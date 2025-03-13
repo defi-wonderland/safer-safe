@@ -18,7 +18,9 @@ contract CappedTokenTransfers is IActions {
   TokenTransfer[] public tokenTransfers;
 
   error LengthMismatch();
+  error ExceededCap();
   error TokenCooldown();
+  error UnallowedToken();
 
   function addCappedToken(address _token, uint256 _cap) external isMsig {
     tokenCap[_token] = _cap;
@@ -65,14 +67,26 @@ contract CappedTokenTransfers is IActions {
         continue;
       }
       uint256 cap = tokenCap[_token];
-      if (capSpentForToken >= cap) {
+
+      // NOTE: safety checks
+      if (cap == 0) {
+        revert UnallowedToken();
+      }
+      if (capSpentForToken > cap) {
+        revert ExceededCap();
+      }
+      if (block.timestamp < tokenCooldown[_token]) {
         revert TokenCooldown();
       }
+
+      // NOTE: update cooldown
       tokenCooldown[_token] = block.timestamp + 1 days;
 
+      // NOTE: reset cap spent (cap is per token per tx, with 1 day cooldown)
       delete capSpent[_token];
     }
 
+    // NOTE: cleanup token transfers
     delete tokenTransfers;
 
     return actions;
