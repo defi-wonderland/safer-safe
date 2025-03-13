@@ -9,6 +9,11 @@ contract TopupCoinbase is IActions {
   address public immutable TOPUP_TOKEN;
   uint256 public immutable TOPUP_AMOUNT;
 
+  constructor(address _topupToken, uint256 _topupAmount) {
+    TOPUP_TOKEN = _topupToken;
+    TOPUP_AMOUNT = _topupAmount;
+  }
+
   address public constant COINBASE_DEPOSIT_ADDRESS = 0x0000000000000000000000000000000000000000;
 
   error TokenCooldown();
