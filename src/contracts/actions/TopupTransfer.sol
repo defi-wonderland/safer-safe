@@ -6,15 +6,15 @@ import {IERC20} from 'forge-std/interfaces/IERC20.sol';
 
 contract TopupCoinbase is IActions {
   uint256 public tokenCooldown;
+  address public immutable TOPUP_RECIPIENT;
   address public immutable TOPUP_TOKEN;
   uint256 public immutable TOPUP_AMOUNT;
 
-  constructor(address _topupToken, uint256 _topupAmount) {
+  constructor(address _topupRecipient, address _topupToken, uint256 _topupAmount) {
+    TOPUP_RECIPIENT = _topupRecipient;
     TOPUP_TOKEN = _topupToken;
     TOPUP_AMOUNT = _topupAmount;
   }
-
-  address public constant COINBASE_DEPOSIT_ADDRESS = 0x0000000000000000000000000000000000000000;
 
   error TokenCooldown();
 
@@ -23,7 +23,7 @@ contract TopupCoinbase is IActions {
 
     actions[0] = Action({
       target: TOPUP_TOKEN,
-      data: abi.encodeWithSelector(IERC20.transfer.selector, COINBASE_DEPOSIT_ADDRESS, TOPUP_AMOUNT),
+      data: abi.encodeWithSelector(IERC20.transfer.selector, TOPUP_RECIPIENT, TOPUP_AMOUNT),
       value: 0
     });
 
