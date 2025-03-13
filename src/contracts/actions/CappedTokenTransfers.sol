@@ -20,7 +20,7 @@ contract CappedTokenTransfers is IActions {
   error LengthMismatch();
   error TokenCooldown();
 
-  function addCappedToken(address _token, uint256 _cap) external isAuthorized {
+  function addCappedToken(address _token, uint256 _cap) external isMsig {
     tokenCap[_token] = _cap;
   }
 
@@ -76,6 +76,12 @@ contract CappedTokenTransfers is IActions {
     delete tokenTransfers;
 
     return actions;
+  }
+
+  modifier isMsig() {
+    // TODO: check if sender is msig
+    // NOTE: this method has a 1 week lockup
+    _;
   }
 
   modifier isAuthorized() {
