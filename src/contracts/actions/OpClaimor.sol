@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity >=0.7.0 <0.9.0;
 
-import {IActions} from '../interfaces/IActions.sol';
+import {IActions} from '../../interfaces/IActions.sol';
 import {IERC20} from 'forge-std/interfaces/IERC20.sol';
 
 contract OpClaimor is IActions {
