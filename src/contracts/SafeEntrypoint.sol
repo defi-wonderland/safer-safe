@@ -10,7 +10,7 @@ contract SafeEntrypoint {
   mapping(bytes32 _actionsHash => bytes _actionsData) public actionsData;
 
   ISafe public immutable SAFE;
-  address public immutable MULTI_SEND;
+  address public immutable MULTI_SEND_CALL_ONLY;
 
   error NotExecutable();
 
@@ -19,7 +19,7 @@ contract SafeEntrypoint {
 
   constructor(address _safe, address _multiSend) {
     SAFE = ISafe(_safe);
-    MULTI_SEND = _multiSend;
+    MULTI_SEND_CALL_ONLY = _multiSend;
   }
 
   function queueActions(address actionsContract) external isAuthorized {
@@ -98,7 +98,7 @@ contract SafeEntrypoint {
 
   function _getSafeTxHash(bytes memory _data, uint256 _nonce) internal view returns (bytes32) {
     return SAFE.getTransactionHash({
-      to: MULTI_SEND,
+      to: MULTI_SEND_CALL_ONLY,
       value: 0,
       data: _data,
       operation: 1, // DELEGATE_CALL
@@ -113,7 +113,7 @@ contract SafeEntrypoint {
 
   function _execSafeTx(bytes memory _data, bytes memory _signatures) internal {
     SAFE.execTransaction{value: msg.value}({
-      to: MULTI_SEND,
+      to: MULTI_SEND_CALL_ONLY,
       value: msg.value,
       data: _data,
       operation: 1, // DELEGATE_CALL
