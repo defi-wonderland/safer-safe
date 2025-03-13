@@ -2,7 +2,6 @@
 pragma solidity >=0.7.0 <0.9.0;
 
 import {IActions} from '../interfaces/IActions.sol';
-import {IERC20} from 'forge-std/interfaces/IERC20.sol';
 
 interface ISafe {
   function execTransaction(
@@ -143,7 +142,7 @@ contract SafeEntrypoint {
     });
   }
 
-  function simulateActions(address _actionsContract) external payable returns (bytes32) {
+  function simulateActions(address _actionsContract) external payable {
     IActions.Action[] memory _actions = IActions(_actionsContract).getActions();
 
     bytes32 _actionsHash = keccak256(abi.encode(_actions));
