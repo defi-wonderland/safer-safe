@@ -13,6 +13,7 @@ contract SafeEntrypoint {
   address public immutable MULTI_SEND_CALL_ONLY;
 
   error NotExecutable();
+  error NotAuthorized();
 
   event ActionsQueued(bytes32 actionsHash, uint256 executableAt);
   event ActionsExecuted(bytes32 actionsHash, bytes32 safeTxHash);
@@ -20,6 +21,14 @@ contract SafeEntrypoint {
   constructor(address _safe, address _multiSend) {
     SAFE = ISafe(_safe);
     MULTI_SEND_CALL_ONLY = _multiSend;
+  }
+
+  function allowActions(address _actionsContract) external isMsig {
+    allowedActions[_actionsContract] = true;
+  }
+
+  function disallowActions(address _actionsContract) external isAuthorized {
+    allowedActions[_actionsContract] = false;
   }
 
   function queueActions(address actionsContract) external isAuthorized {
@@ -124,6 +133,12 @@ contract SafeEntrypoint {
       refundReceiver: payable(address(this)),
       signatures: _signatures
     });
+  }
+
+  modifier isMsig() {
+    // NOTE: SAFE has (probably) 1w execution timelock
+    if (msg.sender != address(SAFE)) revert NotAuthorized();
+    _;
   }
 
   modifier isAuthorized() {
