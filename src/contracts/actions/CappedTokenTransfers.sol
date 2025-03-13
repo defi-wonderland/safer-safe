@@ -51,12 +51,13 @@ contract CappedTokenTransfers is IActions {
     Action[] memory actions = new Action[](tokenTransfers.length);
 
     for (uint256 i = 0; i < tokenTransfers.length; i++) {
+      TokenTransfer memory tokenTransfer = tokenTransfers[i];
       actions[i] = Action({
-        target: tokenTransfers[i].token,
-        data: abi.encodeWithSelector(IERC20.transfer.selector, tokenTransfers[i].recipient, tokenTransfers[i].amount),
+        target: tokenTransfer.token,
+        data: abi.encodeWithSelector(IERC20.transfer.selector, tokenTransfer.recipient, tokenTransfer.amount),
         value: 0
       });
-      capSpent[tokenTransfers[i].token] += tokenTransfers[i].amount;
+      capSpent[tokenTransfer.token] += tokenTransfer.amount;
     }
 
     for (uint256 i = 0; i < tokenTransfers.length; i++) {
