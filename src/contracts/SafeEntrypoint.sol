@@ -17,6 +17,21 @@ interface ISafe {
     address payable refundReceiver,
     bytes memory signatures
   ) external payable returns (bool success);
+
+  function getTransactionHash(
+    address to,
+    uint256 value,
+    bytes calldata data,
+    uint8 operation,
+    uint256 safeTxGas,
+    uint256 baseGas,
+    uint256 gasPrice,
+    address gasToken,
+    address refundReceiver,
+    uint256 _nonce
+  ) external view returns (bytes32 txHash);
+
+  function nonce() external view returns (uint256);
 }
 
 contract SafeEntrypoint {
@@ -28,6 +43,9 @@ contract SafeEntrypoint {
   address public immutable MULTI_SEND;
 
   error NotExecutable();
+
+  event ActionsQueued(bytes32 actionsHash, uint256 executableAt);
+  event ActionsExecuted(bytes32 actionsHash, bytes32 safeTxHash);
 
   constructor(address _safe, address _multiSend) {
     SAFE = ISafe(_safe);
@@ -46,8 +64,12 @@ contract SafeEntrypoint {
       actionsDelay = 7 days;
     }
 
-    actionsExecutableAt[actionsHash] = block.timestamp + actionsDelay;
+    uint256 _executableAt = block.timestamp + actionsDelay;
+    actionsExecutableAt[actionsHash] = _executableAt;
     actionsData[actionsHash] = abi.encode(actions);
+
+    // NOTE: event picked up by off-chain monitoring service
+    emit ActionsQueued(actionsHash, _executableAt);
   }
 
   function executeActions(bytes32 _actionsHash, address[] memory _signers) external payable {
@@ -58,6 +80,21 @@ contract SafeEntrypoint {
     bytes memory _multiSendData = _parseMultiSendData(_actions);
     address[] memory _sortedSigners = _sortSigners(_signers);
     bytes memory _signatures = _parseSignatures(_sortedSigners);
+
+    // NOTE: only for event logging
+    uint256 _nonce = SAFE.nonce();
+    bytes32 _safeTxHash = SAFE.getTransactionHash({
+      to: MULTI_SEND,
+      value: msg.value,
+      data: _multiSendData,
+      operation: 1, // DELEGATE_CALL
+      safeTxGas: 0,
+      baseGas: 0,
+      gasPrice: 0,
+      gasToken: address(0),
+      refundReceiver: payable(address(this)),
+      _nonce: _nonce
+    });
 
     SAFE.execTransaction{value: msg.value}({
       to: MULTI_SEND,
@@ -71,6 +108,77 @@ contract SafeEntrypoint {
       refundReceiver: payable(address(this)),
       signatures: _signatures
     });
+
+    // NOTE: event emitted in simulation to facilitate safeTxHash for approval
+    emit ActionsExecuted(_actionsHash, _safeTxHash);
+  }
+
+  function getSafeTxHash(bytes32 _actionsHash) external view returns (bytes32) {
+    return SAFE.getTransactionHash({
+      to: MULTI_SEND,
+      value: 0,
+      data: actionsData[_actionsHash],
+      operation: 1, // DELEGATE_CALL
+      safeTxGas: 0,
+      baseGas: 0,
+      gasPrice: 0,
+      gasToken: address(0),
+      refundReceiver: payable(address(this)),
+      _nonce: SAFE.nonce()
+    });
+  }
+
+  function getSafeTxHash(bytes32 _actionsHash, uint256 _nonce) external view returns (bytes32) {
+    return SAFE.getTransactionHash({
+      to: MULTI_SEND,
+      value: 0,
+      data: actionsData[_actionsHash],
+      operation: 1, // DELEGATE_CALL
+      safeTxGas: 0,
+      baseGas: 0,
+      gasPrice: 0,
+      gasToken: address(0),
+      refundReceiver: payable(address(this)),
+      _nonce: _nonce
+    });
+  }
+
+  function simulateActions(address _actionsContract) external payable returns (bytes32) {
+    IActions.Action[] memory _actions = IActions(_actionsContract).getActions();
+
+    bytes32 _actionsHash = keccak256(abi.encode(_actions));
+    bytes memory _multiSendData = _parseMultiSendData(_actions);
+    // NOTE: tx will fail unless number of signers is 0
+    bytes memory _signatures = _parseSignatures(new address[](0));
+
+    bytes32 _safeTxHash = SAFE.getTransactionHash({
+      to: MULTI_SEND,
+      value: msg.value,
+      data: _multiSendData,
+      operation: 1, // DELEGATE_CALL
+      safeTxGas: 0,
+      baseGas: 0,
+      gasPrice: 0,
+      gasToken: address(0),
+      refundReceiver: payable(address(this)),
+      _nonce: SAFE.nonce()
+    });
+
+    SAFE.execTransaction{value: msg.value}({
+      to: MULTI_SEND,
+      value: msg.value,
+      data: _multiSendData,
+      operation: 1, // DELEGATE_CALL
+      safeTxGas: 0,
+      baseGas: 0,
+      gasPrice: 0,
+      gasToken: address(0),
+      refundReceiver: payable(address(this)),
+      signatures: _signatures
+    });
+
+    // NOTE: event emitted in simulation to facilitate safeTxHash for approval
+    emit ActionsExecuted(_actionsHash, _safeTxHash);
   }
 
   function _parseMultiSendData(IActions.Action[] memory _actions) internal returns (bytes memory) {

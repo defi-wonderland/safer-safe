@@ -10,7 +10,7 @@ contract OpClaimor is IActions {
   address public constant WONDER_MULTISIG = 0x0000000000000000000000000000000000000000;
 
   function getActions() external returns (Action[] memory) {
-    uint256 amountToClaim = IERC20(OP_RPG_TREASURY).allowance(OP_RPG_TREASURY, WONDER_MULTISIG);
+    uint256 amountToClaim = IERC20(OP_TOKEN).allowance(OP_RPG_TREASURY, WONDER_MULTISIG);
 
     Action[] memory actions = new Action[](1);
     actions[0] = Action({
