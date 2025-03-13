@@ -58,12 +58,12 @@ contract CappedTokenTransfers is IActions {
     }
 
     for (uint256 i = 0; i < tokenTransfers.length; i++) {
-      uint256 capSpentForToken = capSpent[tokenTransfers[i].token];
+      address _token = tokenTransfers[i].token;
+      uint256 capSpentForToken = capSpent[_token];
       if (capSpentForToken == 0) {
         // NOTE: already processed this token
         continue;
       }
-      address _token = tokenTransfers[i].token;
       uint256 cap = tokenCap[_token];
       if (capSpentForToken >= cap) {
         revert TokenCooldown();
