@@ -2,6 +2,7 @@
 pragma solidity >=0.7.0 <0.9.0;
 
 import {IActions} from '../interfaces/IActions.sol';
+import {IMultiSendCallOnly} from '../interfaces/IMultiSendCallOnly.sol';
 import {SafeManageable} from './SafeManageable.sol';
 
 contract SafeEntrypoint is SafeManageable {
@@ -28,10 +29,15 @@ contract SafeEntrypoint is SafeManageable {
     allowedActions[_actionsContract] = false;
   }
 
+  function actionsHash(address _actionsContract) external returns (bytes32) {
+    IActions.Action[] memory actions = IActions(_actionsContract).getActions();
+    return keccak256(abi.encode(actions));
+  }
+
   function queueActions(address actionsContract) external isAuthorized {
     IActions.Action[] memory actions = IActions(actionsContract).getActions();
 
-    bytes32 actionsHash = keccak256(abi.encode(actions));
+    bytes32 _actionsHash = keccak256(abi.encode(actions));
 
     uint256 actionsDelay;
     if (allowedActions[actionsContract]) {
@@ -41,11 +47,11 @@ contract SafeEntrypoint is SafeManageable {
     }
 
     uint256 _executableAt = block.timestamp + actionsDelay;
-    actionsExecutableAt[actionsHash] = _executableAt;
-    actionsData[actionsHash] = abi.encode(actions);
+    actionsExecutableAt[_actionsHash] = _executableAt;
+    actionsData[_actionsHash] = abi.encode(actions);
 
     // NOTE: event picked up by off-chain monitoring service
-    emit ActionsQueued(actionsHash, _executableAt);
+    emit ActionsQueued(_actionsHash, _executableAt);
   }
 
   function executeActions(bytes32 _actionsHash, address[] memory _signers) external payable {
@@ -74,12 +80,20 @@ contract SafeEntrypoint is SafeManageable {
     emit ActionsExecuted(_actionsHash, _safeTxHash);
   }
 
+  function getSafeTxHash(address _actionsContract) external returns (bytes32) {
+    IActions.Action[] memory _actions = IActions(_actionsContract).getActions();
+    bytes memory _actionsData = _parseMultiSendData(_actions);
+    return _getSafeTxHash(_actionsData, SAFE.nonce());
+  }
+
   function getSafeTxHash(bytes32 _actionsHash) external view returns (bytes32) {
-    return _getSafeTxHash(actionsData[_actionsHash], SAFE.nonce());
+    bytes memory _actionsData = _parseMultiSendData(abi.decode(actionsData[_actionsHash], (IActions.Action[])));
+    return _getSafeTxHash(_actionsData, SAFE.nonce());
   }
 
   function getSafeTxHash(bytes32 _actionsHash, uint256 _nonce) external view returns (bytes32) {
-    return _getSafeTxHash(actionsData[_actionsHash], _nonce);
+    bytes memory _actionsData = _parseMultiSendData(abi.decode(actionsData[_actionsHash], (IActions.Action[])));
+    return _getSafeTxHash(_actionsData, _nonce);
   }
 
   function simulateActions(address _actionsContract) external payable {
@@ -99,6 +113,9 @@ contract SafeEntrypoint is SafeManageable {
   }
 
   function _parseMultiSendData(IActions.Action[] memory _actions) internal pure returns (bytes memory _multiSendData) {
+    // Initialize an empty bytes array to avoid null reference
+    _multiSendData = new bytes(0);
+
     // Loop through each action and encode it
     for (uint256 i = 0; i < _actions.length; i++) {
       // Extract the current action
@@ -124,6 +141,8 @@ contract SafeEntrypoint is SafeManageable {
       _multiSendData = abi.encodePacked(_multiSendData, encodedAction);
     }
 
+    _multiSendData = abi.encodeWithSelector(IMultiSendCallOnly.multiSend.selector, _multiSendData);
+
     return _multiSendData;
   }
 
@@ -147,8 +166,11 @@ contract SafeEntrypoint is SafeManageable {
     return _getApprovedSigners(_txHash);
   }
 
-  function _getApprovedSigners(bytes32 _txHash) internal view returns (address[] memory _approvedSigners) {
+  function _getApprovedSigners(bytes32 _actionsHash) internal view returns (address[] memory _approvedSigners) {
     address[] memory _signers = SAFE.getOwners();
+
+    bytes memory _actionsData = _parseMultiSendData(abi.decode(actionsData[_actionsHash], (IActions.Action[])));
+    bytes32 _txHash = _getSafeTxHash(_actionsData, SAFE.nonce());
 
     // Create a temporary array to store approved signers
     address[] memory tempApproved = new address[](_signers.length);
@@ -174,40 +196,42 @@ contract SafeEntrypoint is SafeManageable {
     return _approvedSigners;
   }
 
-  function _parseSignatures(address[] memory _signers) internal pure returns (bytes memory _signatures) {
-    // For approved hash validation, we need to create signatures with:
-    // v = 1 (indicating approved hash validation)
-    // r = address of the signer (converted to bytes32)
-    // s = 0 (not used for approved hash validation)
+  function _parseSignatures(address[] memory _signers) internal pure returns (bytes memory) {
+    // Each signature requires exactly 65 bytes:
+    // r: 32 bytes
+    // s: 32 bytes
+    // v: 1 byte
 
-    // Each signature takes 65 bytes (r = 32 bytes, s = 32 bytes, v = 1 byte)
-    _signatures = new bytes(_signers.length * 65);
+    // The total length will be signers.length * 65 bytes
+    bytes memory signatures = new bytes(_signers.length * 65);
 
-    // Fill the signatures bytes with the proper format for each signer
     for (uint256 i = 0; i < _signers.length; i++) {
-      address signer = _signers[i];
+      // Calculate position in the signatures array (65 bytes per signature)
+      uint256 pos = 65 * i;
 
-      // Calculate the offset for this signature
-      uint256 offset = i * 65;
+      // Set r to the signer address (converted to bytes32)
+      bytes32 r = bytes32(uint256(uint160(_signers[i])));
 
-      // Store the address of the signer in the r value (bytes 0-31)
-      bytes32 r = bytes32(uint256(uint160(signer)));
-
-      // s value is not used for approved hash validation (bytes 32-63)
+      // Set s to zero (not used for approved hash validation)
       bytes32 s = bytes32(0);
 
-      // v value = 1 indicates this is an approved hash signature (byte 64)
+      // Set v to 1 (indicates this is an approved hash signature)
       uint8 v = 1;
 
-      // Place values in the signatures array
+      // Write the signature values to the byte array
       assembly {
-        mstore(add(add(_signatures, 32), offset), r)
-        mstore(add(add(_signatures, 64), offset), s)
-        mstore8(add(add(_signatures, 96), offset), v)
+        // r value: first 32 bytes of the signature
+        mstore(add(add(signatures, 32), pos), r)
+
+        // s value: next 32 bytes of the signature
+        mstore(add(add(signatures, 32), add(pos, 32)), s)
+
+        // v value: final 1 byte of the signature
+        mstore8(add(add(signatures, 32), add(pos, 64)), v)
       }
     }
 
-    return _signatures;
+    return signatures;
   }
 
   function _getSafeTxHash(bytes memory _data, uint256 _nonce) internal view returns (bytes32) {
@@ -228,7 +252,7 @@ contract SafeEntrypoint is SafeManageable {
   function _execSafeTx(bytes memory _data, bytes memory _signatures) internal {
     SAFE.execTransaction{value: msg.value}({
       to: MULTI_SEND_CALL_ONLY,
-      value: msg.value,
+      value: 0,
       data: _data,
       operation: 1, // DELEGATE_CALL
       safeTxGas: 0,
