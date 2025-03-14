@@ -29,4 +29,10 @@ interface ISafe {
   ) external view returns (bytes32 txHash);
 
   function nonce() external view returns (uint256);
+
+  function getOwners() external view returns (address[] memory);
+
+  function isOwner(address owner) external view returns (bool);
+
+  function approvedHashes(address _owner, bytes32 _hash) external view returns (bool);
 }
