@@ -31,8 +31,7 @@ contract SafeEntrypoint is SafeManageable {
   }
 
   function actionsHash(address _actionsContract) external view returns (bytes32) {
-    (IActions.Action[] memory actions, bool success) = _simulateGetActions(_actionsContract);
-    if (!success) revert NotSuccess();
+    IActions.Action[] memory actions = _simulateGetActions(_actionsContract);
     return keccak256(abi.encode(actions));
   }
 
@@ -83,8 +82,7 @@ contract SafeEntrypoint is SafeManageable {
   }
 
   function getSafeTxHash(address _actionsContract) external view returns (bytes32) {
-    (IActions.Action[] memory _actions, bool success) = _simulateGetActions(_actionsContract);
-    if (!success) revert NotSuccess();
+    IActions.Action[] memory _actions = _simulateGetActions(_actionsContract);
     bytes memory _actionsData = _parseMultiSendData(_actions);
     return _getSafeTxHash(_actionsData, SAFE.nonce());
   }
@@ -238,11 +236,7 @@ contract SafeEntrypoint is SafeManageable {
     return signatures;
   }
 
-  function _simulateGetActions(address _actionsContract)
-    internal
-    view
-    returns (IActions.Action[] memory actions, bool success)
-  {
+  function _simulateGetActions(address _actionsContract) internal view returns (IActions.Action[] memory actions) {
     // Initialize an empty array as fallback
     actions = new IActions.Action[](0);
 
@@ -251,14 +245,17 @@ contract SafeEntrypoint is SafeManageable {
 
     // Make a static call (executes the code but reverts any state changes)
     bytes memory returnData;
+    bool success;
     (success, returnData) = _actionsContract.staticcall(callData);
 
     // If the call succeeded, decode the returned data
     if (success && returnData.length > 0) {
       actions = abi.decode(returnData, (IActions.Action[]));
+    } else {
+      revert NotSuccess();
     }
 
-    return (actions, success);
+    return actions;
   }
 
   function _getSafeTxHash(bytes memory _data, uint256 _nonce) internal view returns (bytes32) {
