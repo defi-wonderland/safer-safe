@@ -13,6 +13,7 @@ contract SafeEntrypoint is SafeManageable {
   address public immutable MULTI_SEND_CALL_ONLY;
 
   error NotExecutable();
+  error NotSuccess();
 
   event ActionsQueued(bytes32 actionsHash, uint256 executableAt);
   event ActionsExecuted(bytes32 actionsHash, bytes32 safeTxHash);
@@ -29,8 +30,9 @@ contract SafeEntrypoint is SafeManageable {
     allowedActions[_actionsContract] = false;
   }
 
-  function actionsHash(address _actionsContract) external returns (bytes32) {
-    IActions.Action[] memory actions = IActions(_actionsContract).getActions();
+  function actionsHash(address _actionsContract) external view returns (bytes32) {
+    (IActions.Action[] memory actions, bool success) = _simulateGetActions(_actionsContract);
+    if (!success) revert NotSuccess();
     return keccak256(abi.encode(actions));
   }
 
@@ -80,8 +82,9 @@ contract SafeEntrypoint is SafeManageable {
     emit ActionsExecuted(_actionsHash, _safeTxHash);
   }
 
-  function getSafeTxHash(address _actionsContract) external returns (bytes32) {
-    IActions.Action[] memory _actions = IActions(_actionsContract).getActions();
+  function getSafeTxHash(address _actionsContract) external view returns (bytes32) {
+    (IActions.Action[] memory _actions, bool success) = _simulateGetActions(_actionsContract);
+    if (!success) revert NotSuccess();
     bytes memory _actionsData = _parseMultiSendData(_actions);
     return _getSafeTxHash(_actionsData, SAFE.nonce());
   }
@@ -97,6 +100,7 @@ contract SafeEntrypoint is SafeManageable {
   }
 
   function simulateActions(address _actionsContract) external payable {
+    // NOTE: tx will revert so we don't need to staticcall getActions()
     IActions.Action[] memory _actions = IActions(_actionsContract).getActions();
 
     bytes32 _actionsHash = keccak256(abi.encode(_actions));
@@ -232,6 +236,29 @@ contract SafeEntrypoint is SafeManageable {
     }
 
     return signatures;
+  }
+
+  function _simulateGetActions(address _actionsContract)
+    internal
+    view
+    returns (IActions.Action[] memory actions, bool success)
+  {
+    // Initialize an empty array as fallback
+    actions = new IActions.Action[](0);
+
+    // Encode the function call for getActions()
+    bytes memory callData = abi.encodeWithSelector(IActions.getActions.selector, bytes(''));
+
+    // Make a static call (executes the code but reverts any state changes)
+    bytes memory returnData;
+    (success, returnData) = _actionsContract.staticcall(callData);
+
+    // If the call succeeded, decode the returned data
+    if (success && returnData.length > 0) {
+      actions = abi.decode(returnData, (IActions.Action[]));
+    }
+
+    return (actions, success);
   }
 
   function _getSafeTxHash(bytes memory _data, uint256 _nonce) internal view returns (bytes32) {
