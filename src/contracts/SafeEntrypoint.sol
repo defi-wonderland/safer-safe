@@ -237,9 +237,6 @@ contract SafeEntrypoint is SafeManageable {
   }
 
   function _simulateGetActions(address _actionsContract) internal view returns (IActions.Action[] memory actions) {
-    // Initialize an empty array as fallback
-    actions = new IActions.Action[](0);
-
     // Encode the function call for getActions()
     bytes memory callData = abi.encodeWithSelector(IActions.getActions.selector, bytes(''));
 
