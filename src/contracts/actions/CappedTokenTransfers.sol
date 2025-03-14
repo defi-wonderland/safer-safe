@@ -1,19 +1,21 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity >=0.7.0 <0.9.0;
+pragma solidity 0.8.29;
 
 import {IActions} from '../../interfaces/IActions.sol';
+
+import {SafeManageable} from '../SafeManageable.sol';
 import {IERC20} from 'forge-std/interfaces/IERC20.sol';
 
-contract CappedTokenTransfers is IActions {
-  mapping(address => uint256) public tokenCap;
-  mapping(address => uint256) public capSpent;
-  mapping(address => uint256) public tokenCooldown;
-
+contract CappedTokenTransfers is IActions, SafeManageable {
   struct TokenTransfer {
     address token;
     address recipient;
     uint256 amount;
   }
+
+  mapping(address _token => uint256 _transferCap) public tokenCap;
+  mapping(address _token => uint256 _transferCapSpent) public capSpent;
+  mapping(address _token => uint256 _transferCooldown) public tokenCooldown;
 
   TokenTransfer[] public tokenTransfers;
 
@@ -21,6 +23,8 @@ contract CappedTokenTransfers is IActions {
   error ExceededCap();
   error TokenCooldown();
   error UnallowedToken();
+
+  constructor(address _safe) SafeManageable(_safe) {}
 
   function addCappedToken(address _token, uint256 _cap) external isMsig {
     tokenCap[_token] = _cap;
@@ -41,10 +45,6 @@ contract CappedTokenTransfers is IActions {
     for (uint256 i = 0; i < _tokens.length; i++) {
       _addTokenTransfer(_tokens[i], _recipients[i], _amounts[i]);
     }
-  }
-
-  function _addTokenTransfer(address _token, address _recipient, uint256 _amount) internal {
-    tokenTransfers.push(TokenTransfer({token: _token, recipient: _recipient, amount: _amount}));
   }
 
   function getActions() external returns (Action[] memory) {
@@ -93,15 +93,7 @@ contract CappedTokenTransfers is IActions {
     return actions;
   }
 
-  modifier isMsig() {
-    // TODO: check if sender is msig
-    // NOTE: this method has a 1 week lockup
-    _;
-  }
-
-  modifier isAuthorized() {
-    // TODO: check if sender is msig signer
-    // TODO: abstract to be reused across all actions
-    _;
+  function _addTokenTransfer(address _token, address _recipient, uint256 _amount) internal {
+    tokenTransfers.push(TokenTransfer({token: _token, recipient: _recipient, amount: _amount}));
   }
 }

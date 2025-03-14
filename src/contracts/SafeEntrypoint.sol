@@ -1,22 +1,22 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity >=0.7.0 <0.9.0;
+pragma solidity 0.8.29;
 
 import {IActions} from '../interfaces/IActions.sol';
 import {IMultiSendCallOnly} from '../interfaces/IMultiSendCallOnly.sol';
 import {SafeManageable} from './SafeManageable.sol';
 
 contract SafeEntrypoint is SafeManageable {
+  address public immutable MULTI_SEND_CALL_ONLY;
+
   mapping(address _actionsContract => bool _isAllowed) public allowedActions;
   mapping(bytes32 _actionsHash => uint256 _executableAt) public actionsExecutableAt;
   mapping(bytes32 _actionsHash => bytes _actionsData) public actionsData;
 
-  address public immutable MULTI_SEND_CALL_ONLY;
+  event ActionsQueued(bytes32 actionsHash, uint256 executableAt);
+  event ActionsExecuted(bytes32 actionsHash, bytes32 safeTxHash);
 
   error NotExecutable();
   error NotSuccess();
-
-  event ActionsQueued(bytes32 actionsHash, uint256 executableAt);
-  event ActionsExecuted(bytes32 actionsHash, bytes32 safeTxHash);
 
   constructor(address _safe, address _multiSend) SafeManageable(_safe) {
     MULTI_SEND_CALL_ONLY = _multiSend;
@@ -28,11 +28,6 @@ contract SafeEntrypoint is SafeManageable {
 
   function disallowActions(address _actionsContract) external isAuthorized {
     allowedActions[_actionsContract] = false;
-  }
-
-  function actionsHash(address _actionsContract) external view returns (bytes32) {
-    IActions.Action[] memory actions = _simulateGetActions(_actionsContract);
-    return keccak256(abi.encode(actions));
   }
 
   function queueActions(address actionsContract) external isAuthorized {
@@ -63,22 +58,26 @@ contract SafeEntrypoint is SafeManageable {
     _executeActions(_actionsHash, _getApprovedSigners(_actionsHash));
   }
 
-  function _executeActions(bytes32 _actionsHash, address[] memory _signers) internal {
-    if (actionsExecutableAt[_actionsHash] > block.timestamp) revert NotExecutable();
+  function simulateActions(address _actionsContract) external payable {
+    // NOTE: tx will revert so we don't need to staticcall getActions()
+    IActions.Action[] memory _actions = IActions(_actionsContract).getActions();
 
-    IActions.Action[] memory _actions = abi.decode(actionsData[_actionsHash], (IActions.Action[]));
-
+    bytes32 _actionsHash = keccak256(abi.encode(_actions));
     bytes memory _multiSendData = _parseMultiSendData(_actions);
-    address[] memory _sortedSigners = _sortSigners(_signers);
-    bytes memory _signatures = _parseSignatures(_sortedSigners);
+    // NOTE: tx will fail unless number of signers is 0
+    bytes memory _emptySignatures = _parseSignatures(new address[](0));
 
-    // NOTE: only for event logging
     uint256 _nonce = SAFE.nonce();
     bytes32 _safeTxHash = _getSafeTxHash(_multiSendData, _nonce);
-    _execSafeTx(_multiSendData, _signatures);
+    _execSafeTx(_multiSendData, _emptySignatures);
 
     // NOTE: event emitted in simulation to facilitate safeTxHash for approval
     emit ActionsExecuted(_actionsHash, _safeTxHash);
+  }
+
+  function actionsHash(address _actionsContract) external view returns (bytes32) {
+    IActions.Action[] memory actions = _simulateGetActions(_actionsContract);
+    return keccak256(abi.encode(actions));
   }
 
   function getSafeTxHash(address _actionsContract) external view returns (bytes32) {
@@ -97,21 +96,105 @@ contract SafeEntrypoint is SafeManageable {
     return _getSafeTxHash(_actionsData, _nonce);
   }
 
-  function simulateActions(address _actionsContract) external payable {
-    // NOTE: tx will revert so we don't need to staticcall getActions()
-    IActions.Action[] memory _actions = IActions(_actionsContract).getActions();
+  function getApprovedSigners(bytes32 _txHash) external view returns (address[] memory _approvedSigners) {
+    return _getApprovedSigners(_txHash);
+  }
 
-    bytes32 _actionsHash = keccak256(abi.encode(_actions));
+  function _executeActions(bytes32 _actionsHash, address[] memory _signers) internal {
+    if (actionsExecutableAt[_actionsHash] > block.timestamp) revert NotExecutable();
+
+    IActions.Action[] memory _actions = abi.decode(actionsData[_actionsHash], (IActions.Action[]));
+
     bytes memory _multiSendData = _parseMultiSendData(_actions);
-    // NOTE: tx will fail unless number of signers is 0
-    bytes memory _emptySignatures = _parseSignatures(new address[](0));
+    address[] memory _sortedSigners = _sortSigners(_signers);
+    bytes memory _signatures = _parseSignatures(_sortedSigners);
 
+    // NOTE: only for event logging
     uint256 _nonce = SAFE.nonce();
     bytes32 _safeTxHash = _getSafeTxHash(_multiSendData, _nonce);
-    _execSafeTx(_multiSendData, _emptySignatures);
+    _execSafeTx(_multiSendData, _signatures);
 
     // NOTE: event emitted in simulation to facilitate safeTxHash for approval
     emit ActionsExecuted(_actionsHash, _safeTxHash);
+  }
+
+  function _execSafeTx(bytes memory _data, bytes memory _signatures) internal {
+    SAFE.execTransaction{value: msg.value}({
+      to: MULTI_SEND_CALL_ONLY,
+      value: 0,
+      data: _data,
+      operation: 1, // DELEGATE_CALL
+      safeTxGas: 0,
+      baseGas: 0,
+      gasPrice: 0,
+      gasToken: address(0),
+      refundReceiver: payable(address(this)),
+      signatures: _signatures
+    });
+  }
+
+  function _simulateGetActions(address _actionsContract) internal view returns (IActions.Action[] memory actions) {
+    // Encode the function call for getActions()
+    bytes memory callData = abi.encodeWithSelector(IActions.getActions.selector, bytes(''));
+
+    // Make a static call (executes the code but reverts any state changes)
+    bytes memory returnData;
+    bool success;
+    (success, returnData) = _actionsContract.staticcall(callData);
+
+    // If the call succeeded, decode the returned data
+    if (success && returnData.length > 0) {
+      actions = abi.decode(returnData, (IActions.Action[]));
+    } else {
+      revert NotSuccess();
+    }
+
+    return actions;
+  }
+
+  function _getSafeTxHash(bytes memory _data, uint256 _nonce) internal view returns (bytes32) {
+    return SAFE.getTransactionHash({
+      to: MULTI_SEND_CALL_ONLY,
+      value: 0,
+      data: _data,
+      operation: 1, // DELEGATE_CALL
+      safeTxGas: 0,
+      baseGas: 0,
+      gasPrice: 0,
+      gasToken: address(0),
+      refundReceiver: payable(address(this)),
+      _nonce: _nonce
+    });
+  }
+
+  function _getApprovedSigners(bytes32 _actionsHash) internal view returns (address[] memory _approvedSigners) {
+    address[] memory _signers = SAFE.getOwners();
+
+    bytes memory _actionsData = _parseMultiSendData(abi.decode(actionsData[_actionsHash], (IActions.Action[])));
+    bytes32 _txHash = _getSafeTxHash(_actionsData, SAFE.nonce());
+
+    // Create a temporary array to store approved signers
+    address[] memory tempApproved = new address[](_signers.length);
+    uint256 approvedCount = 0;
+
+    // Single pass through all signers
+    for (uint256 i = 0; i < _signers.length; i++) {
+      // Check if this signer has approved the hash
+      if (SAFE.approvedHashes(_signers[i], _txHash)) {
+        tempApproved[approvedCount] = _signers[i];
+        approvedCount++;
+      }
+    }
+
+    // Create the final result array with the exact size needed
+    _approvedSigners = new address[](approvedCount);
+
+    // Copy from temporary array to final array
+    for (uint256 i = 0; i < approvedCount; i++) {
+      _approvedSigners[i] = tempApproved[i];
+    }
+
+    return _approvedSigners;
   }
 
   function _parseMultiSendData(IActions.Action[] memory _actions) internal pure returns (bytes memory _multiSendData) {
@@ -164,40 +247,6 @@ contract SafeEntrypoint is SafeManageable {
     return _signers;
   }
 
-  function getApprovedSigners(bytes32 _txHash) external view returns (address[] memory _approvedSigners) {
-    return _getApprovedSigners(_txHash);
-  }
-
-  function _getApprovedSigners(bytes32 _actionsHash) internal view returns (address[] memory _approvedSigners) {
-    address[] memory _signers = SAFE.getOwners();
-
-    bytes memory _actionsData = _parseMultiSendData(abi.decode(actionsData[_actionsHash], (IActions.Action[])));
-    bytes32 _txHash = _getSafeTxHash(_actionsData, SAFE.nonce());
-
-    // Create a temporary array to store approved signers
-    address[] memory tempApproved = new address[](_signers.length);
-    uint256 approvedCount = 0;
-
-    // Single pass through all signers
-    for (uint256 i = 0; i < _signers.length; i++) {
-      // Check if this signer has approved the hash
-      if (SAFE.approvedHashes(_signers[i], _txHash)) {
-        tempApproved[approvedCount] = _signers[i];
-        approvedCount++;
-      }
-    }
-
-    // Create the final result array with the exact size needed
-    _approvedSigners = new address[](approvedCount);
-
-    // Copy from temporary array to final array
-    for (uint256 i = 0; i < approvedCount; i++) {
-      _approvedSigners[i] = tempApproved[i];
-    }
-
-    return _approvedSigners;
-  }
-
   function _parseSignatures(address[] memory _signers) internal pure returns (bytes memory) {
     // Each signature requires exactly 65 bytes:
     // r: 32 bytes
@@ -234,54 +283,5 @@ contract SafeEntrypoint is SafeManageable {
     }
 
     return signatures;
-  }
-
-  function _simulateGetActions(address _actionsContract) internal view returns (IActions.Action[] memory actions) {
-    // Encode the function call for getActions()
-    bytes memory callData = abi.encodeWithSelector(IActions.getActions.selector, bytes(''));
-
-    // Make a static call (executes the code but reverts any state changes)
-    bytes memory returnData;
-    bool success;
-    (success, returnData) = _actionsContract.staticcall(callData);
-
-    // If the call succeeded, decode the returned data
-    if (success && returnData.length > 0) {
-      actions = abi.decode(returnData, (IActions.Action[]));
-    } else {
-      revert NotSuccess();
-    }
-
-    return actions;
-  }
-
-  function _getSafeTxHash(bytes memory _data, uint256 _nonce) internal view returns (bytes32) {
-    return SAFE.getTransactionHash({
-      to: MULTI_SEND_CALL_ONLY,
-      value: 0,
-      data: _data,
-      operation: 1, // DELEGATE_CALL
-      safeTxGas: 0,
-      baseGas: 0,
-      gasPrice: 0,
-      gasToken: address(0),
-      refundReceiver: payable(address(this)),
-      _nonce: _nonce
-    });
-  }
-
-  function _execSafeTx(bytes memory _data, bytes memory _signatures) internal {
-    SAFE.execTransaction{value: msg.value}({
-      to: MULTI_SEND_CALL_ONLY,
-      value: 0,
-      data: _data,
-      operation: 1, // DELEGATE_CALL
-      safeTxGas: 0,
-      baseGas: 0,
-      gasPrice: 0,
-      gasToken: address(0),
-      refundReceiver: payable(address(this)),
-      signatures: _signatures
-    });
   }
 }

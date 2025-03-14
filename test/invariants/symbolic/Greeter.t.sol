@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.23;
+pragma solidity 0.8.29;
 
 import {Greeter, IERC20} from 'contracts/Greeter.sol';
 

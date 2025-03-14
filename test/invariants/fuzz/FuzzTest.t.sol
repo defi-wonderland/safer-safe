@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.23;
+pragma solidity 0.8.29;
 
 import {GreeterGuidedHandlers} from './handlers/guided/Greeter.t.sol';
 import {GreeterUnguidedHandlers} from './handlers/unguided/Greeter.t.sol';

@@ -9,6 +9,7 @@
     "private-vars-leading-underscore": ["warn", { "strict": false }],
     "ordering": "warn",
     "avoid-low-level-calls": "off",
-    "named-parameters-mapping": "warn"
+    "named-parameters-mapping": "warn",
+    "reentrancy": "off"
   }
 }

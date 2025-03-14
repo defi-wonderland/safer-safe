@@ -1,17 +1,12 @@
 // SPDX-License-Identifier: LGPL-3.0-only
-pragma solidity >=0.7.0 <0.9.0;
+pragma solidity 0.8.29;
 
-import {IActions} from '../interfaces/IActions.sol';
 import {ISafe} from '../interfaces/ISafe.sol';
 
 abstract contract SafeManageable {
   ISafe public immutable SAFE;
 
   error NotAuthorized();
-
-  constructor(address _safe) {
-    SAFE = ISafe(_safe);
-  }
 
   modifier isMsig() {
     // TODO: uncomment after making the test call from the Safe
@@ -22,5 +17,9 @@ abstract contract SafeManageable {
   modifier isAuthorized() {
     if (!SAFE.isOwner(msg.sender)) revert NotAuthorized();
     _;
+  }
+
+  constructor(address _safe) {
+    SAFE = ISafe(_safe);
   }
 }
