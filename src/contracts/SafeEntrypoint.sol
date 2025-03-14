@@ -3,6 +3,7 @@ pragma solidity 0.8.29;
 
 import {IActions} from '../interfaces/IActions.sol';
 import {IMultiSendCallOnly} from '../interfaces/IMultiSendCallOnly.sol';
+
 import {SafeManageable} from './SafeManageable.sol';
 
 contract SafeEntrypoint is SafeManageable {
@@ -22,6 +23,8 @@ contract SafeEntrypoint is SafeManageable {
     MULTI_SEND_CALL_ONLY = _multiSend;
   }
 
+  // ~~~ ADMIN METHODS ~~~
+
   function allowActions(address _actionsContract) external isMsig {
     allowedActions[_actionsContract] = true;
   }
@@ -29,6 +32,8 @@ contract SafeEntrypoint is SafeManageable {
   function disallowActions(address _actionsContract) external isAuthorized {
     allowedActions[_actionsContract] = false;
   }
+
+  // ~~~ ACTIONS METHODS ~~~
 
   function queueActions(address actionsContract) external isAuthorized {
     IActions.Action[] memory actions = IActions(actionsContract).getActions();
@@ -50,21 +55,19 @@ contract SafeEntrypoint is SafeManageable {
     emit ActionsQueued(_actionsHash, _executableAt);
   }
 
-  function executeActions(bytes32 _actionsHash, address[] memory _signers) external payable {
-    _executeActions(_actionsHash, _signers);
-  }
-
   function executeActions(bytes32 _actionsHash) external payable {
     _executeActions(_actionsHash, _getApprovedSigners(_actionsHash));
   }
 
-  function simulateActions(address _actionsContract) external payable {
-    // NOTE: tx will revert so we don't need to staticcall getActions()
-    IActions.Action[] memory _actions = IActions(_actionsContract).getActions();
+  function executeActions(bytes32 _actionsHash, address[] memory _signers) external payable {
+    _executeActions(_actionsHash, _signers);
+  }
 
-    bytes32 _actionsHash = keccak256(abi.encode(_actions));
+  function simulateActions(bytes32 _actionsHash) external payable {
+    IActions.Action[] memory _actions = abi.decode(actionsData[_actionsHash], (IActions.Action[]));
+
     bytes memory _multiSendData = _parseMultiSendData(_actions);
-    // NOTE: tx will fail unless number of signers is 0
+    // NOTE: tx will fail unless number of signers is 0 (only possible with state overrides)
     bytes memory _emptySignatures = _parseSignatures(new address[](0));
 
     uint256 _nonce = SAFE.nonce();
@@ -75,6 +78,25 @@ contract SafeEntrypoint is SafeManageable {
     emit ActionsExecuted(_actionsHash, _safeTxHash);
   }
 
+  function simulateActions(address _actionsContract) external payable {
+    // NOTE: tx will revert so we don't need to staticcall getActions()
+    IActions.Action[] memory _actions = IActions(_actionsContract).getActions();
+
+    bytes32 _actionsHash = keccak256(abi.encode(_actions));
+    bytes memory _multiSendData = _parseMultiSendData(_actions);
+    // NOTE: tx will fail unless number of signers is 0 (only possible with state overrides)
+    bytes memory _emptySignatures = _parseSignatures(new address[](0));
+
+    uint256 _nonce = SAFE.nonce();
+    bytes32 _safeTxHash = _getSafeTxHash(_multiSendData, _nonce);
+    _execSafeTx(_multiSendData, _emptySignatures);
+
+    // NOTE: event emitted in simulation to facilitate safeTxHash for approval
+    emit ActionsExecuted(_actionsHash, _safeTxHash);
+  }
+
+  // ~~~ VIEW METHODS ~~~
+
   function actionsHash(address _actionsContract) external view returns (bytes32) {
     IActions.Action[] memory actions = _simulateGetActions(_actionsContract);
     return keccak256(abi.encode(actions));
@@ -84,6 +106,12 @@ contract SafeEntrypoint is SafeManageable {
     IActions.Action[] memory _actions = _simulateGetActions(_actionsContract);
     bytes memory _actionsData = _parseMultiSendData(_actions);
     return _getSafeTxHash(_actionsData, SAFE.nonce());
+  }
+
+  function getSafeTxHash(address _actionsContract, uint256 _nonce) external view returns (bytes32) {
+    IActions.Action[] memory _actions = _simulateGetActions(_actionsContract);
+    bytes memory _actionsData = _parseMultiSendData(_actions);
+    return _getSafeTxHash(_actionsData, _nonce);
   }
 
   function getSafeTxHash(bytes32 _actionsHash) external view returns (bytes32) {
@@ -99,6 +127,8 @@ contract SafeEntrypoint is SafeManageable {
   function getApprovedSigners(bytes32 _txHash) external view returns (address[] memory _approvedSigners) {
     return _getApprovedSigners(_txHash);
   }
+
+  // ~~~ INTERNAL METHODS ~~~
 
   function _executeActions(bytes32 _actionsHash, address[] memory _signers) internal {
     if (actionsExecutableAt[_actionsHash] > block.timestamp) revert NotExecutable();
@@ -196,6 +226,8 @@ contract SafeEntrypoint is SafeManageable {
 
     return _approvedSigners;
   }
+
+  // ~~~ INTERNAL PURE METHODS ~~~
 
   function _parseMultiSendData(IActions.Action[] memory _actions) internal pure returns (bytes memory _multiSendData) {
     // Initialize an empty bytes array to avoid null reference

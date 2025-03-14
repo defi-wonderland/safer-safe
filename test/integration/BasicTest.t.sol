@@ -2,6 +2,7 @@
 pragma solidity 0.8.29;
 
 import {SafeEntrypoint} from 'contracts/SafeEntrypoint.sol';
+import {SafeEntrypointFactory} from 'contracts/factories/SafeEntrypointFactory.sol';
 
 import {SimpleActionsFactory} from 'contracts/actions/factories/SimpleActionsFactory.sol';
 import {Test} from 'forge-std/Test.sol';
@@ -46,7 +47,8 @@ contract BasicTest is Test {
     });
 
     // Deploy the SafeEntrypoint contract
-    SafeEntrypoint _safeEntrypoint = new SafeEntrypoint(address(_safe), _MULTI_SEND_CALL_ONLY);
+    SafeEntrypointFactory _safeEntrypointFactory = new SafeEntrypointFactory(_MULTI_SEND_CALL_ONLY);
+    SafeEntrypoint _safeEntrypoint = SafeEntrypoint(_safeEntrypointFactory.createSafeEntrypoint(address(_safe)));
 
     // Deploy SimpleAction contract
     SimpleActionsFactory _simpleActionsFactory = new SimpleActionsFactory();

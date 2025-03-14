@@ -2,9 +2,9 @@
 pragma solidity 0.8.29;
 
 import {IActions} from '../../interfaces/IActions.sol';
+import {IERC20} from 'forge-std/interfaces/IERC20.sol';
 
 import {SafeManageable} from '../SafeManageable.sol';
-import {IERC20} from 'forge-std/interfaces/IERC20.sol';
 
 contract CappedTokenTransfers is IActions, SafeManageable {
   struct TokenTransfer {
@@ -26,6 +26,8 @@ contract CappedTokenTransfers is IActions, SafeManageable {
 
   constructor(address _safe) SafeManageable(_safe) {}
 
+  // ~~~ ADMIN METHODS ~~~
+
   function addCappedToken(address _token, uint256 _cap) external isMsig {
     tokenCap[_token] = _cap;
   }
@@ -46,6 +48,8 @@ contract CappedTokenTransfers is IActions, SafeManageable {
       _addTokenTransfer(_tokens[i], _recipients[i], _amounts[i]);
     }
   }
+
+  // ~~~ ACTIONS METHODS ~~~
 
   function getActions() external returns (Action[] memory) {
     Action[] memory actions = new Action[](tokenTransfers.length);
@@ -87,11 +91,13 @@ contract CappedTokenTransfers is IActions, SafeManageable {
       delete capSpent[_token];
     }
 
-    // NOTE: cleanup token transfers
+    // NOTE: cleanup token transfers (as they're already queued)
     delete tokenTransfers;
 
     return actions;
   }
+
+  // ~~~ INTERNAL METHODS ~~~
 
   function _addTokenTransfer(address _token, address _recipient, uint256 _amount) internal {
     tokenTransfers.push(TokenTransfer({token: _token, recipient: _recipient, amount: _amount}));
