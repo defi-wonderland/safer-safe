@@ -5,10 +5,11 @@ import {AllowanceClaimor} from '../AllowanceClaimor.sol';
 
 contract AllowanceClaimorFactory {
   function createAllowanceClaimor(
+    address _safe,
     address _token,
     address _tokenOwner,
     address _tokenRecipient
   ) external returns (address) {
-    return address(new AllowanceClaimor(_token, _tokenOwner, _tokenRecipient));
+    return address(new AllowanceClaimor(_safe, _token, _tokenOwner, _tokenRecipient));
   }
 }
