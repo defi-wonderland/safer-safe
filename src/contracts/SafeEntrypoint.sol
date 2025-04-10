@@ -9,145 +9,344 @@ import {SafeManageable} from './SafeManageable.sol';
 contract SafeEntrypoint is SafeManageable {
   address public immutable MULTI_SEND_CALL_ONLY;
 
-  mapping(address _actionsContract => bool _isAllowed) public allowedActions;
-  mapping(bytes32 _actionsHash => uint256 _executableAt) public actionsExecutableAt;
-  mapping(bytes32 _actionsHash => bytes _actionsData) public actionsData;
+  // Global nonce to ensure unique hashes for identical actions
+  uint256 internal _nonce;
 
-  event ActionsQueued(bytes32 actionsHash, uint256 executableAt);
-  event ActionsExecuted(bytes32 actionsHash, bytes32 safeTxHash);
+  mapping(address _actionContract => bool _isAllowed) public allowedActions;
+
+  // Mapping for pending actions
+  mapping(bytes32 _actionHash => uint256 _executableAt) public actionExecutableAt;
+  // Mapping for pending actions
+  mapping(bytes32 _actionHash => bytes _actionData) public actionData;
+
+  // Mapping for pending transactions
+  mapping(bytes32 _txHash => uint256 _executableAt) public txExecutableAt;
+  // Mapping for pending transactions
+  mapping(bytes32 _txHash => bytes _txData) public txData;
+
+  event ActionQueued(bytes32 actionHash, uint256 executableAt);
+  event ActionExecuted(bytes32 actionHash, bytes32 safeTxHash);
+  event TransactionQueued(bytes32 txHash, uint256 executableAt);
+  event TransactionExecuted(bytes32 txHash, bytes32 safeTxHash);
 
   error NotExecutable();
   error NotSuccess();
+  error NotAllowed();
 
+  /**
+   * @notice Constructor that sets up the Safe and MultiSend contracts
+   * @param _safe The Gnosis Safe contract address
+   * @param _multiSend The MultiSend contract address
+   */
   constructor(address _safe, address _multiSend) SafeManageable(_safe) {
     MULTI_SEND_CALL_ONLY = _multiSend;
   }
 
   // ~~~ ADMIN METHODS ~~~
 
-  function allowActions(address _actionsContract) external isMsig {
-    allowedActions[_actionsContract] = true;
+  /**
+   * @notice Allows an action contract to be executed by the Safe
+   * @dev Can only be called by the Safe contract
+   * @param _actionContract The address of the action contract to allow
+   */
+  function allowAction(address _actionContract) external isMsig {
+    allowedActions[_actionContract] = true;
   }
 
-  function disallowActions(address _actionsContract) external isAuthorized {
-    allowedActions[_actionsContract] = false;
+  /**
+   * @notice Disallows an action contract from being executed by the Safe
+   * @dev Can be called by any authorized address (safe owner)
+   * @param _actionContract The address of the action contract to disallow
+   */
+  function disallowAction(address _actionContract) external isAuthorized {
+    allowedActions[_actionContract] = false;
   }
 
   // ~~~ ACTIONS METHODS ~~~
 
-  function queueActions(address actionsContract) external isAuthorized {
-    IActions.Action[] memory actions = IActions(actionsContract).getActions();
+  /**
+   * @notice Queues an approved action for execution after a 1-hour delay
+   * @dev The action contract must be pre-approved using allowAction
+   * @param _actionContract The address of the approved action contract
+   */
+  function queueApprovedAction(address _actionContract) external isAuthorized {
+    if (!allowedActions[_actionContract]) revert NotAllowed();
 
-    bytes32 _actionsHash = keccak256(abi.encode(actions));
+    IActions.Action[] memory actions = IActions(_actionContract).getActions();
+    bytes32 _actionHash = keccak256(abi.encode(actions, _nonce++));
 
-    uint256 actionsDelay;
-    if (allowedActions[actionsContract]) {
-      actionsDelay = 1 hours;
-    } else {
-      actionsDelay = 7 days;
-    }
-
-    uint256 _executableAt = block.timestamp + actionsDelay;
-    actionsExecutableAt[_actionsHash] = _executableAt;
-    actionsData[_actionsHash] = abi.encode(actions);
+    uint256 _executableAt = block.timestamp + 1 hours;
+    actionExecutableAt[_actionHash] = _executableAt;
+    actionData[_actionHash] = abi.encode(actions);
 
     // NOTE: event picked up by off-chain monitoring service
-    emit ActionsQueued(_actionsHash, _executableAt);
+    emit ActionQueued(_actionHash, _executableAt);
   }
 
-  function executeActions(bytes32 _actionsHash) external payable {
-    _executeActions(_actionsHash, _getApprovedSigners(_actionsHash));
+  /**
+   * @notice Queues an arbitrary transaction for execution after a 7-day delay
+   * @dev The transaction data must be properly formatted for the target contract
+   * @param _target The address of the target contract
+   * @param _data The raw transaction data to be executed
+   * @param _value The amount of ETH to send with the transaction
+   */
+  function queueArbitraryTransaction(address _target, bytes memory _data, uint256 _value) external isAuthorized {
+    // Create a single action for the arbitrary transaction
+    IActions.Action[] memory actions = new IActions.Action[](1);
+    actions[0] = IActions.Action({target: _target, data: _data, value: _value});
+
+    // Use the existing action storage mechanism
+    bytes32 _actionHash = keccak256(abi.encode(actions, _nonce++));
+    uint256 _executableAt = block.timestamp + 7 days;
+    actionExecutableAt[_actionHash] = _executableAt;
+    actionData[_actionHash] = abi.encode(actions);
+
+    // NOTE: event picked up by off-chain monitoring service
+    emit ActionQueued(_actionHash, _executableAt);
   }
 
-  function executeActions(bytes32 _actionsHash, address[] memory _signers) external payable {
-    _executeActions(_actionsHash, _signers);
+  /**
+   * @notice Executes a queued action using the approved signers
+   * @dev The action must have passed its delay period
+   * @param _actionHash The hash of the action to execute
+   */
+  function executeAction(bytes32 _actionHash) external payable {
+    _executeAction(_actionHash, _getApprovedSigners(_actionHash));
   }
 
-  function simulateActions(bytes32 _actionsHash) external payable {
-    IActions.Action[] memory _actions = abi.decode(actionsData[_actionsHash], (IActions.Action[]));
+  /**
+   * @notice Executes a queued action using the provided signers
+   * @dev The action must have passed its delay period
+   * @param _actionHash The hash of the action to execute
+   * @param _signers The addresses of the signers to use
+   */
+  function executeAction(bytes32 _actionHash, address[] memory _signers) external payable {
+    _executeAction(_actionHash, _signers);
+  }
 
-    bytes memory _multiSendData = _parseMultiSendData(_actions);
+  /**
+   * @notice Executes a queued transaction using the approved signers
+   * @dev The transaction must have passed its delay period
+   * @param _txHash The hash of the transaction to execute
+   */
+  function executeTransaction(bytes32 _txHash) external payable {
+    _executeTransaction(_txHash, _getApprovedSigners(_txHash));
+  }
+
+  /**
+   * @notice Executes a queued transaction using the provided signers
+   * @dev The transaction must have passed its delay period
+   * @param _txHash The hash of the transaction to execute
+   * @param _signers The addresses of the signers to use
+   */
+  function executeTransaction(bytes32 _txHash, address[] memory _signers) external payable {
+    _executeTransaction(_txHash, _signers);
+  }
+
+  /**
+   * @notice Simulates the execution of an action to get its safeTxHash
+   * @dev Used to facilitate approval of the transaction
+   * @param _actionHash The hash of the action to simulate
+   */
+  function simulateActions(bytes32 _actionHash) external payable {
+    IActions.Action[] memory _actions = abi.decode(actionData[_actionHash], (IActions.Action[]));
+
+    bytes memory _multiSendData = _constructMultiSendData(_actions);
     // NOTE: tx will fail unless number of signers is 0 (only possible with state overrides)
-    bytes memory _emptySignatures = _parseSignatures(new address[](0));
+    bytes memory _emptySignatures = _constructApprovedHashSignatures(new address[](0));
 
-    uint256 _nonce = SAFE.nonce();
-    bytes32 _safeTxHash = _getSafeTxHash(_multiSendData, _nonce);
+    uint256 _safeNonce = SAFE.nonce();
+    bytes32 _safeTxHash = _getSafeTxHash(_multiSendData, _safeNonce);
     _execSafeTx(_multiSendData, _emptySignatures);
 
-    // NOTE: event emitted in simulation to facilitate safeTxHash for approval
-    emit ActionsExecuted(_actionsHash, _safeTxHash);
+    // NOTE: event emitted to facilitate safeTxHash for approval
+    emit ActionExecuted(_actionHash, _safeTxHash);
   }
 
-  function simulateActions(address _actionsContract) external payable {
+  /**
+   * @notice Simulates the execution of an action from an action contract
+   * @dev Used to facilitate approval of the transaction
+   * @param _actionContract The address of the action contract to simulate
+   */
+  function simulateAction(address _actionContract) external payable {
     // NOTE: tx will revert so we don't need to staticcall getActions()
-    IActions.Action[] memory _actions = IActions(_actionsContract).getActions();
+    IActions.Action[] memory _actions = IActions(_actionContract).getActions();
 
-    bytes32 _actionsHash = keccak256(abi.encode(_actions));
-    bytes memory _multiSendData = _parseMultiSendData(_actions);
+    bytes32 _actionHash = keccak256(abi.encode(_actions));
+    bytes memory _multiSendData = _constructMultiSendData(_actions);
     // NOTE: tx will fail unless number of signers is 0 (only possible with state overrides)
-    bytes memory _emptySignatures = _parseSignatures(new address[](0));
+    bytes memory _emptySignatures = _constructApprovedHashSignatures(new address[](0));
 
-    uint256 _nonce = SAFE.nonce();
-    bytes32 _safeTxHash = _getSafeTxHash(_multiSendData, _nonce);
+    uint256 _safeNonce = SAFE.nonce();
+    bytes32 _safeTxHash = _getSafeTxHash(_multiSendData, _safeNonce);
     _execSafeTx(_multiSendData, _emptySignatures);
 
-    // NOTE: event emitted in simulation to facilitate safeTxHash for approval
-    emit ActionsExecuted(_actionsHash, _safeTxHash);
+    // NOTE: event emitted to facilitate safeTxHash for approval
+    emit ActionExecuted(_actionHash, _safeTxHash);
+  }
+
+  /**
+   * @notice Simulates the execution of a transaction to get its safeTxHash
+   * @dev Used to facilitate approval of the transaction
+   * @param _txHash The hash of the transaction to simulate
+   */
+  function simulateTransaction(bytes32 _txHash) external payable {
+    bytes memory _data = txData[_txHash];
+    if (_data.length == 0) revert NotExecutable();
+
+    // NOTE: tx will fail unless number of signers is 0 (only possible with state overrides)
+    bytes memory _emptySignatures = _constructApprovedHashSignatures(new address[](0));
+
+    uint256 _safeNonce = SAFE.nonce();
+    bytes32 _safeTxHash = _getSafeTxHash(_data, _safeNonce);
+    _execSafeTx(_data, _emptySignatures);
+
+    // NOTE: event emitted to facilitate safeTxHash for approval
+    emit TransactionExecuted(_txHash, _safeTxHash);
   }
 
   // ~~~ VIEW METHODS ~~~
 
-  function actionsHash(address _actionsContract) external view returns (bytes32) {
-    IActions.Action[] memory actions = _simulateGetActions(_actionsContract);
+  /**
+   * @notice Gets the hash of an action from an action contract
+   * @param _actionContract The address of the action contract
+   * @return The hash of the action
+   */
+  function actionHash(address _actionContract) external view returns (bytes32) {
+    IActions.Action[] memory actions = _simulateGetActions(_actionContract);
     return keccak256(abi.encode(actions));
   }
 
-  function getSafeTxHash(address _actionsContract) external view returns (bytes32) {
-    IActions.Action[] memory _actions = _simulateGetActions(_actionsContract);
-    bytes memory _actionsData = _parseMultiSendData(_actions);
+  /**
+   * @notice Gets the Safe transaction hash for an action contract
+   * @param _actionContract The address of the action contract
+   * @return The Safe transaction hash
+   */
+  function getSafeTxHash(address _actionContract) external view returns (bytes32) {
+    IActions.Action[] memory _actions = _simulateGetActions(_actionContract);
+    bytes memory _actionsData = _constructMultiSendData(_actions);
     return _getSafeTxHash(_actionsData, SAFE.nonce());
   }
 
-  function getSafeTxHash(address _actionsContract, uint256 _nonce) external view returns (bytes32) {
-    IActions.Action[] memory _actions = _simulateGetActions(_actionsContract);
-    bytes memory _actionsData = _parseMultiSendData(_actions);
-    return _getSafeTxHash(_actionsData, _nonce);
+  /**
+   * @notice Gets the Safe transaction hash for an action contract with a specific nonce
+   * @param _actionContract The address of the action contract
+   * @param _nonce The nonce to use for the hash calculation
+   * @return The Safe transaction hash
+   */
+  function getSafeTxHash(address _actionContract, uint256 __nonce) external view returns (bytes32) {
+    IActions.Action[] memory _actions = _simulateGetActions(_actionContract);
+    bytes memory _actionsData = _constructMultiSendData(_actions);
+    return _getSafeTxHash(_actionsData, __nonce);
   }
 
-  function getSafeTxHash(bytes32 _actionsHash) external view returns (bytes32) {
-    bytes memory _actionsData = _parseMultiSendData(abi.decode(actionsData[_actionsHash], (IActions.Action[])));
+  /**
+   * @notice Gets the Safe transaction hash for an action hash
+   * @param _actionHash The hash of the action
+   * @return The Safe transaction hash
+   */
+  function getSafeTxHash(bytes32 _actionHash) external view returns (bytes32) {
+    bytes memory _actionsData = _constructMultiSendData(abi.decode(actionData[_actionHash], (IActions.Action[])));
     return _getSafeTxHash(_actionsData, SAFE.nonce());
   }
 
-  function getSafeTxHash(bytes32 _actionsHash, uint256 _nonce) external view returns (bytes32) {
-    bytes memory _actionsData = _parseMultiSendData(abi.decode(actionsData[_actionsHash], (IActions.Action[])));
-    return _getSafeTxHash(_actionsData, _nonce);
+  /**
+   * @notice Gets the Safe transaction hash for an action hash with a specific nonce
+   * @param _actionHash The hash of the action
+   * @param _nonce The nonce to use for the hash calculation
+   * @return The Safe transaction hash
+   */
+  function getSafeTxHash(bytes32 _actionHash, uint256 __nonce) external view returns (bytes32) {
+    bytes memory _actionsData = _constructMultiSendData(abi.decode(actionData[_actionHash], (IActions.Action[])));
+    return _getSafeTxHash(_actionsData, __nonce);
   }
 
+  /**
+   * @notice Gets the Safe transaction hash for a transaction hash
+   * @param _txHash The hash of the transaction
+   * @return The Safe transaction hash
+   */
+  function getSafeTxHashForTransaction(bytes32 _txHash) external view returns (bytes32) {
+    bytes memory _data = txData[_txHash];
+    if (_data.length == 0) revert NotExecutable();
+    return _getSafeTxHash(_data, SAFE.nonce());
+  }
+
+  /**
+   * @notice Gets the Safe transaction hash for a transaction hash with a specific nonce
+   * @param _txHash The hash of the transaction
+   * @param _nonce The nonce to use for the hash calculation
+   * @return The Safe transaction hash
+   */
+  function getSafeTxHashForTransaction(bytes32 _txHash, uint256 __nonce) external view returns (bytes32) {
+    bytes memory _data = txData[_txHash];
+    if (_data.length == 0) revert NotExecutable();
+    return _getSafeTxHash(_data, __nonce);
+  }
+
+  /**
+   * @notice Gets the list of signers who have approved a transaction
+   * @param _txHash The hash of the transaction
+   * @return _approvedSigners The array of approved signer addresses
+   */
   function getApprovedSigners(bytes32 _txHash) external view returns (address[] memory _approvedSigners) {
     return _getApprovedSigners(_txHash);
   }
 
   // ~~~ INTERNAL METHODS ~~~
 
-  function _executeActions(bytes32 _actionsHash, address[] memory _signers) internal {
-    if (actionsExecutableAt[_actionsHash] > block.timestamp) revert NotExecutable();
+  /**
+   * @notice Internal function to execute an action
+   * @dev Checks if the action is executable and constructs the necessary data
+   * @param _actionHash The hash of the action to execute
+   * @param _signers The addresses of the signers to use
+   */
+  function _executeAction(bytes32 _actionHash, address[] memory _signers) internal {
+    if (actionExecutableAt[_actionHash] > block.timestamp) revert NotExecutable();
 
-    IActions.Action[] memory _actions = abi.decode(actionsData[_actionsHash], (IActions.Action[]));
-
-    bytes memory _multiSendData = _parseMultiSendData(_actions);
+    bytes memory _actionsData = _constructMultiSendData(abi.decode(actionData[_actionHash], (IActions.Action[])));
     address[] memory _sortedSigners = _sortSigners(_signers);
-    bytes memory _signatures = _parseSignatures(_sortedSigners);
+    bytes memory _signatures = _constructApprovedHashSignatures(_sortedSigners);
 
     // NOTE: only for event logging
-    uint256 _nonce = SAFE.nonce();
-    bytes32 _safeTxHash = _getSafeTxHash(_multiSendData, _nonce);
-    _execSafeTx(_multiSendData, _signatures);
+    uint256 _safeNonce = SAFE.nonce();
+    bytes32 _safeTxHash = _getSafeTxHash(_actionsData, _safeNonce);
+    _execSafeTx(_actionsData, _signatures);
 
-    // NOTE: event emitted in simulation to facilitate safeTxHash for approval
-    emit ActionsExecuted(_actionsHash, _safeTxHash);
+    // NOTE: event emitted to log successful execution
+    emit ActionExecuted(_actionHash, _safeTxHash);
   }
 
+  /**
+   * @notice Internal function to execute a transaction
+   * @dev Checks if the transaction is executable and constructs the necessary data
+   * @param _txHash The hash of the transaction to execute
+   * @param _signers The addresses of the signers to use
+   */
+  function _executeTransaction(bytes32 _txHash, address[] memory _signers) internal {
+    if (txExecutableAt[_txHash] > block.timestamp) revert NotExecutable();
+
+    bytes memory _data = txData[_txHash];
+    if (_data.length == 0) revert NotExecutable();
+
+    address[] memory _sortedSigners = _sortSigners(_signers);
+    bytes memory _signatures = _constructApprovedHashSignatures(_sortedSigners);
+
+    // NOTE: only for event logging
+    uint256 _safeNonce = SAFE.nonce();
+    bytes32 _safeTxHash = _getSafeTxHash(_data, _safeNonce);
+    _execSafeTx(_data, _signatures);
+
+    // NOTE: event emitted to log successful execution
+    emit TransactionExecuted(_txHash, _safeTxHash);
+  }
+
+  /**
+   * @notice Internal function to execute a Safe transaction
+   * @dev Uses the Safe's execTransaction function
+   * @param _data The transaction data
+   * @param _signatures The signatures for the transaction
+   */
   function _execSafeTx(bytes memory _data, bytes memory _signatures) internal {
     SAFE.execTransaction{value: msg.value}({
       to: MULTI_SEND_CALL_ONLY,
@@ -163,18 +362,24 @@ contract SafeEntrypoint is SafeManageable {
     });
   }
 
+  /**
+   * @notice Internal function to simulate getting actions from a contract
+   * @dev Uses staticcall to prevent state changes
+   * @param _actionsContract The address of the actions contract
+   * @return actions The array of actions
+   */
   function _simulateGetActions(address _actionsContract) internal view returns (IActions.Action[] memory actions) {
     // Encode the function call for getActions()
-    bytes memory callData = abi.encodeWithSelector(IActions.getActions.selector, bytes(''));
+    bytes memory _callData = abi.encodeWithSelector(IActions.getActions.selector, bytes(''));
 
     // Make a static call (executes the code but reverts any state changes)
-    bytes memory returnData;
-    bool success;
-    (success, returnData) = _actionsContract.staticcall(callData);
+    bytes memory _returnData;
+    bool _success;
+    (_success, _returnData) = _actionsContract.staticcall(_callData);
 
     // If the call succeeded, decode the returned data
-    if (success && returnData.length > 0) {
-      actions = abi.decode(returnData, (IActions.Action[]));
+    if (_success && _returnData.length > 0) {
+      actions = abi.decode(_returnData, (IActions.Action[]));
     } else {
       revert NotSuccess();
     }
@@ -182,7 +387,13 @@ contract SafeEntrypoint is SafeManageable {
     return actions;
   }
 
-  function _getSafeTxHash(bytes memory _data, uint256 _nonce) internal view returns (bytes32) {
+  /**
+   * @notice Internal function to get the Safe transaction hash
+   * @param _data The transaction data
+   * @param _nonce The nonce to use
+   * @return The Safe transaction hash
+   */
+  function _getSafeTxHash(bytes memory _data, uint256 __nonce) internal view returns (bytes32) {
     return SAFE.getTransactionHash({
       to: MULTI_SEND_CALL_ONLY,
       value: 0,
@@ -193,14 +404,19 @@ contract SafeEntrypoint is SafeManageable {
       gasPrice: 0,
       gasToken: address(0),
       refundReceiver: payable(address(this)),
-      _nonce: _nonce
+      _nonce: __nonce
     });
   }
 
-  function _getApprovedSigners(bytes32 _actionsHash) internal view returns (address[] memory _approvedSigners) {
+  /**
+   * @notice Internal function to get the list of approved signers for a transaction
+   * @param _actionHash The hash of the action
+   * @return _approvedSigners The array of approved signer addresses
+   */
+  function _getApprovedSigners(bytes32 _actionHash) internal view returns (address[] memory _approvedSigners) {
     address[] memory _signers = SAFE.getOwners();
 
-    bytes memory _actionsData = _parseMultiSendData(abi.decode(actionsData[_actionsHash], (IActions.Action[])));
+    bytes memory _actionsData = _constructMultiSendData(abi.decode(actionData[_actionHash], (IActions.Action[])));
     bytes32 _txHash = _getSafeTxHash(_actionsData, SAFE.nonce());
 
     // Create a temporary array to store approved signers
@@ -229,7 +445,17 @@ contract SafeEntrypoint is SafeManageable {
 
   // ~~~ INTERNAL PURE METHODS ~~~
 
-  function _parseMultiSendData(IActions.Action[] memory _actions) internal pure returns (bytes memory _multiSendData) {
+  /**
+   * @notice Internal function to construct MultiSend data from actions
+   * @dev Encodes each action into the MultiSend format
+   * @param _actions The array of actions to encode
+   * @return _multiSendData The encoded MultiSend data
+   */
+  function _constructMultiSendData(IActions.Action[] memory _actions)
+    internal
+    pure
+    returns (bytes memory _multiSendData)
+  {
     // Initialize an empty bytes array to avoid null reference
     _multiSendData = new bytes(0);
 
@@ -263,6 +489,12 @@ contract SafeEntrypoint is SafeManageable {
     return _multiSendData;
   }
 
+  /**
+   * @notice Internal function to sort signer addresses
+   * @dev Uses bubble sort to sort addresses numerically
+   * @param _signers The array of signer addresses to sort
+   * @return The sorted array of signer addresses
+   */
   function _sortSigners(address[] memory _signers) internal pure returns (address[] memory) {
     for (uint256 i = 0; i < _signers.length; i++) {
       for (uint256 j = 0; j < _signers.length - i - 1; j++) {
@@ -279,7 +511,13 @@ contract SafeEntrypoint is SafeManageable {
     return _signers;
   }
 
-  function _parseSignatures(address[] memory _signers) internal pure returns (bytes memory) {
+  /**
+   * @notice Internal function to construct signatures for approved hashes
+   * @dev Creates a special signature format using the signer's address
+   * @param _signers The array of signer addresses
+   * @return The encoded signatures
+   */
+  function _constructApprovedHashSignatures(address[] memory _signers) internal pure returns (bytes memory) {
     // Each signature requires exactly 65 bytes:
     // r: 32 bytes
     // s: 32 bytes

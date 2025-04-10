@@ -61,22 +61,22 @@ contract BasicTest is Test {
     address _actionsContract = _simpleActionsFactory.createSimpleActions(_simpleActions);
 
     // Allow the SafeEntrypoint to call the SimpleAction contract
-    _safeEntrypoint.allowActions(address(_actionsContract));
+    _safeEntrypoint.allowAction(address(_actionsContract));
 
     // Queue the actions
-    _safeEntrypoint.queueActions(address(_actionsContract));
+    bytes32 actionHash = _safeEntrypoint.queueApprovedAction(address(_actionsContract));
 
-    bytes32 _actionsHash = _safeEntrypoint.actionsHash(_actionsContract);
-
-    // Execute the actions
+    // Wait for the timelock period
     vm.warp(block.timestamp + 1 hours);
 
-    bytes32 _safeActionsHash = _safeEntrypoint.getSafeTxHash(_actionsContract);
-    _safe.approveHash(_safeActionsHash);
+    // Get and approve the Safe transaction hash
+    bytes32 safeTxHash = _safeEntrypoint.getSafeTxHashForAction(actionHash);
+    _safe.approveHash(safeTxHash);
 
+    // Execute the action
     vm.deal(_OWNER, 1 ether);
-    _safeEntrypoint.executeActions{value: 1}(_actionsHash);
+    _safeEntrypoint.executeAction{value: 1}(actionHash);
   }
 
-  function test_executeActions() public {}
+  function test_executeAction() public {}
 }
