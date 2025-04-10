@@ -16,7 +16,7 @@ contract SafeEntrypoint is SafeManageable {
 
   // Mapping for pending actions
   mapping(bytes32 _actionHash => uint256 _executableAt) public actionExecutableAt;
-  // Mapping for pending actions - now storing the struct directly
+  // Mapping for pending actions 
   mapping(bytes32 _actionHash => IActions.Action[] _actions) public actionData;
 
   event ActionQueued(bytes32 actionHash, uint256 executableAt);
