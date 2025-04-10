@@ -64,7 +64,9 @@ contract BasicTest is Test {
     _safeEntrypoint.allowAction(address(_actionsContract));
 
     // Queue the actions
-    bytes32 actionHash = _safeEntrypoint.queueApprovedAction(address(_actionsContract));
+    _safeEntrypoint.queueApprovedAction(address(_actionsContract));
+
+    bytes32 _actionsHash = _safeEntrypoint.actionsHash(_actionsContract);
 
     // Wait for the timelock period
     vm.warp(block.timestamp + 1 hours);
