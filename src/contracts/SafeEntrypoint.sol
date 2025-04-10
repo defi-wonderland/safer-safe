@@ -19,15 +19,8 @@ contract SafeEntrypoint is SafeManageable {
   // Mapping for pending actions
   mapping(bytes32 _actionHash => bytes _actionData) public actionData;
 
-  // Mapping for pending transactions
-  mapping(bytes32 _txHash => uint256 _executableAt) public txExecutableAt;
-  // Mapping for pending transactions
-  mapping(bytes32 _txHash => bytes _txData) public txData;
-
   event ActionQueued(bytes32 actionHash, uint256 executableAt);
   event ActionExecuted(bytes32 actionHash, bytes32 safeTxHash);
-  event TransactionQueued(bytes32 txHash, uint256 executableAt);
-  event TransactionExecuted(bytes32 txHash, bytes32 safeTxHash);
 
   error NotExecutable();
   error NotSuccess();
@@ -125,25 +118,6 @@ contract SafeEntrypoint is SafeManageable {
   }
 
   /**
-   * @notice Executes a queued transaction using the approved signers
-   * @dev The transaction must have passed its delay period
-   * @param _txHash The hash of the transaction to execute
-   */
-  function executeTransaction(bytes32 _txHash) external payable {
-    _executeTransaction(_txHash, _getApprovedSigners(_txHash));
-  }
-
-  /**
-   * @notice Executes a queued transaction using the provided signers
-   * @dev The transaction must have passed its delay period
-   * @param _txHash The hash of the transaction to execute
-   * @param _signers The addresses of the signers to use
-   */
-  function executeTransaction(bytes32 _txHash, address[] memory _signers) external payable {
-    _executeTransaction(_txHash, _signers);
-  }
-
-  /**
    * @notice Simulates the execution of an action to get its safeTxHash
    * @dev Used to facilitate approval of the transaction
    * @param _actionHash The hash of the action to simulate
@@ -185,26 +159,6 @@ contract SafeEntrypoint is SafeManageable {
     emit ActionExecuted(_actionHash, _safeTxHash);
   }
 
-  /**
-   * @notice Simulates the execution of a transaction to get its safeTxHash
-   * @dev Used to facilitate approval of the transaction
-   * @param _txHash The hash of the transaction to simulate
-   */
-  function simulateTransaction(bytes32 _txHash) external payable {
-    bytes memory _data = txData[_txHash];
-    if (_data.length == 0) revert NotExecutable();
-
-    // NOTE: tx will fail unless number of signers is 0 (only possible with state overrides)
-    bytes memory _emptySignatures = _constructApprovedHashSignatures(new address[](0));
-
-    uint256 _safeNonce = SAFE.nonce();
-    bytes32 _safeTxHash = _getSafeTxHash(_data, _safeNonce);
-    _execSafeTx(_data, _emptySignatures);
-
-    // NOTE: event emitted to facilitate safeTxHash for approval
-    emit TransactionExecuted(_txHash, _safeTxHash);
-  }
-
   // ~~~ VIEW METHODS ~~~
 
   /**
@@ -231,7 +185,7 @@ contract SafeEntrypoint is SafeManageable {
   /**
    * @notice Gets the Safe transaction hash for an action contract with a specific nonce
    * @param _actionContract The address of the action contract
-   * @param _nonce The nonce to use for the hash calculation
+   * @param __nonce The nonce to use for the hash calculation
    * @return The Safe transaction hash
    */
   function getSafeTxHash(address _actionContract, uint256 __nonce) external view returns (bytes32) {
@@ -253,7 +207,7 @@ contract SafeEntrypoint is SafeManageable {
   /**
    * @notice Gets the Safe transaction hash for an action hash with a specific nonce
    * @param _actionHash The hash of the action
-   * @param _nonce The nonce to use for the hash calculation
+   * @param __nonce The nonce to use for the hash calculation
    * @return The Safe transaction hash
    */
   function getSafeTxHash(bytes32 _actionHash, uint256 __nonce) external view returns (bytes32) {
@@ -262,35 +216,12 @@ contract SafeEntrypoint is SafeManageable {
   }
 
   /**
-   * @notice Gets the Safe transaction hash for a transaction hash
-   * @param _txHash The hash of the transaction
-   * @return The Safe transaction hash
-   */
-  function getSafeTxHashForTransaction(bytes32 _txHash) external view returns (bytes32) {
-    bytes memory _data = txData[_txHash];
-    if (_data.length == 0) revert NotExecutable();
-    return _getSafeTxHash(_data, SAFE.nonce());
-  }
-
-  /**
-   * @notice Gets the Safe transaction hash for a transaction hash with a specific nonce
-   * @param _txHash The hash of the transaction
-   * @param _nonce The nonce to use for the hash calculation
-   * @return The Safe transaction hash
-   */
-  function getSafeTxHashForTransaction(bytes32 _txHash, uint256 __nonce) external view returns (bytes32) {
-    bytes memory _data = txData[_txHash];
-    if (_data.length == 0) revert NotExecutable();
-    return _getSafeTxHash(_data, __nonce);
-  }
-
-  /**
    * @notice Gets the list of signers who have approved a transaction
-   * @param _txHash The hash of the transaction
+   * @param _actionHash The hash of the action
    * @return _approvedSigners The array of approved signer addresses
    */
-  function getApprovedSigners(bytes32 _txHash) external view returns (address[] memory _approvedSigners) {
-    return _getApprovedSigners(_txHash);
+  function getApprovedSigners(bytes32 _actionHash) external view returns (address[] memory _approvedSigners) {
+    return _getApprovedSigners(_actionHash);
   }
 
   // ~~~ INTERNAL METHODS ~~~
@@ -315,30 +246,6 @@ contract SafeEntrypoint is SafeManageable {
 
     // NOTE: event emitted to log successful execution
     emit ActionExecuted(_actionHash, _safeTxHash);
-  }
-
-  /**
-   * @notice Internal function to execute a transaction
-   * @dev Checks if the transaction is executable and constructs the necessary data
-   * @param _txHash The hash of the transaction to execute
-   * @param _signers The addresses of the signers to use
-   */
-  function _executeTransaction(bytes32 _txHash, address[] memory _signers) internal {
-    if (txExecutableAt[_txHash] > block.timestamp) revert NotExecutable();
-
-    bytes memory _data = txData[_txHash];
-    if (_data.length == 0) revert NotExecutable();
-
-    address[] memory _sortedSigners = _sortSigners(_signers);
-    bytes memory _signatures = _constructApprovedHashSignatures(_sortedSigners);
-
-    // NOTE: only for event logging
-    uint256 _safeNonce = SAFE.nonce();
-    bytes32 _safeTxHash = _getSafeTxHash(_data, _safeNonce);
-    _execSafeTx(_data, _signatures);
-
-    // NOTE: event emitted to log successful execution
-    emit TransactionExecuted(_txHash, _safeTxHash);
   }
 
   /**
@@ -390,7 +297,7 @@ contract SafeEntrypoint is SafeManageable {
   /**
    * @notice Internal function to get the Safe transaction hash
    * @param _data The transaction data
-   * @param _nonce The nonce to use
+   * @param __nonce The nonce to use
    * @return The Safe transaction hash
    */
   function _getSafeTxHash(bytes memory _data, uint256 __nonce) internal view returns (bytes32) {
