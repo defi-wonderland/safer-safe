@@ -200,6 +200,17 @@ contract SafeEntrypoint is SafeManageable {
     _approvedSigners = _getApprovedSigners(_actionHash);
   }
 
+  /**
+   * @notice Gets the hash of an action from an action contract
+   * @param _actionContract The address of the action contract
+   * @param _actionNonce The nonce of the action
+   * @return _actionHash The hash of the action
+   */
+  function actionHash(address _actionContract, uint256 _actionNonce) external view returns (bytes32 _actionHash) {
+    IActions.Action[] memory actions = _fetchActions(_actionContract);
+    _actionHash = keccak256(abi.encode(actions, _actionNonce));
+  }
+
   // ~~~ INTERNAL METHODS ~~~
 
   /**
