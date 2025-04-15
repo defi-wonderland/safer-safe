@@ -16,8 +16,8 @@ contract SafeEntrypoint is SafeManageable {
 
   // Mapping for pending actions
   mapping(bytes32 _actionHash => uint256 _executableAt) public actionExecutableAt;
-  // Mapping for pending actions 
-  mapping(bytes32 _actionHash => IActions.Action[] _actions) public actionData;
+  // Mapping for pending actions
+  mapping(bytes32 _actionHash => bytes _actionData) public actionData;
 
   event ActionQueued(bytes32 actionHash, uint256 executableAt);
   event ActionExecuted(bytes32 actionHash, bytes32 safeTxHash);
@@ -62,7 +62,7 @@ contract SafeEntrypoint is SafeManageable {
    * @dev The action contract must be pre-approved using allowAction
    * @param _actionContract The address of the approved action contract
    */
-  function queueApprovedAction(address _actionContract) external isAuthorized {
+  function queueApprovedAction(address _actionContract) external isAuthorized returns (bytes32 _actionHash) {
     if (!allowedActions[_actionContract]) revert NotAllowed();
 
     IActions.Action[] memory actions = IActions(_actionContract).getActions();
@@ -70,7 +70,9 @@ contract SafeEntrypoint is SafeManageable {
 
     uint256 _executableAt = block.timestamp + 1 hours;
     actionExecutableAt[_actionHash] = _executableAt;
-    actionData[_actionHash] = actions;
+    actionData[_actionHash] = abi.encode(actions);
+
+    return _actionHash;
 
     // NOTE: event picked up by off-chain monitoring service
     emit ActionQueued(_actionHash, _executableAt);
@@ -83,7 +85,11 @@ contract SafeEntrypoint is SafeManageable {
    * @param _data The raw transaction data to be executed
    * @param _value The amount of ETH to send with the transaction
    */
-  function queueArbitraryTransaction(address _target, bytes memory _data, uint256 _value) external isAuthorized {
+  function queueArbitraryTransaction(
+    address _target,
+    bytes memory _data,
+    uint256 _value
+  ) external isAuthorized returns (bytes32 _actionHash) {
     // Create a single action for the arbitrary transaction
     IActions.Action[] memory actions = new IActions.Action[](1);
     actions[0] = IActions.Action({target: _target, data: _data, value: _value});
@@ -92,7 +98,9 @@ contract SafeEntrypoint is SafeManageable {
     bytes32 _actionHash = keccak256(abi.encode(actions, _nonce++));
     uint256 _executableAt = block.timestamp + 7 days;
     actionExecutableAt[_actionHash] = _executableAt;
-    actionData[_actionHash] = actions;
+    actionData[_actionHash] = abi.encode(actions);
+
+    return _actionHash;
 
     // NOTE: event picked up by off-chain monitoring service
     emit ActionQueued(_actionHash, _executableAt);
@@ -123,7 +131,7 @@ contract SafeEntrypoint is SafeManageable {
    * @param _actionHash The hash of the action to simulate
    */
   function simulateActions(bytes32 _actionHash) external payable {
-    IActions.Action[] memory _actions = actionData[_actionHash];
+    IActions.Action[] memory _actions = abi.decode(actionData[_actionHash], (IActions.Action[]));
 
     bytes memory _multiSendData = _constructMultiSendData(_actions);
     // NOTE: tx will fail unless number of signers is 0 (only possible with state overrides)
@@ -146,6 +154,7 @@ contract SafeEntrypoint is SafeManageable {
     // NOTE: tx will revert so we don't need to staticcall getActions()
     IActions.Action[] memory _actions = IActions(_actionContract).getActions();
 
+    // Include the nonce in the hash calculation for consistency with other functions
     bytes32 _actionHash = keccak256(abi.encode(_actions, _nonce));
     bytes memory _multiSendData = _constructMultiSendData(_actions);
     // NOTE: tx will fail unless number of signers is 0 (only possible with state overrides)
@@ -160,16 +169,6 @@ contract SafeEntrypoint is SafeManageable {
   }
 
   // ~~~ VIEW METHODS ~~~
-
-  /**
-   * @notice Gets the hash of an action from an action contract
-   * @param _actionContract The address of the action contract
-   * @return The hash of the action
-   */
-  function actionHash(address _actionContract) external view returns (bytes32) {
-    IActions.Action[] memory actions = _simulateGetActions(_actionContract);
-    return keccak256(abi.encode(actions));
-  }
 
   /**
    * @notice Gets the Safe transaction hash for an action contract
@@ -200,7 +199,8 @@ contract SafeEntrypoint is SafeManageable {
    * @return The Safe transaction hash
    */
   function getSafeTxHash(bytes32 _actionHash) external view returns (bytes32) {
-    bytes memory _actionsData = _constructMultiSendData(actionData[_actionHash]);
+    IActions.Action[] memory _actions = abi.decode(actionData[_actionHash], (IActions.Action[]));
+    bytes memory _actionsData = _constructMultiSendData(_actions);
     return _getSafeTxHash(_actionsData, SAFE.nonce());
   }
 
@@ -211,7 +211,7 @@ contract SafeEntrypoint is SafeManageable {
    * @return The Safe transaction hash
    */
   function getSafeTxHash(bytes32 _actionHash, uint256 __nonce) external view returns (bytes32) {
-    bytes memory _actionsData = _constructMultiSendData(actionData[_actionHash]);
+    bytes memory _actionsData = _constructMultiSendData(abi.decode(actionData[_actionHash], (IActions.Action[])));
     return _getSafeTxHash(_actionsData, __nonce);
   }
 
@@ -235,7 +235,7 @@ contract SafeEntrypoint is SafeManageable {
   function _executeAction(bytes32 _actionHash, address[] memory _signers) internal {
     if (actionExecutableAt[_actionHash] > block.timestamp) revert NotExecutable();
 
-    bytes memory _actionsData = _constructMultiSendData(actionData[_actionHash]);
+    bytes memory _actionsData = _constructMultiSendData(abi.decode(actionData[_actionHash], (IActions.Action[])));
     address[] memory _sortedSigners = _sortSigners(_signers);
     bytes memory _signatures = _constructApprovedHashSignatures(_sortedSigners);
 
@@ -323,7 +323,7 @@ contract SafeEntrypoint is SafeManageable {
   function _getApprovedSigners(bytes32 _actionHash) internal view returns (address[] memory _approvedSigners) {
     address[] memory _signers = SAFE.getOwners();
 
-    bytes memory _actionsData = _constructMultiSendData(actionData[_actionHash]);
+    bytes memory _actionsData = _constructMultiSendData(abi.decode(actionData[_actionHash], (IActions.Action[])));
     bytes32 _txHash = _getSafeTxHash(_actionsData, SAFE.nonce());
 
     // Create a temporary array to store approved signers
