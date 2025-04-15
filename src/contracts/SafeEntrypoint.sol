@@ -173,46 +173,46 @@ contract SafeEntrypoint is SafeManageable {
   /**
    * @notice Gets the Safe transaction hash for an action contract
    * @param _actionContract The address of the action contract
-   * @return The Safe transaction hash
+   * @return _safeTxHash The Safe transaction hash
    */
-  function getSafeTxHash(address _actionContract) external view returns (bytes32) {
-    IActions.Action[] memory _actions = _simulateGetActions(_actionContract);
+  function getSafeTxHash(address _actionContract) external view returns (bytes32 _safeTxHash) {
+    IActions.Action[] memory _actions = _fetchActions(_actionContract);
     bytes memory _multiSendData = _constructMultiSendData(_actions);
-    return _getSafeTxHash(_multiSendData, SAFE.nonce());
+    _safeTxHash = _getSafeTxHash(_multiSendData, SAFE.nonce());
   }
 
   /**
    * @notice Gets the Safe transaction hash for an action contract with a specific nonce
    * @param _actionContract The address of the action contract
-   * @param __nonce The nonce to use for the hash calculation
-   * @return The Safe transaction hash
+   * @param _safeNonce The nonce to use for the hash calculation
+   * @return _safeTxHash The Safe transaction hash
    */
-  function getSafeTxHash(address _actionContract, uint256 __nonce) external view returns (bytes32) {
-    IActions.Action[] memory _actions = _simulateGetActions(_actionContract);
+  function getSafeTxHash(address _actionContract, uint256 _safeNonce) external view returns (bytes32 _safeTxHash) {
+    IActions.Action[] memory _actions = _fetchActions(_actionContract);
     bytes memory _multiSendData = _constructMultiSendData(_actions);
-    return _getSafeTxHash(_multiSendData, __nonce);
+    _safeTxHash = _getSafeTxHash(_multiSendData, _safeNonce);
   }
 
   /**
    * @notice Gets the Safe transaction hash for an action hash
    * @param _actionHash The hash of the action
-   * @return The Safe transaction hash
+   * @return _safeTxHash The Safe transaction hash
    */
-  function getSafeTxHash(bytes32 _actionHash) external view returns (bytes32) {
+  function getSafeTxHash(bytes32 _actionHash) external view returns (bytes32 _safeTxHash) {
     IActions.Action[] memory _actions = abi.decode(actionData[_actionHash], (IActions.Action[]));
     bytes memory _multiSendData = _constructMultiSendData(_actions);
-    return _getSafeTxHash(_multiSendData, SAFE.nonce());
+    _safeTxHash = _getSafeTxHash(_multiSendData, SAFE.nonce());
   }
 
   /**
    * @notice Gets the Safe transaction hash for an action hash with a specific nonce
    * @param _actionHash The hash of the action
    * @param __nonce The nonce to use for the hash calculation
-   * @return The Safe transaction hash
+   * @return _safeTxHash The Safe transaction hash
    */
-  function getSafeTxHash(bytes32 _actionHash, uint256 __nonce) external view returns (bytes32) {
+  function getSafeTxHash(bytes32 _actionHash, uint256 __nonce) external view returns (bytes32 _safeTxHash) {
     bytes memory _multiSendData = _constructMultiSendData(abi.decode(actionData[_actionHash], (IActions.Action[])));
-    return _getSafeTxHash(_multiSendData, __nonce);
+    _safeTxHash = _getSafeTxHash(_multiSendData, __nonce);
   }
 
   /**
@@ -221,7 +221,7 @@ contract SafeEntrypoint is SafeManageable {
    * @return _approvedSigners The array of approved signer addresses
    */
   function getApprovedSigners(bytes32 _actionHash) external view returns (address[] memory _approvedSigners) {
-    return _getApprovedSigners(_actionHash);
+    _approvedSigners = _getApprovedSigners(_actionHash);
   }
 
   // ~~~ INTERNAL METHODS ~~~
@@ -270,12 +270,12 @@ contract SafeEntrypoint is SafeManageable {
   }
 
   /**
-   * @notice Internal function to simulate getting actions from a contract
+   * @notice Internal function to fetch actions from a contract
    * @dev Uses staticcall to prevent state changes
    * @param _actionsContract The address of the actions contract
    * @return actions The array of actions
    */
-  function _simulateGetActions(address _actionsContract) internal view returns (IActions.Action[] memory actions) {
+  function _fetchActions(address _actionsContract) internal view returns (IActions.Action[] memory actions) {
     // Encode the function call for getActions()
     bytes memory _callData = abi.encodeWithSelector(IActions.getActions.selector, bytes(''));
 
