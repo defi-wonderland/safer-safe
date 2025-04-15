@@ -130,7 +130,7 @@ contract SafeEntrypoint is SafeManageable {
    * @dev Used to facilitate approval of the transaction
    * @param _actionHash The hash of the action to simulate
    */
-  function simulateActions(bytes32 _actionHash) external payable {
+  function simulateAction(bytes32 _actionHash) external payable {
     IActions.Action[] memory _actions = abi.decode(actionData[_actionHash], (IActions.Action[]));
 
     bytes memory _multiSendData = _constructMultiSendData(_actions);
@@ -177,8 +177,8 @@ contract SafeEntrypoint is SafeManageable {
    */
   function getSafeTxHash(address _actionContract) external view returns (bytes32) {
     IActions.Action[] memory _actions = _simulateGetActions(_actionContract);
-    bytes memory _actionsData = _constructMultiSendData(_actions);
-    return _getSafeTxHash(_actionsData, SAFE.nonce());
+    bytes memory _multiSendData = _constructMultiSendData(_actions);
+    return _getSafeTxHash(_multiSendData, SAFE.nonce());
   }
 
   /**
@@ -189,8 +189,8 @@ contract SafeEntrypoint is SafeManageable {
    */
   function getSafeTxHash(address _actionContract, uint256 __nonce) external view returns (bytes32) {
     IActions.Action[] memory _actions = _simulateGetActions(_actionContract);
-    bytes memory _actionsData = _constructMultiSendData(_actions);
-    return _getSafeTxHash(_actionsData, __nonce);
+    bytes memory _multiSendData = _constructMultiSendData(_actions);
+    return _getSafeTxHash(_multiSendData, __nonce);
   }
 
   /**
@@ -200,8 +200,8 @@ contract SafeEntrypoint is SafeManageable {
    */
   function getSafeTxHash(bytes32 _actionHash) external view returns (bytes32) {
     IActions.Action[] memory _actions = abi.decode(actionData[_actionHash], (IActions.Action[]));
-    bytes memory _actionsData = _constructMultiSendData(_actions);
-    return _getSafeTxHash(_actionsData, SAFE.nonce());
+    bytes memory _multiSendData = _constructMultiSendData(_actions);
+    return _getSafeTxHash(_multiSendData, SAFE.nonce());
   }
 
   /**
@@ -211,8 +211,8 @@ contract SafeEntrypoint is SafeManageable {
    * @return The Safe transaction hash
    */
   function getSafeTxHash(bytes32 _actionHash, uint256 __nonce) external view returns (bytes32) {
-    bytes memory _actionsData = _constructMultiSendData(abi.decode(actionData[_actionHash], (IActions.Action[])));
-    return _getSafeTxHash(_actionsData, __nonce);
+    bytes memory _multiSendData = _constructMultiSendData(abi.decode(actionData[_actionHash], (IActions.Action[])));
+    return _getSafeTxHash(_multiSendData, __nonce);
   }
 
   /**
