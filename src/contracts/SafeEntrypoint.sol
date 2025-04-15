@@ -21,10 +21,12 @@ contract SafeEntrypoint is SafeManageable {
 
   event ActionQueued(bytes32 actionHash, uint256 executableAt);
   event ActionExecuted(bytes32 actionHash, bytes32 safeTxHash);
+  event ActionUnqueued(bytes32 actionHash);
 
   error NotExecutable();
   error NotSuccess();
   error NotAllowed();
+  error ActionNotFound();
 
   /**
    * @notice Constructor that sets up the Safe and MultiSend contracts
@@ -166,6 +168,23 @@ contract SafeEntrypoint is SafeManageable {
 
     // NOTE: event emitted to facilitate safeTxHash for approval
     emit ActionExecuted(_actionHash, _safeTxHash);
+  }
+
+  /**
+   * @notice Unqueues a pending action before it is executed
+   * @dev Can only be called by authorized addresses (safe owners)
+   * @param _actionHash The hash of the action to unqueue
+   */
+  function unqueueAction(bytes32 _actionHash) external isAuthorized {
+    // Check if the action exists
+    if (actionExecutableAt[_actionHash] == 0) revert ActionNotFound();
+
+    // Clear the action data
+    delete actionExecutableAt[_actionHash];
+    delete actionData[_actionHash];
+
+    // Emit event for off-chain monitoring
+    emit ActionUnqueued(_actionHash);
   }
 
   // ~~~ VIEW METHODS ~~~
