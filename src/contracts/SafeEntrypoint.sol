@@ -68,16 +68,16 @@ contract SafeEntrypoint is SafeManageable {
     if (!allowedActions[_actionContract]) revert NotAllowed();
 
     IActions.Action[] memory actions = IActions(_actionContract).getActions();
-    bytes32 _actionHash = keccak256(abi.encode(actions, _nonce++));
+    _actionHash = keccak256(abi.encode(actions, _nonce++));
 
     uint256 _executableAt = block.timestamp + 1 hours;
     actionExecutableAt[_actionHash] = _executableAt;
     actionData[_actionHash] = abi.encode(actions);
 
-    return _actionHash;
-
     // NOTE: event picked up by off-chain monitoring service
     emit ActionQueued(_actionHash, _executableAt);
+
+    return _actionHash;
   }
 
   /**
@@ -97,15 +97,15 @@ contract SafeEntrypoint is SafeManageable {
     actions[0] = IActions.Action({target: _target, data: _data, value: _value});
 
     // Use the existing action storage mechanism
-    bytes32 _actionHash = keccak256(abi.encode(actions, _nonce++));
+    _actionHash = keccak256(abi.encode(actions, _nonce++));
     uint256 _executableAt = block.timestamp + 7 days;
     actionExecutableAt[_actionHash] = _executableAt;
     actionData[_actionHash] = abi.encode(actions);
 
-    return _actionHash;
-
     // NOTE: event picked up by off-chain monitoring service
     emit ActionQueued(_actionHash, _executableAt);
+
+    return _actionHash;
   }
 
   /**
@@ -125,49 +125,6 @@ contract SafeEntrypoint is SafeManageable {
    */
   function executeAction(bytes32 _actionHash, address[] memory _signers) external payable {
     _executeAction(_actionHash, _signers);
-  }
-
-  /**
-   * @notice Simulates the execution of an action to get its safeTxHash
-   * @dev Used to facilitate approval of the transaction
-   * @param _actionHash The hash of the action to simulate
-   */
-  function simulateAction(bytes32 _actionHash) external payable {
-    IActions.Action[] memory _actions = abi.decode(actionData[_actionHash], (IActions.Action[]));
-
-    bytes memory _multiSendData = _constructMultiSendData(_actions);
-    // NOTE: tx will fail unless number of signers is 0 (only possible with state overrides)
-    bytes memory _emptySignatures = _constructApprovedHashSignatures(new address[](0));
-
-    uint256 _safeNonce = SAFE.nonce();
-    bytes32 _safeTxHash = _getSafeTxHash(_multiSendData, _safeNonce);
-    _execSafeTx(_multiSendData, _emptySignatures);
-
-    // NOTE: event emitted to facilitate safeTxHash for approval
-    emit ActionExecuted(_actionHash, _safeTxHash);
-  }
-
-  /**
-   * @notice Simulates the execution of an action from an action contract
-   * @dev Used to facilitate approval of the transaction
-   * @param _actionContract The address of the action contract to simulate
-   */
-  function simulateAction(address _actionContract) external payable {
-    // NOTE: tx will revert so we don't need to staticcall getActions()
-    IActions.Action[] memory _actions = IActions(_actionContract).getActions();
-
-    // Include the nonce in the hash calculation for consistency with other functions
-    bytes32 _actionHash = keccak256(abi.encode(_actions, _nonce));
-    bytes memory _multiSendData = _constructMultiSendData(_actions);
-    // NOTE: tx will fail unless number of signers is 0 (only possible with state overrides)
-    bytes memory _emptySignatures = _constructApprovedHashSignatures(new address[](0));
-
-    uint256 _safeNonce = SAFE.nonce();
-    bytes32 _safeTxHash = _getSafeTxHash(_multiSendData, _safeNonce);
-    _execSafeTx(_multiSendData, _emptySignatures);
-
-    // NOTE: event emitted to facilitate safeTxHash for approval
-    emit ActionExecuted(_actionHash, _safeTxHash);
   }
 
   /**
