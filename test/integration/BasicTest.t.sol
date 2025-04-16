@@ -8,8 +8,8 @@ import {SimpleActionsFactory} from 'contracts/actions/factories/SimpleActionsFac
 import {Test} from 'forge-std/Test.sol';
 import {SimpleAction} from 'interfaces/SimpleAction.sol';
 
-import {Safe} from 'safe-contracts/contracts/Safe.sol';
-import {SafeProxyFactory} from 'safe-contracts/contracts/proxies/SafeProxyFactory.sol';
+import {Safe} from '@safe-smart-account/Safe.sol';
+import {SafeProxyFactory} from '@safe-smart-account/proxies/SafeProxyFactory.sol';
 
 contract BasicTest is Test {
   uint256 internal constant _FORK_BLOCK = 18_920_905;

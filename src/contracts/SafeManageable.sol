@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.29;
 
-import {ISafe} from '../interfaces/ISafe.sol';
+import {ISafe} from '@safe-smart-account/interfaces/ISafe.sol';
 
 abstract contract SafeManageable {
   ISafe public immutable SAFE;

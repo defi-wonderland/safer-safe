@@ -2,9 +2,11 @@
 pragma solidity 0.8.29;
 
 import {IActions} from '../interfaces/IActions.sol';
-import {IMultiSendCallOnly} from '../interfaces/IMultiSendCallOnly.sol';
 
 import {SafeManageable} from './SafeManageable.sol';
+
+import {Enum} from '@safe-smart-account/libraries/Enum.sol';
+import {MultiSendCallOnly} from '@safe-smart-account/libraries/MultiSendCallOnly.sol';
 
 contract SafeEntrypoint is SafeManageable {
   address public immutable MULTI_SEND_CALL_ONLY;
@@ -253,7 +255,7 @@ contract SafeEntrypoint is SafeManageable {
       to: MULTI_SEND_CALL_ONLY,
       value: 0,
       data: _data,
-      operation: 1, // DELEGATE_CALL
+      operation: Enum.Operation.DelegateCall,
       safeTxGas: 0,
       baseGas: 0,
       gasPrice: 0,
@@ -299,7 +301,7 @@ contract SafeEntrypoint is SafeManageable {
       to: MULTI_SEND_CALL_ONLY,
       value: 0,
       data: _data,
-      operation: 1, // DELEGATE_CALL
+      operation: Enum.Operation.DelegateCall,
       safeTxGas: 0,
       baseGas: 0,
       gasPrice: 0,
@@ -327,7 +329,7 @@ contract SafeEntrypoint is SafeManageable {
     // Single pass through all signers
     for (uint256 i = 0; i < _signers.length; i++) {
       // Check if this signer has approved the hash
-      if (SAFE.approvedHashes(_signers[i], _txHash)) {
+      if (SAFE.approvedHashes(_signers[i], _txHash) == 1) {
         tempApproved[approvedCount] = _signers[i];
         approvedCount++;
       }
@@ -385,7 +387,7 @@ contract SafeEntrypoint is SafeManageable {
       _multiSendData = abi.encodePacked(_multiSendData, encodedAction);
     }
 
-    _multiSendData = abi.encodeWithSelector(IMultiSendCallOnly.multiSend.selector, _multiSendData);
+    _multiSendData = abi.encodeWithSelector(MultiSendCallOnly.multiSend.selector, _multiSendData);
 
     return _multiSendData;
   }

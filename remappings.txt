@@ -3,3 +3,5 @@ halmos-cheatcodes=node_modules/halmos-cheatcodes
 
 contracts/=src/contracts
 interfaces/=src/interfaces
+
+@safe-smart-account/=node_modules/@safe-global/safe-contracts/contracts
