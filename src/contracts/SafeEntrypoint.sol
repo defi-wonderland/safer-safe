@@ -28,6 +28,7 @@ contract SafeEntrypoint is SafeManageable {
   error NotAllowed();
   error ActionNotFound();
   error ActionAlreadyExecuted();
+  error EmptyActionsArray();
 
   /**
    * @notice Constructor that sets up the Safe and MultiSend contracts
@@ -82,26 +83,25 @@ contract SafeEntrypoint is SafeManageable {
   }
 
   /**
-   * @notice Queues an arbitrary transaction for execution after a 7-day delay
-   * @dev The transaction data must be properly formatted for the target contract
-   * @param _target The address of the target contract
-   * @param _data The raw transaction data to be executed
-   * @param _value The amount of ETH to send with the transaction
+   * @notice Queues arbitrary transactions for execution after a 7-day delay
+   * @dev The transaction data must be properly formatted for each target contract
+   * @param _actions The array of actions to queue
    */
-  function queueArbitraryTransaction(
-    address _target,
-    bytes memory _data,
-    uint256 _value
-  ) external isAuthorized returns (bytes32 _actionHash) {
-    // Create a single action for the arbitrary transaction
-    IActions.Action[] memory actions = new IActions.Action[](1);
-    actions[0] = IActions.Action({target: _target, data: _data, value: _value});
+  function queueArbitraryTransactions(IActions.Action[] memory _actions)
+    external
+    isAuthorized
+    returns (bytes32 _actionHash)
+  {
+    // Validate that the actions array is not empty
+    if (_actions.length == 0) {
+      revert EmptyActionsArray();
+    }
 
     // Use the existing action storage mechanism
-    _actionHash = keccak256(abi.encode(actions, _nonce++));
+    _actionHash = keccak256(abi.encode(_actions, _nonce++));
     uint256 _executableAt = block.timestamp + 7 days;
     actionExecutableAt[_actionHash] = _executableAt;
-    actionData[_actionHash] = abi.encode(actions);
+    actionData[_actionHash] = abi.encode(_actions);
 
     // NOTE: event picked up by off-chain monitoring service
     emit ActionQueued(_actionHash, _executableAt);
