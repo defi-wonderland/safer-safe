@@ -183,12 +183,12 @@ contract SafeEntrypoint is SafeManageable {
   /**
    * @notice Gets the Safe transaction hash for an action hash with a specific nonce
    * @param _actionHash The hash of the action
-   * @param __nonce The nonce to use for the hash calculation
+   * @param _safeNonce The nonce to use for the hash calculation
    * @return _safeTxHash The Safe transaction hash
    */
-  function getSafeTxHash(bytes32 _actionHash, uint256 __nonce) external view returns (bytes32 _safeTxHash) {
+  function getSafeTxHash(bytes32 _actionHash, uint256 _safeNonce) external view returns (bytes32 _safeTxHash) {
     bytes memory _multiSendData = _constructMultiSendData(abi.decode(actionData[_actionHash], (IActions.Action[])));
-    _safeTxHash = _getSafeTxHash(_multiSendData, __nonce);
+    _safeTxHash = _getSafeTxHash(_multiSendData, _safeNonce);
   }
 
   /**
@@ -206,7 +206,7 @@ contract SafeEntrypoint is SafeManageable {
    * @param _actionNonce The nonce of the action
    * @return _actionHash The hash of the action
    */
-  function actionHash(address _actionContract, uint256 _actionNonce) external view returns (bytes32 _actionHash) {
+  function getActionHash(address _actionContract, uint256 _actionNonce) external view returns (bytes32 _actionHash) {
     IActions.Action[] memory actions = _fetchActions(_actionContract);
     _actionHash = keccak256(abi.encode(actions, _actionNonce));
   }
@@ -222,14 +222,14 @@ contract SafeEntrypoint is SafeManageable {
   function _executeAction(bytes32 _actionHash, address[] memory _signers) internal {
     if (actionExecutableAt[_actionHash] > block.timestamp) revert NotExecutable();
 
-    bytes memory _actionsData = _constructMultiSendData(abi.decode(actionData[_actionHash], (IActions.Action[])));
+    bytes memory _multiSendData = _constructMultiSendData(abi.decode(actionData[_actionHash], (IActions.Action[])));
     address[] memory _sortedSigners = _sortSigners(_signers);
     bytes memory _signatures = _constructApprovedHashSignatures(_sortedSigners);
 
     // NOTE: only for event logging
     uint256 _safeNonce = SAFE.nonce();
-    bytes32 _safeTxHash = _getSafeTxHash(_actionsData, _safeNonce);
-    _execSafeTx(_actionsData, _signatures);
+    bytes32 _safeTxHash = _getSafeTxHash(_multiSendData, _safeNonce);
+    _execSafeTx(_multiSendData, _signatures);
 
     // NOTE: event emitted to log successful execution
     emit ActionExecuted(_actionHash, _safeTxHash);
@@ -259,17 +259,17 @@ contract SafeEntrypoint is SafeManageable {
   /**
    * @notice Internal function to fetch actions from a contract
    * @dev Uses staticcall to prevent state changes
-   * @param _actionsContract The address of the actions contract
+   * @param _actionContract The address of the action contract
    * @return actions The array of actions
    */
-  function _fetchActions(address _actionsContract) internal view returns (IActions.Action[] memory actions) {
+  function _fetchActions(address _actionContract) internal view returns (IActions.Action[] memory actions) {
     // Encode the function call for getActions()
     bytes memory _callData = abi.encodeWithSelector(IActions.getActions.selector, bytes(''));
 
     // Make a static call (executes the code but reverts any state changes)
     bytes memory _returnData;
     bool _success;
-    (_success, _returnData) = _actionsContract.staticcall(_callData);
+    (_success, _returnData) = _actionContract.staticcall(_callData);
 
     // If the call succeeded, decode the returned data
     if (_success && _returnData.length > 0) {
@@ -284,10 +284,10 @@ contract SafeEntrypoint is SafeManageable {
   /**
    * @notice Internal function to get the Safe transaction hash
    * @param _data The transaction data
-   * @param __nonce The nonce to use
+   * @param _safeNonce The nonce to use
    * @return The Safe transaction hash
    */
-  function _getSafeTxHash(bytes memory _data, uint256 __nonce) internal view returns (bytes32) {
+  function _getSafeTxHash(bytes memory _data, uint256 _safeNonce) internal view returns (bytes32) {
     return SAFE.getTransactionHash({
       to: MULTI_SEND_CALL_ONLY,
       value: 0,
@@ -298,7 +298,7 @@ contract SafeEntrypoint is SafeManageable {
       gasPrice: 0,
       gasToken: address(0),
       refundReceiver: payable(address(this)),
-      _nonce: __nonce
+      _nonce: _safeNonce
     });
   }
 
@@ -310,8 +310,8 @@ contract SafeEntrypoint is SafeManageable {
   function _getApprovedSigners(bytes32 _actionHash) internal view returns (address[] memory _approvedSigners) {
     address[] memory _signers = SAFE.getOwners();
 
-    bytes memory _actionsData = _constructMultiSendData(abi.decode(actionData[_actionHash], (IActions.Action[])));
-    bytes32 _txHash = _getSafeTxHash(_actionsData, SAFE.nonce());
+    bytes memory _multiSendData = _constructMultiSendData(abi.decode(actionData[_actionHash], (IActions.Action[])));
+    bytes32 _txHash = _getSafeTxHash(_multiSendData, SAFE.nonce());
 
     // Create a temporary array to store approved signers
     address[] memory tempApproved = new address[](_signers.length);

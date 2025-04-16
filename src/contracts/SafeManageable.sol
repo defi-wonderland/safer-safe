@@ -9,8 +9,7 @@ abstract contract SafeManageable {
   error NotAuthorized();
 
   modifier isMsig() {
-    // TODO: uncomment after making the test call from the Safe
-    // if (msg.sender != address(SAFE)) revert NotAuthorized();
+    if (msg.sender != address(SAFE)) revert NotAuthorized();
     _;
   }
 

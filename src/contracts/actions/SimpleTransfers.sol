@@ -2,16 +2,15 @@
 pragma solidity 0.8.29;
 
 import {IActions} from '../../interfaces/IActions.sol';
-import {SimpleAction} from '../../interfaces/SimpleAction.sol';
 
 contract SimpleTransfers is IActions {
-  Action[] public actions;
-
   struct Transfer {
     address token;
     address to;
     uint256 amount;
   }
+
+  Action[] public actions;
 
   event SimpleActionAdded(address indexed target, string signature, bytes data, uint256 value);
 

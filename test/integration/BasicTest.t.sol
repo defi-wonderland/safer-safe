@@ -22,7 +22,6 @@ contract BasicTest is Test {
 
   function setUp() public {
     vm.createSelectFork(vm.rpcUrl('mainnet'), _FORK_BLOCK);
-    vm.startPrank(_OWNER);
 
     // Deploy the Safe contract
     address[] memory _owners = new address[](1);
@@ -56,30 +55,32 @@ contract BasicTest is Test {
     _simpleActions[0] = SimpleAction({target: _WETH, signature: 'deposit()', data: bytes(''), value: 1});
 
     _simpleActions[1] =
-      SimpleAction({target: _OWNER, signature: 'transfer(address,uint256)', data: abi.encode(_OWNER, 1), value: 0});
+      SimpleAction({target: _WETH, signature: 'transfer(address,uint256)', data: abi.encode(_OWNER, 1), value: 0});
 
-    address _actionsContract = _simpleActionsFactory.createSimpleActions(_simpleActions);
+    address _actionContract = _simpleActionsFactory.createSimpleActions(_simpleActions);
 
     // Allow the SafeEntrypoint to call the SimpleAction contract
-    _safeEntrypoint.allowAction(address(_actionsContract));
+    vm.prank(address(_safe)); // TODO: Replicate Safe transaction without pranking it
+    _safeEntrypoint.allowAction(address(_actionContract));
+
+    vm.startPrank(_OWNER);
 
     // Queue the actions
-    bytes32 _actionsHash = _safeEntrypoint.queueApprovedAction(address(_actionsContract));
-
-    bytes memory _actionData = _safeEntrypoint.actionData(_actionsHash);
-    emit log_named_bytes('actionData', _actionData);
+    bytes32 _actionsHash = _safeEntrypoint.queueApprovedAction(address(_actionContract));
 
     // Wait for the timelock period
     vm.warp(block.timestamp + 1 hours);
 
     // Get and approve the Safe transaction hash
-    bytes32 safeTxHash = _safeEntrypoint.getSafeTxHash(_actionsHash);
-    _safe.approveHash(safeTxHash);
+    bytes32 _safeTxHash = _safeEntrypoint.getSafeTxHash(_actionsHash);
+    _safe.approveHash(_safeTxHash);
 
-    // // Execute the action
+    // Execute the action
     vm.deal(_OWNER, 1 ether);
     _safeEntrypoint.executeAction{value: 1}(_actionsHash);
   }
 
-  function test_executeAction() public {}
+  function test_executeAction() public {
+    assertEq(_OWNER.balance, 1 ether - 1);
+  }
 }
