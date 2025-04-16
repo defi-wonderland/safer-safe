@@ -18,6 +18,8 @@ contract SafeEntrypoint is SafeManageable {
   mapping(bytes32 _actionHash => uint256 _executableAt) public actionExecutableAt;
   // Mapping for pending actions
   mapping(bytes32 _actionHash => bytes _actionData) public actionData;
+  // Mapping for executed actions
+  mapping(bytes32 _actionHash => bool _executed) public executed;
 
   event ApprovedActionQueued(bytes32 actionHash, uint256 executableAt);
   event ArbitraryActionQueued(bytes32 actionHash, uint256 executableAt);
@@ -84,15 +86,11 @@ contract SafeEntrypoint is SafeManageable {
   }
 
   /**
-   * @notice Queues arbitrary transactions for execution after a 7-day delay
-   * @dev The transaction data must be properly formatted for each target contract
+   * @notice Queues arbitrary actions for execution after a 7-day delay
+   * @dev The actions must be properly formatted for each target contract
    * @param _actions The array of actions to queue
    */
-  function queueArbitraryTransactions(IActions.Action[] memory _actions)
-    external
-    isAuthorized
-    returns (bytes32 _actionHash)
-  {
+  function queueArbitraryAction(IActions.Action[] memory _actions) external isAuthorized returns (bytes32 _actionHash) {
     // Validate that the actions array is not empty
     if (_actions.length == 0) {
       revert EmptyActionsArray();
@@ -130,6 +128,15 @@ contract SafeEntrypoint is SafeManageable {
   }
 
   /**
+   * @notice Checks if an action has been executed
+   * @param _actionHash The hash of the action to check
+   * @return _executed Whether the action has been executed
+   */
+  function isExecuted(bytes32 _actionHash) external view returns (bool _executed) {
+    return executed[_actionHash];
+  }
+
+  /**
    * @notice Unqueues a pending action before it is executed
    * @dev Can only be called by authorized addresses (safe owners)
    * @param _actionHash The hash of the action to unqueue
@@ -139,7 +146,7 @@ contract SafeEntrypoint is SafeManageable {
     if (actionExecutableAt[_actionHash] == 0) revert ActionNotFound();
 
     // Check if the action has already been executed
-    if (actionExecutableAt[_actionHash] <= block.timestamp) revert ActionAlreadyExecuted();
+    if (executed[_actionHash]) revert ActionAlreadyExecuted();
 
     // Clear the action data
     delete actionExecutableAt[_actionHash];
@@ -235,6 +242,9 @@ contract SafeEntrypoint is SafeManageable {
     uint256 _safeNonce = SAFE.nonce();
     bytes32 _safeTxHash = _getSafeTxHash(_multiSendData, _safeNonce);
     _execSafeTx(_multiSendData, _signatures);
+
+    // Mark the action as executed
+    executed[_actionHash] = true;
 
     // NOTE: event emitted to log successful execution
     emit ActionExecuted(_actionHash, _safeTxHash);
