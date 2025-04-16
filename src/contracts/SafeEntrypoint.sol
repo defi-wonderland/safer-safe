@@ -128,15 +128,6 @@ contract SafeEntrypoint is SafeManageable {
   }
 
   /**
-   * @notice Checks if an action has been executed
-   * @param _actionHash The hash of the action to check
-   * @return _executed Whether the action has been executed
-   */
-  function isExecuted(bytes32 _actionHash) external view returns (bool _executed) {
-    return executed[_actionHash];
-  }
-
-  /**
    * @notice Unqueues a pending action before it is executed
    * @dev Can only be called by authorized addresses (safe owners)
    * @param _actionHash The hash of the action to unqueue
