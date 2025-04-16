@@ -4,7 +4,7 @@ pragma solidity 0.8.29;
 import {SafeEntrypoint} from 'contracts/SafeEntrypoint.sol';
 import {SafeEntrypointFactory} from 'contracts/factories/SafeEntrypointFactory.sol';
 
-import {SimpleActionsFactory} from 'contracts/actions/factories/SimpleActionsFactory.sol';
+import {SimpleActionsFactory} from 'contracts/factories/SimpleActionsFactory.sol';
 import {Test} from 'forge-std/Test.sol';
 import {SimpleAction} from 'interfaces/SimpleAction.sol';
 

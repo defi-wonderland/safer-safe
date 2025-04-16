@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.29;
 
-import {IActions} from '../../interfaces/IActions.sol';
 import {IERC20} from 'forge-std/interfaces/IERC20.sol';
+import {IActions} from 'interfaces/IActions.sol';
 
-import {SafeManageable} from '../SafeManageable.sol';
+import {SafeManageable} from 'contracts/SafeManageable.sol';
 
 contract CappedTokenTransfers is IActions, SafeManageable {
   struct TokenTransfer {

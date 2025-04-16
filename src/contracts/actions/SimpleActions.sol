@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.29;
 
-import {IActions} from '../../interfaces/IActions.sol';
-import {SimpleAction} from '../../interfaces/SimpleAction.sol';
+import {IActions} from 'interfaces/IActions.sol';
+import {SimpleAction} from 'interfaces/SimpleAction.sol';
 
 contract SimpleActions is IActions {
   Action[] public actions;
