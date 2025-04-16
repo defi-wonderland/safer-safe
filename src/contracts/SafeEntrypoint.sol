@@ -19,7 +19,8 @@ contract SafeEntrypoint is SafeManageable {
   // Mapping for pending actions
   mapping(bytes32 _actionHash => bytes _actionData) public actionData;
 
-  event ActionQueued(bytes32 actionHash, uint256 executableAt);
+  event ApprovedActionQueued(bytes32 actionHash, uint256 executableAt);
+  event ArbitraryActionQueued(bytes32 actionHash, uint256 executableAt);
   event ActionExecuted(bytes32 actionHash, bytes32 safeTxHash);
   event ActionUnqueued(bytes32 actionHash);
 
@@ -77,7 +78,7 @@ contract SafeEntrypoint is SafeManageable {
     actionData[_actionHash] = abi.encode(actions);
 
     // NOTE: event picked up by off-chain monitoring service
-    emit ActionQueued(_actionHash, _executableAt);
+    emit ApprovedActionQueued(_actionHash, _executableAt);
 
     return _actionHash;
   }
@@ -104,7 +105,7 @@ contract SafeEntrypoint is SafeManageable {
     actionData[_actionHash] = abi.encode(_actions);
 
     // NOTE: event picked up by off-chain monitoring service
-    emit ActionQueued(_actionHash, _executableAt);
+    emit ArbitraryActionQueued(_actionHash, _executableAt);
 
     return _actionHash;
   }
