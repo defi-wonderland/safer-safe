@@ -27,6 +27,7 @@ contract SafeEntrypoint is SafeManageable {
   error NotSuccess();
   error NotAllowed();
   error ActionNotFound();
+  error ActionAlreadyExecuted();
 
   /**
    * @notice Constructor that sets up the Safe and MultiSend contracts
@@ -135,6 +136,9 @@ contract SafeEntrypoint is SafeManageable {
   function unqueueAction(bytes32 _actionHash) external isAuthorized {
     // Check if the action exists
     if (actionExecutableAt[_actionHash] == 0) revert ActionNotFound();
+
+    // Check if the action has already been executed
+    if (actionExecutableAt[_actionHash] <= block.timestamp) revert ActionAlreadyExecuted();
 
     // Clear the action data
     delete actionExecutableAt[_actionHash];
