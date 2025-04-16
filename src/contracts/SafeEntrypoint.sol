@@ -233,6 +233,7 @@ contract SafeEntrypoint is SafeManageable {
    */
   function _executeAction(bytes32 _actionHash, address[] memory _signers) internal {
     if (actionExecutableAt[_actionHash] > block.timestamp) revert NotExecutable();
+    if (executed[_actionHash]) revert ActionAlreadyExecuted();
 
     bytes memory _multiSendData = _constructMultiSendData(abi.decode(actionData[_actionHash], (IActions.Action[])));
     address[] memory _sortedSigners = _sortSigners(_signers);
