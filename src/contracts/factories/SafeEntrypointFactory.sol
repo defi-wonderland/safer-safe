@@ -1,9 +1,11 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.29;
 
-import {SafeEntrypoint} from '../SafeEntrypoint.sol';
+import {SafeEntrypoint} from 'contracts/SafeEntrypoint.sol';
 
-contract SafeEntrypointFactory {
+import {ISafeEntrypointFactory} from 'interfaces/factories/ISafeEntrypointFactory.sol';
+
+contract SafeEntrypointFactory is ISafeEntrypointFactory {
   address public immutable MULTI_SEND_CALL_ONLY;
 
   constructor(address _multiSend) {

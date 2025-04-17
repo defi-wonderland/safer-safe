@@ -1,12 +1,15 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.29;
 
-import {IActions} from '../interfaces/IActions.sol';
-import {IMultiSendCallOnly} from '../interfaces/IMultiSendCallOnly.sol';
+import {SafeManageable} from 'contracts/SafeManageable.sol';
 
-import {SafeManageable} from './SafeManageable.sol';
+import {IActions} from 'interfaces/IActions.sol';
+import {ISafeEntrypoint} from 'interfaces/ISafeEntrypoint.sol';
 
-contract SafeEntrypoint is SafeManageable {
+import {Enum} from '@safe-smart-account/libraries/Enum.sol';
+import {MultiSendCallOnly} from '@safe-smart-account/libraries/MultiSendCallOnly.sol';
+
+contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   address public immutable MULTI_SEND_CALL_ONLY;
 
   // Global nonce to ensure unique hashes for identical actions
@@ -20,18 +23,6 @@ contract SafeEntrypoint is SafeManageable {
   mapping(bytes32 _actionHash => bytes _actionData) public actionData;
   // Mapping for executed actions
   mapping(bytes32 _actionHash => bool _executed) public executed;
-
-  event ApprovedActionQueued(bytes32 actionHash, uint256 executableAt);
-  event ArbitraryActionQueued(bytes32 actionHash, uint256 executableAt);
-  event ActionExecuted(bytes32 actionHash, bytes32 safeTxHash);
-  event ActionUnqueued(bytes32 actionHash);
-
-  error NotExecutable();
-  error NotSuccess();
-  error NotAllowed();
-  error ActionNotFound();
-  error ActionAlreadyExecuted();
-  error EmptyActionsArray();
 
   /**
    * @notice Constructor that sets up the Safe and MultiSend contracts
@@ -253,7 +244,7 @@ contract SafeEntrypoint is SafeManageable {
       to: MULTI_SEND_CALL_ONLY,
       value: 0,
       data: _data,
-      operation: 1, // DELEGATE_CALL
+      operation: Enum.Operation.DelegateCall,
       safeTxGas: 0,
       baseGas: 0,
       gasPrice: 0,
@@ -299,7 +290,7 @@ contract SafeEntrypoint is SafeManageable {
       to: MULTI_SEND_CALL_ONLY,
       value: 0,
       data: _data,
-      operation: 1, // DELEGATE_CALL
+      operation: Enum.Operation.DelegateCall,
       safeTxGas: 0,
       baseGas: 0,
       gasPrice: 0,
@@ -327,7 +318,7 @@ contract SafeEntrypoint is SafeManageable {
     // Single pass through all signers
     for (uint256 i = 0; i < _signers.length; i++) {
       // Check if this signer has approved the hash
-      if (SAFE.approvedHashes(_signers[i], _txHash)) {
+      if (SAFE.approvedHashes(_signers[i], _txHash) == 1) {
         tempApproved[approvedCount] = _signers[i];
         approvedCount++;
       }
@@ -385,7 +376,7 @@ contract SafeEntrypoint is SafeManageable {
       _multiSendData = abi.encodePacked(_multiSendData, encodedAction);
     }
 
-    _multiSendData = abi.encodeWithSelector(IMultiSendCallOnly.multiSend.selector, _multiSendData);
+    _multiSendData = abi.encodeWithSelector(MultiSendCallOnly.multiSend.selector, _multiSendData);
 
     return _multiSendData;
   }

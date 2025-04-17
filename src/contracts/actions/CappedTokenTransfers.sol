@@ -1,28 +1,18 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.29;
 
-import {IActions} from '../../interfaces/IActions.sol';
+import {SafeManageable} from 'contracts/SafeManageable.sol';
+
+import {ICappedTokenTransfers} from 'interfaces/actions/ICappedTokenTransfers.sol';
+
 import {IERC20} from 'forge-std/interfaces/IERC20.sol';
 
-import {SafeManageable} from '../SafeManageable.sol';
-
-contract CappedTokenTransfers is IActions, SafeManageable {
-  struct TokenTransfer {
-    address token;
-    address recipient;
-    uint256 amount;
-  }
-
+contract CappedTokenTransfers is SafeManageable, ICappedTokenTransfers {
   mapping(address _token => uint256 _transferCap) public tokenCap;
   mapping(address _token => uint256 _transferCapSpent) public capSpent;
   mapping(address _token => uint256 _transferCooldown) public tokenCooldown;
 
   TokenTransfer[] public tokenTransfers;
-
-  error LengthMismatch();
-  error ExceededCap();
-  error TokenCooldown();
-  error UnallowedToken();
 
   constructor(address _safe) SafeManageable(_safe) {}
 
