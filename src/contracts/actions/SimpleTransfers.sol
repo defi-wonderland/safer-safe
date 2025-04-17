@@ -1,18 +1,10 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.29;
 
-import {IActions} from 'interfaces/IActions.sol';
+import {ISimpleTransfers} from 'interfaces/actions/ISimpleTransfers.sol';
 
-contract SimpleTransfers is IActions {
-  struct Transfer {
-    address token;
-    address to;
-    uint256 amount;
-  }
-
+contract SimpleTransfers is ISimpleTransfers {
   Action[] public actions;
-
-  event SimpleActionAdded(address indexed target, string signature, bytes data, uint256 value);
 
   constructor(Transfer[] memory _transfers) {
     for (uint256 i = 0; i < _transfers.length; i++) {

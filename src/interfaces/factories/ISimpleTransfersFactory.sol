@@ -1,12 +1,9 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.29;
 
-import {SimpleTransfers} from 'contracts/actions/SimpleTransfers.sol';
-
 import {ISimpleTransfers} from 'interfaces/actions/ISimpleTransfers.sol';
-import {ISimpleTransfersFactory} from 'interfaces/factories/ISimpleTransfersFactory.sol';
 
-contract SimpleTransfersFactory is ISimpleTransfersFactory {
+interface ISimpleTransfersFactory {
   /**
    * NOTE: in Etherscan interface, the transaction should be parsed as follows:
    * Describing a WETH.transfer(address(0xc0ffee), 1)
@@ -18,7 +15,5 @@ contract SimpleTransfersFactory is ISimpleTransfersFactory {
    *    ]
    *  ]
    */
-  function createSimpleTransfers(ISimpleTransfers.Transfer[] memory _transfers) external returns (address) {
-    return address(new SimpleTransfers(_transfers));
-  }
+  function createSimpleTransfers(ISimpleTransfers.Transfer[] memory _transfers) external returns (address);
 }

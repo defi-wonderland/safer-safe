@@ -1,12 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.29;
 
+import {Test} from 'forge-std/Test.sol';
+
 import {SafeEntrypoint} from 'contracts/SafeEntrypoint.sol';
 import {SafeEntrypointFactory} from 'contracts/factories/SafeEntrypointFactory.sol';
-
 import {SimpleActionsFactory} from 'contracts/factories/SimpleActionsFactory.sol';
-import {Test} from 'forge-std/Test.sol';
-import {SimpleAction} from 'interfaces/SimpleAction.sol';
+
+import {ISimpleActions} from 'interfaces/actions/ISimpleActions.sol';
 
 import {Safe} from '@safe-smart-account/Safe.sol';
 import {SafeProxyFactory} from '@safe-smart-account/proxies/SafeProxyFactory.sol';
@@ -18,7 +19,7 @@ contract BasicTest is Test {
 
   address internal constant _OWNER = address(0xc0ffee);
 
-  SimpleAction internal _simpleAction;
+  ISimpleActions.SimpleAction internal _simpleAction;
 
   function setUp() public {
     vm.createSelectFork(vm.rpcUrl('mainnet'), _FORK_BLOCK);
@@ -51,15 +52,19 @@ contract BasicTest is Test {
 
     // Deploy SimpleAction contract
     SimpleActionsFactory _simpleActionsFactory = new SimpleActionsFactory();
-    SimpleAction[] memory _simpleActions = new SimpleAction[](2);
-    _simpleActions[0] = SimpleAction({target: _WETH, signature: 'deposit()', data: bytes(''), value: 1});
+    ISimpleActions.SimpleAction[] memory _simpleActions = new ISimpleActions.SimpleAction[](2);
+    _simpleActions[0] = ISimpleActions.SimpleAction({target: _WETH, signature: 'deposit()', data: bytes(''), value: 1});
 
-    _simpleActions[1] =
-      SimpleAction({target: _WETH, signature: 'transfer(address,uint256)', data: abi.encode(_OWNER, 1), value: 0});
+    _simpleActions[1] = ISimpleActions.SimpleAction({
+      target: _WETH,
+      signature: 'transfer(address,uint256)',
+      data: abi.encode(_OWNER, 1),
+      value: 0
+    });
 
     address _actionContract = _simpleActionsFactory.createSimpleActions(_simpleActions);
 
-    // Allow the SafeEntrypoint to call the SimpleAction contract
+    // Allow the SafeEntrypoint to call the SimpleActions contract
     vm.prank(address(_safe)); // TODO: Replicate Safe transaction without pranking it
     _safeEntrypoint.allowAction(address(_actionContract));
 
