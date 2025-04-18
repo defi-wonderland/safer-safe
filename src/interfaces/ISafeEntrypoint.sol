@@ -1,38 +1,127 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.29;
 
-import {IActions} from 'interfaces/IActions.sol';
 import {ISafeManageable} from 'interfaces/ISafeManageable.sol';
+import {IActions} from 'interfaces/actions/IActions.sol';
 
+/**
+ * @title ISafeEntrypoint
+ * @notice Interface for the SafeEntrypoint contract
+ */
 interface ISafeEntrypoint is ISafeManageable {
+  // ~~~ STORAGE METHODS ~~~
+
+  /**
+   * @notice Gets the MultiSendCallOnly contract
+   * @return _multiSendCallOnly The MultiSendCallOnly contract address
+   */
   function MULTI_SEND_CALL_ONLY() external view returns (address _multiSendCallOnly);
 
+  /**
+   * @notice Maps an action contract to its approval status
+   * @param _actionContract The address of the action contract
+   * @return _isAllowed The approval status of the action contract
+   */
   function allowedActions(address _actionContract) external view returns (bool _isAllowed);
 
-  // Mapping for pending actions
+  /**
+   * @notice Maps an action hash to its executable timestamp
+   * @param _actionHash The hash of the action
+   * @return _executableAt The timestamp from which the action can be executed
+   */
   function actionExecutableAt(bytes32 _actionHash) external view returns (uint256 _executableAt);
 
-  // Mapping for pending actions
+  /**
+   * @notice Maps an action hash to its data
+   * @param _actionHash The hash of the action
+   * @return _actionData The data of the action
+   */
   function actionData(bytes32 _actionHash) external view returns (bytes memory _actionData);
 
-  // Mapping for executed actions
+  /**
+   * @notice Maps an action hash to its execution status
+   * @param _actionHash The hash of the action
+   * @return _executed The execution status of the action
+   */
   function executed(bytes32 _actionHash) external view returns (bool _executed);
 
   // ~~~ EVENTS ~~~
 
-  event ApprovedActionQueued(bytes32 actionHash, uint256 executableAt);
-  event ArbitraryActionQueued(bytes32 actionHash, uint256 executableAt);
-  event ActionExecuted(bytes32 actionHash, bytes32 safeTxHash);
-  event ActionUnqueued(bytes32 actionHash);
+  /**
+   * @notice Emitted when an action contract is allowed
+   * @param _actionContract The address of the action contract
+   */
+  event ActionAllowed(address _actionContract);
+
+  /**
+   * @notice Emitted when an action contract is disallowed
+   * @param _actionContract The address of the action contract
+   */
+  event ActionDisallowed(address _actionContract);
+
+  /**
+   * @notice Emitted when an approved action is queued
+   * @param _actionHash The hash of the action
+   * @param _executableAt The timestamp from which the action can be executed
+   */
+  event ApprovedActionQueued(bytes32 _actionHash, uint256 _executableAt);
+
+  /**
+   * @notice Emitted when an arbitrary action is queued
+   * @param _actionHash The hash of the action
+   * @param _executableAt The timestamp from which the action can be executed
+   */
+  event ArbitraryActionQueued(bytes32 _actionHash, uint256 _executableAt);
+
+  /**
+   * @notice Emitted when an action is executed
+   * @param _actionHash The hash of the action
+   * @param _safeTxHash The hash of the Safe transaction
+   */
+  event ActionExecuted(bytes32 _actionHash, bytes32 _safeTxHash);
+
+  /**
+   * @notice Emitted when an action is unqueued
+   * @param _actionHash The hash of the action
+   */
+  event ActionUnqueued(bytes32 _actionHash);
 
   // ~~~ ERRORS ~~~
 
-  error NotExecutable();
-  error NotSuccess();
+  /**
+   * @notice Thrown when an action contract is already allowed
+   */
+  error AlreadyAllowed();
+
+  /**
+   * @notice Thrown when an action contract is not allowed
+   */
   error NotAllowed();
-  error ActionNotFound();
-  error ActionAlreadyExecuted();
+
+  /**
+   * @notice Thrown when an empty actions array is provided
+   */
   error EmptyActionsArray();
+
+  /**
+   * @notice Thrown when an action is not found
+   */
+  error ActionNotFound();
+
+  /**
+   * @notice Thrown when an action has already been executed
+   */
+  error ActionAlreadyExecuted();
+
+  /**
+   * @notice Thrown when an action is not executable
+   */
+  error NotExecutable();
+
+  /**
+   * @notice Thrown when a call to an action contract fails
+   */
+  error NotSuccess();
 
   // ~~~ ADMIN METHODS ~~~
 
@@ -45,7 +134,7 @@ interface ISafeEntrypoint is ISafeManageable {
 
   /**
    * @notice Disallows an action contract from being executed by the Safe
-   * @dev Can be called by any authorized address (safe owner)
+   * @dev Can only be called by the Safe owners
    * @param _actionContract The address of the action contract to disallow
    */
   function disallowAction(address _actionContract) external;
@@ -54,6 +143,7 @@ interface ISafeEntrypoint is ISafeManageable {
 
   /**
    * @notice Queues an approved action for execution after a 1-hour delay
+   * @dev Can only be called by the Safe owners
    * @dev The action contract must be pre-approved using allowAction
    * @param _actionContract The address of the approved action contract
    */
@@ -61,6 +151,7 @@ interface ISafeEntrypoint is ISafeManageable {
 
   /**
    * @notice Queues arbitrary actions for execution after a 7-day delay
+   * @dev Can only be called by the Safe owners
    * @dev The actions must be properly formatted for each target contract
    * @param _actions The array of actions to queue
    */
@@ -83,7 +174,7 @@ interface ISafeEntrypoint is ISafeManageable {
 
   /**
    * @notice Unqueues a pending action before it is executed
-   * @dev Can only be called by authorized addresses (safe owners)
+   * @dev Can only be called by the Safe owners
    * @param _actionHash The hash of the action to unqueue
    */
   function unqueueAction(bytes32 _actionHash) external;
