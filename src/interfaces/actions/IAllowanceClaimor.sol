@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.29;
 
-import {IActions} from 'interfaces/IActions.sol';
+import {IActions} from 'interfaces/actions/IActions.sol';
 
 interface IAllowanceClaimor is IActions {
   function SAFE() external view returns (address _safe);
