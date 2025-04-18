@@ -123,12 +123,11 @@ jobs:
         with:
           version: stable
 
-      
       - name: Install lintspec via cargo
         uses: baptiste0928/cargo-install@v3
         with:
           crate: lintspec
-          version: '0.3.0'
+          version: '0.4.1'
 
       - name: Use Node.js
         uses: actions/setup-node@v4
