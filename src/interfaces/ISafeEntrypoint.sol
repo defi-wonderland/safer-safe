@@ -48,6 +48,18 @@ interface ISafeEntrypoint is ISafeManageable {
   // ~~~ EVENTS ~~~
 
   /**
+   * @notice Emitted when an action contract is allowed
+   * @param _actionContract The address of the action contract
+   */
+  event ActionAllowed(address _actionContract);
+
+  /**
+   * @notice Emitted when an action contract is disallowed
+   * @param _actionContract The address of the action contract
+   */
+  event ActionDisallowed(address _actionContract);
+
+  /**
    * @notice Emitted when an approved action is queued
    * @param _actionHash The hash of the action
    * @param _executableAt The timestamp from which the action can be executed
@@ -75,6 +87,11 @@ interface ISafeEntrypoint is ISafeManageable {
   event ActionUnqueued(bytes32 _actionHash);
 
   // ~~~ ERRORS ~~~
+
+  /**
+   * @notice Thrown when an action contract is already allowed
+   */
+  error AlreadyAllowed();
 
   /**
    * @notice Thrown when an action contract is not allowed
