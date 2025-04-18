@@ -5,19 +5,34 @@ import {ISafeManageable} from 'interfaces/ISafeManageable.sol';
 
 import {ISafe} from '@safe-smart-account/interfaces/ISafe.sol';
 
+/**
+ * @title SafeManageable
+ * @notice Abstract contract that provides common functionality for managing a Safe
+ */
 abstract contract SafeManageable is ISafeManageable {
+  /// @inheritdoc ISafeManageable
   ISafe public immutable SAFE;
 
+  /**
+   * @notice Modifier that checks if the caller is the Safe contract
+   */
   modifier isMsig() {
     if (msg.sender != address(SAFE)) revert NotAuthorized();
     _;
   }
 
+  /**
+   * @notice Modifier that checks if the caller is a Safe owner
+   */
   modifier isAuthorized() {
     if (!SAFE.isOwner(msg.sender)) revert NotAuthorized();
     _;
   }
 
+  /**
+   * @notice Constructor that sets up the Safe contract
+   * @param _safe The Gnosis Safe contract address
+   */
   constructor(address _safe) {
     SAFE = ISafe(_safe);
   }

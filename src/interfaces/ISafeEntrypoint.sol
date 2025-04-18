@@ -12,8 +12,8 @@ interface ISafeEntrypoint is ISafeManageable {
   // ~~~ STORAGE METHODS ~~~
 
   /**
-   * @notice Returns the address of the MultiSendCallOnly contract
-   * @return _multiSendCallOnly The address of the MultiSendCallOnly contract
+   * @notice Gets the MultiSendCallOnly contract
+   * @return _multiSendCallOnly The MultiSendCallOnly contract address
    */
   function MULTI_SEND_CALL_ONLY() external view returns (address _multiSendCallOnly);
 
