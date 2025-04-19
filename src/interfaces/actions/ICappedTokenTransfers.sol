@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.29;
 
-import {IActions} from 'interfaces/IActions.sol';
 import {ISafeManageable} from 'interfaces/ISafeManageable.sol';
+import {IActions} from 'interfaces/actions/IActions.sol';
 
 interface ICappedTokenTransfers is ISafeManageable, IActions {
   struct TokenTransfer {
