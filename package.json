@@ -1,11 +1,11 @@
 {
-  "name": "safe-entrypoint",
+  "name": "safer-safe",
   "version": "0.0.1",
-  "description": "Safe Entrypoint",
-  "homepage": "https://github.com/defi-wonderland/safe-entrypoint#readme",
+  "description": "Safer Safe",
+  "homepage": "https://github.com/defi-wonderland/safer-safe#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/defi-wonderland/safe-entrypoint.git"
+    "url": "git+https://github.com/defi-wonderland/safer-safe.git"
   },
   "license": "MIT",
   "author": "Wonderland",
