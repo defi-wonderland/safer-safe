@@ -16,6 +16,12 @@ contract OnlyEntrypointGuard is BaseTransactionGuard, IOnlyEntrypointGuard {
   /// @inheritdoc IOnlyEntrypointGuard
   uint256 public immutable MIN_SIGNERS;
 
+  // Signature type constant for pre-approved hash signatures
+  uint8 private constant PRE_VALIDATED_SIGNATURE_TYPE = 0x01;
+
+  // Error for invalid signature format
+  error InvalidSignatureFormat();
+
   /**
    * @notice Constructor that sets up the guard
    * @param _entrypoint The address of the Safe Entrypoint contract
@@ -59,6 +65,11 @@ contract OnlyEntrypointGuard is BaseTransactionGuard, IOnlyEntrypointGuard {
       return;
     }
 
+    // Validate signature format - only allow pre-approved hash signatures
+    if (!_isValidSignatureFormat(_signatures)) {
+      revert InvalidSignatureFormat();
+    }
+
     // Check if the transaction has enough signers for emergency override
     uint256 signerCount = _countSigners(_signatures);
     if (signerCount >= MIN_SIGNERS) {
@@ -87,5 +98,30 @@ contract OnlyEntrypointGuard is BaseTransactionGuard, IOnlyEntrypointGuard {
   function _countSigners(bytes memory _signatures) internal pure returns (uint256 _count) {
     // Each signature is 65 bytes (r: 32 bytes, s: 32 bytes, v: 1 byte)
     return _signatures.length / 65;
+  }
+
+  /**
+   * @notice Validates that all signatures are pre-approved hash signatures
+   * @param _signatures The signatures to validate
+   * @return _isValid Whether all signatures are pre-approved hash signatures
+   */
+  function _isValidSignatureFormat(bytes memory _signatures) internal pure returns (bool _isValid) {
+    // Check if the signatures length is a multiple of 65 bytes
+    if (_signatures.length % 65 != 0) {
+      return false;
+    }
+
+    // Check each signature
+    for (uint256 i = 0; i < _signatures.length; i += 65) {
+      // Get the signature type (last byte of each 65-byte signature)
+      uint8 signatureType = uint8(_signatures[i + 64]);
+
+      // Only allow pre-approved hash signatures (type 0x01)
+      if (signatureType != PRE_VALIDATED_SIGNATURE_TYPE) {
+        return false;
+      }
+    }
+
+    return true;
   }
 }
