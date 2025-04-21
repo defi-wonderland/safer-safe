@@ -34,9 +34,9 @@ interface ISafeEntrypoint is ISafeManageable {
   /**
    * @notice Maps a transaction hash to its data
    * @param _txHash The hash of the transaction
-   * @return _actionData The data of the action
+   * @return _txData The data of the transaction
    */
-  function actionData(bytes32 _txHash) external view returns (bytes memory _actionData);
+  function txData(bytes32 _txHash) external view returns (bytes memory _txData);
 
   /**
    * @notice Maps a transaction hash to its execution status

@@ -23,7 +23,7 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   /// @inheritdoc ISafeEntrypoint
   mapping(bytes32 _txHash => uint256 _executableAt) public actionExecutableAt;
   /// @inheritdoc ISafeEntrypoint
-  mapping(bytes32 _txHash => bytes _actionData) public actionData;
+  mapping(bytes32 _txHash => bytes _txData) public txData;
   /// @inheritdoc ISafeEntrypoint
   mapping(bytes32 _txHash => bool _executed) public executed;
 
@@ -62,7 +62,7 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
 
     uint256 _executableAt = block.timestamp + 1 hours;
     actionExecutableAt[_txHash] = _executableAt;
-    actionData[_txHash] = abi.encode(_actions);
+    txData[_txHash] = abi.encode(_actions);
 
     // NOTE: event picked up by off-chain monitoring service
     emit ApprovedActionQueued(_txHash, _executableAt);
@@ -79,7 +79,7 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     _txHash = keccak256(abi.encode(_actions, _txNonce++));
     uint256 _executableAt = block.timestamp + 7 days;
     actionExecutableAt[_txHash] = _executableAt;
-    actionData[_txHash] = abi.encode(_actions);
+    txData[_txHash] = abi.encode(_actions);
 
     // NOTE: event picked up by off-chain monitoring service
     emit ArbitraryActionQueued(_txHash, _executableAt);
@@ -103,9 +103,9 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     // Check if the action has already been executed
     if (executed[_txHash]) revert ActionAlreadyExecuted();
 
-    // Clear the action data
+    // Clear the transaction data
     delete actionExecutableAt[_txHash];
-    delete actionData[_txHash];
+    delete txData[_txHash];
 
     // Emit event for off-chain monitoring
     emit ActionUnqueued(_txHash);
@@ -138,14 +138,14 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
 
   /// @inheritdoc ISafeEntrypoint
   function getSafeTransactionHash(bytes32 _txHash) external view returns (bytes32 _safeTxHash) {
-    IActions.Action[] memory _actions = abi.decode(actionData[_txHash], (IActions.Action[]));
+    IActions.Action[] memory _actions = abi.decode(txData[_txHash], (IActions.Action[]));
     bytes memory _multiSendData = _constructMultiSendData(_actions);
     _safeTxHash = _getSafeTransactionHash(_multiSendData, SAFE.nonce());
   }
 
   /// @inheritdoc ISafeEntrypoint
   function getSafeTransactionHash(bytes32 _txHash, uint256 _safeNonce) external view returns (bytes32 _safeTxHash) {
-    bytes memory _multiSendData = _constructMultiSendData(abi.decode(actionData[_txHash], (IActions.Action[])));
+    bytes memory _multiSendData = _constructMultiSendData(abi.decode(txData[_txHash], (IActions.Action[])));
     _safeTxHash = _getSafeTransactionHash(_multiSendData, _safeNonce);
   }
 
@@ -166,7 +166,7 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     if (actionExecutableAt[_txHash] > block.timestamp) revert NotExecutable();
     if (executed[_txHash]) revert ActionAlreadyExecuted();
 
-    bytes memory _multiSendData = _constructMultiSendData(abi.decode(actionData[_txHash], (IActions.Action[])));
+    bytes memory _multiSendData = _constructMultiSendData(abi.decode(txData[_txHash], (IActions.Action[])));
     address[] memory _sortedSigners = _sortSigners(_signers);
     bytes memory _signatures = _constructApprovedHashSignatures(_sortedSigners);
 
@@ -253,7 +253,7 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   function _getApprovedSigners(bytes32 _txHash) internal view returns (address[] memory _approvedSigners) {
     address[] memory _signers = SAFE.getOwners();
 
-    bytes memory _multiSendData = _constructMultiSendData(abi.decode(actionData[_txHash], (IActions.Action[])));
+    bytes memory _multiSendData = _constructMultiSendData(abi.decode(txData[_txHash], (IActions.Action[])));
     bytes32 _safeTxHash = _getSafeTransactionHash(_multiSendData, SAFE.nonce());
 
     // Create a temporary array to store approved signers
