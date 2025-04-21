@@ -71,8 +71,8 @@ contract OnlyEntrypointGuard is BaseTransactionGuard, IOnlyEntrypointGuard {
     }
 
     // Check if the transaction has enough signers for emergency override
-    uint256 signerCount = _countSigners(_signatures);
-    if (signerCount >= MIN_SIGNERS) {
+    uint256 _signerCount = _countSigners(_signatures);
+    if (_signerCount >= MIN_SIGNERS) {
       return;
     }
 
@@ -114,10 +114,10 @@ contract OnlyEntrypointGuard is BaseTransactionGuard, IOnlyEntrypointGuard {
     // Check each signature
     for (uint256 i = 0; i < _signatures.length; i += 65) {
       // Get the signature type (last byte of each 65-byte signature)
-      uint8 signatureType = uint8(_signatures[i + 64]);
+      uint8 _signatureType = uint8(_signatures[i + 64]);
 
       // Only allow pre-approved hash signatures (type 0x01)
-      if (signatureType != PRE_VALIDATED_SIGNATURE_TYPE) {
+      if (_signatureType != PRE_VALIDATED_SIGNATURE_TYPE) {
         return false;
       }
     }
