@@ -186,10 +186,10 @@ interface ISafeEntrypoint is ISafeManageable {
   /**
    * @notice Gets the hash of a transaction from an action contract
    * @param _actionContract The address of the action contract
-   * @param _actionNonce The nonce of the action
+   * @param _txNonce The nonce of the transaction
    * @return _txHash The hash of the transaction
    */
-  function getTransactionHash(address _actionContract, uint256 _actionNonce) external view returns (bytes32 _txHash);
+  function getTransactionHash(address _actionContract, uint256 _txNonce) external view returns (bytes32 _txHash);
 
   /**
    * @notice Gets the Safe transaction hash for an action contract

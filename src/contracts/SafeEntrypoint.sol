@@ -28,7 +28,7 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   mapping(bytes32 _txHash => bool _executed) public executed;
 
   /// @notice Global nonce to ensure unique hashes for identical transactions
-  uint256 internal _actionNonce;
+  uint256 internal _txNonce;
 
   /**
    * @notice Constructor that sets up the Safe and MultiSendCallOnly contracts
@@ -58,7 +58,7 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     if (!allowedActions[_actionContract]) revert NotAllowed();
 
     IActions.Action[] memory _actions = IActions(_actionContract).getActions();
-    _txHash = keccak256(abi.encode(_actions, _actionNonce++));
+    _txHash = keccak256(abi.encode(_actions, _txNonce++));
 
     uint256 _executableAt = block.timestamp + 1 hours;
     actionExecutableAt[_txHash] = _executableAt;
@@ -75,8 +75,8 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
       revert EmptyActionsArray();
     }
 
-    // Use the existing action storage mechanism
-    _txHash = keccak256(abi.encode(_actions, _actionNonce++));
+    // Use the existing transaction storage mechanism
+    _txHash = keccak256(abi.encode(_actions, _txNonce++));
     uint256 _executableAt = block.timestamp + 7 days;
     actionExecutableAt[_txHash] = _executableAt;
     actionData[_txHash] = abi.encode(_actions);
@@ -114,9 +114,9 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   // ~~~ VIEW METHODS ~~~
 
   /// @inheritdoc ISafeEntrypoint
-  function getTransactionHash(address _actionContract, uint256 _actionNonce) external view returns (bytes32 _txHash) {
+  function getTransactionHash(address _actionContract, uint256 _txNonce) external view returns (bytes32 _txHash) {
     IActions.Action[] memory _actions = _fetchActions(_actionContract);
-    _txHash = keccak256(abi.encode(_actions, _actionNonce));
+    _txHash = keccak256(abi.encode(_actions, _txNonce));
   }
 
   /// @inheritdoc ISafeEntrypoint
