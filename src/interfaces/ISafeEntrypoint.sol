@@ -41,9 +41,9 @@ interface ISafeEntrypoint is ISafeManageable {
   /**
    * @notice Maps a transaction hash to its execution status
    * @param _txHash The hash of the transaction
-   * @return _executed The execution status of the action
+   * @return _isExecuted The execution status of the action
    */
-  function executed(bytes32 _txHash) external view returns (bool _executed);
+  function executedTxs(bytes32 _txHash) external view returns (bool _isExecuted);
 
   // ~~~ EVENTS ~~~
 
@@ -62,16 +62,16 @@ interface ISafeEntrypoint is ISafeManageable {
   /**
    * @notice Emitted when an approved action is queued
    * @param _txHash The hash of the transaction
-   * @param _executableAt The timestamp from which the action can be executed
+   * @param _txExecutableAt The timestamp from which the transaction can be executed
    */
-  event ApprovedActionQueued(bytes32 _txHash, uint256 _executableAt);
+  event ApprovedActionQueued(bytes32 _txHash, uint256 _txExecutableAt);
 
   /**
    * @notice Emitted when an arbitrary action is queued
    * @param _txHash The hash of the transaction
-   * @param _executableAt The timestamp from which the action can be executed
+   * @param _txExecutableAt The timestamp from which the transaction can be executed
    */
-  event ArbitraryActionQueued(bytes32 _txHash, uint256 _executableAt);
+  event ArbitraryActionQueued(bytes32 _txHash, uint256 _txExecutableAt);
 
   /**
    * @notice Emitted when an action is executed

@@ -25,7 +25,7 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   /// @inheritdoc ISafeEntrypoint
   mapping(bytes32 _txHash => bytes _txData) public txData;
   /// @inheritdoc ISafeEntrypoint
-  mapping(bytes32 _txHash => bool _executed) public executed;
+  mapping(bytes32 _txHash => bool _isExecuted) public executedTxs;
 
   /// @notice Global nonce to ensure unique hashes for identical transactions
   uint256 internal _txNonce;
@@ -101,7 +101,7 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     if (txExecutableAt[_txHash] == 0) revert ActionNotFound();
 
     // Check if the transaction has already been executed
-    if (executed[_txHash]) revert ActionAlreadyExecuted();
+    if (executedTxs[_txHash]) revert ActionAlreadyExecuted();
 
     // Clear the transaction data
     delete txExecutableAt[_txHash];
@@ -164,7 +164,7 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
    */
   function _executeAction(bytes32 _txHash, address[] memory _signers) internal {
     if (txExecutableAt[_txHash] > block.timestamp) revert NotExecutable();
-    if (executed[_txHash]) revert ActionAlreadyExecuted();
+    if (executedTxs[_txHash]) revert ActionAlreadyExecuted();
 
     bytes memory _multiSendData = _constructMultiSendData(abi.decode(txData[_txHash], (IActions.Action[])));
     address[] memory _sortedSigners = _sortSigners(_signers);
@@ -175,8 +175,8 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     bytes32 _safeTxHash = _getSafeTransactionHash(_multiSendData, _safeNonce);
     _execSafeTransaction(_multiSendData, _signatures);
 
-    // Mark the action as executed
-    executed[_txHash] = true;
+    // Mark the transaction as executed
+    executedTxs[_txHash] = true;
 
     // NOTE: event emitted to log successful execution
     emit ActionExecuted(_txHash, _safeTxHash);
