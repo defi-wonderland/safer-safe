@@ -8,7 +8,6 @@ import {IOnlyEntrypointGuard} from 'interfaces/IOnlyEntrypointGuard.sol';
 /**
  * @title OnlyEntrypointGuard
  * @notice Guard that ensures transactions are either executed through the entrypoint or by a high-threshold multisig signer
- * @dev This guard prevents direct execution of transactions unless they come from the entrypoint or a high-threshold multisig
  */
 contract OnlyEntrypointGuard is BaseTransactionGuard, IOnlyEntrypointGuard {
   /// @inheritdoc IOnlyEntrypointGuard
