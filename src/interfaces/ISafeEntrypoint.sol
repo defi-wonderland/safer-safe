@@ -27,9 +27,9 @@ interface ISafeEntrypoint is ISafeManageable {
   /**
    * @notice Maps a transaction hash to its executable timestamp
    * @param _txHash The hash of the transaction
-   * @return _executableAt The timestamp from which the action can be executed
+   * @return _txExecutableAt The timestamp from which the transaction can be executed
    */
-  function actionExecutableAt(bytes32 _txHash) external view returns (uint256 _executableAt);
+  function txExecutableAt(bytes32 _txHash) external view returns (uint256 _txExecutableAt);
 
   /**
    * @notice Maps a transaction hash to its data

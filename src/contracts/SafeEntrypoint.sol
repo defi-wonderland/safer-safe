@@ -21,7 +21,7 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   mapping(address _actionContract => bool _isAllowed) public allowedActions;
 
   /// @inheritdoc ISafeEntrypoint
-  mapping(bytes32 _txHash => uint256 _executableAt) public actionExecutableAt;
+  mapping(bytes32 _txHash => uint256 _txExecutableAt) public txExecutableAt;
   /// @inheritdoc ISafeEntrypoint
   mapping(bytes32 _txHash => bytes _txData) public txData;
   /// @inheritdoc ISafeEntrypoint
@@ -61,7 +61,7 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     _txHash = keccak256(abi.encode(_actions, _txNonce++));
 
     uint256 _executableAt = block.timestamp + 1 hours;
-    actionExecutableAt[_txHash] = _executableAt;
+    txExecutableAt[_txHash] = _executableAt;
     txData[_txHash] = abi.encode(_actions);
 
     // NOTE: event picked up by off-chain monitoring service
@@ -78,7 +78,7 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     // Use the existing transaction storage mechanism
     _txHash = keccak256(abi.encode(_actions, _txNonce++));
     uint256 _executableAt = block.timestamp + 7 days;
-    actionExecutableAt[_txHash] = _executableAt;
+    txExecutableAt[_txHash] = _executableAt;
     txData[_txHash] = abi.encode(_actions);
 
     // NOTE: event picked up by off-chain monitoring service
@@ -97,14 +97,14 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
 
   /// @inheritdoc ISafeEntrypoint
   function unqueueAction(bytes32 _txHash) external isAuthorized {
-    // Check if the action exists
-    if (actionExecutableAt[_txHash] == 0) revert ActionNotFound();
+    // Check if the transaction exists
+    if (txExecutableAt[_txHash] == 0) revert ActionNotFound();
 
-    // Check if the action has already been executed
+    // Check if the transaction has already been executed
     if (executed[_txHash]) revert ActionAlreadyExecuted();
 
     // Clear the transaction data
-    delete actionExecutableAt[_txHash];
+    delete txExecutableAt[_txHash];
     delete txData[_txHash];
 
     // Emit event for off-chain monitoring
@@ -163,7 +163,7 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
    * @param _signers The addresses of the signers to use
    */
   function _executeAction(bytes32 _txHash, address[] memory _signers) internal {
-    if (actionExecutableAt[_txHash] > block.timestamp) revert NotExecutable();
+    if (txExecutableAt[_txHash] > block.timestamp) revert NotExecutable();
     if (executed[_txHash]) revert ActionAlreadyExecuted();
 
     bytes memory _multiSendData = _constructMultiSendData(abi.decode(txData[_txHash], (IActions.Action[])));
