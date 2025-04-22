@@ -146,6 +146,7 @@ interface ISafeEntrypoint is ISafeManageable {
    * @dev Can only be called by the Safe owners
    * @dev The action contract must be pre-approved using allowAction
    * @param _actionContract The address of the approved action contract
+   * @return _actionHash The hash of the action
    */
   function queueApprovedAction(address _actionContract) external returns (bytes32 _actionHash);
 
@@ -154,6 +155,7 @@ interface ISafeEntrypoint is ISafeManageable {
    * @dev Can only be called by the Safe owners
    * @dev The actions must be properly formatted for each target contract
    * @param _actions The array of actions to queue
+   * @return _actionHash The hash of the action
    */
   function queueArbitraryAction(IActions.Action[] memory _actions) external returns (bytes32 _actionHash);
 
