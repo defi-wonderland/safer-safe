@@ -18,11 +18,11 @@ interface ISafeEntrypoint is ISafeManageable {
   function MULTI_SEND_CALL_ONLY() external view returns (address _multiSendCallOnly);
 
   /**
-   * @notice Maps an action contract to its approval status
-   * @param _actionContract The address of the action contract
-   * @return _isAllowed The approval status of the action contract
+   * @notice Maps a transaction builder to its approval status
+   * @param _transactionBuilder The address of the transaction builder
+   * @return _isApproved The approval status of the transaction builder
    */
-  function allowedActions(address _actionContract) external view returns (bool _isAllowed);
+  function approvedTransactionBuilders(address _transactionBuilder) external view returns (bool _isApproved);
 
   /**
    * @notice Maps a transaction hash to its executable timestamp
@@ -48,16 +48,16 @@ interface ISafeEntrypoint is ISafeManageable {
   // ~~~ EVENTS ~~~
 
   /**
-   * @notice Emitted when an action contract is allowed
-   * @param _actionContract The address of the action contract
+   * @notice Emitted when a transaction builder is approved
+   * @param _transactionBuilder The address of the transaction builder
    */
-  event ActionAllowed(address _actionContract);
+  event ActionAllowed(address _transactionBuilder);
 
   /**
-   * @notice Emitted when an action contract is disallowed
-   * @param _actionContract The address of the action contract
+   * @notice Emitted when a transaction builder is disapproved
+   * @param _transactionBuilder The address of the transaction builder
    */
-  event ActionDisallowed(address _actionContract);
+  event ActionDisallowed(address _transactionBuilder);
 
   /**
    * @notice Emitted when a transaction is queued
@@ -120,29 +120,29 @@ interface ISafeEntrypoint is ISafeManageable {
   // ~~~ ADMIN METHODS ~~~
 
   /**
-   * @notice Allows an action contract to be executed by the Safe
+   * @notice Approves a transaction builder to be executed by the Safe
    * @dev Can only be called by the Safe contract
-   * @param _actionContract The address of the action contract to allow
+   * @param _transactionBuilder The address of the transaction builder to approve
    */
-  function allowAction(address _actionContract) external;
+  function allowAction(address _transactionBuilder) external;
 
   /**
-   * @notice Disallows an action contract from being executed by the Safe
+   * @notice Disapproves a transaction builder from being executed by the Safe
    * @dev Can only be called by the Safe owners
-   * @param _actionContract The address of the action contract to disallow
+   * @param _transactionBuilder The address of the transaction builder to disapprove
    */
-  function disallowAction(address _actionContract) external;
+  function disallowAction(address _transactionBuilder) external;
 
   // ~~~ ACTIONS METHODS ~~~
 
   /**
    * @notice Queues an approved transaction for execution after a 1-hour delay
    * @dev Can only be called by the Safe owners
-   * @dev The action contract must be pre-approved using allowAction
-   * @param _actionContract The address of the approved action contract
+   * @dev The transaction builder must be pre-approved using approveTransactionBuilder
+   * @param _transactionBuilder The address of the approved transaction builder
    * @return _txHash The hash of the transaction
    */
-  function queueTransaction(address _actionContract) external returns (bytes32 _txHash);
+  function queueTransaction(address _transactionBuilder) external returns (bytes32 _txHash);
 
   /**
    * @notice Queues an arbitrary transaction for execution after a 7-day delay
@@ -178,42 +178,42 @@ interface ISafeEntrypoint is ISafeManageable {
   // ~~~ VIEW METHODS ~~~
 
   /**
-   * @notice Gets the hash of a transaction from an action contract
-   * @param _actionContract The address of the action contract
+   * @notice Gets the hash of a transaction from a transaction builder
+   * @param _transactionBuilder The address of the transaction builder
    * @param _txNonce The nonce of the transaction
    * @return _txHash The hash of the transaction
    */
-  function getTransactionHash(address _actionContract, uint256 _txNonce) external view returns (bytes32 _txHash);
+  function getTransactionHash(address _transactionBuilder, uint256 _txNonce) external view returns (bytes32 _txHash);
 
   /**
-   * @notice Gets the Safe transaction hash for an action contract
-   * @param _actionContract The address of the action contract
+   * @notice Gets the Safe transaction hash for a transaction builder
+   * @param _transactionBuilder The address of the transaction builder
    * @return _safeTxHash The Safe transaction hash
    */
-  function getSafeTransactionHash(address _actionContract) external view returns (bytes32 _safeTxHash);
+  function getSafeTransactionHash(address _transactionBuilder) external view returns (bytes32 _safeTxHash);
 
   /**
-   * @notice Gets the Safe transaction hash for an action contract with a specific nonce
-   * @param _actionContract The address of the action contract
-   * @param _safeNonce The nonce to use for the hash calculation
+   * @notice Gets the Safe transaction hash for a transaction builder with a specific Safe nonce
+   * @param _transactionBuilder The address of the transaction builder
+   * @param _safeNonce The Safe nonce to use for the hash calculation
    * @return _safeTxHash The Safe transaction hash
    */
   function getSafeTransactionHash(
-    address _actionContract,
+    address _transactionBuilder,
     uint256 _safeNonce
   ) external view returns (bytes32 _safeTxHash);
 
   /**
-   * @notice Gets the Safe transaction hash for an action hash
+   * @notice Gets the Safe transaction hash for a transaction hash
    * @param _txHash The hash of the transaction
    * @return _safeTxHash The Safe transaction hash
    */
   function getSafeTransactionHash(bytes32 _txHash) external view returns (bytes32 _safeTxHash);
 
   /**
-   * @notice Gets the Safe transaction hash for an action hash with a specific nonce
+   * @notice Gets the Safe transaction hash for a transaction hash with a specific Safe nonce
    * @param _txHash The hash of the transaction
-   * @param _safeNonce The nonce to use for the hash calculation
+   * @param _safeNonce The Safe nonce to use for the hash calculation
    * @return _safeTxHash The Safe transaction hash
    */
   function getSafeTransactionHash(bytes32 _txHash, uint256 _safeNonce) external view returns (bytes32 _safeTxHash);

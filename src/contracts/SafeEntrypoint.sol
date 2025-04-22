@@ -18,7 +18,7 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   address public immutable MULTI_SEND_CALL_ONLY;
 
   /// @inheritdoc ISafeEntrypoint
-  mapping(address _actionContract => bool _isAllowed) public allowedActions;
+  mapping(address _transactionBuilder => bool _isApproved) public approvedTransactionBuilders;
 
   /// @inheritdoc ISafeEntrypoint
   mapping(bytes32 _txHash => uint256 _txExecutableAt) public txExecutableAt;
@@ -42,22 +42,22 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   // ~~~ ADMIN METHODS ~~~
 
   /// @inheritdoc ISafeEntrypoint
-  function allowAction(address _actionContract) external isMsig {
-    allowedActions[_actionContract] = true;
+  function allowAction(address _transactionBuilder) external isMsig {
+    approvedTransactionBuilders[_transactionBuilder] = true;
   }
 
   /// @inheritdoc ISafeEntrypoint
-  function disallowAction(address _actionContract) external isAuthorized {
-    allowedActions[_actionContract] = false;
+  function disallowAction(address _transactionBuilder) external isAuthorized {
+    approvedTransactionBuilders[_transactionBuilder] = false;
   }
 
   // ~~~ ACTIONS METHODS ~~~
 
   /// @inheritdoc ISafeEntrypoint
-  function queueTransaction(address _actionContract) external isAuthorized returns (bytes32 _txHash) {
-    if (!allowedActions[_actionContract]) revert NotAllowed();
+  function queueTransaction(address _transactionBuilder) external isAuthorized returns (bytes32 _txHash) {
+    if (!approvedTransactionBuilders[_transactionBuilder]) revert NotAllowed();
 
-    IActions.Action[] memory _actions = IActions(_actionContract).getActions();
+    IActions.Action[] memory _actions = IActions(_transactionBuilder).getActions();
     _txHash = keccak256(abi.encode(_actions, _txNonce++));
 
     uint256 _executableAt = block.timestamp + 1 hours;
@@ -114,24 +114,24 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   // ~~~ VIEW METHODS ~~~
 
   /// @inheritdoc ISafeEntrypoint
-  function getTransactionHash(address _actionContract, uint256 _txNonce) external view returns (bytes32 _txHash) {
-    IActions.Action[] memory _actions = _fetchActions(_actionContract);
+  function getTransactionHash(address _transactionBuilder, uint256 _txNonce) external view returns (bytes32 _txHash) {
+    IActions.Action[] memory _actions = _fetchActions(_transactionBuilder);
     _txHash = keccak256(abi.encode(_actions, _txNonce));
   }
 
   /// @inheritdoc ISafeEntrypoint
-  function getSafeTransactionHash(address _actionContract) external view returns (bytes32 _safeTxHash) {
-    IActions.Action[] memory _actions = _fetchActions(_actionContract);
+  function getSafeTransactionHash(address _transactionBuilder) external view returns (bytes32 _safeTxHash) {
+    IActions.Action[] memory _actions = _fetchActions(_transactionBuilder);
     bytes memory _multiSendData = _constructMultiSendData(_actions);
     _safeTxHash = _getSafeTransactionHash(_multiSendData, SAFE.nonce());
   }
 
   /// @inheritdoc ISafeEntrypoint
   function getSafeTransactionHash(
-    address _actionContract,
+    address _transactionBuilder,
     uint256 _safeNonce
   ) external view returns (bytes32 _safeTxHash) {
-    IActions.Action[] memory _actions = _fetchActions(_actionContract);
+    IActions.Action[] memory _actions = _fetchActions(_transactionBuilder);
     bytes memory _multiSendData = _constructMultiSendData(_actions);
     _safeTxHash = _getSafeTransactionHash(_multiSendData, _safeNonce);
   }
@@ -206,15 +206,15 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   /**
    * @notice Internal function to fetch actions from a contract
    * @dev Uses staticcall to prevent state changes
-   * @param _actionContract The address of the action contract
+   * @param _transactionBuilder The address of the transaction builder
    * @return _actions The array of actions
    */
-  function _fetchActions(address _actionContract) internal view returns (IActions.Action[] memory _actions) {
+  function _fetchActions(address _transactionBuilder) internal view returns (IActions.Action[] memory _actions) {
     // Encode the function call for getActions()
     bytes memory _callData = abi.encodeWithSelector(IActions.getActions.selector, bytes(''));
 
     // Make a static call (executes the code but reverts any state changes)
-    (bool _success, bytes memory _returnData) = _actionContract.staticcall(_callData);
+    (bool _success, bytes memory _returnData) = _transactionBuilder.staticcall(_callData);
 
     // If the call succeeded, decode the returned data
     if (_success && _returnData.length > 0) {
@@ -227,7 +227,7 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   /**
    * @notice Internal function to get the Safe transaction hash
    * @param _data The transaction data
-   * @param _safeNonce The nonce to use
+   * @param _safeNonce The Safe nonce to use for the hash calculation
    * @return _safeTxHash The Safe transaction hash
    */
   function _getSafeTransactionHash(bytes memory _data, uint256 _safeNonce) internal view returns (bytes32 _safeTxHash) {
