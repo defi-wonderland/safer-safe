@@ -18,11 +18,11 @@ contract CappedTokenTransfers is SafeManageable, ICappedTokenTransfers {
 
   // ~~~ ADMIN METHODS ~~~
 
-  function addCappedToken(address _token, uint256 _cap) external isMsig {
+  function addCappedToken(address _token, uint256 _cap) external isSafe {
     tokenCap[_token] = _cap;
   }
 
-  function addTokenTransfer(address _token, address _recipient, uint256 _amount) external isAuthorized {
+  function addTokenTransfer(address _token, address _recipient, uint256 _amount) external isSafeOwner {
     _addTokenTransfer(_token, _recipient, _amount);
   }
 
@@ -30,7 +30,7 @@ contract CappedTokenTransfers is SafeManageable, ICappedTokenTransfers {
     address[] memory _tokens,
     address[] memory _recipients,
     uint256[] memory _amounts
-  ) external isAuthorized {
+  ) external isSafeOwner {
     if (_tokens.length != _recipients.length || _tokens.length != _amounts.length) {
       revert LengthMismatch();
     }

@@ -16,16 +16,16 @@ abstract contract SafeManageable is ISafeManageable {
   /**
    * @notice Modifier that checks if the caller is the Safe contract
    */
-  modifier isMsig() {
-    if (msg.sender != address(SAFE)) revert NotAuthorized();
+  modifier isSafe() {
+    if (msg.sender != address(SAFE)) revert NotSafeOwner();
     _;
   }
 
   /**
    * @notice Modifier that checks if the caller is a Safe owner
    */
-  modifier isAuthorized() {
-    if (!SAFE.isOwner(msg.sender)) revert NotAuthorized();
+  modifier isSafeOwner() {
+    if (!SAFE.isOwner(msg.sender)) revert NotSafeOwner();
     _;
   }
 

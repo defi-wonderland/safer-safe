@@ -42,19 +42,19 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   // ~~~ ADMIN METHODS ~~~
 
   /// @inheritdoc ISafeEntrypoint
-  function approveTransactionBuilder(address _transactionBuilder) external isMsig {
+  function approveTransactionBuilder(address _transactionBuilder) external isSafe {
     approvedTransactionBuilders[_transactionBuilder] = true;
   }
 
   /// @inheritdoc ISafeEntrypoint
-  function disapproveTransactionBuilder(address _transactionBuilder) external isAuthorized {
+  function disapproveTransactionBuilder(address _transactionBuilder) external isSafeOwner {
     approvedTransactionBuilders[_transactionBuilder] = false;
   }
 
   // ~~~ ACTIONS METHODS ~~~
 
   /// @inheritdoc ISafeEntrypoint
-  function queueTransaction(address _transactionBuilder) external isAuthorized returns (bytes32 _txHash) {
+  function queueTransaction(address _transactionBuilder) external isSafeOwner returns (bytes32 _txHash) {
     if (!approvedTransactionBuilders[_transactionBuilder]) revert TransactionBuilderNotApproved();
 
     IActions.Action[] memory _actions = IActions(_transactionBuilder).getActions();
@@ -69,7 +69,7 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   }
 
   /// @inheritdoc ISafeEntrypoint
-  function queueTransaction(IActions.Action[] memory _actions) external isAuthorized returns (bytes32 _txHash) {
+  function queueTransaction(IActions.Action[] memory _actions) external isSafeOwner returns (bytes32 _txHash) {
     // Validate that the actions array is not empty
     if (_actions.length == 0) {
       revert EmptyActionsArray();
@@ -96,7 +96,7 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   }
 
   /// @inheritdoc ISafeEntrypoint
-  function unqueueTransaction(bytes32 _txHash) external isAuthorized {
+  function unqueueTransaction(bytes32 _txHash) external isSafeOwner {
     // Check if the transaction exists
     if (txExecutableAt[_txHash] == 0) revert TransactionNotQueued();
 
@@ -206,7 +206,7 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   /**
    * @notice Internal function to fetch actions from a contract
    * @dev Uses staticcall to prevent state changes
-   * @param _transactionBuilder The address of the transaction builder
+   * @param _transactionBuilder The address of the transaction builder contract
    * @return _actions The array of actions
    */
   function _fetchActions(address _transactionBuilder) internal view returns (IActions.Action[] memory _actions) {
