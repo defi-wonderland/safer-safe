@@ -32,28 +32,19 @@ contract OnlyEntrypointGuard is BaseTransactionGuard, IOnlyEntrypointGuard {
   /**
    * @notice Checks if a transaction is allowed to be executed
    * @dev This function is called before a transaction is executed
-   * @param _to The address the transaction is being sent to
-   * @param _value The value being sent with the transaction
-   * @param _data The data being sent with the transaction
-   * @param _operation The operation being performed (Call or DelegateCall)
-   * @param _safeTxGas The gas to use for the transaction
-   * @param _baseGas The base gas to use for the transaction
-   * @param _gasPrice The gas price to use for the transaction
-   * @param _gasToken The token to use for gas
-   * @param _refundReceiver The address to receive any refunds
    * @param _signatures The signatures for the transaction
    * @param _msgSender The address of the sender of the transaction
    */
   function checkTransaction(
-    address _to,
-    uint256 _value,
-    bytes memory _data,
-    Enum.Operation _operation,
-    uint256 _safeTxGas,
-    uint256 _baseGas,
-    uint256 _gasPrice,
-    address _gasToken,
-    address payable _refundReceiver,
+    address, /* _to */
+    uint256, /* _value */
+    bytes memory, /* _data */
+    Enum.Operation, /* _operation */
+    uint256, /* _safeTxGas */
+    uint256, /* _baseGas */
+    uint256, /* _gasPrice */
+    address, /* _gasToken */
+    address payable, /*  _refundReceiver */
     bytes memory _signatures,
     address _msgSender
   ) external override {
