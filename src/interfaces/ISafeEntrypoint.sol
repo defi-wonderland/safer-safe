@@ -221,7 +221,7 @@ interface ISafeEntrypoint is ISafeManageable {
   /**
    * @notice Gets the list of signers who have approved a transaction
    * @param _txHash The hash of the transaction
-   * @return _approvedSigners The array of approved signer addresses
+   * @return _approvedHashSigners The array of approved hash signer addresses
    */
-  function getApprovedSigners(bytes32 _txHash) external view returns (address[] memory _approvedSigners);
+  function getApprovedHashSigners(bytes32 _txHash) external view returns (address[] memory _approvedHashSigners);
 }

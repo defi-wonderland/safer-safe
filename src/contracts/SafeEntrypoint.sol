@@ -87,7 +87,7 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
 
   /// @inheritdoc ISafeEntrypoint
   function executeTransaction(bytes32 _txHash) external payable {
-    _executeTransaction(_txHash, _getApprovedSigners(_txHash));
+    _executeTransaction(_txHash, _getApprovedHashSigners(_txHash));
   }
 
   /// @inheritdoc ISafeEntrypoint
@@ -150,8 +150,8 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   }
 
   /// @inheritdoc ISafeEntrypoint
-  function getApprovedSigners(bytes32 _txHash) external view returns (address[] memory _approvedSigners) {
-    _approvedSigners = _getApprovedSigners(_txHash);
+  function getApprovedHashSigners(bytes32 _txHash) external view returns (address[] memory _approvedHashSigners) {
+    _approvedHashSigners = _getApprovedHashSigners(_txHash);
   }
 
   // ~~~ INTERNAL METHODS ~~~
@@ -185,14 +185,14 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   /**
    * @notice Internal function to execute a Safe transaction
    * @dev Uses the Safe's execTransaction function
-   * @param _data The transaction data
+   * @param _safeTxData The Safe transaction data
    * @param _signatures The signatures for the transaction
    */
-  function _execSafeTransaction(bytes memory _data, bytes memory _signatures) internal {
+  function _execSafeTransaction(bytes memory _safeTxData, bytes memory _signatures) internal {
     SAFE.execTransaction{value: msg.value}({
       to: MULTI_SEND_CALL_ONLY,
       value: 0,
-      data: _data,
+      data: _safeTxData,
       operation: Enum.Operation.DelegateCall,
       safeTxGas: 0,
       baseGas: 0,
@@ -226,15 +226,18 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
 
   /**
    * @notice Internal function to get the Safe transaction hash
-   * @param _data The transaction data
+   * @param _safeTxData The Safe transaction data
    * @param _safeNonce The Safe nonce to use for the hash calculation
    * @return _safeTxHash The Safe transaction hash
    */
-  function _getSafeTransactionHash(bytes memory _data, uint256 _safeNonce) internal view returns (bytes32 _safeTxHash) {
+  function _getSafeTransactionHash(
+    bytes memory _safeTxData,
+    uint256 _safeNonce
+  ) internal view returns (bytes32 _safeTxHash) {
     _safeTxHash = SAFE.getTransactionHash({
       to: MULTI_SEND_CALL_ONLY,
       value: 0,
-      data: _data,
+      data: _safeTxData,
       operation: Enum.Operation.DelegateCall,
       safeTxGas: 0,
       baseGas: 0,
@@ -246,35 +249,36 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   }
 
   /**
-   * @notice Internal function to get the list of approved signers for a transaction
+   * @notice Internal function to get the list of approved hash signers for a transaction
    * @param _txHash The hash of the transaction
-   * @return _approvedSigners The array of approved signer addresses
+   * @return _approvedHashSigners The array of approved hash signer addresses
    */
-  function _getApprovedSigners(bytes32 _txHash) internal view returns (address[] memory _approvedSigners) {
-    address[] memory _signers = SAFE.getOwners();
+  function _getApprovedHashSigners(bytes32 _txHash) internal view returns (address[] memory _approvedHashSigners) {
+    address[] memory _safeOwners = SAFE.getOwners();
+    uint256 _safeOwnersCount = _safeOwners.length;
 
     bytes memory _multiSendData = _buildMultiSendData(abi.decode(txData[_txHash], (IActions.Action[])));
     bytes32 _safeTxHash = _getSafeTransactionHash(_multiSendData, SAFE.nonce());
 
-    // Create a temporary array to store approved signers
-    address[] memory _tempApproved = new address[](_signers.length);
-    uint256 _approvedCount = 0;
+    // Create a temporary array to store approved hash signers
+    address[] memory _tempSigners = new address[](_safeOwnersCount);
+    uint256 _approvedHashSignersCount;
 
-    // Single pass through all signers
-    for (uint256 _i; _i < _signers.length; ++_i) {
-      // Check if this signer has approved the hash
-      if (SAFE.approvedHashes(_signers[_i], _safeTxHash) == 1) {
-        _tempApproved[_approvedCount] = _signers[_i];
-        ++_approvedCount;
+    // Single pass through all owners
+    for (uint256 _i; _i < _safeOwnersCount; ++_i) {
+      // Check if this owner has approved the hash
+      if (SAFE.approvedHashes(_safeOwners[_i], _safeTxHash) == 1) {
+        _tempSigners[_approvedHashSignersCount] = _safeOwners[_i];
+        ++_approvedHashSignersCount;
       }
     }
 
     // Create the final result array with the exact size needed
-    _approvedSigners = new address[](_approvedCount);
+    _approvedHashSigners = new address[](_approvedHashSignersCount);
 
     // Copy from temporary array to final array
-    for (uint256 _i; _i < _approvedCount; ++_i) {
-      _approvedSigners[_i] = _tempApproved[_i];
+    for (uint256 _i; _i < _approvedHashSignersCount; ++_i) {
+      _approvedHashSigners[_i] = _tempSigners[_i];
     }
   }
 
@@ -320,16 +324,20 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
    * @notice Internal function to build signatures for approved hashes
    * @dev Creates a special signature format using the signer's address
    * @param _signers The array of signer addresses
-   * @return _signatures The encoded signatures
+   * @return _approvedHashSignatures The encoded approved hash signatures
    */
-  function _buildApprovedHashSignatures(address[] memory _signers) internal pure returns (bytes memory _signatures) {
+  function _buildApprovedHashSignatures(address[] memory _signers)
+    internal
+    pure
+    returns (bytes memory _approvedHashSignatures)
+  {
     // Each signature requires exactly 65 bytes:
     // r: 32 bytes
     // s: 32 bytes
     // v: 1 byte
 
     // The total length will be signers.length * 65 bytes
-    _signatures = new bytes(_signers.length * 65);
+    _approvedHashSignatures = new bytes(_signers.length * 65);
 
     for (uint256 _i; _i < _signers.length; ++_i) {
       // Calculate position in the signatures array (65 bytes per signature)
@@ -347,13 +355,13 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
       // Write the signature values to the byte array
       assembly {
         // r value: first 32 bytes of the signature
-        mstore(add(add(_signatures, 32), _pos), _r)
+        mstore(add(add(_approvedHashSignatures, 32), _pos), _r)
 
         // s value: next 32 bytes of the signature
-        mstore(add(add(_signatures, 32), add(_pos, 32)), _s)
+        mstore(add(add(_approvedHashSignatures, 32), add(_pos, 32)), _s)
 
         // v value: final 1 byte of the signature
-        mstore8(add(add(_signatures, 32), add(_pos, 64)), _v)
+        mstore8(add(add(_approvedHashSignatures, 32), add(_pos, 64)), _v)
       }
     }
   }
@@ -364,7 +372,7 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
    * @param _signers The array of signer addresses to sort
    * @return _sortedSigners The sorted array of signer addresses
    */
-  function _sortSigners(address[] memory _signers) private pure returns (address[] memory _sortedSigners) {
+  function _sortSigners(address[] memory _signers) internal pure returns (address[] memory _sortedSigners) {
     for (uint256 _i; _i < _signers.length; ++_i) {
       for (uint256 _j; _j < _signers.length - _i - 1; ++_j) {
         // If the current element is greater than the next element, swap them
