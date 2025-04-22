@@ -27,6 +27,17 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   /// @inheritdoc ISafeEntrypoint
   mapping(bytes32 _actionHash => bool _executed) public executed;
 
+  struct ActionBatch {
+    address[] actionContracts;
+    bytes actionData;
+    uint256 executableAt;
+  }
+
+  error ActionAlreadyQueued();
+
+  mapping(bytes32 _actionHash => ActionBatch _actionBatch) public actionBatches;
+  mapping(address _actionContract => bool _isQueued) public queuedActions;
+
   /// @notice Global nonce to ensure unique hashes for identical actions
   uint256 internal _actionNonce;
 
@@ -66,6 +77,57 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
 
     // NOTE: event picked up by off-chain monitoring service
     emit ApprovedActionQueued(_actionHash, _executableAt);
+  }
+
+  function getBatchedActions(address[] memory actionContracts) public /* view */ returns (IActions.Action[] memory) {
+    uint256 _totalLength;
+    IActions.Action[][] memory _cachedActions = new IActions.Action[][](actionContracts.length);
+
+    // First pass: call getActions once per contract and cache the results
+    for (uint256 _i; _i < actionContracts.length; ++_i) {
+      address _actionContract = actionContracts[_i];
+      if (!allowedActions[_actionContract]) revert NotAllowed();
+      if (queuedActions[_actionContract]) revert ActionAlreadyQueued();
+      IActions.Action[] memory actions = IActions(_actionContract).getActions();
+
+      queuedActions[_actionContract] = true;
+
+      _cachedActions[_i] = actions;
+      _totalLength += actions.length;
+    }
+
+    // Allocate the final array
+    IActions.Action[] memory allActions = new IActions.Action[](_totalLength);
+
+    // Second pass: fill the final array from cached results
+    uint256 _index;
+    for (uint256 _i; _i < _cachedActions.length; ++_i) {
+      for (uint256 _j; _j < _cachedActions[_i].length; ++_j) {
+        allActions[_index++] = _cachedActions[_i][_j];
+      }
+    }
+
+    return allActions;
+  }
+
+  function queueApprovedActions(address[] memory _actionContracts) external isAuthorized returns (bytes32 _actionHash) {
+    for (uint256 _i; _i < _actionContracts.length; ++_i) {
+      address _actionContract = _actionContracts[_i];
+      if (!allowedActions[_actionContract]) revert NotAllowed();
+    }
+
+    IActions.Action[] memory _actions = getBatchedActions(_actionContracts);
+
+    _actionHash = keccak256(abi.encode(_actions, _actionNonce++));
+
+    actionBatches[_actionHash] = ActionBatch({
+      actionContracts: _actionContracts,
+      actionData: abi.encode(_actions),
+      executableAt: block.timestamp + 1 hours
+    });
+
+    // NOTE: event picked up by off-chain monitoring service
+    emit ApprovedActionQueued(_actionHash, block.timestamp + 1 hours);
   }
 
   /// @inheritdoc ISafeEntrypoint
