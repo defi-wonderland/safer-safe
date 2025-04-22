@@ -51,13 +51,13 @@ interface ISafeEntrypoint is ISafeManageable {
    * @notice Emitted when a transaction builder is approved
    * @param _transactionBuilder The address of the transaction builder
    */
-  event ActionAllowed(address _transactionBuilder);
+  event TransactionBuilderApproved(address _transactionBuilder);
 
   /**
    * @notice Emitted when a transaction builder is disapproved
    * @param _transactionBuilder The address of the transaction builder
    */
-  event ActionDisallowed(address _transactionBuilder);
+  event TransactionBuilderDisapproved(address _transactionBuilder);
 
   /**
    * @notice Emitted when a transaction is queued
@@ -83,14 +83,14 @@ interface ISafeEntrypoint is ISafeManageable {
   // ~~~ ERRORS ~~~
 
   /**
-   * @notice Thrown when an action contract is already allowed
+   * @notice Thrown when a transaction builder is already approved
    */
-  error AlreadyAllowed();
+  error TransactionBuilderAlreadyApproved();
 
   /**
-   * @notice Thrown when an action contract is not allowed
+   * @notice Thrown when a transaction builder is not approved
    */
-  error NotAllowed();
+  error TransactionBuilderNotApproved();
 
   /**
    * @notice Thrown when an empty actions array is provided
@@ -113,7 +113,7 @@ interface ISafeEntrypoint is ISafeManageable {
   error TransactionNotExecutable();
 
   /**
-   * @notice Thrown when a call to an action contract fails
+   * @notice Thrown when a call to a transaction builder fails
    */
   error NotSuccess();
 
@@ -124,14 +124,14 @@ interface ISafeEntrypoint is ISafeManageable {
    * @dev Can only be called by the Safe contract
    * @param _transactionBuilder The address of the transaction builder to approve
    */
-  function allowAction(address _transactionBuilder) external;
+  function approveTransactionBuilder(address _transactionBuilder) external;
 
   /**
    * @notice Disapproves a transaction builder from being executed by the Safe
    * @dev Can only be called by the Safe owners
    * @param _transactionBuilder The address of the transaction builder to disapprove
    */
-  function disallowAction(address _transactionBuilder) external;
+  function disapproveTransactionBuilder(address _transactionBuilder) external;
 
   // ~~~ ACTIONS METHODS ~~~
 

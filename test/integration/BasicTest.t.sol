@@ -66,7 +66,7 @@ contract BasicTest is Test {
 
     // Allow the SafeEntrypoint to call the SimpleActions contract
     vm.prank(address(_safe)); // TODO: Replicate Safe transaction without pranking it
-    _safeEntrypoint.allowAction(_transactionBuilder);
+    _safeEntrypoint.approveTransactionBuilder(_transactionBuilder);
 
     vm.startPrank(_OWNER);
 

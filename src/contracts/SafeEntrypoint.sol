@@ -42,12 +42,12 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   // ~~~ ADMIN METHODS ~~~
 
   /// @inheritdoc ISafeEntrypoint
-  function allowAction(address _transactionBuilder) external isMsig {
+  function approveTransactionBuilder(address _transactionBuilder) external isMsig {
     approvedTransactionBuilders[_transactionBuilder] = true;
   }
 
   /// @inheritdoc ISafeEntrypoint
-  function disallowAction(address _transactionBuilder) external isAuthorized {
+  function disapproveTransactionBuilder(address _transactionBuilder) external isAuthorized {
     approvedTransactionBuilders[_transactionBuilder] = false;
   }
 
@@ -55,7 +55,7 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
 
   /// @inheritdoc ISafeEntrypoint
   function queueTransaction(address _transactionBuilder) external isAuthorized returns (bytes32 _txHash) {
-    if (!approvedTransactionBuilders[_transactionBuilder]) revert NotAllowed();
+    if (!approvedTransactionBuilders[_transactionBuilder]) revert TransactionBuilderNotApproved();
 
     IActions.Action[] memory _actions = IActions(_transactionBuilder).getActions();
     _txHash = keccak256(abi.encode(_actions, _txNonce++));
