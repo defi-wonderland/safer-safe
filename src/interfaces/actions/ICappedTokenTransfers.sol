@@ -2,9 +2,9 @@
 pragma solidity 0.8.29;
 
 import {ISafeManageable} from 'interfaces/ISafeManageable.sol';
-import {IActions} from 'interfaces/actions/IActions.sol';
+import {ITransactionBuilder} from 'interfaces/actions/ITransactionBuilder.sol';
 
-interface ICappedTokenTransfers is ISafeManageable, IActions {
+interface ICappedTokenTransfers is ISafeManageable, ITransactionBuilder {
   struct TokenTransfer {
     address token;
     address recipient;

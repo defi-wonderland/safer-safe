@@ -2,7 +2,7 @@
 pragma solidity 0.8.29;
 
 import {ISafeManageable} from 'interfaces/ISafeManageable.sol';
-import {IActions} from 'interfaces/actions/IActions.sol';
+import {ITransactionBuilder} from 'interfaces/actions/ITransactionBuilder.sol';
 
 /**
  * @title ISafeEntrypoint
@@ -19,10 +19,10 @@ interface ISafeEntrypoint is ISafeManageable {
 
   /**
    * @notice Maps a transaction builder to its approval status
-   * @param _transactionBuilder The address of the transaction builder contract
+   * @param _txBuilder The address of the transaction builder contract
    * @return _isApproved The approval status of the transaction builder
    */
-  function approvedTransactionBuilders(address _transactionBuilder) external view returns (bool _isApproved);
+  function approvedTransactionBuilders(address _txBuilder) external view returns (bool _isApproved);
 
   /**
    * @notice Maps a transaction hash to its executable timestamp
@@ -49,15 +49,15 @@ interface ISafeEntrypoint is ISafeManageable {
 
   /**
    * @notice Emitted when a transaction builder is approved
-   * @param _transactionBuilder The address of the transaction builder contract
+   * @param _txBuilder The address of the transaction builder contract
    */
-  event TransactionBuilderApproved(address _transactionBuilder);
+  event TransactionBuilderApproved(address _txBuilder);
 
   /**
    * @notice Emitted when a transaction builder is disapproved
-   * @param _transactionBuilder The address of the transaction builder contract
+   * @param _txBuilder The address of the transaction builder contract
    */
-  event TransactionBuilderDisapproved(address _transactionBuilder);
+  event TransactionBuilderDisapproved(address _txBuilder);
 
   /**
    * @notice Emitted when a transaction is queued
@@ -122,16 +122,16 @@ interface ISafeEntrypoint is ISafeManageable {
   /**
    * @notice Approves a transaction builder to be executed by the Safe
    * @dev Can only be called by the Safe contract
-   * @param _transactionBuilder The address of the transaction builder contract to approve
+   * @param _txBuilder The address of the transaction builder contract to approve
    */
-  function approveTransactionBuilder(address _transactionBuilder) external;
+  function approveTransactionBuilder(address _txBuilder) external;
 
   /**
    * @notice Disapproves a transaction builder from being executed by the Safe
    * @dev Can only be called by the Safe owners
-   * @param _transactionBuilder The address of the transaction builder contract to disapprove
+   * @param _txBuilder The address of the transaction builder contract to disapprove
    */
-  function disapproveTransactionBuilder(address _transactionBuilder) external;
+  function disapproveTransactionBuilder(address _txBuilder) external;
 
   // ~~~ ACTIONS METHODS ~~~
 
@@ -139,10 +139,10 @@ interface ISafeEntrypoint is ISafeManageable {
    * @notice Queues an approved transaction for execution after a 1-hour delay
    * @dev Can only be called by the Safe owners
    * @dev The transaction builder contract must be pre-approved using approveTransactionBuilder
-   * @param _transactionBuilder The address of the approved transaction builder contract
+   * @param _txBuilder The address of the approved transaction builder contract
    * @return _txHash The hash of the transaction
    */
-  function queueTransaction(address _transactionBuilder) external returns (bytes32 _txHash);
+  function queueTransaction(address _txBuilder) external returns (bytes32 _txHash);
 
   /**
    * @notice Queues an arbitrary transaction for execution after a 7-day delay
@@ -151,7 +151,7 @@ interface ISafeEntrypoint is ISafeManageable {
    * @param _actions The array of actions to queue
    * @return _txHash The hash of the transaction
    */
-  function queueTransaction(IActions.Action[] memory _actions) external returns (bytes32 _txHash);
+  function queueTransaction(ITransactionBuilder.Action[] memory _actions) external returns (bytes32 _txHash);
 
   /**
    * @notice Executes a queued transaction using the approved signers
@@ -179,29 +179,26 @@ interface ISafeEntrypoint is ISafeManageable {
 
   /**
    * @notice Gets the hash of a transaction from a transaction builder
-   * @param _transactionBuilder The address of the transaction builder contract
+   * @param _txBuilder The address of the transaction builder contract
    * @param _txNonce The nonce of the transaction
    * @return _txHash The hash of the transaction
    */
-  function getTransactionHash(address _transactionBuilder, uint256 _txNonce) external view returns (bytes32 _txHash);
+  function getTransactionHash(address _txBuilder, uint256 _txNonce) external view returns (bytes32 _txHash);
 
   /**
    * @notice Gets the Safe transaction hash for a transaction builder
-   * @param _transactionBuilder The address of the transaction builder contract
+   * @param _txBuilder The address of the transaction builder contract
    * @return _safeTxHash The Safe transaction hash
    */
-  function getSafeTransactionHash(address _transactionBuilder) external view returns (bytes32 _safeTxHash);
+  function getSafeTransactionHash(address _txBuilder) external view returns (bytes32 _safeTxHash);
 
   /**
    * @notice Gets the Safe transaction hash for a transaction builder with a specific Safe nonce
-   * @param _transactionBuilder The address of the transaction builder contract
+   * @param _txBuilder The address of the transaction builder contract
    * @param _safeNonce The Safe nonce to use for the hash calculation
    * @return _safeTxHash The Safe transaction hash
    */
-  function getSafeTransactionHash(
-    address _transactionBuilder,
-    uint256 _safeNonce
-  ) external view returns (bytes32 _safeTxHash);
+  function getSafeTransactionHash(address _txBuilder, uint256 _safeNonce) external view returns (bytes32 _safeTxHash);
 
   /**
    * @notice Gets the Safe transaction hash for a transaction hash

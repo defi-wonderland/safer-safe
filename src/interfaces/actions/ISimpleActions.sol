@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: LGPL-3.0-only
 pragma solidity 0.8.29;
 
-import {IActions} from 'interfaces/actions/IActions.sol';
+import {ITransactionBuilder} from 'interfaces/actions/ITransactionBuilder.sol';
 
-interface ISimpleActions is IActions {
+interface ISimpleActions is ITransactionBuilder {
   struct SimpleAction {
     address target; // e.g. WETH
     string signature; // e.g. "transfer(address,uint256)"
