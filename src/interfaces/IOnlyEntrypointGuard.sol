@@ -21,10 +21,10 @@ interface IOnlyEntrypointGuard {
   function ENTRYPOINT() external view returns (address _entrypoint);
 
   /**
-   * @notice Gets the minimum number of signers required for emergency override
-   * @return _minSigners The minimum number of signers required
+   * @notice Gets the address of the emergency multisig contract
+   * @return _emergencyMultisig The address of the emergency multisig contract
    */
-  function MIN_SIGNERS() external view returns (uint256 _minSigners);
+  function EMERGENCY_MULTISIG() external view returns (address _emergencyMultisig);
 
   // ~~~ ERRORS ~~~
 

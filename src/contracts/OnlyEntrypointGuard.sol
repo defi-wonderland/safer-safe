@@ -7,7 +7,7 @@ import {IOnlyEntrypointGuard} from 'interfaces/IOnlyEntrypointGuard.sol';
 
 /**
  * @title OnlyEntrypointGuard
- * @notice Guard that ensures transactions are either executed through the entrypoint or by a high-threshold multisig signer
+ * @notice Guard that ensures transactions are either executed through the entrypoint or by an emergency multisig contract
  */
 contract OnlyEntrypointGuard is BaseTransactionGuard, IOnlyEntrypointGuard {
   /// @inheritdoc IOnlyEntrypointGuard
@@ -17,16 +17,16 @@ contract OnlyEntrypointGuard is BaseTransactionGuard, IOnlyEntrypointGuard {
   address public immutable ENTRYPOINT;
 
   /// @inheritdoc IOnlyEntrypointGuard
-  uint256 public immutable MIN_SIGNERS;
+  address public immutable EMERGENCY_MULTISIG;
 
   /**
    * @notice Constructor that sets up the guard
    * @param _entrypoint The address of the Safe Entrypoint contract
-   * @param _minSigners The minimum number of signers required for emergency override
+   * @param _emergencyMultisig The address of the emergency multisig contract that can execute transactions in emergency situations
    */
-  constructor(address _entrypoint, uint256 _minSigners) {
+  constructor(address _entrypoint, address _emergencyMultisig) {
     ENTRYPOINT = _entrypoint;
-    MIN_SIGNERS = _minSigners;
+    EMERGENCY_MULTISIG = _emergencyMultisig;
   }
 
   /**
@@ -48,20 +48,14 @@ contract OnlyEntrypointGuard is BaseTransactionGuard, IOnlyEntrypointGuard {
     bytes memory _signatures,
     address _msgSender
   ) external override {
-    // Allow transactions from the entrypoint
-    if (_msgSender == ENTRYPOINT) {
+    // Allow transactions from the entrypoint or emergency multisig
+    if (_msgSender == ENTRYPOINT || _msgSender == EMERGENCY_MULTISIG) {
       return;
     }
 
     // Validate signature format - only allow pre-approved hash signatures
     if (!_isValidSignatureFormat(_signatures)) {
       revert InvalidSignatureFormat();
-    }
-
-    // Check if the transaction has enough signers for emergency override
-    uint256 _signerCount = _countSigners(_signatures);
-    if (_signerCount >= MIN_SIGNERS) {
-      return;
     }
 
     // If we get here, the transaction is not allowed
@@ -76,16 +70,6 @@ contract OnlyEntrypointGuard is BaseTransactionGuard, IOnlyEntrypointGuard {
    */
   function checkAfterExecution(bytes32 _txHash, bool _success) external override {
     // No post-execution checks needed
-  }
-
-  /**
-   * @notice Counts the number of signers in a transaction
-   * @param _signatures The signatures for the transaction
-   * @return _count The number of signers
-   */
-  function _countSigners(bytes memory _signatures) internal pure returns (uint256 _count) {
-    // Each signature is 65 bytes (r: 32 bytes, s: 32 bytes, v: 1 byte)
-    return _signatures.length / 65;
   }
 
   /**
