@@ -71,7 +71,7 @@ contract BasicTest is Test {
     vm.startPrank(_OWNER);
 
     // Queue the transaction
-    bytes32 _txHash = _safeEntrypoint.queueApprovedAction(address(_actionContract));
+    bytes32 _txHash = _safeEntrypoint.queueTransaction(address(_actionContract));
 
     // Wait for the timelock period
     vm.warp(block.timestamp + 1 hours);
@@ -82,8 +82,8 @@ contract BasicTest is Test {
 
     // Execute the transaction
     vm.deal(_OWNER, 1 ether);
-    _safeEntrypoint.executeAction{value: 1}(_txHash);
+    _safeEntrypoint.executeTransaction{value: 1}(_txHash);
   }
 
-  function test_executeAction() public {}
+  function test_executeTransaction() public {}
 }

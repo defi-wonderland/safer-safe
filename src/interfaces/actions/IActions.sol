@@ -8,5 +8,5 @@ interface IActions {
     uint256 value;
   }
 
-  function getActions() external returns (Action[] memory);
+  function getActions() external returns (Action[] memory _actions);
 }

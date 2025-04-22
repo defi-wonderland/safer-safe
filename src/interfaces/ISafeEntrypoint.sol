@@ -60,31 +60,25 @@ interface ISafeEntrypoint is ISafeManageable {
   event ActionDisallowed(address _actionContract);
 
   /**
-   * @notice Emitted when an approved action is queued
+   * @notice Emitted when a transaction is queued
    * @param _txHash The hash of the transaction
    * @param _txExecutableAt The timestamp from which the transaction can be executed
+   * @param _isArbitrary Whether the transaction is arbitrary or pre-approved
    */
-  event ApprovedActionQueued(bytes32 _txHash, uint256 _txExecutableAt);
+  event TransactionQueued(bytes32 _txHash, uint256 _txExecutableAt, bool _isArbitrary);
 
   /**
-   * @notice Emitted when an arbitrary action is queued
-   * @param _txHash The hash of the transaction
-   * @param _txExecutableAt The timestamp from which the transaction can be executed
-   */
-  event ArbitraryActionQueued(bytes32 _txHash, uint256 _txExecutableAt);
-
-  /**
-   * @notice Emitted when an action is executed
+   * @notice Emitted when a transaction is executed
    * @param _txHash The hash of the transaction
    * @param _safeTxHash The hash of the Safe transaction
    */
-  event ActionExecuted(bytes32 _txHash, bytes32 _safeTxHash);
+  event TransactionExecuted(bytes32 _txHash, bytes32 _safeTxHash);
 
   /**
-   * @notice Emitted when an action is unqueued
+   * @notice Emitted when a transaction is unqueued
    * @param _txHash The hash of the transaction
    */
-  event ActionUnqueued(bytes32 _txHash);
+  event TransactionUnqueued(bytes32 _txHash);
 
   // ~~~ ERRORS ~~~
 
@@ -104,19 +98,19 @@ interface ISafeEntrypoint is ISafeManageable {
   error EmptyActionsArray();
 
   /**
-   * @notice Thrown when an action is not found
+   * @notice Thrown when a transaction is not queued
    */
-  error ActionNotFound();
+  error TransactionNotQueued();
 
   /**
-   * @notice Thrown when an action has already been executed
+   * @notice Thrown when a transaction has already been executed
    */
-  error ActionAlreadyExecuted();
+  error TransactionAlreadyExecuted();
 
   /**
-   * @notice Thrown when an action is not executable
+   * @notice Thrown when a transaction is not executable
    */
-  error NotExecutable();
+  error TransactionNotExecutable();
 
   /**
    * @notice Thrown when a call to an action contract fails
@@ -142,44 +136,44 @@ interface ISafeEntrypoint is ISafeManageable {
   // ~~~ ACTIONS METHODS ~~~
 
   /**
-   * @notice Queues an approved action for execution after a 1-hour delay
+   * @notice Queues an approved transaction for execution after a 1-hour delay
    * @dev Can only be called by the Safe owners
    * @dev The action contract must be pre-approved using allowAction
    * @param _actionContract The address of the approved action contract
    * @return _txHash The hash of the transaction
    */
-  function queueApprovedAction(address _actionContract) external returns (bytes32 _txHash);
+  function queueTransaction(address _actionContract) external returns (bytes32 _txHash);
 
   /**
-   * @notice Queues arbitrary actions for execution after a 7-day delay
+   * @notice Queues an arbitrary transaction for execution after a 7-day delay
    * @dev Can only be called by the Safe owners
    * @dev The actions must be properly formatted for each target contract
    * @param _actions The array of actions to queue
    * @return _txHash The hash of the transaction
    */
-  function queueArbitraryAction(IActions.Action[] memory _actions) external returns (bytes32 _txHash);
+  function queueTransaction(IActions.Action[] memory _actions) external returns (bytes32 _txHash);
 
   /**
-   * @notice Executes a queued action using the approved signers
-   * @dev The action must have passed its delay period
+   * @notice Executes a queued transaction using the approved signers
+   * @dev The transaction must have passed its delay period
    * @param _txHash The hash of the transaction to execute
    */
-  function executeAction(bytes32 _txHash) external payable;
+  function executeTransaction(bytes32 _txHash) external payable;
 
   /**
-   * @notice Executes a queued action using the provided signers
-   * @dev The action must have passed its delay period
+   * @notice Executes a queued transaction using the provided signers
+   * @dev The transaction must have passed its delay period
    * @param _txHash The hash of the transaction to execute
    * @param _signers The addresses of the signers to use
    */
-  function executeAction(bytes32 _txHash, address[] memory _signers) external payable;
+  function executeTransaction(bytes32 _txHash, address[] memory _signers) external payable;
 
   /**
-   * @notice Unqueues a pending action before it is executed
+   * @notice Unqueues a pending transaction before it is executed
    * @dev Can only be called by the Safe owners
    * @param _txHash The hash of the transaction to unqueue
    */
-  function unqueueAction(bytes32 _txHash) external;
+  function unqueueTransaction(bytes32 _txHash) external;
 
   // ~~~ VIEW METHODS ~~~
 

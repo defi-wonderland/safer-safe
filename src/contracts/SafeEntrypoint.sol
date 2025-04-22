@@ -54,7 +54,7 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   // ~~~ ACTIONS METHODS ~~~
 
   /// @inheritdoc ISafeEntrypoint
-  function queueApprovedAction(address _actionContract) external isAuthorized returns (bytes32 _txHash) {
+  function queueTransaction(address _actionContract) external isAuthorized returns (bytes32 _txHash) {
     if (!allowedActions[_actionContract]) revert NotAllowed();
 
     IActions.Action[] memory _actions = IActions(_actionContract).getActions();
@@ -65,11 +65,11 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     txData[_txHash] = abi.encode(_actions);
 
     // NOTE: event picked up by off-chain monitoring service
-    emit ApprovedActionQueued(_txHash, _executableAt);
+    emit TransactionQueued(_txHash, _executableAt, false);
   }
 
   /// @inheritdoc ISafeEntrypoint
-  function queueArbitraryAction(IActions.Action[] memory _actions) external isAuthorized returns (bytes32 _txHash) {
+  function queueTransaction(IActions.Action[] memory _actions) external isAuthorized returns (bytes32 _txHash) {
     // Validate that the actions array is not empty
     if (_actions.length == 0) {
       revert EmptyActionsArray();
@@ -82,33 +82,33 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     txData[_txHash] = abi.encode(_actions);
 
     // NOTE: event picked up by off-chain monitoring service
-    emit ArbitraryActionQueued(_txHash, _executableAt);
+    emit TransactionQueued(_txHash, _executableAt, true);
   }
 
   /// @inheritdoc ISafeEntrypoint
-  function executeAction(bytes32 _txHash) external payable {
-    _executeAction(_txHash, _getApprovedSigners(_txHash));
+  function executeTransaction(bytes32 _txHash) external payable {
+    _executeTransaction(_txHash, _getApprovedSigners(_txHash));
   }
 
   /// @inheritdoc ISafeEntrypoint
-  function executeAction(bytes32 _txHash, address[] memory _signers) external payable {
-    _executeAction(_txHash, _signers);
+  function executeTransaction(bytes32 _txHash, address[] memory _signers) external payable {
+    _executeTransaction(_txHash, _signers);
   }
 
   /// @inheritdoc ISafeEntrypoint
-  function unqueueAction(bytes32 _txHash) external isAuthorized {
+  function unqueueTransaction(bytes32 _txHash) external isAuthorized {
     // Check if the transaction exists
-    if (txExecutableAt[_txHash] == 0) revert ActionNotFound();
+    if (txExecutableAt[_txHash] == 0) revert TransactionNotQueued();
 
     // Check if the transaction has already been executed
-    if (executedTxs[_txHash]) revert ActionAlreadyExecuted();
+    if (executedTxs[_txHash]) revert TransactionAlreadyExecuted();
 
     // Clear the transaction data
     delete txExecutableAt[_txHash];
     delete txData[_txHash];
 
     // Emit event for off-chain monitoring
-    emit ActionUnqueued(_txHash);
+    emit TransactionUnqueued(_txHash);
   }
 
   // ~~~ VIEW METHODS ~~~
@@ -162,9 +162,9 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
    * @param _txHash The hash of the transaction to execute
    * @param _signers The addresses of the signers to use
    */
-  function _executeAction(bytes32 _txHash, address[] memory _signers) internal {
-    if (txExecutableAt[_txHash] > block.timestamp) revert NotExecutable();
-    if (executedTxs[_txHash]) revert ActionAlreadyExecuted();
+  function _executeTransaction(bytes32 _txHash, address[] memory _signers) internal {
+    if (txExecutableAt[_txHash] > block.timestamp) revert TransactionNotExecutable();
+    if (executedTxs[_txHash]) revert TransactionAlreadyExecuted();
 
     bytes memory _multiSendData = _constructMultiSendData(abi.decode(txData[_txHash], (IActions.Action[])));
     address[] memory _sortedSigners = _sortSigners(_signers);
@@ -179,7 +179,7 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     executedTxs[_txHash] = true;
 
     // NOTE: event emitted to log successful execution
-    emit ActionExecuted(_txHash, _safeTxHash);
+    emit TransactionExecuted(_txHash, _safeTxHash);
   }
 
   /**
