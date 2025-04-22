@@ -31,6 +31,12 @@ interface ISafeEntrypoint is ISafeManageable {
   function MULTI_SEND_CALL_ONLY() external view returns (address _multiSendCallOnly);
 
   /**
+   * @notice Gets the global nonce
+   * @return actionNonce The global nonce
+   */
+  function actionNonce() external view returns (uint256 actionNonce);
+
+  /**
    * @notice Maps an action contract to its approval status
    * @param _actionContract The address of the action contract
    * @return _isAllowed The approval status of the action contract

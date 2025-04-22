@@ -17,8 +17,8 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   /// @inheritdoc ISafeEntrypoint
   address public immutable MULTI_SEND_CALL_ONLY;
 
-  /// @notice Global nonce to ensure unique hashes for identical actions
-  uint256 public _actionNonce;
+  /// @inheritdoc ISafeEntrypoint
+  uint256 public actionNonce;
 
   /// @inheritdoc ISafeEntrypoint
   mapping(address _actionContract => bool _isAllowed) public allowedActions;
@@ -81,7 +81,7 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     IActions.Action[] memory allActions = _collectActions(_actionContracts);
 
     // Create a unique hash for the batch
-    _actionHash = keccak256(abi.encode(allActions, _actionNonce++));
+    _actionHash = keccak256(abi.encode(allActions, actionNonce++));
 
     // Mark all contracts as queued
     for (uint256 _i; _i < _actionContracts.length; ++_i) {
@@ -109,7 +109,7 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     }
 
     // Create a unique hash for the actions
-    _actionHash = keccak256(abi.encode(_actions, _actionNonce++));
+    _actionHash = keccak256(abi.encode(_actions, actionNonce++));
 
     // Store the action information
     actions[_actionHash] = ActionInfo({
