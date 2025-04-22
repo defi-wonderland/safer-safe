@@ -1,11 +1,11 @@
 {
-  "name": "solidity-foundry-boilerplate",
-  "version": "1.0.0",
-  "description": "Production ready Solidity boilerplate with Foundry",
-  "homepage": "https://github.com/defi-wonderland/solidity-foundry-boilerplate#readme",
+  "name": "safer-safe",
+  "version": "0.0.1",
+  "description": "Safer Safe",
+  "homepage": "https://github.com/defi-wonderland/safer-safe#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/defi-wonderland/solidity-foundry-boilerplate.git"
+    "url": "git+https://github.com/defi-wonderland/safer-safe.git"
   },
   "license": "MIT",
   "author": "Wonderland",
