@@ -122,7 +122,7 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   /// @inheritdoc ISafeEntrypoint
   function getSafeTransactionHash(address _transactionBuilder) external view returns (bytes32 _safeTxHash) {
     IActions.Action[] memory _actions = _fetchActions(_transactionBuilder);
-    bytes memory _multiSendData = _constructMultiSendData(_actions);
+    bytes memory _multiSendData = _buildMultiSendData(_actions);
     _safeTxHash = _getSafeTransactionHash(_multiSendData, SAFE.nonce());
   }
 
@@ -132,20 +132,20 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     uint256 _safeNonce
   ) external view returns (bytes32 _safeTxHash) {
     IActions.Action[] memory _actions = _fetchActions(_transactionBuilder);
-    bytes memory _multiSendData = _constructMultiSendData(_actions);
+    bytes memory _multiSendData = _buildMultiSendData(_actions);
     _safeTxHash = _getSafeTransactionHash(_multiSendData, _safeNonce);
   }
 
   /// @inheritdoc ISafeEntrypoint
   function getSafeTransactionHash(bytes32 _txHash) external view returns (bytes32 _safeTxHash) {
     IActions.Action[] memory _actions = abi.decode(txData[_txHash], (IActions.Action[]));
-    bytes memory _multiSendData = _constructMultiSendData(_actions);
+    bytes memory _multiSendData = _buildMultiSendData(_actions);
     _safeTxHash = _getSafeTransactionHash(_multiSendData, SAFE.nonce());
   }
 
   /// @inheritdoc ISafeEntrypoint
   function getSafeTransactionHash(bytes32 _txHash, uint256 _safeNonce) external view returns (bytes32 _safeTxHash) {
-    bytes memory _multiSendData = _constructMultiSendData(abi.decode(txData[_txHash], (IActions.Action[])));
+    bytes memory _multiSendData = _buildMultiSendData(abi.decode(txData[_txHash], (IActions.Action[])));
     _safeTxHash = _getSafeTransactionHash(_multiSendData, _safeNonce);
   }
 
@@ -158,7 +158,7 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
 
   /**
    * @notice Internal function to execute a transaction
-   * @dev Checks if the transaction is executable and constructs the necessary data
+   * @dev Checks if the transaction is executable and builds the necessary data
    * @param _txHash The hash of the transaction to execute
    * @param _signers The addresses of the signers to use
    */
@@ -166,9 +166,9 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     if (txExecutableAt[_txHash] > block.timestamp) revert TransactionNotExecutable();
     if (executedTxs[_txHash]) revert TransactionAlreadyExecuted();
 
-    bytes memory _multiSendData = _constructMultiSendData(abi.decode(txData[_txHash], (IActions.Action[])));
+    bytes memory _multiSendData = _buildMultiSendData(abi.decode(txData[_txHash], (IActions.Action[])));
     address[] memory _sortedSigners = _sortSigners(_signers);
-    bytes memory _signatures = _constructApprovedHashSignatures(_sortedSigners);
+    bytes memory _signatures = _buildApprovedHashSignatures(_sortedSigners);
 
     // NOTE: only for event logging
     uint256 _safeNonce = SAFE.nonce();
@@ -253,7 +253,7 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   function _getApprovedSigners(bytes32 _txHash) internal view returns (address[] memory _approvedSigners) {
     address[] memory _signers = SAFE.getOwners();
 
-    bytes memory _multiSendData = _constructMultiSendData(abi.decode(txData[_txHash], (IActions.Action[])));
+    bytes memory _multiSendData = _buildMultiSendData(abi.decode(txData[_txHash], (IActions.Action[])));
     bytes32 _safeTxHash = _getSafeTransactionHash(_multiSendData, SAFE.nonce());
 
     // Create a temporary array to store approved signers
@@ -279,16 +279,12 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   }
 
   /**
-   * @notice Internal function to construct MultiSend data from actions
+   * @notice Internal function to build MultiSend data from actions array
    * @dev Encodes each action into the MultiSend format
    * @param _actions The array of actions to encode
    * @return _multiSendData The encoded MultiSend data
    */
-  function _constructMultiSendData(IActions.Action[] memory _actions)
-    internal
-    pure
-    returns (bytes memory _multiSendData)
-  {
+  function _buildMultiSendData(IActions.Action[] memory _actions) internal pure returns (bytes memory _multiSendData) {
     // Initialize an empty bytes array to avoid null reference
     _multiSendData = new bytes(0);
 
@@ -321,34 +317,12 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   }
 
   /**
-   * @notice Internal function to sort signer addresses
-   * @dev Uses bubble sort to sort addresses numerically
-   * @param _signers The array of signer addresses to sort
-   * @return _sortedSigners The sorted array of signer addresses
-   */
-  function _sortSigners(address[] memory _signers) internal pure returns (address[] memory _sortedSigners) {
-    for (uint256 _i; _i < _signers.length; ++_i) {
-      for (uint256 _j; _j < _signers.length - _i - 1; ++_j) {
-        // If the current element is greater than the next element, swap them
-        if (_signers[_j] > _signers[_j + 1]) {
-          // Swap elements
-          address _temp = _signers[_j];
-          _signers[_j] = _signers[_j + 1];
-          _signers[_j + 1] = _temp;
-        }
-      }
-    }
-
-    return _signers;
-  }
-
-  /**
-   * @notice Internal function to construct signatures for approved hashes
+   * @notice Internal function to build signatures for approved hashes
    * @dev Creates a special signature format using the signer's address
    * @param _signers The array of signer addresses
    * @return _signatures The encoded signatures
    */
-  function _constructApprovedHashSignatures(address[] memory _signers) internal pure returns (bytes memory _signatures) {
+  function _buildApprovedHashSignatures(address[] memory _signers) internal pure returns (bytes memory _signatures) {
     // Each signature requires exactly 65 bytes:
     // r: 32 bytes
     // s: 32 bytes
@@ -382,5 +356,27 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
         mstore8(add(add(_signatures, 32), add(_pos, 64)), _v)
       }
     }
+  }
+
+  /**
+   * @notice Internal function to sort signer addresses
+   * @dev Uses bubble sort to sort addresses numerically
+   * @param _signers The array of signer addresses to sort
+   * @return _sortedSigners The sorted array of signer addresses
+   */
+  function _sortSigners(address[] memory _signers) private pure returns (address[] memory _sortedSigners) {
+    for (uint256 _i; _i < _signers.length; ++_i) {
+      for (uint256 _j; _j < _signers.length - _i - 1; ++_j) {
+        // If the current element is greater than the next element, swap them
+        if (_signers[_j] > _signers[_j + 1]) {
+          // Swap elements
+          address _temp = _signers[_j];
+          _signers[_j] = _signers[_j + 1];
+          _signers[_j + 1] = _temp;
+        }
+      }
+    }
+
+    return _signers;
   }
 }
