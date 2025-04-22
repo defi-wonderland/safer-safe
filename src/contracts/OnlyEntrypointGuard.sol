@@ -11,16 +11,13 @@ import {IOnlyEntrypointGuard} from 'interfaces/IOnlyEntrypointGuard.sol';
  */
 contract OnlyEntrypointGuard is BaseTransactionGuard, IOnlyEntrypointGuard {
   /// @inheritdoc IOnlyEntrypointGuard
+  uint256 public constant PRE_VALIDATED_SIGNATURE_TYPE = 0x01;
+
+  /// @inheritdoc IOnlyEntrypointGuard
   address public immutable ENTRYPOINT;
 
   /// @inheritdoc IOnlyEntrypointGuard
   uint256 public immutable MIN_SIGNERS;
-
-  // Signature type constant for pre-approved hash signatures
-  uint8 private constant PRE_VALIDATED_SIGNATURE_TYPE = 0x01;
-
-  // Error for invalid signature format
-  error InvalidSignatureFormat();
 
   /**
    * @notice Constructor that sets up the guard

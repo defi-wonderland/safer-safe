@@ -9,6 +9,12 @@ interface IOnlyEntrypointGuard {
   // ~~~ STORAGE METHODS ~~~
 
   /**
+   * @notice Gets the signature type constant for pre-approved hash signatures
+   * @return _preValidatedSignatureType The signature type constant for pre-approved hash signatures
+   */
+  function PRE_VALIDATED_SIGNATURE_TYPE() external view returns (uint256 _preValidatedSignatureType);
+
+  /**
    * @notice Gets the address of the Safe Entrypoint contract
    * @return _entrypoint The address of the Safe Entrypoint contract
    */
@@ -21,6 +27,11 @@ interface IOnlyEntrypointGuard {
   function MIN_SIGNERS() external view returns (uint256 _minSigners);
 
   // ~~~ ERRORS ~~~
+
+  /**
+   * @notice Thrown when the signature format is invalid
+   */
+  error InvalidSignatureFormat();
 
   /**
    * @notice Thrown when the transaction is not allowed
