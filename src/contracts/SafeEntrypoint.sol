@@ -63,6 +63,7 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     for (uint256 _i; _i < _actionContracts.length; ++_i) {
       if (!allowedActions[_actionContracts[_i]]) revert NotAllowed();
       if (queuedActions[_actionContracts[_i]]) revert ActionAlreadyQueued();
+      queuedActions[_actionContracts[_i]] = true;
     }
 
     // Collect all actions
@@ -70,11 +71,6 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
 
     // Create a unique hash for the batch
     _actionHash = keccak256(abi.encode(allActions, actionNonce++));
-
-    // Mark all contracts as queued
-    for (uint256 _i; _i < _actionContracts.length; ++_i) {
-      queuedActions[_actionContracts[_i]] = true;
-    }
 
     // Store the batch information
     actions[_actionHash] = ActionInfo({
