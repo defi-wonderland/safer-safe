@@ -71,7 +71,9 @@ contract BasicTest is Test {
     vm.startPrank(_OWNER);
 
     // Queue the actions
-    bytes32 _actionsHash = _safeEntrypoint.queueApprovedAction(address(_actionContract));
+    address[] memory actionContracts = new address[](1);
+    actionContracts[0] = address(_actionContract);
+    bytes32 _actionsHash = _safeEntrypoint.queueApprovedActions(actionContracts);
 
     // Wait for the timelock period
     vm.warp(block.timestamp + 1 hours);

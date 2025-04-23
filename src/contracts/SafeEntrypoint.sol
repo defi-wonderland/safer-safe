@@ -55,14 +55,7 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   // ~~~ ACTIONS METHODS ~~~
 
   /// @inheritdoc ISafeEntrypoint
-  function queueApprovedAction(address _actionContract) external isAuthorized returns (bytes32 _actionHash) {
-    address[] memory _actionContracts = new address[](1);
-    _actionContracts[0] = _actionContract;
-    return queueApprovedActions(_actionContracts);
-  }
-
-  /// @inheritdoc ISafeEntrypoint
-  function queueApprovedActions(address[] memory _actionContracts) public isAuthorized returns (bytes32 _actionHash) {
+  function queueApprovedActions(address[] memory _actionContracts) external isAuthorized returns (bytes32 _actionHash) {
     // Validate input array is not empty
     if (_actionContracts.length == 0) revert EmptyActionsArray();
 

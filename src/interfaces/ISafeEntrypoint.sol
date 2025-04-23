@@ -149,13 +149,6 @@ interface ISafeEntrypoint is ISafeManageable {
   // ~~~ ACTIONS METHODS ~~~
 
   /**
-   * @notice Queues an approved action for execution
-   * @param _actionContract The address of the action contract
-   * @return _actionHash The hash of the queued action
-   */
-  function queueApprovedAction(address _actionContract) external returns (bytes32 _actionHash);
-
-  /**
    * @notice Queues multiple approved action contracts as a single batch
    * @param _actionContracts Array of action contract addresses to queue
    * @return _actionHash The hash of the queued batch
