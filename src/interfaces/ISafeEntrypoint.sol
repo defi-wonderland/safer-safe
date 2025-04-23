@@ -2,7 +2,7 @@
 pragma solidity 0.8.29;
 
 import {ISafeManageable} from 'interfaces/ISafeManageable.sol';
-import {IActions} from 'interfaces/actions/IActions.sol';
+import {ITransactionBuilder} from 'interfaces/actions/ITransactionBuilder.sol';
 
 /**
  * @title ISafeEntrypoint
@@ -18,85 +18,79 @@ interface ISafeEntrypoint is ISafeManageable {
   function MULTI_SEND_CALL_ONLY() external view returns (address _multiSendCallOnly);
 
   /**
-   * @notice Maps an action contract to its approval status
-   * @param _actionContract The address of the action contract
-   * @return _isAllowed The approval status of the action contract
+   * @notice Maps a transaction builder to its approval status
+   * @param _txBuilder The address of the transaction builder contract
+   * @return _isApproved The approval status of the transaction builder
    */
-  function allowedActions(address _actionContract) external view returns (bool _isAllowed);
+  function approvedTransactionBuilders(address _txBuilder) external view returns (bool _isApproved);
 
   /**
-   * @notice Maps an action hash to its executable timestamp
-   * @param _actionHash The hash of the action
-   * @return _executableAt The timestamp from which the action can be executed
+   * @notice Maps a transaction hash to its executable timestamp
+   * @param _txHash The hash of the transaction
+   * @return _txExecutableAt The timestamp from which the transaction can be executed
    */
-  function actionExecutableAt(bytes32 _actionHash) external view returns (uint256 _executableAt);
+  function txExecutableAt(bytes32 _txHash) external view returns (uint256 _txExecutableAt);
 
   /**
-   * @notice Maps an action hash to its data
-   * @param _actionHash The hash of the action
-   * @return _actionData The data of the action
+   * @notice Maps a transaction hash to its data
+   * @param _txHash The hash of the transaction
+   * @return _txData The data of the transaction
    */
-  function actionData(bytes32 _actionHash) external view returns (bytes memory _actionData);
+  function txData(bytes32 _txHash) external view returns (bytes memory _txData);
 
   /**
-   * @notice Maps an action hash to its execution status
-   * @param _actionHash The hash of the action
-   * @return _executed The execution status of the action
+   * @notice Maps a transaction hash to its execution status
+   * @param _txHash The hash of the transaction
+   * @return _isExecuted The execution status of the action
    */
-  function executed(bytes32 _actionHash) external view returns (bool _executed);
+  function executedTxs(bytes32 _txHash) external view returns (bool _isExecuted);
 
   // ~~~ EVENTS ~~~
 
   /**
-   * @notice Emitted when an action contract is allowed
-   * @param _actionContract The address of the action contract
+   * @notice Emitted when a transaction builder is approved
+   * @param _txBuilder The address of the transaction builder contract
    */
-  event ActionAllowed(address _actionContract);
+  event TransactionBuilderApproved(address _txBuilder);
 
   /**
-   * @notice Emitted when an action contract is disallowed
-   * @param _actionContract The address of the action contract
+   * @notice Emitted when a transaction builder is disapproved
+   * @param _txBuilder The address of the transaction builder contract
    */
-  event ActionDisallowed(address _actionContract);
+  event TransactionBuilderDisapproved(address _txBuilder);
 
   /**
-   * @notice Emitted when an approved action is queued
-   * @param _actionHash The hash of the action
-   * @param _executableAt The timestamp from which the action can be executed
+   * @notice Emitted when a transaction is queued
+   * @param _txHash The hash of the transaction
+   * @param _txExecutableAt The timestamp from which the transaction can be executed
+   * @param _isArbitrary Whether the transaction is arbitrary or pre-approved
    */
-  event ApprovedActionQueued(bytes32 _actionHash, uint256 _executableAt);
+  event TransactionQueued(bytes32 _txHash, uint256 _txExecutableAt, bool _isArbitrary);
 
   /**
-   * @notice Emitted when an arbitrary action is queued
-   * @param _actionHash The hash of the action
-   * @param _executableAt The timestamp from which the action can be executed
-   */
-  event ArbitraryActionQueued(bytes32 _actionHash, uint256 _executableAt);
-
-  /**
-   * @notice Emitted when an action is executed
-   * @param _actionHash The hash of the action
+   * @notice Emitted when a transaction is executed
+   * @param _txHash The hash of the transaction
    * @param _safeTxHash The hash of the Safe transaction
    */
-  event ActionExecuted(bytes32 _actionHash, bytes32 _safeTxHash);
+  event TransactionExecuted(bytes32 _txHash, bytes32 _safeTxHash);
 
   /**
-   * @notice Emitted when an action is unqueued
-   * @param _actionHash The hash of the action
+   * @notice Emitted when a transaction is unqueued
+   * @param _txHash The hash of the transaction
    */
-  event ActionUnqueued(bytes32 _actionHash);
+  event TransactionUnqueued(bytes32 _txHash);
 
   // ~~~ ERRORS ~~~
 
   /**
-   * @notice Thrown when an action contract is already allowed
+   * @notice Thrown when a transaction builder is already approved
    */
-  error AlreadyAllowed();
+  error TransactionBuilderAlreadyApproved();
 
   /**
-   * @notice Thrown when an action contract is not allowed
+   * @notice Thrown when a transaction builder is not approved
    */
-  error NotAllowed();
+  error TransactionBuilderNotApproved();
 
   /**
    * @notice Thrown when an empty actions array is provided
@@ -104,125 +98,127 @@ interface ISafeEntrypoint is ISafeManageable {
   error EmptyActionsArray();
 
   /**
-   * @notice Thrown when an action is not found
+   * @notice Thrown when a transaction is not queued
    */
-  error ActionNotFound();
+  error TransactionNotQueued();
 
   /**
-   * @notice Thrown when an action has already been executed
+   * @notice Thrown when a transaction has already been executed
    */
-  error ActionAlreadyExecuted();
+  error TransactionAlreadyExecuted();
 
   /**
-   * @notice Thrown when an action is not executable
+   * @notice Thrown when a transaction is not executable
    */
-  error NotExecutable();
+  error TransactionNotExecutable();
 
   /**
-   * @notice Thrown when a call to an action contract fails
+   * @notice Thrown when a call to a transaction builder fails
    */
   error NotSuccess();
 
   // ~~~ ADMIN METHODS ~~~
 
   /**
-   * @notice Allows an action contract to be executed by the Safe
+   * @notice Approves a transaction builder to be executed by the Safe
    * @dev Can only be called by the Safe contract
-   * @param _actionContract The address of the action contract to allow
+   * @param _txBuilder The address of the transaction builder contract to approve
    */
-  function allowAction(address _actionContract) external;
+  function approveTransactionBuilder(address _txBuilder) external;
 
   /**
-   * @notice Disallows an action contract from being executed by the Safe
+   * @notice Disapproves a transaction builder from being executed by the Safe
    * @dev Can only be called by the Safe owners
-   * @param _actionContract The address of the action contract to disallow
+   * @param _txBuilder The address of the transaction builder contract to disapprove
    */
-  function disallowAction(address _actionContract) external;
+  function disapproveTransactionBuilder(address _txBuilder) external;
 
   // ~~~ ACTIONS METHODS ~~~
 
   /**
-   * @notice Queues an approved action for execution after a 1-hour delay
+   * @notice Queues an approved transaction for execution after a 1-hour delay
    * @dev Can only be called by the Safe owners
-   * @dev The action contract must be pre-approved using allowAction
-   * @param _actionContract The address of the approved action contract
+   * @dev The transaction builder contract must be pre-approved using approveTransactionBuilder
+   * @param _txBuilder The address of the approved transaction builder contract
+   * @return _txHash The hash of the transaction
    */
-  function queueApprovedAction(address _actionContract) external returns (bytes32 _actionHash);
+  function queueTransaction(address _txBuilder) external returns (bytes32 _txHash);
 
   /**
-   * @notice Queues arbitrary actions for execution after a 7-day delay
+   * @notice Queues an arbitrary transaction for execution after a 7-day delay
    * @dev Can only be called by the Safe owners
    * @dev The actions must be properly formatted for each target contract
    * @param _actions The array of actions to queue
+   * @return _txHash The hash of the transaction
    */
-  function queueArbitraryAction(IActions.Action[] memory _actions) external returns (bytes32 _actionHash);
+  function queueTransaction(ITransactionBuilder.Action[] memory _actions) external returns (bytes32 _txHash);
 
   /**
-   * @notice Executes a queued action using the approved signers
-   * @dev The action must have passed its delay period
-   * @param _actionHash The hash of the action to execute
+   * @notice Executes a queued transaction using the approved signers
+   * @dev The transaction must have passed its delay period
+   * @param _txHash The hash of the transaction to execute
    */
-  function executeAction(bytes32 _actionHash) external payable;
+  function executeTransaction(bytes32 _txHash) external payable;
 
   /**
-   * @notice Executes a queued action using the provided signers
-   * @dev The action must have passed its delay period
-   * @param _actionHash The hash of the action to execute
+   * @notice Executes a queued transaction using the provided signers
+   * @dev The transaction must have passed its delay period
+   * @param _txHash The hash of the transaction to execute
    * @param _signers The addresses of the signers to use
    */
-  function executeAction(bytes32 _actionHash, address[] memory _signers) external payable;
+  function executeTransaction(bytes32 _txHash, address[] memory _signers) external payable;
 
   /**
-   * @notice Unqueues a pending action before it is executed
+   * @notice Unqueues a pending transaction before it is executed
    * @dev Can only be called by the Safe owners
-   * @param _actionHash The hash of the action to unqueue
+   * @param _txHash The hash of the transaction to unqueue
    */
-  function unqueueAction(bytes32 _actionHash) external;
+  function unqueueTransaction(bytes32 _txHash) external;
 
   // ~~~ VIEW METHODS ~~~
 
   /**
-   * @notice Gets the Safe transaction hash for an action contract
-   * @param _actionContract The address of the action contract
-   * @return _safeTxHash The Safe transaction hash
+   * @notice Gets the hash of a transaction from a transaction builder
+   * @param _txBuilder The address of the transaction builder contract
+   * @param _txNonce The nonce of the transaction
+   * @return _txHash The hash of the transaction
    */
-  function getSafeTxHash(address _actionContract) external view returns (bytes32 _safeTxHash);
+  function getTransactionHash(address _txBuilder, uint256 _txNonce) external view returns (bytes32 _txHash);
 
   /**
-   * @notice Gets the Safe transaction hash for an action contract with a specific nonce
-   * @param _actionContract The address of the action contract
-   * @param _safeNonce The nonce to use for the hash calculation
+   * @notice Gets the Safe transaction hash for a transaction builder
+   * @param _txBuilder The address of the transaction builder contract
    * @return _safeTxHash The Safe transaction hash
    */
-  function getSafeTxHash(address _actionContract, uint256 _safeNonce) external view returns (bytes32 _safeTxHash);
+  function getSafeTransactionHash(address _txBuilder) external view returns (bytes32 _safeTxHash);
 
   /**
-   * @notice Gets the Safe transaction hash for an action hash
-   * @param _actionHash The hash of the action
+   * @notice Gets the Safe transaction hash for a transaction builder with a specific Safe nonce
+   * @param _txBuilder The address of the transaction builder contract
+   * @param _safeNonce The Safe nonce to use for the hash calculation
    * @return _safeTxHash The Safe transaction hash
    */
-  function getSafeTxHash(bytes32 _actionHash) external view returns (bytes32 _safeTxHash);
+  function getSafeTransactionHash(address _txBuilder, uint256 _safeNonce) external view returns (bytes32 _safeTxHash);
 
   /**
-   * @notice Gets the Safe transaction hash for an action hash with a specific nonce
-   * @param _actionHash The hash of the action
-   * @param _safeNonce The nonce to use for the hash calculation
+   * @notice Gets the Safe transaction hash for a transaction hash
+   * @param _txHash The hash of the transaction
    * @return _safeTxHash The Safe transaction hash
    */
-  function getSafeTxHash(bytes32 _actionHash, uint256 _safeNonce) external view returns (bytes32 _safeTxHash);
+  function getSafeTransactionHash(bytes32 _txHash) external view returns (bytes32 _safeTxHash);
+
+  /**
+   * @notice Gets the Safe transaction hash for a transaction hash with a specific Safe nonce
+   * @param _txHash The hash of the transaction
+   * @param _safeNonce The Safe nonce to use for the hash calculation
+   * @return _safeTxHash The Safe transaction hash
+   */
+  function getSafeTransactionHash(bytes32 _txHash, uint256 _safeNonce) external view returns (bytes32 _safeTxHash);
 
   /**
    * @notice Gets the list of signers who have approved a transaction
-   * @param _actionHash The hash of the action
-   * @return _approvedSigners The array of approved signer addresses
+   * @param _txHash The hash of the transaction
+   * @return _approvedHashSigners The array of approved hash signer addresses
    */
-  function getApprovedSigners(bytes32 _actionHash) external view returns (address[] memory _approvedSigners);
-
-  /**
-   * @notice Gets the hash of an action from an action contract
-   * @param _actionContract The address of the action contract
-   * @param _actionNonce The nonce of the action
-   * @return _actionHash The hash of the action
-   */
-  function getActionHash(address _actionContract, uint256 _actionNonce) external view returns (bytes32 _actionHash);
+  function getApprovedHashSigners(bytes32 _txHash) external view returns (address[] memory _approvedHashSigners);
 }

@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.29;
 
-import {IActions} from 'interfaces/actions/IActions.sol';
+import {ITransactionBuilder} from 'interfaces/actions/ITransactionBuilder.sol';
 
-interface ISimpleTransfers is IActions {
+interface ISimpleTransfers is ITransactionBuilder {
   struct Transfer {
     address token;
     address to;
