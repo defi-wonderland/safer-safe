@@ -18,7 +18,6 @@ interface ISafeEntrypoint is ISafeManageable {
     uint256 executableAt;
     bytes actionData;
     bool executed;
-    bool isBatch;
     address[] actionContracts; // Only used for batches
   }
 
@@ -146,12 +145,6 @@ interface ISafeEntrypoint is ISafeManageable {
    * @param _actionContract The address of the action contract
    */
   function disallowAction(address _actionContract) external;
-
-  /**
-   * @notice Resets the queued status of an action contract
-   * @param _actionContract The address of the action contract to unqueue
-   */
-  function unqueueActionContract(address _actionContract) external;
 
   // ~~~ ACTIONS METHODS ~~~
 

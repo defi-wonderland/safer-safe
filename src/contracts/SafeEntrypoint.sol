@@ -52,11 +52,6 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     allowedActions[_actionContract] = false;
   }
 
-  /// @inheritdoc ISafeEntrypoint
-  function unqueueActionContract(address _actionContract) external isAuthorized {
-    queuedActions[_actionContract] = false;
-  }
-
   // ~~~ ACTIONS METHODS ~~~
 
   /// @inheritdoc ISafeEntrypoint
@@ -93,7 +88,6 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
       executableAt: block.timestamp + 1 hours,
       actionData: abi.encode(allActions),
       executed: false,
-      isBatch: _actionContracts.length > 1,
       actionContracts: _actionContracts
     });
 
@@ -116,7 +110,6 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
       executableAt: block.timestamp + 7 days,
       actionData: abi.encode(_actions),
       executed: false,
-      isBatch: false,
       actionContracts: new address[](0)
     });
 
@@ -142,12 +135,10 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     // Check if the action has already been executed
     if (actions[_actionHash].executed) revert ActionAlreadyExecuted();
 
-    // If this is a batch, unqueue all action contracts
-    if (actions[_actionHash].isBatch) {
-      address[] memory actionContracts = actions[_actionHash].actionContracts;
-      for (uint256 i = 0; i < actionContracts.length; i++) {
-        queuedActions[actionContracts[i]] = false;
-      }
+    // Unqueue all action contracts
+    address[] memory actionContracts = actions[_actionHash].actionContracts;
+    for (uint256 i = 0; i < actionContracts.length; i++) {
+      queuedActions[actionContracts[i]] = false;
     }
 
     // Clear the action data
@@ -224,12 +215,10 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     // Mark the action as executed
     actionInfo.executed = true;
 
-    // If this is a batch, unqueue all action contracts
-    if (actionInfo.isBatch) {
-      address[] memory actionContracts = actionInfo.actionContracts;
-      for (uint256 i = 0; i < actionContracts.length; i++) {
-        queuedActions[actionContracts[i]] = false;
-      }
+    // Unqueue all action contracts
+    address[] memory actionContracts = actionInfo.actionContracts;
+    for (uint256 i = 0; i < actionContracts.length; i++) {
+      queuedActions[actionContracts[i]] = false;
     }
 
     // NOTE: event emitted to log successful execution
