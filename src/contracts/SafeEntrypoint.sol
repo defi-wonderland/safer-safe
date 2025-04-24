@@ -40,11 +40,13 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   /// @inheritdoc ISafeEntrypoint
   function allowAction(address _actionContract) external isMsig {
     actionContractInfo[_actionContract].isAllowed = true;
+    emit ActionAllowed(_actionContract);
   }
 
   /// @inheritdoc ISafeEntrypoint
   function disallowAction(address _actionContract) external isAuthorized {
     actionContractInfo[_actionContract].isAllowed = false;
+    emit ActionDisallowed(_actionContract);
   }
 
   // ~~~ ACTIONS METHODS ~~~
