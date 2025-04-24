@@ -136,12 +136,14 @@ interface ISafeEntrypoint is ISafeManageable {
 
   /**
    * @notice Allows an action contract to be executed
+   * @dev Can only be called by the Safe contract
    * @param _actionContract The address of the action contract
    */
   function allowAction(address _actionContract) external;
 
   /**
    * @notice Disallows an action contract from being executed
+   * @dev Can only be called by the Safe owners
    * @param _actionContract The address of the action contract
    */
   function disallowAction(address _actionContract) external;
@@ -150,6 +152,7 @@ interface ISafeEntrypoint is ISafeManageable {
 
   /**
    * @notice Queues multiple approved action contracts as a single batch
+   * @dev Can only be called by the Safe owners
    * @param _actionContracts Array of action contract addresses to queue
    * @return _actionHash The hash of the queued batch
    */
@@ -157,6 +160,7 @@ interface ISafeEntrypoint is ISafeManageable {
 
   /**
    * @notice Queues an arbitrary action for execution
+   * @dev Can only be called by the Safe owners
    * @param _actions The array of actions to queue
    * @return _actionHash The hash of the queued action
    */
@@ -164,12 +168,14 @@ interface ISafeEntrypoint is ISafeManageable {
 
   /**
    * @notice Executes an action using the approved signers
+   * @dev The action must have passed its delay period
    * @param _actionHash The hash of the action to execute
    */
   function executeAction(bytes32 _actionHash) external payable;
 
   /**
    * @notice Executes an action using the specified signers
+   * @dev The action must have passed its delay period
    * @param _actionHash The hash of the action to execute
    * @param _signers The addresses of the signers to use
    */
@@ -177,6 +183,7 @@ interface ISafeEntrypoint is ISafeManageable {
 
   /**
    * @notice Unqueues an action
+   * @dev Can only be called by the Safe owners
    * @param _actionHash The hash of the action to unqueue
    */
   function unqueueAction(bytes32 _actionHash) external;
