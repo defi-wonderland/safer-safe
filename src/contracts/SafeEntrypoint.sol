@@ -20,16 +20,11 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   /// @inheritdoc ISafeEntrypoint
   uint256 public actionNonce;
 
-  /// @inheritdoc ISafeEntrypoint
-  mapping(address _actionContract => bool _isAllowed) public allowedActions;
+  /// @notice Maps an action contract to its information
+  mapping(address _actionContract => ActionContractInfo _info) private actionContractInfo;
 
-  /// @inheritdoc ISafeEntrypoint
-  mapping(address _actionContract => bool _isQueued) public queuedActions;
-
-  /**
-   * @notice Maps an action hash to its information
-   */
-  mapping(bytes32 _actionHash => ActionInfo _info) public actions;
+  /// @notice Maps an action hash to its information
+  mapping(bytes32 _actionHash => ActionInfo _info) private actions;
 
   /**
    * @notice Constructor that sets up the Safe and MultiSendCallOnly contracts
@@ -44,12 +39,12 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
 
   /// @inheritdoc ISafeEntrypoint
   function allowAction(address _actionContract) external isMsig {
-    allowedActions[_actionContract] = true;
+    actionContractInfo[_actionContract].isAllowed = true;
   }
 
   /// @inheritdoc ISafeEntrypoint
   function disallowAction(address _actionContract) external isAuthorized {
-    allowedActions[_actionContract] = false;
+    actionContractInfo[_actionContract].isAllowed = false;
   }
 
   // ~~~ ACTIONS METHODS ~~~
@@ -61,9 +56,9 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
 
     // Validate all contracts are allowed and not already queued
     for (uint256 _i; _i < _actionContracts.length; ++_i) {
-      if (!allowedActions[_actionContracts[_i]]) revert NotAllowed();
-      if (queuedActions[_actionContracts[_i]]) revert ActionAlreadyQueued();
-      queuedActions[_actionContracts[_i]] = true;
+      if (!actionContractInfo[_actionContracts[_i]].isAllowed) revert NotAllowed();
+      if (actionContractInfo[_actionContracts[_i]].isQueued) revert ActionAlreadyQueued();
+      actionContractInfo[_actionContracts[_i]].isQueued = true;
     }
 
     // Collect all actions
@@ -125,9 +120,9 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     if (actions[_actionHash].executed) revert ActionAlreadyExecuted();
 
     // Unqueue all action contracts
-    address[] memory actionContracts = actions[_actionHash].actionContracts;
-    for (uint256 i = 0; i < actionContracts.length; i++) {
-      queuedActions[actionContracts[i]] = false;
+    address[] memory actionContractsToUnqueue = actions[_actionHash].actionContracts;
+    for (uint256 i = 0; i < actionContractsToUnqueue.length; i++) {
+      actionContractInfo[actionContractsToUnqueue[i]].isQueued = false;
     }
 
     // Clear the action data
@@ -178,6 +173,25 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     _actionHash = keccak256(abi.encode(actionList, _actionNonce));
   }
 
+  /// @inheritdoc ISafeEntrypoint
+  function getActionContractInfo(address _actionContract) external view returns (bool _isAllowed, bool _isQueued) {
+    return (actionContractInfo[_actionContract].isAllowed, actionContractInfo[_actionContract].isQueued);
+  }
+
+  /// @inheritdoc ISafeEntrypoint
+  function getActionInfo(bytes32 _actionHash)
+    external
+    view
+    returns (uint256 executableAt, bytes memory actionData, bool executed, address[] memory actionContracts)
+  {
+    return (
+      actions[_actionHash].executableAt,
+      actions[_actionHash].actionData,
+      actions[_actionHash].executed,
+      actions[_actionHash].actionContracts
+    );
+  }
+
   // ~~~ INTERNAL METHODS ~~~
 
   /**
@@ -205,9 +219,9 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     actionInfo.executed = true;
 
     // Unqueue all action contracts
-    address[] memory actionContracts = actionInfo.actionContracts;
-    for (uint256 i = 0; i < actionContracts.length; i++) {
-      queuedActions[actionContracts[i]] = false;
+    address[] memory actionContractsToUnqueue = actionInfo.actionContracts;
+    for (uint256 i = 0; i < actionContractsToUnqueue.length; i++) {
+      actionContractInfo[actionContractsToUnqueue[i]].isQueued = false;
     }
 
     // NOTE: event emitted to log successful execution

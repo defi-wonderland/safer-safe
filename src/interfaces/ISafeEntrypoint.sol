@@ -12,13 +12,27 @@ interface ISafeEntrypoint is ISafeManageable {
   // ~~~ STRUCTS ~~~
 
   /**
-   * @notice Action information stored by hash
+   * @notice Information about an action
+   * @param executableAt The timestamp after which the action can be executed
+   * @param actionData The encoded action data
+   * @param executed Whether the action has been executed
+   * @param actionContracts Array of action contract addresses associated
    */
   struct ActionInfo {
     uint256 executableAt;
     bytes actionData;
     bool executed;
     address[] actionContracts; // Only used for batches
+  }
+
+  /**
+   * @notice Information about an action contract
+   * @param isAllowed Whether the action contract is allowed to be executed
+   * @param isQueued Whether the action contract is currently queued for execution
+   */
+  struct ActionContractInfo {
+    bool isAllowed;
+    bool isQueued;
   }
 
   // ~~~ STORAGE METHODS ~~~
@@ -36,18 +50,25 @@ interface ISafeEntrypoint is ISafeManageable {
   function actionNonce() external view returns (uint256 actionNonce);
 
   /**
-   * @notice Maps an action contract to its approval status
+   * @notice Gets the information about an action contract
    * @param _actionContract The address of the action contract
-   * @return _isAllowed The approval status of the action contract
+   * @return _isAllowed Whether the action contract is allowed to be executed
+   * @return _isQueued Whether the action contract is currently queued for execution
    */
-  function allowedActions(address _actionContract) external view returns (bool _isAllowed);
+  function getActionContractInfo(address _actionContract) external view returns (bool _isAllowed, bool _isQueued);
 
   /**
-   * @notice Maps an action contract to its queued status
-   * @param _actionContract The address of the action contract
-   * @return _isQueued Whether the action contract is currently queued
+   * @notice Gets the information about an action
+   * @param _actionHash The hash of the action
+   * @return executableAt The timestamp after which the action can be executed
+   * @return actionData The encoded action data
+   * @return executed Whether the action has been executed
+   * @return actionContracts Array of action contract addresses associated
    */
-  function queuedActions(address _actionContract) external view returns (bool _isQueued);
+  function getActionInfo(bytes32 _actionHash)
+    external
+    view
+    returns (uint256 executableAt, bytes memory actionData, bool executed, address[] memory actionContracts);
 
   // ~~~ EVENTS ~~~
 
