@@ -18,28 +18,13 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   address public immutable MULTI_SEND_CALL_ONLY;
 
   /// @inheritdoc ISafeEntrypoint
-  mapping(address _actionContract => bool _isAllowed) public allowedActions;
+  uint256 public actionNonce;
 
-  /// @inheritdoc ISafeEntrypoint
-  mapping(bytes32 _actionHash => uint256 _executableAt) public actionExecutableAt;
-  /// @inheritdoc ISafeEntrypoint
-  mapping(bytes32 _actionHash => bytes _actionData) public actionData;
-  /// @inheritdoc ISafeEntrypoint
-  mapping(bytes32 _actionHash => bool _executed) public executed;
+  /// @notice Maps an action contract to its information
+  mapping(address _actionContract => ActionContractInfo _info) private actionContractInfo;
 
-  struct ActionBatch {
-    address[] actionContracts;
-    bytes actionData;
-    uint256 executableAt;
-  }
-
-  error ActionAlreadyQueued();
-
-  mapping(bytes32 _actionHash => ActionBatch _actionBatch) public actionBatches;
-  mapping(address _actionContract => bool _isQueued) public queuedActions;
-
-  /// @notice Global nonce to ensure unique hashes for identical actions
-  uint256 internal _actionNonce;
+  /// @notice Maps an action hash to its information
+  mapping(bytes32 _actionHash => ActionInfo _info) private actions;
 
   /**
    * @notice Constructor that sets up the Safe and MultiSendCallOnly contracts
@@ -54,76 +39,40 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
 
   /// @inheritdoc ISafeEntrypoint
   function allowAction(address _actionContract) external isMsig {
-    allowedActions[_actionContract] = true;
+    actionContractInfo[_actionContract].isAllowed = true;
   }
 
   /// @inheritdoc ISafeEntrypoint
   function disallowAction(address _actionContract) external isAuthorized {
-    allowedActions[_actionContract] = false;
+    actionContractInfo[_actionContract].isAllowed = false;
   }
 
   // ~~~ ACTIONS METHODS ~~~
 
   /// @inheritdoc ISafeEntrypoint
-  function queueApprovedAction(address _actionContract) external isAuthorized returns (bytes32 _actionHash) {
-    if (!allowedActions[_actionContract]) revert NotAllowed();
-
-    IActions.Action[] memory actions = IActions(_actionContract).getActions();
-    _actionHash = keccak256(abi.encode(actions, _actionNonce++));
-
-    uint256 _executableAt = block.timestamp + 1 hours;
-    actionExecutableAt[_actionHash] = _executableAt;
-    actionData[_actionHash] = abi.encode(actions);
-
-    // NOTE: event picked up by off-chain monitoring service
-    emit ApprovedActionQueued(_actionHash, _executableAt);
-  }
-
-  function getBatchedActions(address[] memory actionContracts) public /* view */ returns (IActions.Action[] memory) {
-    uint256 _totalLength;
-    IActions.Action[][] memory _cachedActions = new IActions.Action[][](actionContracts.length);
-
-    // First pass: call getActions once per contract and cache the results
-    for (uint256 _i; _i < actionContracts.length; ++_i) {
-      address _actionContract = actionContracts[_i];
-      if (!allowedActions[_actionContract]) revert NotAllowed();
-      if (queuedActions[_actionContract]) revert ActionAlreadyQueued();
-      IActions.Action[] memory actions = IActions(_actionContract).getActions();
-
-      queuedActions[_actionContract] = true;
-
-      _cachedActions[_i] = actions;
-      _totalLength += actions.length;
-    }
-
-    // Allocate the final array
-    IActions.Action[] memory allActions = new IActions.Action[](_totalLength);
-
-    // Second pass: fill the final array from cached results
-    uint256 _index;
-    for (uint256 _i; _i < _cachedActions.length; ++_i) {
-      for (uint256 _j; _j < _cachedActions[_i].length; ++_j) {
-        allActions[_index++] = _cachedActions[_i][_j];
-      }
-    }
-
-    return allActions;
-  }
-
   function queueApprovedActions(address[] memory _actionContracts) external isAuthorized returns (bytes32 _actionHash) {
+    // Validate input array is not empty
+    if (_actionContracts.length == 0) revert EmptyActionsArray();
+
+    // Validate all contracts are allowed and not already queued
     for (uint256 _i; _i < _actionContracts.length; ++_i) {
-      address _actionContract = _actionContracts[_i];
-      if (!allowedActions[_actionContract]) revert NotAllowed();
+      if (!actionContractInfo[_actionContracts[_i]].isAllowed) revert NotAllowed();
+      if (actionContractInfo[_actionContracts[_i]].isQueued) revert ActionAlreadyQueued();
+      actionContractInfo[_actionContracts[_i]].isQueued = true;
     }
 
-    IActions.Action[] memory _actions = getBatchedActions(_actionContracts);
+    // Collect all actions
+    IActions.Action[] memory allActions = _collectActions(_actionContracts);
 
-    _actionHash = keccak256(abi.encode(_actions, _actionNonce++));
+    // Create a unique hash for the batch
+    _actionHash = keccak256(abi.encode(allActions, actionNonce++));
 
-    actionBatches[_actionHash] = ActionBatch({
-      actionContracts: _actionContracts,
-      actionData: abi.encode(_actions),
-      executableAt: block.timestamp + 1 hours
+    // Store the batch information
+    actions[_actionHash] = ActionInfo({
+      executableAt: block.timestamp + 1 hours,
+      actionData: abi.encode(allActions),
+      executed: false,
+      actionContracts: _actionContracts
     });
 
     // NOTE: event picked up by off-chain monitoring service
@@ -137,14 +86,19 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
       revert EmptyActionsArray();
     }
 
-    // Use the existing action storage mechanism
-    _actionHash = keccak256(abi.encode(_actions, _actionNonce++));
-    uint256 _executableAt = block.timestamp + 7 days;
-    actionExecutableAt[_actionHash] = _executableAt;
-    actionData[_actionHash] = abi.encode(_actions);
+    // Create a unique hash for the actions
+    _actionHash = keccak256(abi.encode(_actions, actionNonce++));
+
+    // Store the action information
+    actions[_actionHash] = ActionInfo({
+      executableAt: block.timestamp + 7 days,
+      actionData: abi.encode(_actions),
+      executed: false,
+      actionContracts: new address[](0)
+    });
 
     // NOTE: event picked up by off-chain monitoring service
-    emit ArbitraryActionQueued(_actionHash, _executableAt);
+    emit ArbitraryActionQueued(_actionHash, block.timestamp + 7 days);
   }
 
   /// @inheritdoc ISafeEntrypoint
@@ -160,14 +114,19 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   /// @inheritdoc ISafeEntrypoint
   function unqueueAction(bytes32 _actionHash) external isAuthorized {
     // Check if the action exists
-    if (actionExecutableAt[_actionHash] == 0) revert ActionNotFound();
+    if (actions[_actionHash].executableAt == 0) revert ActionNotFound();
 
     // Check if the action has already been executed
-    if (executed[_actionHash]) revert ActionAlreadyExecuted();
+    if (actions[_actionHash].executed) revert ActionAlreadyExecuted();
+
+    // Unqueue all action contracts
+    address[] memory actionContractsToUnqueue = actions[_actionHash].actionContracts;
+    for (uint256 i = 0; i < actionContractsToUnqueue.length; i++) {
+      actionContractInfo[actionContractsToUnqueue[i]].isQueued = false;
+    }
 
     // Clear the action data
-    delete actionExecutableAt[_actionHash];
-    delete actionData[_actionHash];
+    delete actions[_actionHash];
 
     // Emit event for off-chain monitoring
     emit ActionUnqueued(_actionHash);
@@ -191,14 +150,15 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
 
   /// @inheritdoc ISafeEntrypoint
   function getSafeTxHash(bytes32 _actionHash) external view returns (bytes32 _safeTxHash) {
-    IActions.Action[] memory _actions = abi.decode(actionData[_actionHash], (IActions.Action[]));
+    IActions.Action[] memory _actions = abi.decode(actions[_actionHash].actionData, (IActions.Action[]));
     bytes memory _multiSendData = _constructMultiSendData(_actions);
     _safeTxHash = _getSafeTxHash(_multiSendData, SAFE.nonce());
   }
 
   /// @inheritdoc ISafeEntrypoint
   function getSafeTxHash(bytes32 _actionHash, uint256 _safeNonce) external view returns (bytes32 _safeTxHash) {
-    bytes memory _multiSendData = _constructMultiSendData(abi.decode(actionData[_actionHash], (IActions.Action[])));
+    bytes memory _multiSendData =
+      _constructMultiSendData(abi.decode(actions[_actionHash].actionData, (IActions.Action[])));
     _safeTxHash = _getSafeTxHash(_multiSendData, _safeNonce);
   }
 
@@ -209,8 +169,27 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
 
   /// @inheritdoc ISafeEntrypoint
   function getActionHash(address _actionContract, uint256 _actionNonce) external view returns (bytes32 _actionHash) {
-    IActions.Action[] memory actions = _fetchActions(_actionContract);
-    _actionHash = keccak256(abi.encode(actions, _actionNonce));
+    IActions.Action[] memory actionList = _fetchActions(_actionContract);
+    _actionHash = keccak256(abi.encode(actionList, _actionNonce));
+  }
+
+  /// @inheritdoc ISafeEntrypoint
+  function getActionContractInfo(address _actionContract) external view returns (bool _isAllowed, bool _isQueued) {
+    return (actionContractInfo[_actionContract].isAllowed, actionContractInfo[_actionContract].isQueued);
+  }
+
+  /// @inheritdoc ISafeEntrypoint
+  function getActionInfo(bytes32 _actionHash)
+    external
+    view
+    returns (uint256 executableAt, bytes memory actionData, bool executed, address[] memory actionContracts)
+  {
+    return (
+      actions[_actionHash].executableAt,
+      actions[_actionHash].actionData,
+      actions[_actionHash].executed,
+      actions[_actionHash].actionContracts
+    );
   }
 
   // ~~~ INTERNAL METHODS ~~~
@@ -222,10 +201,12 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
    * @param _signers The addresses of the signers to use
    */
   function _executeAction(bytes32 _actionHash, address[] memory _signers) internal {
-    if (actionExecutableAt[_actionHash] > block.timestamp) revert NotExecutable();
-    if (executed[_actionHash]) revert ActionAlreadyExecuted();
+    ActionInfo storage actionInfo = actions[_actionHash];
 
-    bytes memory _multiSendData = _constructMultiSendData(abi.decode(actionData[_actionHash], (IActions.Action[])));
+    if (actionInfo.executableAt > block.timestamp) revert NotExecutable();
+    if (actionInfo.executed) revert ActionAlreadyExecuted();
+
+    bytes memory _multiSendData = _constructMultiSendData(abi.decode(actionInfo.actionData, (IActions.Action[])));
     address[] memory _sortedSigners = _sortSigners(_signers);
     bytes memory _signatures = _constructApprovedHashSignatures(_sortedSigners);
 
@@ -235,7 +216,13 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     _execSafeTx(_multiSendData, _signatures);
 
     // Mark the action as executed
-    executed[_actionHash] = true;
+    actionInfo.executed = true;
+
+    // Unqueue all action contracts
+    address[] memory actionContractsToUnqueue = actionInfo.actionContracts;
+    for (uint256 i = 0; i < actionContractsToUnqueue.length; i++) {
+      actionContractInfo[actionContractsToUnqueue[i]].isQueued = false;
+    }
 
     // NOTE: event emitted to log successful execution
     emit ActionExecuted(_actionHash, _safeTxHash);
@@ -284,6 +271,42 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   }
 
   /**
+   * @notice Internal function to collect actions from multiple contracts
+   * @param _actionContracts Array of action contract addresses
+   * @return _allActions Combined array of all actions
+   */
+  function _collectActions(address[] memory _actionContracts)
+    internal
+    view
+    returns (IActions.Action[] memory _allActions)
+  {
+    // Cache for storing actions from each contract
+    IActions.Action[][] memory _cachedActions = new IActions.Action[][](_actionContracts.length);
+    uint256 _totalLength;
+
+    // First pass: call getActions once per contract and cache the results
+    for (uint256 _i; _i < _actionContracts.length; ++_i) {
+      address _actionContract = _actionContracts[_i];
+      IActions.Action[] memory actionList = _fetchActions(_actionContract);
+      _cachedActions[_i] = actionList;
+      _totalLength += actionList.length;
+    }
+
+    // Allocate the final array
+    _allActions = new IActions.Action[](_totalLength);
+
+    // Second pass: fill the final array from cached results
+    uint256 _index;
+    for (uint256 _i; _i < _cachedActions.length; ++_i) {
+      for (uint256 _j; _j < _cachedActions[_i].length; ++_j) {
+        _allActions[_index++] = _cachedActions[_i][_j];
+      }
+    }
+
+    return _allActions;
+  }
+
+  /**
    * @notice Internal function to get the Safe transaction hash
    * @param _data The transaction data
    * @param _safeNonce The nonce to use
@@ -312,7 +335,8 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   function _getApprovedSigners(bytes32 _actionHash) internal view returns (address[] memory _approvedSigners) {
     address[] memory _signers = SAFE.getOwners();
 
-    bytes memory _multiSendData = _constructMultiSendData(abi.decode(actionData[_actionHash], (IActions.Action[])));
+    bytes memory _multiSendData =
+      _constructMultiSendData(abi.decode(actions[_actionHash].actionData, (IActions.Action[])));
     bytes32 _safeTxHash = _getSafeTxHash(_multiSendData, SAFE.nonce());
 
     // Create a temporary array to store approved signers
