@@ -38,13 +38,19 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   // ~~~ ADMIN METHODS ~~~
 
   /// @inheritdoc ISafeEntrypoint
-  function allowAction(address _actionContract) external isMsig {
+  function allowAction(address _actionContract, uint256 _expiryTime) external isMsig {
+    // Ensure expiry time is in the future
+    if (_expiryTime <= block.timestamp) revert InvalidExpiryTime();
+
     actionContractInfo[_actionContract].isAllowed = true;
+    actionContractInfo[_actionContract].expiryTime = _expiryTime;
+    emit ActionAllowed(_actionContract);
   }
 
   /// @inheritdoc ISafeEntrypoint
   function disallowAction(address _actionContract) external isAuthorized {
     actionContractInfo[_actionContract].isAllowed = false;
+    emit ActionDisallowed(_actionContract);
   }
 
   // ~~~ ACTIONS METHODS ~~~
@@ -58,6 +64,10 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     for (uint256 _i; _i < _actionContracts.length; ++_i) {
       if (!actionContractInfo[_actionContracts[_i]].isAllowed) revert NotAllowed();
       if (actionContractInfo[_actionContracts[_i]].isQueued) revert ActionAlreadyQueued();
+      if (block.timestamp >= actionContractInfo[_actionContracts[_i]].expiryTime) {
+        revert ActionExpired();
+      }
+
       actionContractInfo[_actionContracts[_i]].isQueued = true;
     }
 
@@ -174,8 +184,21 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   }
 
   /// @inheritdoc ISafeEntrypoint
-  function getActionContractInfo(address _actionContract) external view returns (bool _isAllowed, bool _isQueued) {
-    return (actionContractInfo[_actionContract].isAllowed, actionContractInfo[_actionContract].isQueued);
+  function getActionContractInfo(address _actionContract)
+    external
+    view
+    returns (bool _isAllowed, bool _isQueued, uint256 _expiryTime)
+  {
+    bool isQueued = actionContractInfo[_actionContract].isQueued;
+    bool isAllowed = actionContractInfo[_actionContract].isAllowed;
+    uint256 expiryTime = actionContractInfo[_actionContract].expiryTime;
+
+    // If the action has expired, return false for isAllowed
+    if (block.timestamp >= expiryTime) {
+      isAllowed = false;
+    }
+
+    return (isAllowed, isQueued, expiryTime);
   }
 
   /// @inheritdoc ISafeEntrypoint

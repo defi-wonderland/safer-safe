@@ -29,10 +29,12 @@ interface ISafeEntrypoint is ISafeManageable {
    * @notice Information about an action contract
    * @param isAllowed Whether the action contract is allowed to be executed
    * @param isQueued Whether the action contract is currently queued for execution
+   * @param expiryTime The timestamp after which the action is no longer allowed (0 means no expiry)
    */
   struct ActionContractInfo {
     bool isAllowed;
     bool isQueued;
+    uint256 expiryTime;
   }
 
   // ~~~ STORAGE METHODS ~~~
@@ -54,8 +56,12 @@ interface ISafeEntrypoint is ISafeManageable {
    * @param _actionContract The address of the action contract
    * @return _isAllowed Whether the action contract is allowed to be executed
    * @return _isQueued Whether the action contract is currently queued for execution
+   * @return _expiryTime The timestamp after which the action is no longer allowed (0 means no expiry)
    */
-  function getActionContractInfo(address _actionContract) external view returns (bool _isAllowed, bool _isQueued);
+  function getActionContractInfo(address _actionContract)
+    external
+    view
+    returns (bool _isAllowed, bool _isQueued, uint256 _expiryTime);
 
   /**
    * @notice Gets the information about an action
@@ -153,14 +159,25 @@ interface ISafeEntrypoint is ISafeManageable {
    */
   error NotSuccess();
 
+  /**
+   * @notice Thrown when an action has expired
+   */
+  error ActionExpired();
+
+  /**
+   * @notice Thrown when an expiry time is invalid (not in the future)
+   */
+  error InvalidExpiryTime();
+
   // ~~~ ADMIN METHODS ~~~
 
   /**
    * @notice Allows an action contract to be executed
    * @dev Can only be called by the Safe contract
    * @param _actionContract The address of the action contract
+   * @param _expiryTime The timestamp after which the action is no longer allowed
    */
-  function allowAction(address _actionContract) external;
+  function allowAction(address _actionContract, uint256 _expiryTime) external;
 
   /**
    * @notice Disallows an action contract from being executed
