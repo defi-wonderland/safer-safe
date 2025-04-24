@@ -73,18 +73,18 @@ contract BasicTest is Test {
     // Queue the actions
     address[] memory actionContracts = new address[](1);
     actionContracts[0] = address(_actionContract);
-    bytes32 _actionsHash = _safeEntrypoint.queueApprovedActions(actionContracts);
+    uint256 _txId = _safeEntrypoint.queueApprovedActions(actionContracts);
 
     // Wait for the timelock period
     vm.warp(block.timestamp + 1 hours);
 
     // Get and approve the Safe transaction hash
-    bytes32 _safeTxHash = _safeEntrypoint.getSafeTxHash(_actionsHash);
+    bytes32 _safeTxHash = _safeEntrypoint.getSafeTxHash(_txId);
     _safe.approveHash(_safeTxHash);
 
-    // Execute the action
+    // Execute the actions
     vm.deal(_OWNER, 1 ether);
-    _safeEntrypoint.executeAction{value: 1}(_actionsHash);
+    _safeEntrypoint.executeAction{value: 1}(_txId);
   }
 
   function test_executeAction() public {
