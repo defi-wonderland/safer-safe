@@ -5,7 +5,7 @@ import {ISafe} from '@safe-smart-account/interfaces/ISafe.sol';
 
 /**
  * @title ISafeManageable
- * @notice Interface for the SafeManageable contract
+ * @notice Interface for the SafeManageable abstract contract
  */
 interface ISafeManageable {
   // ~~~ STORAGE METHODS ~~~
@@ -21,5 +21,5 @@ interface ISafeManageable {
   /**
    * @notice Thrown when the caller is not a Safe owner
    */
-  error NotAuthorized();
+  error NotSafeOwner();
 }
