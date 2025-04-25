@@ -21,10 +21,10 @@ interface IOnlyEntrypointGuard {
   function ENTRYPOINT() external view returns (address _entrypoint);
 
   /**
-   * @notice Gets the address of the emergency multisig contract
-   * @return _emergencyMultisig The address of the emergency multisig contract
+   * @notice Gets the address of the emergency caller
+   * @return _emergencyCaller The address of the emergency caller (can be contract or EOA)
    */
-  function EMERGENCY_MULTISIG() external view returns (address _emergencyMultisig);
+  function EMERGENCY_CALLER() external view returns (address _emergencyCaller);
 
   // ~~~ ERRORS ~~~
 

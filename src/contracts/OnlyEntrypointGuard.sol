@@ -17,16 +17,16 @@ contract OnlyEntrypointGuard is BaseTransactionGuard, IOnlyEntrypointGuard {
   address public immutable ENTRYPOINT;
 
   /// @inheritdoc IOnlyEntrypointGuard
-  address public immutable EMERGENCY_MULTISIG;
+  address public immutable EMERGENCY_CALLER;
 
   /**
    * @notice Constructor that sets up the guard
    * @param _entrypoint The address of the Safe Entrypoint contract
-   * @param _emergencyMultisig The address of the emergency multisig contract that can execute transactions in emergency situations
+   * @param _emergencyCaller The address of the emergency caller (can be a multisig or EOA)
    */
-  constructor(address _entrypoint, address _emergencyMultisig) {
+  constructor(address _entrypoint, address _emergencyCaller) {
     ENTRYPOINT = _entrypoint;
-    EMERGENCY_MULTISIG = _emergencyMultisig;
+    EMERGENCY_CALLER = _emergencyCaller;
   }
 
   /**
@@ -48,8 +48,8 @@ contract OnlyEntrypointGuard is BaseTransactionGuard, IOnlyEntrypointGuard {
     bytes memory _signatures,
     address _msgSender
   ) external override {
-    // Allow transactions from the entrypoint or emergency multisig
-    if (_msgSender != ENTRYPOINT && _msgSender != EMERGENCY_MULTISIG) {
+    // Allow transactions from the entrypoint or emergency caller
+    if (_msgSender != ENTRYPOINT && _msgSender != EMERGENCY_CALLER) {
       revert TransactionNotAllowed();
     }
 
