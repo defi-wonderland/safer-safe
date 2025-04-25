@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0
-pragma solidity ^0.8.29;
+pragma solidity 0.8.29;
 
 import {BaseTransactionGuard} from '@safe-smart-account/base/GuardManager.sol';
 import {Enum} from '@safe-smart-account/libraries/Enum.sol';
@@ -49,17 +49,14 @@ contract OnlyEntrypointGuard is BaseTransactionGuard, IOnlyEntrypointGuard {
     address _msgSender
   ) external override {
     // Allow transactions from the entrypoint or emergency multisig
-    if (_msgSender == ENTRYPOINT || _msgSender == EMERGENCY_MULTISIG) {
-      return;
+    if (_msgSender != ENTRYPOINT && _msgSender != EMERGENCY_MULTISIG) {
+      revert TransactionNotAllowed();
     }
 
     // Validate signature format - only allow pre-approved hash signatures
     if (!_isValidSignatureFormat(_signatures)) {
       revert InvalidSignatureFormat();
     }
-
-    // If we get here, the transaction is not allowed
-    revert TransactionNotAllowed();
   }
 
   /**
