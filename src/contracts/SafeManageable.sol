@@ -10,8 +10,12 @@ import {ISafe} from '@safe-smart-account/interfaces/ISafe.sol';
  * @notice Abstract contract that provides common functionality for managing a Safe
  */
 abstract contract SafeManageable is ISafeManageable {
+  // ~~~ STORAGE ~~~
+
   /// @inheritdoc ISafeManageable
   ISafe public immutable SAFE;
+
+  // ~~~ MODIFIERS ~~~
 
   /**
    * @notice Modifier that checks if the caller is the Safe contract
