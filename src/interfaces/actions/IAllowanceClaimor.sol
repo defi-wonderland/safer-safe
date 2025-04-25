@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.29;
 
-import {IActions} from 'interfaces/actions/IActions.sol';
+import {ITransactionBuilder} from 'interfaces/actions/ITransactionBuilder.sol';
 
-interface IAllowanceClaimor is IActions {
+interface IAllowanceClaimor is ITransactionBuilder {
   function SAFE() external view returns (address _safe);
   function TOKEN() external view returns (address _token);
   function TOKEN_OWNER() external view returns (address _tokenOwner);

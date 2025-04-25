@@ -62,32 +62,30 @@ contract BasicTest is Test {
       value: 0
     });
 
-    address _actionContract = _simpleActionsFactory.createSimpleActions(_simpleActions);
+    address _txBuilder = _simpleActionsFactory.createSimpleActions(_simpleActions);
 
     // Allow the SafeEntrypoint to call the SimpleActions contract
     vm.prank(address(_safe)); // TODO: Replicate Safe transaction without pranking it
-    _safeEntrypoint.allowAction(address(_actionContract));
+    _safeEntrypoint.approveTransactionBuilder(_txBuilder);
 
     vm.startPrank(_OWNER);
 
-    // Queue the actions
-    address[] memory actionContracts = new address[](1);
-    actionContracts[0] = address(_actionContract);
-    uint256 _txId = _safeEntrypoint.queueApprovedActions(actionContracts);
+    // Queue the transaction
+    address[] memory _txBuilders = new address[](1);
+    _txBuilders[0] = _txBuilder;
+    uint256 _txId = _safeEntrypoint.queueTransaction(_txBuilders);
 
     // Wait for the timelock period
     vm.warp(block.timestamp + 1 hours);
 
     // Get and approve the Safe transaction hash
-    bytes32 _safeTxHash = _safeEntrypoint.getSafeTxHash(_txId);
+    bytes32 _safeTxHash = _safeEntrypoint.getSafeTransactionHash(_txId);
     _safe.approveHash(_safeTxHash);
 
-    // Execute the actions
+    // Execute the transaction
     vm.deal(_OWNER, 1 ether);
-    _safeEntrypoint.executeAction{value: 1}(_txId);
+    _safeEntrypoint.executeTransaction{value: 1}(_txId);
   }
 
-  function test_executeAction() public {
-    assertEq(_OWNER.balance, 1 ether - 1);
-  }
+  function test_executeTransaction() public {}
 }

@@ -1,21 +1,21 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.29;
 
-import {IActions} from 'interfaces/actions/IActions.sol';
+import {ITransactionBuilder} from 'interfaces/actions/ITransactionBuilder.sol';
 
 contract SimpleActionsCaller {
-  error ActionFailed(uint256 index);
+  error ActionFailed(uint256 _index);
 
-  function callActions(address _actions) external payable {
-    IActions.Action[] memory actions = IActions(_actions).getActions();
+  function callActions(address _txBuilder) external payable {
+    ITransactionBuilder.Action[] memory _actions = ITransactionBuilder(_txBuilder).getActions();
 
-    for (uint256 i = 0; i < actions.length; i++) {
-      IActions.Action memory action = actions[i];
+    for (uint256 _i; _i < _actions.length; ++_i) {
+      ITransactionBuilder.Action memory _action = _actions[_i];
 
-      (bool success,) = action.target.call{value: action.value}(action.data);
+      (bool _success,) = _action.target.call{value: _action.value}(_action.data);
 
-      if (!success) {
-        revert ActionFailed(i);
+      if (!_success) {
+        revert ActionFailed(_i);
       }
     }
   }
