@@ -73,18 +73,18 @@ contract BasicTest is Test {
     // Queue the transaction
     address[] memory _txBuilders = new address[](1);
     _txBuilders[0] = _txBuilder;
-    bytes32 _txHash = _safeEntrypoint.queueTransaction(_txBuilders);
+    uint256 _txId = _safeEntrypoint.queueTransaction(_txBuilders);
 
     // Wait for the timelock period
     vm.warp(block.timestamp + 1 hours);
 
     // Get and approve the Safe transaction hash
-    bytes32 _safeTxHash = _safeEntrypoint.getSafeTransactionHash(_txHash);
+    bytes32 _safeTxHash = _safeEntrypoint.getSafeTransactionHash(_txId);
     _safe.approveHash(_safeTxHash);
 
     // Execute the transaction
     vm.deal(_OWNER, 1 ether);
-    _safeEntrypoint.executeTransaction{value: 1}(_txHash);
+    _safeEntrypoint.executeTransaction{value: 1}(_txId);
   }
 
   function test_executeTransaction() public {}
