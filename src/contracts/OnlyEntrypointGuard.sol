@@ -19,27 +19,34 @@ contract OnlyEntrypointGuard is BaseTransactionGuard, IOnlyEntrypointGuard {
   /// @inheritdoc IOnlyEntrypointGuard
   address public immutable EMERGENCY_CALLER;
 
+  /// @inheritdoc IOnlyEntrypointGuard
+  address public immutable MULTI_SEND_CALL_ONLY;
+
   /**
    * @notice Constructor that sets up the guard
    * @param _entrypoint The address of the Safe Entrypoint contract
    * @param _emergencyCaller The address of the emergency caller (can be a multisig or EOA)
+   * @param _multiSendCallOnly The address of the MultiSendCallOnly contract
    */
-  constructor(address _entrypoint, address _emergencyCaller) {
+  constructor(address _entrypoint, address _emergencyCaller, address _multiSendCallOnly) {
     ENTRYPOINT = _entrypoint;
     EMERGENCY_CALLER = _emergencyCaller;
+    MULTI_SEND_CALL_ONLY = _multiSendCallOnly;
   }
 
   /**
    * @notice Checks if a transaction is allowed to be executed
    * @dev This function is called before a transaction is executed
+   * @param _to The target address
+   * @param _operation The operation type
    * @param _signatures The signatures for the transaction
    * @param _msgSender The address of the sender of the transaction
    */
   function checkTransaction(
-    address, /* _to */
+    address _to,
     uint256, /* _value */
     bytes memory, /* _data */
-    Enum.Operation, /* _operation */
+    Enum.Operation _operation,
     uint256, /* _safeTxGas */
     uint256, /* _baseGas */
     uint256, /* _gasPrice */
@@ -48,11 +55,16 @@ contract OnlyEntrypointGuard is BaseTransactionGuard, IOnlyEntrypointGuard {
     bytes memory _signatures,
     address _msgSender
   ) external override {
+    // If operation is delegateCall, to must be MULTI_SEND_CALL_ONLY
+    if (_operation == Enum.Operation.DelegateCall) {
+      if (_to != MULTI_SEND_CALL_ONLY) {
+        revert UnauthorizedDelegateCall(_to);
+      }
+    }
     // Allow transactions from the entrypoint or emergency caller
     if (_msgSender != ENTRYPOINT && _msgSender != EMERGENCY_CALLER) {
-      revert TransactionNotAllowed();
+      revert UnauthorizedSender(_msgSender);
     }
-
     // Validate signature format - only allow pre-approved hash signatures
     if (!_isValidSignatureFormat(_signatures)) {
       revert InvalidSignatureFormat();
