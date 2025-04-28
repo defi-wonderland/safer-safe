@@ -4,7 +4,7 @@ pragma solidity 0.8.29;
 import {SafeManageable} from 'contracts/SafeManageable.sol';
 
 import {ISafeEntrypoint} from 'interfaces/ISafeEntrypoint.sol';
-import {ITransactionBuilder} from 'interfaces/actions/ITransactionBuilder.sol';
+import {IActionsBuilder} from 'interfaces/actions/IActionsBuilder.sol';
 
 import {Enum} from '@safe-smart-account/libraries/Enum.sol';
 import {MultiSendCallOnly} from '@safe-smart-account/libraries/MultiSendCallOnly.sol';
@@ -22,8 +22,8 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   /// @inheritdoc ISafeEntrypoint
   uint256 public transactionNonce;
 
-  /// @notice Maps a transaction builder to its information
-  mapping(address _txBuilder => TransactionBuilderInfo _txBuilderInfo) internal _transactionBuilderInfo;
+  /// @notice Maps an actions builder to its information
+  mapping(address _actionsBuilder => ActionsBuilderInfo _actionsBuilderInfo) internal _actionsBuilderInfo;
 
   /// @notice Maps a transaction ID to its information
   mapping(uint256 _txId => TransactionInfo _txInfo) internal _transactionInfo;
@@ -40,43 +40,43 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   // ~~~ ADMIN METHODS ~~~
 
   /// @inheritdoc ISafeEntrypoint
-  function approveTransactionBuilder(address _txBuilder) external isSafe {
-    if (_transactionBuilderInfo[_txBuilder].isApproved) revert TransactionBuilderAlreadyApproved();
-    _transactionBuilderInfo[_txBuilder].isApproved = true;
-    emit TransactionBuilderApproved(_txBuilder);
+  function approveActionsBuilder(address _actionsBuilder) external isSafe {
+    if (_actionsBuilderInfo[_actionsBuilder].isApproved) revert ActionsBuilderAlreadyApproved();
+    _actionsBuilderInfo[_actionsBuilder].isApproved = true;
+    emit ActionsBuilderApproved(_actionsBuilder);
   }
 
   /// @inheritdoc ISafeEntrypoint
-  function disapproveTransactionBuilder(address _txBuilder) external isSafeOwner {
-    if (!_transactionBuilderInfo[_txBuilder].isApproved) revert TransactionBuilderNotApproved();
-    _transactionBuilderInfo[_txBuilder].isApproved = false;
-    emit TransactionBuilderDisapproved(_txBuilder);
+  function disapproveActionsBuilder(address _actionsBuilder) external isSafeOwner {
+    if (!_actionsBuilderInfo[_actionsBuilder].isApproved) revert ActionsBuilderNotApproved();
+    _actionsBuilderInfo[_actionsBuilder].isApproved = false;
+    emit ActionsBuilderDisapproved(_actionsBuilder);
   }
 
   // ~~~ TRANSACTION METHODS ~~~
 
   /// @inheritdoc ISafeEntrypoint
-  function queueTransaction(address[] memory _txBuilders) external isSafeOwner returns (uint256 _txId) {
+  function queueTransaction(address[] memory _actionsBuilders) external isSafeOwner returns (uint256 _txId) {
     // Validate input array is not empty
-    if (_txBuilders.length == 0) revert EmptyTransactionBuildersArray();
+    if (_actionsBuilders.length == 0) revert EmptyActionsBuildersArray();
 
     // Validate all contracts are allowed and not already queued
-    for (uint256 _i; _i < _txBuilders.length; ++_i) {
-      if (!_transactionBuilderInfo[_txBuilders[_i]].isApproved) revert TransactionBuilderNotApproved();
-      if (_transactionBuilderInfo[_txBuilders[_i]].isQueued) revert TransactionBuilderAlreadyQueued();
+    for (uint256 _i; _i < _actionsBuilders.length; ++_i) {
+      if (!_actionsBuilderInfo[_actionsBuilders[_i]].isApproved) revert ActionsBuilderNotApproved();
+      if (_actionsBuilderInfo[_actionsBuilders[_i]].isQueued) revert ActionsBuilderAlreadyQueued();
 
-      _transactionBuilderInfo[_txBuilders[_i]].isQueued = true;
+      _actionsBuilderInfo[_actionsBuilders[_i]].isQueued = true;
     }
 
     // Collect all actions
-    ITransactionBuilder.Action[] memory _allActions = _collectActions(_txBuilders);
+    IActionsBuilder.Action[] memory _allActions = _collectActions(_actionsBuilders);
 
     // Generate a simple transaction ID
     _txId = transactionNonce++;
 
     // Store the transaction information
     _transactionInfo[_txId] = TransactionInfo({
-      transactionBuilders: _txBuilders,
+      actionsBuilders: _actionsBuilders,
       actionsData: abi.encode(_allActions),
       executableAt: block.timestamp + 1 hours,
       isExecuted: false
@@ -87,7 +87,7 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   }
 
   /// @inheritdoc ISafeEntrypoint
-  function queueTransaction(ITransactionBuilder.Action[] memory _actions) external isSafeOwner returns (uint256 _txId) {
+  function queueTransaction(IActionsBuilder.Action[] memory _actions) external isSafeOwner returns (uint256 _txId) {
     // Validate that the actions array is not empty
     if (_actions.length == 0) {
       revert EmptyActionsArray();
@@ -98,7 +98,7 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
 
     // Store the transaction information
     _transactionInfo[_txId] = TransactionInfo({
-      transactionBuilders: new address[](0),
+      actionsBuilders: new address[](0),
       actionsData: abi.encode(_actions),
       executableAt: block.timestamp + 7 days,
       isExecuted: false
@@ -126,10 +126,10 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     // Check if the transaction has already been executed
     if (_transactionInfo[_txId].isExecuted) revert TransactionAlreadyExecuted();
 
-    // Unqueue all transaction builders
-    address[] memory _txBuildersToUnqueue = _transactionInfo[_txId].transactionBuilders;
-    for (uint256 _i; _i < _txBuildersToUnqueue.length; ++_i) {
-      _transactionBuilderInfo[_txBuildersToUnqueue[_i]].isQueued = false;
+    // Unqueue all actions builders
+    address[] memory _actionsBuildersToUnqueue = _transactionInfo[_txId].actionsBuilders;
+    for (uint256 _i; _i < _actionsBuildersToUnqueue.length; ++_i) {
+      _actionsBuilderInfo[_actionsBuildersToUnqueue[_i]].isQueued = false;
     }
 
     // Clear the transaction information
@@ -142,19 +142,19 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   // ~~~ EXTERNAL VIEW METHODS ~~~
 
   /// @inheritdoc ISafeEntrypoint
-  function getTransactionBuilderInfo(address _txBuilder) external view returns (bool _isApproved, bool _isQueued) {
+  function getActionsBuilderInfo(address _actionsBuilder) external view returns (bool _isApproved, bool _isQueued) {
     (_isApproved, _isQueued) =
-      (_transactionBuilderInfo[_txBuilder].isApproved, _transactionBuilderInfo[_txBuilder].isQueued);
+      (_actionsBuilderInfo[_actionsBuilder].isApproved, _actionsBuilderInfo[_actionsBuilder].isQueued);
   }
 
   /// @inheritdoc ISafeEntrypoint
   function getTransactionInfo(uint256 _txId)
     external
     view
-    returns (address[] memory _txBuilders, bytes memory _actionsData, uint256 _executableAt, bool _isExecuted)
+    returns (address[] memory _actionsBuilders, bytes memory _actionsData, uint256 _executableAt, bool _isExecuted)
   {
-    (_txBuilders, _actionsData, _executableAt, _isExecuted) = (
-      _transactionInfo[_txId].transactionBuilders,
+    (_actionsBuilders, _actionsData, _executableAt, _isExecuted) = (
+      _transactionInfo[_txId].actionsBuilders,
       _transactionInfo[_txId].actionsData,
       _transactionInfo[_txId].executableAt,
       _transactionInfo[_txId].isExecuted
@@ -162,23 +162,26 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   }
 
   /// @inheritdoc ISafeEntrypoint
-  function getSafeTransactionHash(address _txBuilder) external view returns (bytes32 _safeTxHash) {
-    ITransactionBuilder.Action[] memory _actions = _fetchActions(_txBuilder);
+  function getSafeTransactionHash(address _actionsBuilder) external view returns (bytes32 _safeTxHash) {
+    IActionsBuilder.Action[] memory _actions = _fetchActions(_actionsBuilder);
     bytes memory _multiSendData = _buildMultiSendData(_actions);
     _safeTxHash = _getSafeTransactionHash(_multiSendData, SAFE.nonce());
   }
 
   /// @inheritdoc ISafeEntrypoint
-  function getSafeTransactionHash(address _txBuilder, uint256 _safeNonce) external view returns (bytes32 _safeTxHash) {
-    ITransactionBuilder.Action[] memory _actions = _fetchActions(_txBuilder);
+  function getSafeTransactionHash(
+    address _actionsBuilder,
+    uint256 _safeNonce
+  ) external view returns (bytes32 _safeTxHash) {
+    IActionsBuilder.Action[] memory _actions = _fetchActions(_actionsBuilder);
     bytes memory _multiSendData = _buildMultiSendData(_actions);
     _safeTxHash = _getSafeTransactionHash(_multiSendData, _safeNonce);
   }
 
   /// @inheritdoc ISafeEntrypoint
   function getSafeTransactionHash(uint256 _txId) external view returns (bytes32 _safeTxHash) {
-    ITransactionBuilder.Action[] memory _actions =
-      abi.decode(_transactionInfo[_txId].actionsData, (ITransactionBuilder.Action[]));
+    IActionsBuilder.Action[] memory _actions =
+      abi.decode(_transactionInfo[_txId].actionsData, (IActionsBuilder.Action[]));
     bytes memory _multiSendData = _buildMultiSendData(_actions);
     _safeTxHash = _getSafeTransactionHash(_multiSendData, SAFE.nonce());
   }
@@ -186,7 +189,7 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   /// @inheritdoc ISafeEntrypoint
   function getSafeTransactionHash(uint256 _txId, uint256 _safeNonce) external view returns (bytes32 _safeTxHash) {
     bytes memory _multiSendData =
-      _buildMultiSendData(abi.decode(_transactionInfo[_txId].actionsData, (ITransactionBuilder.Action[])));
+      _buildMultiSendData(abi.decode(_transactionInfo[_txId].actionsData, (IActionsBuilder.Action[])));
     _safeTxHash = _getSafeTransactionHash(_multiSendData, _safeNonce);
   }
 
@@ -209,7 +212,7 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     if (_txInfo.executableAt > block.timestamp) revert TransactionNotExecutable();
     if (_txInfo.isExecuted) revert TransactionAlreadyExecuted();
 
-    bytes memory _multiSendData = _buildMultiSendData(abi.decode(_txInfo.actionsData, (ITransactionBuilder.Action[])));
+    bytes memory _multiSendData = _buildMultiSendData(abi.decode(_txInfo.actionsData, (IActionsBuilder.Action[])));
     address[] memory _sortedSigners = _sortSigners(_signers);
     bytes memory _signatures = _buildApprovedHashSignatures(_sortedSigners);
 
@@ -221,10 +224,10 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     // Mark the transaction as executed
     _txInfo.isExecuted = true;
 
-    // Unqueue all action contracts
-    address[] memory transactionBuildersToUnqueue = _txInfo.transactionBuilders;
-    for (uint256 _i; _i < transactionBuildersToUnqueue.length; ++_i) {
-      _transactionBuilderInfo[transactionBuildersToUnqueue[_i]].isQueued = false;
+    // Unqueue all actions builders
+    address[] memory _actionsBuildersToUnqueue = _txInfo.actionsBuilders;
+    for (uint256 _i; _i < _actionsBuildersToUnqueue.length; ++_i) {
+      _actionsBuilderInfo[_actionsBuildersToUnqueue[_i]].isQueued = false;
     }
 
     // NOTE: event emitted to log successful execution
@@ -255,49 +258,49 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   // ~~~ INTERNAL VIEW METHODS ~~~
 
   /**
-   * @notice Internal function to fetch actions from a contract
+   * @notice Internal function to fetch actions from an actions builder
    * @dev Uses staticcall to prevent state changes
-   * @param _txBuilder The address of the transaction builder contract
-   * @return _actions The array of actions
+   * @param _actionsBuilder The address of the actions builder contract
+   * @return _actions The batch of actions
    */
-  function _fetchActions(address _txBuilder) internal view returns (ITransactionBuilder.Action[] memory _actions) {
+  function _fetchActions(address _actionsBuilder) internal view returns (IActionsBuilder.Action[] memory _actions) {
     // Encode the function call for getActions()
-    bytes memory _callData = abi.encodeWithSelector(ITransactionBuilder.getActions.selector, bytes(''));
+    bytes memory _callData = abi.encodeWithSelector(IActionsBuilder.getActions.selector, bytes(''));
 
     // Make a static call (executes the code but reverts any state changes)
-    (bool _success, bytes memory _returnData) = _txBuilder.staticcall(_callData);
+    (bool _success, bytes memory _returnData) = _actionsBuilder.staticcall(_callData);
 
     // If the call succeeded, decode the returned data
     if (_success && _returnData.length > 0) {
-      _actions = abi.decode(_returnData, (ITransactionBuilder.Action[]));
+      _actions = abi.decode(_returnData, (IActionsBuilder.Action[]));
     } else {
       revert NotSuccess();
     }
   }
 
   /**
-   * @notice Internal function to collect actions from multiple transaction builders
-   * @param _txBuilders The array of transaction builder contract addresses
-   * @return _allActions The combined array of all actions
+   * @notice Internal function to collect actions from multiple actions builders
+   * @param _actionsBuilders The batch of actions builder contract addresses
+   * @return _allActions The combined batch of all actions
    */
-  function _collectActions(address[] memory _txBuilders)
+  function _collectActions(address[] memory _actionsBuilders)
     internal
     view
-    returns (ITransactionBuilder.Action[] memory _allActions)
+    returns (IActionsBuilder.Action[] memory _allActions)
   {
     // Cache for storing actions from each contract
-    ITransactionBuilder.Action[][] memory _cachedActions = new ITransactionBuilder.Action[][](_txBuilders.length);
+    IActionsBuilder.Action[][] memory _cachedActions = new IActionsBuilder.Action[][](_actionsBuilders.length);
     uint256 _allActionsLength;
 
     // First pass: call getActions once per contract and cache the results
-    for (uint256 _i; _i < _txBuilders.length; ++_i) {
-      ITransactionBuilder.Action[] memory _actions = _fetchActions(_txBuilders[_i]);
+    for (uint256 _i; _i < _actionsBuilders.length; ++_i) {
+      IActionsBuilder.Action[] memory _actions = _fetchActions(_actionsBuilders[_i]);
       _cachedActions[_i] = _actions;
       _allActionsLength += _actions.length;
     }
 
     // Allocate the final array
-    _allActions = new ITransactionBuilder.Action[](_allActionsLength);
+    _allActions = new IActionsBuilder.Action[](_allActionsLength);
     uint256 _allActionsIndex;
 
     // Second pass: fill the final array from cached results
@@ -342,7 +345,7 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     uint256 _safeOwnersCount = _safeOwners.length;
 
     bytes memory _multiSendData =
-      _buildMultiSendData(abi.decode(_transactionInfo[_txId].actionsData, (ITransactionBuilder.Action[])));
+      _buildMultiSendData(abi.decode(_transactionInfo[_txId].actionsData, (IActionsBuilder.Action[])));
     bytes32 _safeTxHash = _getSafeTransactionHash(_multiSendData, SAFE.nonce());
 
     // Create a temporary array to store approved hash signers
@@ -370,12 +373,12 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   // ~~~ INTERNAL PURE METHODS ~~~
 
   /**
-   * @notice Internal function to build MultiSend data from actions array
+   * @notice Internal function to build MultiSend data from actions
    * @dev Encodes each action into the MultiSend format
-   * @param _actions The array of actions to encode
+   * @param _actions The batch of actions to encode
    * @return _multiSendData The encoded MultiSend data
    */
-  function _buildMultiSendData(ITransactionBuilder.Action[] memory _actions)
+  function _buildMultiSendData(IActionsBuilder.Action[] memory _actions)
     internal
     pure
     returns (bytes memory _multiSendData)
@@ -386,7 +389,7 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     // Loop through each action and encode it
     for (uint256 _i; _i < _actions.length; ++_i) {
       // Extract the current action
-      ITransactionBuilder.Action memory _action = _actions[_i];
+      IActionsBuilder.Action memory _action = _actions[_i];
 
       // For each action, we encode:
       // 1 byte: operation (0 = Call, 1 = DelegateCall) - using 0 (Call) by default
