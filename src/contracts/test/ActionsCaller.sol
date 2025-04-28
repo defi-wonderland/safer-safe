@@ -3,7 +3,7 @@ pragma solidity 0.8.29;
 
 import {IActionsBuilder} from 'interfaces/actions/IActionsBuilder.sol';
 
-contract SimpleActionsCaller {
+contract ActionsCaller {
   error ActionFailed(uint256 _index);
 
   function callActions(address _actionsBuilder) external payable {
