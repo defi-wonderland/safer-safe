@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.29;
 
-import {ITransactionBuilder} from 'interfaces/actions/ITransactionBuilder.sol';
+import {IActionsBuilder} from 'interfaces/actions/IActionsBuilder.sol';
 
-interface ISimpleActions is ITransactionBuilder {
+interface ISimpleActions is IActionsBuilder {
   struct SimpleAction {
     address target; // e.g. WETH
     string signature; // e.g. "transfer(address,uint256)"

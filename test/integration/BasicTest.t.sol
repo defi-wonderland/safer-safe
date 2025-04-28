@@ -62,18 +62,18 @@ contract BasicTest is Test {
       value: 0
     });
 
-    address _txBuilder = _simpleActionsFactory.createSimpleActions(_simpleActions);
+    address _actionsBuilder = _simpleActionsFactory.createSimpleActions(_simpleActions);
 
     // Allow the SafeEntrypoint to call the SimpleActions contract
     vm.prank(address(_safe)); // TODO: Replicate Safe transaction without pranking it
-    _safeEntrypoint.approveTransactionBuilder(_txBuilder, block.timestamp + 1 days);
+    _safeEntrypoint.approveActionsBuilder(_actionsBuilder, block.timestamp + 1 days);
 
     vm.startPrank(_OWNER);
 
     // Queue the transaction
-    address[] memory _txBuilders = new address[](1);
-    _txBuilders[0] = _txBuilder;
-    uint256 _txId = _safeEntrypoint.queueTransaction(_txBuilders);
+    address[] memory _actionsBuilders = new address[](1);
+    _actionsBuilders[0] = _actionsBuilder;
+    uint256 _txId = _safeEntrypoint.queueTransaction(_actionsBuilders);
 
     // Wait for the timelock period
     vm.warp(block.timestamp + 1 hours);

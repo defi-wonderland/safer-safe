@@ -2,7 +2,7 @@
 pragma solidity 0.8.29;
 
 import {ISafeManageable} from 'interfaces/ISafeManageable.sol';
-import {ITransactionBuilder} from 'interfaces/actions/ITransactionBuilder.sol';
+import {IActionsBuilder} from 'interfaces/actions/IActionsBuilder.sol';
 
 /**
  * @title ISafeEntrypoint
@@ -12,24 +12,24 @@ interface ISafeEntrypoint is ISafeManageable {
   // ~~~ STRUCTS ~~~
 
   /**
-   * @notice Information about a transaction builder
-   * @param approvalExpiryTime The timestamp after which the transaction builder contract is no longer approved to be executed
-   * @param isQueued Whether the transaction builder contract is currently queued for execution
+   * @notice Information about an actions builder
+   * @param approvalExpiryTime The timestamp after which the actions builder contract is no longer approved to be executed
+   * @param isQueued Whether the actions builder contract is currently queued for execution
    */
-  struct TransactionBuilderInfo {
+  struct ActionsBuilderInfo {
     uint256 approvalExpiryTime;
     bool isQueued;
   }
 
   /**
    * @notice Information about a transaction
-   * @param transactionBuilders The batch of transaction builder contract addresses associated
+   * @param actionsBuilders The batch of actions builder contract addresses associated
    * @param actionsData The encoded actions data
    * @param executableAt The timestamp after which the transaction can be executed
    * @param isExecuted Whether the transaction has been executed
    */
   struct TransactionInfo {
-    address[] transactionBuilders;
+    address[] actionsBuilders;
     bytes actionsData;
     uint256 executableAt;
     bool isExecuted;
@@ -52,17 +52,17 @@ interface ISafeEntrypoint is ISafeManageable {
   // ~~~ EVENTS ~~~
 
   /**
-   * @notice Emitted when a transaction builder is approved
-   * @param _txBuilder The address of the transaction builder contract
-   * @param _approvalExpiryTime The timestamp after which the transaction builder contract is no longer approved to be executed
+   * @notice Emitted when an actions builder is approved
+   * @param _actionsBuilder The address of the actions builder contract
+   * @param _approvalExpiryTime The timestamp after which the actions builder contract is no longer approved to be executed
    */
-  event TransactionBuilderApproved(address _txBuilder, uint256 _approvalExpiryTime);
+  event ActionsBuilderApproved(address _actionsBuilder, uint256 _approvalExpiryTime);
 
   /**
-   * @notice Emitted when a transaction builder is disapproved
-   * @param _txBuilder The address of the transaction builder contract
+   * @notice Emitted when an actions builder is disapproved
+   * @param _actionsBuilder The address of the actions builder contract
    */
-  event TransactionBuilderDisapproved(address _txBuilder);
+  event ActionsBuilderDisapproved(address _actionsBuilder);
 
   /**
    * @notice Emitted when a transaction is queued
@@ -88,14 +88,14 @@ interface ISafeEntrypoint is ISafeManageable {
   // ~~~ ERRORS ~~~
 
   /**
-   * @notice Thrown when a transaction builder is not approved
+   * @notice Thrown when an actions builder is not approved
    */
-  error TransactionBuilderNotApproved();
+  error ActionsBuilderNotApproved();
 
   /**
-   * @notice Thrown when a transaction builder is already queued
+   * @notice Thrown when an actions builder is already queued
    */
-  error TransactionBuilderAlreadyQueued();
+  error ActionsBuilderAlreadyQueued();
 
   /**
    * @notice Thrown when a transaction is not executable
@@ -118,9 +118,9 @@ interface ISafeEntrypoint is ISafeManageable {
   error InvalidApprovalExpiryTime();
 
   /**
-   * @notice Thrown when an empty transaction builders array is provided
+   * @notice Thrown when an empty actions builders array is provided
    */
-  error EmptyTransactionBuildersArray();
+  error EmptyActionsBuildersArray();
 
   /**
    * @notice Thrown when an empty actions array is provided
@@ -128,38 +128,38 @@ interface ISafeEntrypoint is ISafeManageable {
   error EmptyActionsArray();
 
   /**
-   * @notice Thrown when a call to a transaction builder fails
+   * @notice Thrown when a call to an actions builder fails
    */
   error NotSuccess();
 
   // ~~~ ADMIN METHODS ~~~
 
   /**
-   * @notice Approves a transaction builder to be executed
+   * @notice Approves an actions builder to be executed
    * @dev Can only be called by the Safe contract
-   * @param _txBuilder The address of the transaction builder contract to approve
-   * @param _approvalExpiryTime The timestamp after which the transaction builder contract is no longer approved to be executed
+   * @param _actionsBuilder The address of the actions builder contract to approve
+   * @param _approvalExpiryTime The timestamp after which the actions builder contract is no longer approved to be executed
    */
-  function approveTransactionBuilder(address _txBuilder, uint256 _approvalExpiryTime) external;
+  function approveActionsBuilder(address _actionsBuilder, uint256 _approvalExpiryTime) external;
 
   /**
-   * @notice Disapproves a transaction builder from being executed
+   * @notice Disapproves an actions builder from being executed
    * @dev Can only be called by the Safe owners
-   * @param _txBuilder The address of the transaction builder contract to disapprove
+   * @param _actionsBuilder The address of the actions builder contract to disapprove
    */
-  function disapproveTransactionBuilder(address _txBuilder) external;
+  function disapproveActionsBuilder(address _actionsBuilder) external;
 
   // ~~~ TRANSACTION METHODS ~~~
 
   /**
-   * @notice Queues a transaction bulked from multiple transaction builders for execution after a 1-hour delay
+   * @notice Queues a transaction bulked from multiple actions builders for execution after a 1-hour delay
    * @dev Can only be called by the Safe owners
-   * @dev The transaction builder contracts must be pre-approved using approveTransactionBuilder
-   * @dev The transaction builder contracts must not be already in the queue
-   * @param _txBuilders The batch of transaction builder contract addresses to queue
+   * @dev The actions builder contracts must be pre-approved using approveActionsBuilder
+   * @dev The actions builder contracts must not be already in the queue
+   * @param _actionsBuilders The batch of actions builder contract addresses to queue
    * @return _txId The ID of the queued transaction
    */
-  function queueTransaction(address[] memory _txBuilders) external returns (uint256 _txId);
+  function queueTransaction(address[] memory _actionsBuilders) external returns (uint256 _txId);
 
   /**
    * @notice Queues an arbitrary transaction for execution after a 7-day delay
@@ -168,7 +168,7 @@ interface ISafeEntrypoint is ISafeManageable {
    * @param _actions The batch of actions to queue
    * @return _txId The ID of the queued transaction
    */
-  function queueTransaction(ITransactionBuilder.Action[] memory _actions) external returns (uint256 _txId);
+  function queueTransaction(IActionsBuilder.Action[] memory _actions) external returns (uint256 _txId);
 
   /**
    * @notice Executes a queued transaction using the approved signers
@@ -197,12 +197,12 @@ interface ISafeEntrypoint is ISafeManageable {
   // ~~~ VIEW METHODS ~~~
 
   /**
-   * @notice Gets the information about a transaction builder
-   * @param _txBuilder The address of the transaction builder contract
-   * @return _approvalExpiryTime The timestamp after which the transaction builder contract is no longer approved to be executed
-   * @return _isQueued Whether the transaction builder contract is currently queued for execution
+   * @notice Gets the information about an actions builder
+   * @param _actionsBuilder The address of the actions builder contract
+   * @return _approvalExpiryTime The timestamp after which the actions builder contract is no longer approved to be executed
+   * @return _isQueued Whether the actions builder contract is currently queued for execution
    */
-  function getTransactionBuilderInfo(address _txBuilder)
+  function getActionsBuilderInfo(address _actionsBuilder)
     external
     view
     returns (uint256 _approvalExpiryTime, bool _isQueued);
@@ -210,7 +210,7 @@ interface ISafeEntrypoint is ISafeManageable {
   /**
    * @notice Gets the information about a transaction
    * @param _txId The ID of the transaction
-   * @return _txBuilders The batch of transaction builder contract addresses associated
+   * @return _actionsBuilders The batch of actions builder contract addresses associated
    * @return _actionsData The encoded actions data
    * @return _executableAt The timestamp after which the transaction can be executed
    * @return _isExecuted Whether the transaction has been executed
@@ -218,22 +218,25 @@ interface ISafeEntrypoint is ISafeManageable {
   function getTransactionInfo(uint256 _txId)
     external
     view
-    returns (address[] memory _txBuilders, bytes memory _actionsData, uint256 _executableAt, bool _isExecuted);
+    returns (address[] memory _actionsBuilders, bytes memory _actionsData, uint256 _executableAt, bool _isExecuted);
 
   /**
-   * @notice Gets the Safe transaction hash for a transaction builder
-   * @param _txBuilder The address of the transaction builder contract
+   * @notice Gets the Safe transaction hash for an actions builder
+   * @param _actionsBuilder The address of the actions builder contract
    * @return _safeTxHash The Safe transaction hash
    */
-  function getSafeTransactionHash(address _txBuilder) external view returns (bytes32 _safeTxHash);
+  function getSafeTransactionHash(address _actionsBuilder) external view returns (bytes32 _safeTxHash);
 
   /**
-   * @notice Gets the Safe transaction hash for a transaction builder with a specific Safe nonce
-   * @param _txBuilder The address of the transaction builder contract
+   * @notice Gets the Safe transaction hash for an actions builder with a specific Safe nonce
+   * @param _actionsBuilder The address of the actions builder contract
    * @param _safeNonce The Safe nonce to use for the hash calculation
    * @return _safeTxHash The Safe transaction hash
    */
-  function getSafeTransactionHash(address _txBuilder, uint256 _safeNonce) external view returns (bytes32 _safeTxHash);
+  function getSafeTransactionHash(
+    address _actionsBuilder,
+    uint256 _safeNonce
+  ) external view returns (bytes32 _safeTxHash);
 
   /**
    * @notice Gets the Safe transaction hash for a transaction ID
