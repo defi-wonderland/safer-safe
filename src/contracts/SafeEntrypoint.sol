@@ -40,20 +40,21 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   // ~~~ ADMIN METHODS ~~~
 
   /// @inheritdoc ISafeEntrypoint
-  function approveTransactionBuilder(address _txBuilder, uint256 _expiryTime) external isSafe {
-    if (_transactionBuilderInfo[_txBuilder].isApproved) revert TransactionBuilderAlreadyApproved();
-    // Ensure expiry time is in the future
-    if (_expiryTime <= block.timestamp) revert InvalidExpiryTime();
+  function approveTransactionBuilder(address _txBuilder, uint256 _approvalExpiryTime) external isSafe {
+    // Ensure approval expiry time is in the future
+    if (_approvalExpiryTime <= block.timestamp) revert InvalidApprovalExpiryTime();
 
-    _transactionBuilderInfo[_txBuilder].isApproved = true;
-    _transactionBuilderInfo[_txBuilder].expiryTime = _expiryTime;
-    emit TransactionBuilderApproved(_txBuilder);
+    _transactionBuilderInfo[_txBuilder].approvalExpiryTime = _approvalExpiryTime;
+    emit TransactionBuilderApproved(_txBuilder, _approvalExpiryTime);
   }
 
   /// @inheritdoc ISafeEntrypoint
   function disapproveTransactionBuilder(address _txBuilder) external isSafeOwner {
-    if (!_transactionBuilderInfo[_txBuilder].isApproved) revert TransactionBuilderNotApproved();
-    _transactionBuilderInfo[_txBuilder].isApproved = false;
+    if (_transactionBuilderInfo[_txBuilder].approvalExpiryTime <= block.timestamp) {
+      revert TransactionBuilderNotApproved();
+    }
+
+    _transactionBuilderInfo[_txBuilder].approvalExpiryTime = 0;
     emit TransactionBuilderDisapproved(_txBuilder);
   }
 
@@ -66,11 +67,10 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
 
     // Validate all contracts are allowed and not already queued
     for (uint256 _i; _i < _txBuilders.length; ++_i) {
-      if (!_transactionBuilderInfo[_txBuilders[_i]].isApproved) revert TransactionBuilderNotApproved();
-      if (_transactionBuilderInfo[_txBuilders[_i]].isQueued) revert TransactionBuilderAlreadyQueued();
-      if (block.timestamp >= _transactionBuilderInfo[_txBuilders[_i]].expiryTime) {
-        revert TransactionBuilderExpired();
+      if (_transactionBuilderInfo[_txBuilders[_i]].approvalExpiryTime <= block.timestamp) {
+        revert TransactionBuilderNotApproved();
       }
+      if (_transactionBuilderInfo[_txBuilders[_i]].isQueued) revert TransactionBuilderAlreadyQueued();
 
       _transactionBuilderInfo[_txBuilders[_i]].isQueued = true;
     }
@@ -152,18 +152,10 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   function getTransactionBuilderInfo(address _txBuilder)
     external
     view
-    returns (bool _isApproved, bool _isQueued, uint256 _expiryTime)
+    returns (uint256 _approvalExpiryTime, bool _isQueued)
   {
-    _isQueued = _transactionBuilderInfo[_txBuilder].isQueued;
-    _isApproved = _transactionBuilderInfo[_txBuilder].isApproved;
-    _expiryTime = _transactionBuilderInfo[_txBuilder].expiryTime;
-
-    // If the transaction builder has expired, return false for isApproved
-    if (block.timestamp >= _expiryTime) {
-      _isApproved = false;
-    }
-
-    return (_isApproved, _isQueued, _expiryTime);
+    (_approvalExpiryTime, _isQueued) =
+      (_transactionBuilderInfo[_txBuilder].approvalExpiryTime, _transactionBuilderInfo[_txBuilder].isQueued);
   }
 
   /// @inheritdoc ISafeEntrypoint

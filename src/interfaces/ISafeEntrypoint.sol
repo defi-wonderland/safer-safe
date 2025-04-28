@@ -13,14 +13,12 @@ interface ISafeEntrypoint is ISafeManageable {
 
   /**
    * @notice Information about a transaction builder
-   * @param isApproved Whether the transaction builder contract is approved to be executed
+   * @param approvalExpiryTime The timestamp after which the transaction builder contract is no longer approved to be executed
    * @param isQueued Whether the transaction builder contract is currently queued for execution
-   * @param expiryTime The timestamp after which the transaction builder contract is no longer approved (0 means no expiry)
    */
   struct TransactionBuilderInfo {
-    bool isApproved;
+    uint256 approvalExpiryTime;
     bool isQueued;
-    uint256 expiryTime;
   }
 
   /**
@@ -56,8 +54,9 @@ interface ISafeEntrypoint is ISafeManageable {
   /**
    * @notice Emitted when a transaction builder is approved
    * @param _txBuilder The address of the transaction builder contract
+   * @param _approvalExpiryTime The timestamp after which the transaction builder contract is no longer approved to be executed
    */
-  event TransactionBuilderApproved(address _txBuilder);
+  event TransactionBuilderApproved(address _txBuilder, uint256 _approvalExpiryTime);
 
   /**
    * @notice Emitted when a transaction builder is disapproved
@@ -89,11 +88,6 @@ interface ISafeEntrypoint is ISafeManageable {
   // ~~~ ERRORS ~~~
 
   /**
-   * @notice Thrown when a transaction builder is already approved
-   */
-  error TransactionBuilderAlreadyApproved();
-
-  /**
    * @notice Thrown when a transaction builder is not approved
    */
   error TransactionBuilderNotApproved();
@@ -102,11 +96,6 @@ interface ISafeEntrypoint is ISafeManageable {
    * @notice Thrown when a transaction builder is already queued
    */
   error TransactionBuilderAlreadyQueued();
-
-  /**
-   * @notice Thrown when a transaction builder has expired
-   */
-  error TransactionBuilderExpired();
 
   /**
    * @notice Thrown when a transaction is not executable
@@ -124,9 +113,9 @@ interface ISafeEntrypoint is ISafeManageable {
   error TransactionNotQueued();
 
   /**
-   * @notice Thrown when an expiry time is invalid (not in the future)
+   * @notice Thrown when an approval expiry time is invalid (not in the future)
    */
-  error InvalidExpiryTime();
+  error InvalidApprovalExpiryTime();
 
   /**
    * @notice Thrown when an empty transaction builders array is provided
@@ -149,9 +138,9 @@ interface ISafeEntrypoint is ISafeManageable {
    * @notice Approves a transaction builder to be executed
    * @dev Can only be called by the Safe contract
    * @param _txBuilder The address of the transaction builder contract to approve
-   * @param _expiryTime The timestamp after which the transaction builder contract is no longer approved (0 means no expiry)
+   * @param _approvalExpiryTime The timestamp after which the transaction builder contract is no longer approved to be executed
    */
-  function approveTransactionBuilder(address _txBuilder, uint256 _expiryTime) external;
+  function approveTransactionBuilder(address _txBuilder, uint256 _approvalExpiryTime) external;
 
   /**
    * @notice Disapproves a transaction builder from being executed
@@ -210,14 +199,13 @@ interface ISafeEntrypoint is ISafeManageable {
   /**
    * @notice Gets the information about a transaction builder
    * @param _txBuilder The address of the transaction builder contract
-   * @return _isApproved Whether the transaction builder contract is approved to be executed
+   * @return _approvalExpiryTime The timestamp after which the transaction builder contract is no longer approved to be executed
    * @return _isQueued Whether the transaction builder contract is currently queued for execution
-   * @return _expiryTime The timestamp after which the transaction builder contract is no longer approved (0 means no expiry)
    */
   function getTransactionBuilderInfo(address _txBuilder)
     external
     view
-    returns (bool _isApproved, bool _isQueued, uint256 _expiryTime);
+    returns (uint256 _approvalExpiryTime, bool _isQueued);
 
   /**
    * @notice Gets the information about a transaction
