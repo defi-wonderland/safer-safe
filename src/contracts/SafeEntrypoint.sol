@@ -162,23 +162,6 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   }
 
   /// @inheritdoc ISafeEntrypoint
-  function getSafeTransactionHash(address _actionsBuilder) external view returns (bytes32 _safeTxHash) {
-    IActionsBuilder.Action[] memory _actions = _fetchActions(_actionsBuilder);
-    bytes memory _multiSendData = _buildMultiSendData(_actions);
-    _safeTxHash = _getSafeTransactionHash(_multiSendData, SAFE.nonce());
-  }
-
-  /// @inheritdoc ISafeEntrypoint
-  function getSafeTransactionHash(
-    address _actionsBuilder,
-    uint256 _safeNonce
-  ) external view returns (bytes32 _safeTxHash) {
-    IActionsBuilder.Action[] memory _actions = _fetchActions(_actionsBuilder);
-    bytes memory _multiSendData = _buildMultiSendData(_actions);
-    _safeTxHash = _getSafeTransactionHash(_multiSendData, _safeNonce);
-  }
-
-  /// @inheritdoc ISafeEntrypoint
   function getSafeTransactionHash(uint256 _txId) external view returns (bytes32 _safeTxHash) {
     IActionsBuilder.Action[] memory _actions =
       abi.decode(_transactionInfo[_txId].actionsData, (IActionsBuilder.Action[]));

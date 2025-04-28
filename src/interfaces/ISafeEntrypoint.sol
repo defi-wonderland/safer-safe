@@ -216,24 +216,6 @@ interface ISafeEntrypoint is ISafeManageable {
     returns (address[] memory _actionsBuilders, bytes memory _actionsData, uint256 _executableAt, bool _isExecuted);
 
   /**
-   * @notice Gets the Safe transaction hash for an actions builder
-   * @param _actionsBuilder The address of the actions builder contract
-   * @return _safeTxHash The Safe transaction hash
-   */
-  function getSafeTransactionHash(address _actionsBuilder) external view returns (bytes32 _safeTxHash);
-
-  /**
-   * @notice Gets the Safe transaction hash for an actions builder with a specific Safe nonce
-   * @param _actionsBuilder The address of the actions builder contract
-   * @param _safeNonce The Safe nonce to use for the hash calculation
-   * @return _safeTxHash The Safe transaction hash
-   */
-  function getSafeTransactionHash(
-    address _actionsBuilder,
-    uint256 _safeNonce
-  ) external view returns (bytes32 _safeTxHash);
-
-  /**
    * @notice Gets the Safe transaction hash for a transaction ID
    * @param _txId The ID of the transaction
    * @return _safeTxHash The Safe transaction hash
