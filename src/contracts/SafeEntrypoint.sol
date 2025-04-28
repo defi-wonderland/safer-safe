@@ -41,12 +41,16 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
 
   /// @inheritdoc ISafeEntrypoint
   function approveTransactionBuilder(address _txBuilder) external isSafe {
+    if (_transactionBuilderInfo[_txBuilder].isApproved) revert TransactionBuilderAlreadyApproved();
     _transactionBuilderInfo[_txBuilder].isApproved = true;
+    emit TransactionBuilderApproved(_txBuilder);
   }
 
   /// @inheritdoc ISafeEntrypoint
   function disapproveTransactionBuilder(address _txBuilder) external isSafeOwner {
+    if (!_transactionBuilderInfo[_txBuilder].isApproved) revert TransactionBuilderNotApproved();
     _transactionBuilderInfo[_txBuilder].isApproved = false;
+    emit TransactionBuilderDisapproved(_txBuilder);
   }
 
   // ~~~ TRANSACTION METHODS ~~~
