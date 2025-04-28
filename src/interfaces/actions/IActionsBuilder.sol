@@ -2,10 +2,10 @@
 pragma solidity 0.8.29;
 
 /**
- * @title ITransactionBuilder
- * @notice Interface for a TransactionBuilder contract
+ * @title IActionsBuilder
+ * @notice Interface for a ActionsBuilder contract
  */
-interface ITransactionBuilder {
+interface IActionsBuilder {
   // ~~~ STRUCTS ~~~
 
   /**
