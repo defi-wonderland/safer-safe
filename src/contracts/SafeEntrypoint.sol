@@ -236,7 +236,7 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   function _execSafeTransaction(bytes memory _safeTxData, bytes memory _signatures) internal {
     SAFE.execTransaction{value: msg.value}({
       to: MULTI_SEND_CALL_ONLY,
-      value: 0,
+      value: 0, // Value must be 0 for delegatecall operations
       data: _safeTxData,
       operation: Enum.Operation.DelegateCall,
       safeTxGas: 0,
