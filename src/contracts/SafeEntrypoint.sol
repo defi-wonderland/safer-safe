@@ -110,12 +110,13 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
 
   /// @inheritdoc ISafeEntrypoint
   function executeTransaction(uint256 _txId) external payable {
-    _executeTransaction(_txId, _getApprovedHashSigners(_txId));
+    (address[] memory _signers, bytes memory _multiSendData, bytes32 _safeTxHash) = _getApprovedHashSigners(_txId);
+    _executeTransaction(_txId, _signers, _multiSendData, _safeTxHash);
   }
 
   /// @inheritdoc ISafeEntrypoint
   function executeTransaction(uint256 _txId, address[] memory _signers) external payable {
-    _executeTransaction(_txId, _signers);
+    _executeTransaction(_txId, _signers, new bytes(0), bytes32(0));
   }
 
   /// @inheritdoc ISafeEntrypoint
@@ -178,7 +179,7 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
 
   /// @inheritdoc ISafeEntrypoint
   function getApprovedHashSigners(uint256 _txId) external view returns (address[] memory _approvedHashSigners) {
-    _approvedHashSigners = _getApprovedHashSigners(_txId);
+    (_approvedHashSigners,,) = _getApprovedHashSigners(_txId);
   }
 
   // ~~~ INTERNAL METHODS ~~~
@@ -188,20 +189,31 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
    * @dev Checks if the transaction is executable and builds the necessary data
    * @param _txId The ID of the transaction to execute
    * @param _signers The addresses of the signers to use
+   * @param _multiSendData Optional pre-calculated MultiSend data. If empty, it will be calculated
+   * @param _safeTxHash Optional pre-calculated Safe transaction hash. If zero, it will be calculated
    */
-  function _executeTransaction(uint256 _txId, address[] memory _signers) internal {
+  function _executeTransaction(
+    uint256 _txId,
+    address[] memory _signers,
+    bytes memory _multiSendData,
+    bytes32 _safeTxHash
+  ) internal {
     TransactionInfo storage _txInfo = _transactionInfo[_txId];
 
     if (_txInfo.executableAt > block.timestamp) revert TransactionNotExecutable();
     if (_txInfo.isExecuted) revert TransactionAlreadyExecuted();
 
-    bytes memory _multiSendData = _buildMultiSendData(abi.decode(_txInfo.actionsData, (IActionsBuilder.Action[])));
+    // Calculate these only if not provided
+    if (_multiSendData.length == 0) {
+      _multiSendData = _buildMultiSendData(abi.decode(_txInfo.actionsData, (IActionsBuilder.Action[])));
+    }
+    if (_safeTxHash == bytes32(0)) {
+      _safeTxHash = _getSafeTransactionHash(_multiSendData, SAFE.nonce());
+    }
+
     address[] memory _sortedSigners = _sortSigners(_signers);
     bytes memory _signatures = _buildApprovedHashSignatures(_sortedSigners);
 
-    // NOTE: only for event logging
-    uint256 _safeNonce = SAFE.nonce();
-    bytes32 _safeTxHash = _getSafeTransactionHash(_multiSendData, _safeNonce);
     _execSafeTransaction(_multiSendData, _signatures);
 
     // Mark the transaction as executed
@@ -322,14 +334,19 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
    * @notice Internal function to get the list of approved hash signers for a transaction
    * @param _txId The ID of the transaction
    * @return _approvedHashSigners The array of approved hash signer addresses
+   * @return _multiSendData The pre-calculated MultiSend data
+   * @return _safeTxHash The pre-calculated Safe transaction hash
    */
-  function _getApprovedHashSigners(uint256 _txId) internal view returns (address[] memory _approvedHashSigners) {
+  function _getApprovedHashSigners(uint256 _txId)
+    internal
+    view
+    returns (address[] memory _approvedHashSigners, bytes memory _multiSendData, bytes32 _safeTxHash)
+  {
     address[] memory _safeOwners = SAFE.getOwners();
     uint256 _safeOwnersCount = _safeOwners.length;
 
-    bytes memory _multiSendData =
-      _buildMultiSendData(abi.decode(_transactionInfo[_txId].actionsData, (IActionsBuilder.Action[])));
-    bytes32 _safeTxHash = _getSafeTransactionHash(_multiSendData, SAFE.nonce());
+    _multiSendData = _buildMultiSendData(abi.decode(_transactionInfo[_txId].actionsData, (IActionsBuilder.Action[])));
+    _safeTxHash = _getSafeTransactionHash(_multiSendData, SAFE.nonce());
 
     // Create a temporary array to store approved hash signers
     address[] memory _tempSigners = new address[](_safeOwnersCount);
