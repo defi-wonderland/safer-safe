@@ -13,7 +13,7 @@ interface ISafeEntrypoint is ISafeManageable {
 
   /**
    * @notice Information about an actions builder
-   * @param approvalExpiryTime The timestamp after which the actions builder contract is no longer approved to be executed
+   * @param approvalExpiryTime The timestamp from which the actions builder contract is no longer approved to be executed
    * @param isQueued Whether the actions builder contract is currently queued for execution
    */
   struct ActionsBuilderInfo {
@@ -25,7 +25,7 @@ interface ISafeEntrypoint is ISafeManageable {
    * @notice Information about a transaction
    * @param actionsBuilders The batch of actions builder contract addresses associated
    * @param actionsData The encoded actions data
-   * @param executableAt The timestamp after which the transaction can be executed
+   * @param executableAt The timestamp from which the transaction can be executed
    * @param isExecuted Whether the transaction has been executed
    */
   struct TransactionInfo {
@@ -54,23 +54,18 @@ interface ISafeEntrypoint is ISafeManageable {
   /**
    * @notice Emitted when an actions builder is approved
    * @param _actionsBuilder The address of the actions builder contract
-   * @param _approvalExpiryTime The timestamp after which the actions builder contract is no longer approved to be executed
+   * @param _approvalDuration The duration (in seconds) of the approval to the actions builder contract (0 means disapproval)
+   * @param _approvalExpiryTime The timestamp from which the actions builder contract is no longer approved to be executed
    */
-  event ActionsBuilderApproved(address _actionsBuilder, uint256 _approvalExpiryTime);
-
-  /**
-   * @notice Emitted when an actions builder is disapproved
-   * @param _actionsBuilder The address of the actions builder contract
-   */
-  event ActionsBuilderDisapproved(address _actionsBuilder);
+  event ActionsBuilderApproved(address _actionsBuilder, uint256 _approvalDuration, uint256 _approvalExpiryTime);
 
   /**
    * @notice Emitted when a transaction is queued
    * @param _txId The ID of the transaction
-   * @param _txExecutableAt The timestamp from which the transaction can be executed
+   * @param _executableAt The timestamp from which the transaction can be executed
    * @param _isArbitrary Whether the transaction is arbitrary or pre-approved
    */
-  event TransactionQueued(uint256 _txId, uint256 _txExecutableAt, bool _isArbitrary);
+  event TransactionQueued(uint256 _txId, uint256 _executableAt, bool _isArbitrary);
 
   /**
    * @notice Emitted when a transaction is executed
@@ -113,11 +108,6 @@ interface ISafeEntrypoint is ISafeManageable {
   error TransactionNotQueued();
 
   /**
-   * @notice Thrown when an approval expiry time is invalid (not in the future)
-   */
-  error InvalidApprovalExpiryTime();
-
-  /**
    * @notice Thrown when an empty actions builders array is provided
    */
   error EmptyActionsBuildersArray();
@@ -138,16 +128,9 @@ interface ISafeEntrypoint is ISafeManageable {
    * @notice Approves an actions builder to be executed
    * @dev Can only be called by the Safe contract
    * @param _actionsBuilder The address of the actions builder contract to approve
-   * @param _approvalExpiryTime The timestamp after which the actions builder contract is no longer approved to be executed
+   * @param _approvalDuration The duration (in seconds) of the approval to the actions builder contract (0 means disapproval)
    */
-  function approveActionsBuilder(address _actionsBuilder, uint256 _approvalExpiryTime) external;
-
-  /**
-   * @notice Disapproves an actions builder from being executed
-   * @dev Can only be called by the Safe owners
-   * @param _actionsBuilder The address of the actions builder contract to disapprove
-   */
-  function disapproveActionsBuilder(address _actionsBuilder) external;
+  function approveActionsBuilder(address _actionsBuilder, uint256 _approvalDuration) external;
 
   // ~~~ TRANSACTION METHODS ~~~
 
@@ -199,7 +182,7 @@ interface ISafeEntrypoint is ISafeManageable {
   /**
    * @notice Gets the information about an actions builder
    * @param _actionsBuilder The address of the actions builder contract
-   * @return _approvalExpiryTime The timestamp after which the actions builder contract is no longer approved to be executed
+   * @return _approvalExpiryTime The timestamp from which the actions builder contract is no longer approved to be executed
    * @return _isQueued Whether the actions builder contract is currently queued for execution
    */
   function getActionsBuilderInfo(address _actionsBuilder)
@@ -212,7 +195,7 @@ interface ISafeEntrypoint is ISafeManageable {
    * @param _txId The ID of the transaction
    * @return _actionsBuilders The batch of actions builder contract addresses associated
    * @return _actionsData The encoded actions data
-   * @return _executableAt The timestamp after which the transaction can be executed
+   * @return _executableAt The timestamp from which the transaction can be executed
    * @return _isExecuted Whether the transaction has been executed
    */
   function getTransactionInfo(uint256 _txId)

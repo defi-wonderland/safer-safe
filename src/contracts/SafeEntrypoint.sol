@@ -40,22 +40,11 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   // ~~~ ADMIN METHODS ~~~
 
   /// @inheritdoc ISafeEntrypoint
-  function approveActionsBuilder(address _actionsBuilder, uint256 _approvalExpiryTime) external isSafe {
-    // Ensure approval expiry time is in the future
-    if (_approvalExpiryTime <= block.timestamp) revert InvalidApprovalExpiryTime();
+  function approveActionsBuilder(address _actionsBuilder, uint256 _approvalDuration) external isSafe {
+    uint256 _approvalExpiryTime = block.timestamp + _approvalDuration;
 
     _actionsBuilderInfo[_actionsBuilder].approvalExpiryTime = _approvalExpiryTime;
-    emit ActionsBuilderApproved(_actionsBuilder, _approvalExpiryTime);
-  }
-
-  /// @inheritdoc ISafeEntrypoint
-  function disapproveActionsBuilder(address _actionsBuilder) external isSafeOwner {
-    if (_actionsBuilderInfo[_actionsBuilder].approvalExpiryTime <= block.timestamp) {
-      revert ActionsBuilderNotApproved();
-    }
-
-    _actionsBuilderInfo[_actionsBuilder].approvalExpiryTime = 0;
-    emit ActionsBuilderDisapproved(_actionsBuilder);
+    emit ActionsBuilderApproved(_actionsBuilder, _approvalDuration, _approvalExpiryTime);
   }
 
   // ~~~ TRANSACTION METHODS ~~~
