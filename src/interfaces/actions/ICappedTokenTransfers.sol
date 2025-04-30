@@ -6,18 +6,18 @@ import {IActionsBuilder} from 'interfaces/actions/IActionsBuilder.sol';
 
 interface ICappedTokenTransfers is ISafeManageable, IActionsBuilder {
   struct TokenTransfer {
-    address token;
     address recipient;
     uint256 amount;
   }
 
-  function tokenCap(address _token) external view returns (uint256 _transferCap);
-  function capSpent(address _token) external view returns (uint256 _transferCapSpent);
-  function lastEpochTimestamp(address _token) external view returns (uint256 _lastEpochTimestamp);
-  function tokenEpochLength(address _token) external view returns (uint256 _epochLength);
+  function tokenCap() external view returns (uint256);
+  function capSpent() external view returns (uint256);
+  function lastEpochTimestamp() external view returns (uint256);
+  function tokenEpochLength() external view returns (uint256);
   function stateUpdated() external view returns (bool);
+  function token() external view returns (address);
 
-  function tokenTransfers(uint256 _index) external view returns (address _token, address _recipient, uint256 _amount);
+  function tokenTransfers(uint256 _index) external view returns (address _recipient, uint256 _amount);
 
   // ~~~ ERRORS ~~~
 
@@ -29,17 +29,11 @@ interface ICappedTokenTransfers is ISafeManageable, IActionsBuilder {
 
   // ~~~ ADMIN METHODS ~~~
 
-  function addCappedToken(address _token, uint256 _cap, uint256 _epochLength) external;
-
-  function addTokenTransfers(
-    address[] memory _tokens,
-    address[] memory _recipients,
-    uint256[] memory _amounts
-  ) external;
+  function addTokenTransfers(address[] memory _recipients, uint256[] memory _amounts) external;
 
   // ~~~ STATE MANAGEMENT ~~~
 
-  function updateState(address[] memory _tokens, uint256[] memory _spentAmounts) external;
+  function updateState(bytes memory _data) external;
 
   function getActions() external view returns (Action[] memory);
 }
