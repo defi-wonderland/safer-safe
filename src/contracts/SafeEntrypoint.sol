@@ -40,17 +40,11 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   // ~~~ ADMIN METHODS ~~~
 
   /// @inheritdoc ISafeEntrypoint
-  function approveActionsBuilder(address _actionsBuilder) external isSafe {
-    if (_actionsBuilderInfo[_actionsBuilder].isApproved) revert ActionsBuilderAlreadyApproved();
-    _actionsBuilderInfo[_actionsBuilder].isApproved = true;
-    emit ActionsBuilderApproved(_actionsBuilder);
-  }
+  function approveActionsBuilder(address _actionsBuilder, uint256 _approvalDuration) external isSafe {
+    uint256 _approvalExpiryTime = block.timestamp + _approvalDuration;
 
-  /// @inheritdoc ISafeEntrypoint
-  function disapproveActionsBuilder(address _actionsBuilder) external isSafeOwner {
-    if (!_actionsBuilderInfo[_actionsBuilder].isApproved) revert ActionsBuilderNotApproved();
-    _actionsBuilderInfo[_actionsBuilder].isApproved = false;
-    emit ActionsBuilderDisapproved(_actionsBuilder);
+    _actionsBuilderInfo[_actionsBuilder].approvalExpiryTime = _approvalExpiryTime;
+    emit ActionsBuilderApproved(_actionsBuilder, _approvalDuration, _approvalExpiryTime);
   }
 
   // ~~~ TRANSACTION METHODS ~~~
@@ -62,7 +56,9 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
 
     // Validate all contracts are allowed and not already queued
     for (uint256 _i; _i < _actionsBuilders.length; ++_i) {
-      if (!_actionsBuilderInfo[_actionsBuilders[_i]].isApproved) revert ActionsBuilderNotApproved();
+      if (_actionsBuilderInfo[_actionsBuilders[_i]].approvalExpiryTime <= block.timestamp) {
+        revert ActionsBuilderNotApproved();
+      }
       if (_actionsBuilderInfo[_actionsBuilders[_i]].isQueued) revert ActionsBuilderAlreadyQueued();
 
       _actionsBuilderInfo[_actionsBuilders[_i]].isQueued = true;
@@ -142,9 +138,13 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   // ~~~ EXTERNAL VIEW METHODS ~~~
 
   /// @inheritdoc ISafeEntrypoint
-  function getActionsBuilderInfo(address _actionsBuilder) external view returns (bool _isApproved, bool _isQueued) {
-    (_isApproved, _isQueued) =
-      (_actionsBuilderInfo[_actionsBuilder].isApproved, _actionsBuilderInfo[_actionsBuilder].isQueued);
+  function getActionsBuilderInfo(address _actionsBuilder)
+    external
+    view
+    returns (uint256 _approvalExpiryTime, bool _isQueued)
+  {
+    (_approvalExpiryTime, _isQueued) =
+      (_actionsBuilderInfo[_actionsBuilder].approvalExpiryTime, _actionsBuilderInfo[_actionsBuilder].isQueued);
   }
 
   /// @inheritdoc ISafeEntrypoint
