@@ -14,11 +14,11 @@ interface ISafeEntrypoint is ISafeManageable {
   /**
    * @notice Information about an actions builder
    * @param approvalExpiryTime The timestamp from which the actions builder contract is no longer approved to be executed
-   * @param isQueued Whether the actions builder contract is currently queued for execution
+   * @param queuedTransactionId The ID of the transaction in which the actions builder contract is currently queued for execution (0 means not in queue)
    */
   struct ActionsBuilderInfo {
     uint256 approvalExpiryTime;
-    bool isQueued;
+    uint256 queuedTransactionId;
   }
 
   /**
@@ -93,9 +93,9 @@ interface ISafeEntrypoint is ISafeManageable {
   error ActionsBuilderAlreadyQueued();
 
   /**
-   * @notice Thrown when a transaction is not executable
+   * @notice Thrown when a transaction is not yet executable
    */
-  error TransactionNotExecutable();
+  error TransactionNotYetExecutable();
 
   /**
    * @notice Thrown when a transaction has already been executed
@@ -183,12 +183,12 @@ interface ISafeEntrypoint is ISafeManageable {
    * @notice Gets the information about an actions builder
    * @param _actionsBuilder The address of the actions builder contract
    * @return _approvalExpiryTime The timestamp from which the actions builder contract is no longer approved to be executed
-   * @return _isQueued Whether the actions builder contract is currently queued for execution
+   * @return _queuedTransactionId The ID of the transaction in which the actions builder contract is currently queued for execution (0 means not in queue)
    */
   function getActionsBuilderInfo(address _actionsBuilder)
     external
     view
-    returns (uint256 _approvalExpiryTime, bool _isQueued);
+    returns (uint256 _approvalExpiryTime, uint256 _queuedTransactionId);
 
   /**
    * @notice Gets the information about a transaction
