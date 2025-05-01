@@ -54,21 +54,21 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     // Validate input array is not empty
     if (_actionsBuilders.length == 0) revert EmptyActionsBuildersArray();
 
+    // Generate a simple transaction ID
+    _txId = ++transactionNonce;
+
     // Validate all contracts are allowed and not already queued
     for (uint256 _i; _i < _actionsBuilders.length; ++_i) {
       if (_actionsBuilderInfo[_actionsBuilders[_i]].approvalExpiryTime <= block.timestamp) {
         revert ActionsBuilderNotApproved();
       }
-      if (_actionsBuilderInfo[_actionsBuilders[_i]].isQueued) revert ActionsBuilderAlreadyQueued();
+      if (_actionsBuilderInfo[_actionsBuilders[_i]].queuedTransactionId != 0) revert ActionsBuilderAlreadyQueued();
 
-      _actionsBuilderInfo[_actionsBuilders[_i]].isQueued = true;
+      _actionsBuilderInfo[_actionsBuilders[_i]].queuedTransactionId = _txId;
     }
 
     // Collect all actions
     IActionsBuilder.Action[] memory _allActions = _collectActions(_actionsBuilders);
-
-    // Generate a simple transaction ID
-    _txId = transactionNonce++;
 
     // Store the transaction information
     _transactionInfo[_txId] = TransactionInfo({
@@ -125,7 +125,7 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     // Unqueue all actions builders
     address[] memory _actionsBuildersToUnqueue = _transactionInfo[_txId].actionsBuilders;
     for (uint256 _i; _i < _actionsBuildersToUnqueue.length; ++_i) {
-      _actionsBuilderInfo[_actionsBuildersToUnqueue[_i]].isQueued = false;
+      _actionsBuilderInfo[_actionsBuildersToUnqueue[_i]].queuedTransactionId = 0;
     }
 
     // Clear the transaction information
@@ -141,10 +141,11 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   function getActionsBuilderInfo(address _actionsBuilder)
     external
     view
-    returns (uint256 _approvalExpiryTime, bool _isQueued)
+    returns (uint256 _approvalExpiryTime, uint256 _queuedTransactionId)
   {
-    (_approvalExpiryTime, _isQueued) =
-      (_actionsBuilderInfo[_actionsBuilder].approvalExpiryTime, _actionsBuilderInfo[_actionsBuilder].isQueued);
+    (_approvalExpiryTime, _queuedTransactionId) = (
+      _actionsBuilderInfo[_actionsBuilder].approvalExpiryTime, _actionsBuilderInfo[_actionsBuilder].queuedTransactionId
+    );
   }
 
   /// @inheritdoc ISafeEntrypoint
@@ -192,7 +193,7 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   function _executeTransaction(uint256 _txId, address[] memory _signers) internal {
     TransactionInfo storage _txInfo = _transactionInfo[_txId];
 
-    if (_txInfo.executableAt > block.timestamp) revert TransactionNotExecutable();
+    if (_txInfo.executableAt > block.timestamp) revert TransactionNotYetExecutable();
     if (_txInfo.isExecuted) revert TransactionAlreadyExecuted();
 
     bytes memory _multiSendData = _buildMultiSendData(abi.decode(_txInfo.actionsData, (IActionsBuilder.Action[])));
@@ -210,7 +211,7 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     // Unqueue all actions builders
     address[] memory _actionsBuildersToUnqueue = _txInfo.actionsBuilders;
     for (uint256 _i; _i < _actionsBuildersToUnqueue.length; ++_i) {
-      _actionsBuilderInfo[_actionsBuildersToUnqueue[_i]].isQueued = false;
+      _actionsBuilderInfo[_actionsBuildersToUnqueue[_i]].queuedTransactionId = 0;
     }
 
     // NOTE: event emitted to log successful execution
