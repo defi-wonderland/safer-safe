@@ -96,7 +96,7 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     }
 
     // Generate a simple transaction ID
-    _txId = transactionNonce++;
+    _txId = ++transactionNonce;
 
     // Store the transaction information
     _transactionInfo[_txId] = TransactionInfo({
