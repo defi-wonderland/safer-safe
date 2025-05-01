@@ -17,6 +17,12 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   // ~~~ STORAGE ~~~
 
   /// @inheritdoc ISafeEntrypoint
+  uint256 public constant SHORT_DELAY = 1 hours;
+
+  /// @inheritdoc ISafeEntrypoint
+  uint256 public constant LONG_DELAY = 7 days;
+
+  /// @inheritdoc ISafeEntrypoint
   address public immutable MULTI_SEND_CALL_ONLY;
 
   /// @inheritdoc ISafeEntrypoint
@@ -74,12 +80,12 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     _transactionInfo[_txId] = TransactionInfo({
       actionsBuilders: _actionsBuilders,
       actionsData: abi.encode(_allActions),
-      executableAt: block.timestamp + 1 hours,
+      executableAt: block.timestamp + SHORT_DELAY,
       isExecuted: false
     });
 
     // NOTE: event picked up by off-chain monitoring service
-    emit TransactionQueued(_txId, block.timestamp + 1 hours, false);
+    emit TransactionQueued(_txId, false);
   }
 
   /// @inheritdoc ISafeEntrypoint
@@ -96,12 +102,12 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     _transactionInfo[_txId] = TransactionInfo({
       actionsBuilders: new address[](0),
       actionsData: abi.encode(_actions),
-      executableAt: block.timestamp + 7 days,
+      executableAt: block.timestamp + LONG_DELAY,
       isExecuted: false
     });
 
     // NOTE: event picked up by off-chain monitoring service
-    emit TransactionQueued(_txId, block.timestamp + 7 days, true);
+    emit TransactionQueued(_txId, true);
   }
 
   /// @inheritdoc ISafeEntrypoint
@@ -131,8 +137,11 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     // Clear the transaction information
     delete _transactionInfo[_txId];
 
-    // Emit event for off-chain monitoring
-    emit TransactionUnqueued(_txId);
+    // NOTE: only for event logging
+    bool _isArbitrary = _actionsBuildersToUnqueue.length == 0;
+
+    // NOTE: emit event for off-chain monitoring
+    emit TransactionUnqueued(_txId, _isArbitrary);
   }
 
   // ~~~ EXTERNAL VIEW METHODS ~~~
@@ -214,8 +223,11 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
       _actionsBuilderInfo[_actionsBuildersToUnqueue[_i]].queuedTransactionId = 0;
     }
 
+    // NOTE: only for event logging
+    bool _isArbitrary = _actionsBuildersToUnqueue.length == 0;
+
     // NOTE: event emitted to log successful execution
-    emit TransactionExecuted(_txId, _safeTxHash);
+    emit TransactionExecuted(_txId, _isArbitrary, _safeTxHash, _signers);
   }
 
   /**

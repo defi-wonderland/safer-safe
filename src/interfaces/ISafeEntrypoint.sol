@@ -38,6 +38,18 @@ interface ISafeEntrypoint is ISafeManageable {
   // ~~~ STORAGE METHODS ~~~
 
   /**
+   * @notice Gets the short delay applied to pre-approved transactions
+   * @return _shortDelay The short delay (in seconds)
+   */
+  function SHORT_DELAY() external view returns (uint256 _shortDelay);
+
+  /**
+   * @notice Gets the long delay applied to arbitrary transactions
+   * @return _longDelay The long delay (in seconds)
+   */
+  function LONG_DELAY() external view returns (uint256 _longDelay);
+
+  /**
    * @notice Gets the MultiSendCallOnly contract
    * @return _multiSendCallOnly The MultiSendCallOnly contract address
    */
@@ -57,28 +69,34 @@ interface ISafeEntrypoint is ISafeManageable {
    * @param _approvalDuration The duration (in seconds) of the approval to the actions builder contract (0 means disapproval)
    * @param _approvalExpiryTime The timestamp from which the actions builder contract is no longer approved to be executed
    */
-  event ActionsBuilderApproved(address _actionsBuilder, uint256 _approvalDuration, uint256 _approvalExpiryTime);
+  event ActionsBuilderApproved(
+    address indexed _actionsBuilder, uint256 indexed _approvalDuration, uint256 indexed _approvalExpiryTime
+  );
 
   /**
    * @notice Emitted when a transaction is queued
    * @param _txId The ID of the transaction
-   * @param _executableAt The timestamp from which the transaction can be executed
    * @param _isArbitrary Whether the transaction is arbitrary or pre-approved
    */
-  event TransactionQueued(uint256 _txId, uint256 _executableAt, bool _isArbitrary);
+  event TransactionQueued(uint256 indexed _txId, bool indexed _isArbitrary);
 
   /**
    * @notice Emitted when a transaction is executed
    * @param _txId The ID of the transaction
+   * @param _isArbitrary Whether the transaction is arbitrary or pre-approved
    * @param _safeTxHash The hash of the Safe transaction
+   * @param _signers The array of signer addresses
    */
-  event TransactionExecuted(uint256 _txId, bytes32 _safeTxHash);
+  event TransactionExecuted(
+    uint256 indexed _txId, bool indexed _isArbitrary, bytes32 indexed _safeTxHash, address[] _signers
+  );
 
   /**
    * @notice Emitted when a transaction is unqueued
    * @param _txId The ID of the transaction
+   * @param _isArbitrary Whether the transaction is arbitrary or pre-approved
    */
-  event TransactionUnqueued(uint256 _txId);
+  event TransactionUnqueued(uint256 indexed _txId, bool indexed _isArbitrary);
 
   // ~~~ ERRORS ~~~
 

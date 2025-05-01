@@ -66,7 +66,8 @@ contract BasicTest is Test {
 
     // Allow the SafeEntrypoint to call the SimpleActions contract
     vm.prank(address(_safe)); // TODO: Replicate Safe transaction without pranking it
-    _safeEntrypoint.approveActionsBuilder(_actionsBuilder, block.timestamp + 1 days);
+    uint256 _approvalDuration = block.timestamp + 1 days;
+    _safeEntrypoint.approveActionsBuilder(_actionsBuilder, _approvalDuration);
 
     vm.startPrank(_OWNER);
 
@@ -76,7 +77,7 @@ contract BasicTest is Test {
     uint256 _txId = _safeEntrypoint.queueTransaction(_actionsBuilders);
 
     // Wait for the timelock period
-    vm.warp(block.timestamp + 1 hours);
+    vm.warp(block.timestamp + _safeEntrypoint.SHORT_DELAY());
 
     // Get and approve the Safe transaction hash
     bytes32 _safeTxHash = _safeEntrypoint.getSafeTransactionHash(_txId);
