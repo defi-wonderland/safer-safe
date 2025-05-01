@@ -13,7 +13,7 @@ interface ISafeEntrypoint is ISafeManageable {
 
   /**
    * @notice Information about an actions builder
-   * @param approvalExpiryTime The timestamp from which the actions builder contract is no longer approved to be executed
+   * @param approvalExpiryTime The timestamp from which the actions builder contract is no longer approved to be queued
    * @param queuedTransactionId The ID of the transaction in which the actions builder contract is currently queued for execution (0 means not in queue)
    */
   struct ActionsBuilderInfo {
@@ -67,7 +67,7 @@ interface ISafeEntrypoint is ISafeManageable {
    * @notice Emitted when an actions builder is approved
    * @param _actionsBuilder The address of the actions builder contract
    * @param _approvalDuration The duration (in seconds) of the approval to the actions builder contract (0 means disapproval)
-   * @param _approvalExpiryTime The timestamp from which the actions builder contract is no longer approved to be executed
+   * @param _approvalExpiryTime The timestamp from which the actions builder contract is no longer approved to be queued
    */
   event ActionsBuilderApproved(
     address indexed _actionsBuilder, uint256 indexed _approvalDuration, uint256 indexed _approvalExpiryTime
@@ -143,7 +143,7 @@ interface ISafeEntrypoint is ISafeManageable {
   // ~~~ ADMIN METHODS ~~~
 
   /**
-   * @notice Approves an actions builder to be executed
+   * @notice Approves an actions builder to be queued
    * @dev Can only be called by the Safe contract
    * @param _actionsBuilder The address of the actions builder contract to approve
    * @param _approvalDuration The duration (in seconds) of the approval to the actions builder contract (0 means disapproval)
@@ -172,7 +172,7 @@ interface ISafeEntrypoint is ISafeManageable {
   function queueTransaction(IActionsBuilder.Action[] memory _actions) external returns (uint256 _txId);
 
   /**
-   * @notice Executes a queued transaction using the approved signers
+   * @notice Executes a queued transaction using the approved hash signers
    * @dev Can be called by anyone
    * @dev The transaction must have passed its delay period
    * @param _txId The ID of the transaction to execute
@@ -200,7 +200,7 @@ interface ISafeEntrypoint is ISafeManageable {
   /**
    * @notice Gets the information about an actions builder
    * @param _actionsBuilder The address of the actions builder contract
-   * @return _approvalExpiryTime The timestamp from which the actions builder contract is no longer approved to be executed
+   * @return _approvalExpiryTime The timestamp from which the actions builder contract is no longer approved to be queued
    * @return _queuedTransactionId The ID of the transaction in which the actions builder contract is currently queued for execution (0 means not in queue)
    */
   function getActionsBuilderInfo(address _actionsBuilder)
