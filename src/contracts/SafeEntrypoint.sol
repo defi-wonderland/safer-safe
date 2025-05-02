@@ -122,14 +122,16 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
 
   /// @inheritdoc ISafeEntrypoint
   function unqueueTransaction(uint256 _txId) external isSafeOwner {
+    TransactionInfo storage _txInfo = _transactionInfo[_txId];
+
     // Check if the transaction exists
-    if (_transactionInfo[_txId].executableAt == 0) revert TransactionNotQueued();
+    if (_txInfo.executableAt == 0) revert TransactionNotQueued();
 
     // Check if the transaction has already been executed
-    if (_transactionInfo[_txId].isExecuted) revert TransactionAlreadyExecuted();
+    if (_txInfo.isExecuted) revert TransactionAlreadyExecuted();
 
     // Unqueue all actions builders
-    address[] memory _actionsBuildersToUnqueue = _transactionInfo[_txId].actionsBuilders;
+    address[] memory _actionsBuildersToUnqueue = _txInfo.actionsBuilders;
     for (uint256 _i; _i < _actionsBuildersToUnqueue.length; ++_i) {
       _actionsBuilderInfo[_actionsBuildersToUnqueue[_i]].queuedTransactionId = 0;
     }
@@ -163,26 +165,24 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     view
     returns (address[] memory _actionsBuilders, bytes memory _actionsData, uint256 _executableAt, bool _isExecuted)
   {
-    (_actionsBuilders, _actionsData, _executableAt, _isExecuted) = (
-      _transactionInfo[_txId].actionsBuilders,
-      _transactionInfo[_txId].actionsData,
-      _transactionInfo[_txId].executableAt,
-      _transactionInfo[_txId].isExecuted
-    );
+    TransactionInfo storage _txInfo = _transactionInfo[_txId];
+    (_actionsBuilders, _actionsData, _executableAt, _isExecuted) =
+      (_txInfo.actionsBuilders, _txInfo.actionsData, _txInfo.executableAt, _txInfo.isExecuted);
   }
 
   /// @inheritdoc ISafeEntrypoint
   function getSafeTransactionHash(uint256 _txId) external view returns (bytes32 _safeTxHash) {
-    IActionsBuilder.Action[] memory _actions =
-      abi.decode(_transactionInfo[_txId].actionsData, (IActionsBuilder.Action[]));
+    TransactionInfo storage _txInfo = _transactionInfo[_txId];
+    IActionsBuilder.Action[] memory _actions = abi.decode(_txInfo.actionsData, (IActionsBuilder.Action[]));
     bytes memory _multiSendData = _buildMultiSendData(_actions);
     _safeTxHash = _getSafeTransactionHash(_multiSendData, SAFE.nonce());
   }
 
   /// @inheritdoc ISafeEntrypoint
   function getSafeTransactionHash(uint256 _txId, uint256 _safeNonce) external view returns (bytes32 _safeTxHash) {
-    bytes memory _multiSendData =
-      _buildMultiSendData(abi.decode(_transactionInfo[_txId].actionsData, (IActionsBuilder.Action[])));
+    TransactionInfo storage _txInfo = _transactionInfo[_txId];
+    IActionsBuilder.Action[] memory _actions = abi.decode(_txInfo.actionsData, (IActionsBuilder.Action[]));
+    bytes memory _multiSendData = _buildMultiSendData(_actions);
     _safeTxHash = _getSafeTransactionHash(_multiSendData, _safeNonce);
   }
 
@@ -205,7 +205,8 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     if (_txInfo.executableAt > block.timestamp) revert TransactionNotYetExecutable();
     if (_txInfo.isExecuted) revert TransactionAlreadyExecuted();
 
-    bytes memory _multiSendData = _buildMultiSendData(abi.decode(_txInfo.actionsData, (IActionsBuilder.Action[])));
+    IActionsBuilder.Action[] memory _actions = abi.decode(_txInfo.actionsData, (IActionsBuilder.Action[]));
+    bytes memory _multiSendData = _buildMultiSendData(_actions);
     address[] memory _sortedSigners = _sortSigners(_signers);
     bytes memory _signatures = _buildApprovedHashSignatures(_sortedSigners);
 
@@ -337,12 +338,13 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
    * @return _approvedHashSigners The array of approved hash signer addresses
    */
   function _getApprovedHashSigners(uint256 _txId) internal view returns (address[] memory _approvedHashSigners) {
+    TransactionInfo storage _txInfo = _transactionInfo[_txId];
+    IActionsBuilder.Action[] memory _actions = abi.decode(_txInfo.actionsData, (IActionsBuilder.Action[]));
+    bytes memory _multiSendData = _buildMultiSendData(_actions);
+    bytes32 _safeTxHash = _getSafeTransactionHash(_multiSendData, SAFE.nonce());
+
     address[] memory _safeOwners = SAFE.getOwners();
     uint256 _safeOwnersCount = _safeOwners.length;
-
-    bytes memory _multiSendData =
-      _buildMultiSendData(abi.decode(_transactionInfo[_txId].actionsData, (IActionsBuilder.Action[])));
-    bytes32 _safeTxHash = _getSafeTransactionHash(_multiSendData, SAFE.nonce());
 
     // Create a temporary array to store approved hash signers
     address[] memory _tempSigners = new address[](_safeOwnersCount);
