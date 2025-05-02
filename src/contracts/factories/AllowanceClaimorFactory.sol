@@ -11,7 +11,7 @@ contract AllowanceClaimorFactory is IAllowanceClaimorFactory {
     address _token,
     address _tokenOwner,
     address _tokenRecipient
-  ) external returns (address) {
-    return address(new AllowanceClaimor(_safe, _token, _tokenOwner, _tokenRecipient));
+  ) external returns (address _allowanceClaimor) {
+    _allowanceClaimor = address(new AllowanceClaimor(_safe, _token, _tokenOwner, _tokenRecipient));
   }
 }

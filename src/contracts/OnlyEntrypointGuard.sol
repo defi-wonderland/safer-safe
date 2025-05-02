@@ -89,7 +89,7 @@ contract OnlyEntrypointGuard is BaseTransactionGuard, IOnlyEntrypointGuard {
   function _isValidSignatureFormat(bytes memory _signatures) internal pure returns (bool _isValid) {
     // Check if the signatures length is a multiple of 65 bytes
     if (_signatures.length % 65 != 0) {
-      return false;
+      return _isValid = false;
     }
 
     // Check each signature
@@ -99,10 +99,10 @@ contract OnlyEntrypointGuard is BaseTransactionGuard, IOnlyEntrypointGuard {
 
       // Only allow pre-approved hash signatures (type 0x01)
       if (_signatureType != PRE_VALIDATED_SIGNATURE_TYPE) {
-        return false;
+        return _isValid = false;
       }
     }
 
-    return true;
+    _isValid = true;
   }
 }

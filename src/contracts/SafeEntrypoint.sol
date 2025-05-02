@@ -56,7 +56,7 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   // ~~~ TRANSACTION METHODS ~~~
 
   /// @inheritdoc ISafeEntrypoint
-  function queueTransaction(address[] memory _actionsBuilders) external isSafeOwner returns (uint256 _txId) {
+  function queueTransaction(address[] calldata _actionsBuilders) external isSafeOwner returns (uint256 _txId) {
     // Validate input array is not empty
     if (_actionsBuilders.length == 0) revert EmptyActionsBuildersArray();
 
@@ -89,7 +89,7 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   }
 
   /// @inheritdoc ISafeEntrypoint
-  function queueTransaction(IActionsBuilder.Action[] memory _actions) external isSafeOwner returns (uint256 _txId) {
+  function queueTransaction(IActionsBuilder.Action[] calldata _actions) external isSafeOwner returns (uint256 _txId) {
     // Validate that the actions array is not empty
     if (_actions.length == 0) {
       revert EmptyActionsArray();
@@ -116,7 +116,7 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   }
 
   /// @inheritdoc ISafeEntrypoint
-  function executeTransaction(uint256 _txId, address[] memory _signers) external payable {
+  function executeTransaction(uint256 _txId, address[] calldata _signers) external payable {
     _executeTransaction(_txId, _signers);
   }
 
@@ -279,7 +279,7 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
    * @param _actionsBuilders The batch of actions builder contract addresses
    * @return _allActions The combined batch of all actions
    */
-  function _collectActions(address[] memory _actionsBuilders)
+  function _collectActions(address[] calldata _actionsBuilders)
     internal
     view
     returns (IActionsBuilder.Action[] memory _allActions)

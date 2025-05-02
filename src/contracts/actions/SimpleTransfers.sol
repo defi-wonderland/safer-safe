@@ -21,7 +21,7 @@ contract SimpleTransfers is ISimpleTransfers {
     }
   }
 
-  function getActions() external view returns (Action[] memory) {
-    return actions;
+  function getActions() external view returns (Action[] memory _actions) {
+    _actions = actions;
   }
 }

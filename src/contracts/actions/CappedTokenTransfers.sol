@@ -27,9 +27,9 @@ contract CappedTokenTransfers is SafeManageable, ICappedTokenTransfers {
   }
 
   function addTokenTransfers(
-    address[] memory _tokens,
-    address[] memory _recipients,
-    uint256[] memory _amounts
+    address[] calldata _tokens,
+    address[] calldata _recipients,
+    uint256[] calldata _amounts
   ) external isSafeOwner {
     if (_tokens.length != _recipients.length || _tokens.length != _amounts.length) {
       revert LengthMismatch();
@@ -41,12 +41,12 @@ contract CappedTokenTransfers is SafeManageable, ICappedTokenTransfers {
 
   // ~~~ ACTIONS METHODS ~~~
 
-  function getActions() external returns (Action[] memory) {
-    Action[] memory actions = new Action[](tokenTransfers.length);
+  function getActions() external returns (Action[] memory _actions) {
+    _actions = new Action[](tokenTransfers.length);
 
     for (uint256 i = 0; i < tokenTransfers.length; i++) {
       TokenTransfer memory tokenTransfer = tokenTransfers[i];
-      actions[i] = Action({
+      _actions[i] = Action({
         target: tokenTransfer.token,
         data: abi.encodeWithSelector(IERC20.transfer.selector, tokenTransfer.recipient, tokenTransfer.amount),
         value: 0
@@ -83,8 +83,6 @@ contract CappedTokenTransfers is SafeManageable, ICappedTokenTransfers {
 
     // NOTE: cleanup token transfers (as they're already queued)
     delete tokenTransfers;
-
-    return actions;
   }
 
   // ~~~ INTERNAL METHODS ~~~
