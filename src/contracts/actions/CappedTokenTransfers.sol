@@ -9,52 +9,50 @@ import {IERC20} from 'forge-std/interfaces/IERC20.sol';
 
 contract CappedTokenTransfers is SafeManageable, ICappedTokenTransfers {
   // Token configuration
-  address public immutable token;
-  uint256 public immutable tokenCap;
-  uint256 public immutable tokenEpochLength;
+  address public immutable TOKEN;
+  uint256 public immutable CAP;
+  uint256 public immutable EPOCH_LENGTH;
 
   // State tracking
-  uint256 public capSpent;
-  uint256 public lastEpochTimestamp;
-  bool public stateUpdated;
+  uint256 public totalSpent;
+  uint256 public startingTimestamp;
+
   TokenTransfer[] public tokenTransfers;
 
   constructor(address _safe, address _token, uint256 _cap, uint256 _epochLength) SafeManageable(_safe) {
-    token = _token;
-    tokenCap = _cap;
-    tokenEpochLength = _epochLength;
-    lastEpochTimestamp = block.timestamp;
-    stateUpdated = true;
+    TOKEN = _token;
+    CAP = _cap;
+    EPOCH_LENGTH = _epochLength;
+    startingTimestamp = block.timestamp;
   }
 
   // ~~~ ADMIN METHODS ~~~
 
-  function addTokenTransfers(address[] memory _recipients, uint256[] memory _amounts) external isSafeOwner {
-    if (_recipients.length != _amounts.length) {
-      revert LengthMismatch();
-    }
+  function addTokenTransfer(address _recipient, uint256 _amount) external isSafeOwner {
+    tokenTransfers.push(TokenTransfer({recipient: _recipient, amount: _amount}));
+  }
 
-    for (uint256 i = 0; i < _recipients.length; i++) {
-      _addTokenTransfer(_recipients[i], _amounts[i]);
-    }
+  function removeTokenTransfer(uint256 _index) external isSafeOwner {
+    if (_index >= tokenTransfers.length) revert InvalidIndex();
 
-    // Mark state as needing update
-    stateUpdated = false;
+    delete tokenTransfers[_index];
   }
 
   // ~~~ ACTIONS METHODS ~~~
 
   function getActions() external view returns (Action[] memory) {
-    // Get total amount to be spent
-    uint256 _totalAmount = _calculateTotalAmount();
-
-    // Validate cap
-    if (capSpent + _totalAmount > tokenCap) {
-      revert ExceededCap();
+    // Count valid transfers
+    uint256 _validCount = 0;
+    uint256 _totalAmount = 0;
+    for (uint256 i = 0; i < tokenTransfers.length; i++) {
+      if (tokenTransfers[i].recipient != address(0)) {
+        _validCount++;
+        _totalAmount += tokenTransfers[i].amount;
+      }
     }
 
-    // Create actions array: one for updateState + one for each transfer
-    uint256 _numActions = tokenTransfers.length + 1;
+    // Create actions array: one for updateState + one for each valid transfer
+    uint256 _numActions = _validCount + 1;
     Action[] memory _actions = new Action[](_numActions);
 
     // First action: update state
@@ -64,53 +62,37 @@ contract CappedTokenTransfers is SafeManageable, ICappedTokenTransfers {
       value: 0
     });
 
-    // Remaining actions: token transfers
+    // Remaining actions: valid token transfers
+    uint256 _actionIndex = 1;
     for (uint256 i = 0; i < tokenTransfers.length; i++) {
-      TokenTransfer memory transfer = tokenTransfers[i];
-      _actions[i + 1] = Action({
-        target: token,
-        data: abi.encodeWithSelector(IERC20.transfer.selector, transfer.recipient, transfer.amount),
-        value: 0
-      });
+      if (tokenTransfers[i].recipient != address(0)) {
+        _actions[_actionIndex] = Action({
+          target: TOKEN,
+          data: abi.encodeWithSelector(IERC20.transfer.selector, tokenTransfers[i].recipient, tokenTransfers[i].amount),
+          value: 0
+        });
+        _actionIndex++;
+      }
     }
 
     return _actions;
   }
 
   function updateState(bytes memory _data) external isSafe {
-    // Validate state
-    if (stateUpdated) revert StateAlreadyUpdated();
+    uint256 _timeElapsed = block.timestamp - startingTimestamp;
+    // we always want to round up any fraction
+    uint256 _totalAllowed = (_timeElapsed * CAP + EPOCH_LENGTH - 1) / EPOCH_LENGTH;
 
-    // Decode the data
-    uint256 _spentAmount = abi.decode(_data, (uint256));
+    uint256 _amount = abi.decode(_data, (uint256));
+    uint256 _totalSpent = totalSpent + _amount;
 
-    uint256 _currentTimestamp = block.timestamp;
-
-    // Reset cap if epoch has passed
-    if (_currentTimestamp >= lastEpochTimestamp + tokenEpochLength) {
-      capSpent = 0;
-      lastEpochTimestamp = _currentTimestamp;
+    if (_totalSpent > _totalAllowed) {
+      revert CapExceeded();
     }
 
-    // Update cap spent
-    capSpent += _spentAmount;
+    totalSpent = _totalSpent;
 
     // Clean up
     delete tokenTransfers;
-    stateUpdated = true;
-  }
-
-  // ~~~ INTERNAL METHODS ~~~
-
-  function _addTokenTransfer(address _recipient, uint256 _amount) internal {
-    tokenTransfers.push(TokenTransfer({recipient: _recipient, amount: _amount}));
-  }
-
-  function _calculateTotalAmount() internal view returns (uint256) {
-    uint256 _total = 0;
-    for (uint256 i = 0; i < tokenTransfers.length; i++) {
-      _total += tokenTransfers[i].amount;
-    }
-    return _total;
   }
 }
