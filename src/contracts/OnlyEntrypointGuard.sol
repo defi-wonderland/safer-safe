@@ -87,15 +87,17 @@ contract OnlyEntrypointGuard is BaseTransactionGuard, IOnlyEntrypointGuard {
    * @return _isValid Whether all signatures are pre-approved hash signatures
    */
   function _isValidSignatureFormat(bytes memory _signatures) internal pure returns (bool _isValid) {
+    uint256 _signaturesLength = _signatures.length;
+
     // Check if the signatures length is a multiple of 65 bytes
-    if (_signatures.length % 65 != 0) {
+    if (_signaturesLength % 65 != 0) {
       return _isValid = false;
     }
 
     // Check each signature
-    for (uint256 i = 0; i < _signatures.length; i += 65) {
+    for (uint256 _i; _i < _signaturesLength; _i += 65) {
       // Get the signature type (last byte of each 65-byte signature)
-      uint8 _signatureType = uint8(_signatures[i + 64]);
+      uint8 _signatureType = uint8(_signatures[_i + 64]);
 
       // Only allow pre-approved hash signatures (type 0x01)
       if (_signatureType != PRE_VALIDATED_SIGNATURE_TYPE) {

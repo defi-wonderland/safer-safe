@@ -57,14 +57,16 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
 
   /// @inheritdoc ISafeEntrypoint
   function queueTransaction(address[] calldata _actionsBuilders) external isSafeOwner returns (uint256 _txId) {
+    uint256 _actionsBuildersLength = _actionsBuilders.length;
+
     // Validate input array is not empty
-    if (_actionsBuilders.length == 0) revert EmptyActionsBuildersArray();
+    if (_actionsBuildersLength == 0) revert EmptyActionsBuildersArray();
 
     // Generate a simple transaction ID
     _txId = ++transactionNonce;
 
     // Validate all contracts are allowed and not already queued
-    for (uint256 _i; _i < _actionsBuilders.length; ++_i) {
+    for (uint256 _i; _i < _actionsBuildersLength; ++_i) {
       if (_actionsBuilderInfo[_actionsBuilders[_i]].approvalExpiryTime <= block.timestamp) {
         revert ActionsBuilderNotApproved();
       }
@@ -132,7 +134,8 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
 
     // Unqueue all actions builders
     address[] memory _actionsBuildersToUnqueue = _txInfo.actionsBuilders;
-    for (uint256 _i; _i < _actionsBuildersToUnqueue.length; ++_i) {
+    uint256 _actionsBuildersToUnqueueLength = _actionsBuildersToUnqueue.length;
+    for (uint256 _i; _i < _actionsBuildersToUnqueueLength; ++_i) {
       _actionsBuilderInfo[_actionsBuildersToUnqueue[_i]].queuedTransactionId = 0;
     }
 
@@ -140,7 +143,7 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     delete _transactionInfo[_txId];
 
     // NOTE: only for event logging
-    bool _isArbitrary = _actionsBuildersToUnqueue.length == 0;
+    bool _isArbitrary = _actionsBuildersToUnqueueLength == 0;
 
     // NOTE: emit event for off-chain monitoring
     emit TransactionUnqueued(_txId, _isArbitrary);
@@ -220,12 +223,13 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
 
     // Unqueue all actions builders
     address[] memory _actionsBuildersToUnqueue = _txInfo.actionsBuilders;
-    for (uint256 _i; _i < _actionsBuildersToUnqueue.length; ++_i) {
+    uint256 _actionsBuildersToUnqueueLength = _actionsBuildersToUnqueue.length;
+    for (uint256 _i; _i < _actionsBuildersToUnqueueLength; ++_i) {
       _actionsBuilderInfo[_actionsBuildersToUnqueue[_i]].queuedTransactionId = 0;
     }
 
     // NOTE: only for event logging
-    bool _isArbitrary = _actionsBuildersToUnqueue.length == 0;
+    bool _isArbitrary = _actionsBuildersToUnqueueLength == 0;
 
     // NOTE: event emitted to log successful execution
     emit TransactionExecuted(_txId, _isArbitrary, _safeTxHash, _signers);
@@ -285,23 +289,26 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     view
     returns (IActionsBuilder.Action[] memory _allActions)
   {
-    // Cache for storing actions from each contract
-    IActionsBuilder.Action[][] memory _cachedActions = new IActionsBuilder.Action[][](_actionsBuilders.length);
+    uint256 _actionsBuildersLength = _actionsBuilders.length;
     uint256 _allActionsLength;
+    uint256 _allActionsIndex;
+
+    // Cache for storing actions from each contract
+    IActionsBuilder.Action[][] memory _cachedActions = new IActionsBuilder.Action[][](_actionsBuildersLength);
+    IActionsBuilder.Action[] memory _actions;
 
     // First pass: call getActions once per contract and cache the results
-    for (uint256 _i; _i < _actionsBuilders.length; ++_i) {
-      IActionsBuilder.Action[] memory _actions = _fetchActions(_actionsBuilders[_i]);
+    for (uint256 _i; _i < _actionsBuildersLength; ++_i) {
+      _actions = _fetchActions(_actionsBuilders[_i]);
       _cachedActions[_i] = _actions;
       _allActionsLength += _actions.length;
     }
 
     // Allocate the final array
     _allActions = new IActionsBuilder.Action[](_allActionsLength);
-    uint256 _allActionsIndex;
 
     // Second pass: fill the final array from cached results
-    for (uint256 _i; _i < _cachedActions.length; ++_i) {
+    for (uint256 _i; _i < _actionsBuildersLength; ++_i) {
       for (uint256 _j; _j < _cachedActions[_i].length; ++_j) {
         _allActions[_allActionsIndex++] = _cachedActions[_i][_j];
       }
@@ -344,14 +351,14 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     bytes32 _safeTxHash = _getSafeTransactionHash(_multiSendData, SAFE.nonce());
 
     address[] memory _safeOwners = SAFE.getOwners();
-    uint256 _safeOwnersCount = _safeOwners.length;
+    uint256 _safeOwnersLength = _safeOwners.length;
 
     // Create a temporary array to store approved hash signers
-    address[] memory _tempSigners = new address[](_safeOwnersCount);
+    address[] memory _tempSigners = new address[](_safeOwnersLength);
     uint256 _approvedHashSignersCount;
 
     // Single pass through all owners
-    for (uint256 _i; _i < _safeOwnersCount; ++_i) {
+    for (uint256 _i; _i < _safeOwnersLength; ++_i) {
       // Check if this owner has approved the hash
       if (SAFE.approvedHashes(_safeOwners[_i], _safeTxHash) == 1) {
         _tempSigners[_approvedHashSignersCount] = _safeOwners[_i];
@@ -384,10 +391,14 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     // Initialize an empty bytes array to avoid null reference
     _multiSendData = new bytes(0);
 
+    uint256 _actionsLength = _actions.length;
+    IActionsBuilder.Action memory _action;
+    bytes memory _encodedAction;
+
     // Loop through each action and encode it
-    for (uint256 _i; _i < _actions.length; ++_i) {
+    for (uint256 _i; _i < _actionsLength; ++_i) {
       // Extract the current action
-      IActionsBuilder.Action memory _action = _actions[_i];
+      _action = _actions[_i];
 
       // For each action, we encode:
       // 1 byte: operation (0 = Call, 1 = DelegateCall) - using 0 (Call) by default
@@ -397,7 +408,7 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
       // N bytes: data payload
 
       // Encode each action using abi.encodePacked to avoid padding
-      bytes memory _encodedAction = abi.encodePacked(
+      _encodedAction = abi.encodePacked(
         uint8(0), // operation (0 = Call)
         _action.target, // target address
         _action.value, // ether value
@@ -427,34 +438,30 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     // r: 32 bytes
     // s: 32 bytes
     // v: 1 byte
-
     // The total length will be signers.length * 65 bytes
-    _approvedHashSignatures = new bytes(_signers.length * 65);
 
-    for (uint256 _i; _i < _signers.length; ++_i) {
-      // Calculate position in the signatures array (65 bytes per signature)
-      uint256 _pos = 65 * _i;
+    // Set s to zero (not used for approved hash validation)
+    bytes32 _s = bytes32(0);
 
+    // Set v to 1 (indicates this is an approved hash signature)
+    uint8 _v = 1;
+
+    uint256 _signersLength = _signers.length;
+    bytes32 _r;
+    bytes memory _signature;
+
+    for (uint256 _i; _i < _signersLength; ++_i) {
       // Set r to the signer address (converted to bytes32)
-      bytes32 _r = bytes32(uint256(uint160(_signers[_i])));
+      _r = bytes32(uint256(uint160(_signers[_i])));
 
-      // Set s to zero (not used for approved hash validation)
-      bytes32 _s = bytes32(0);
-
-      // Set v to 1 (indicates this is an approved hash signature)
-      uint8 _v = 1;
+      // 65 bytes per signature
+      // r value: first 32 bytes of the signature
+      // s value: next 32 bytes of the signature
+      // v value: final 1 byte of the signature
+      _signature = abi.encodePacked(_r, _s, _v);
 
       // Write the signature values to the byte array
-      assembly {
-        // r value: first 32 bytes of the signature
-        mstore(add(add(_approvedHashSignatures, 32), _pos), _r)
-
-        // s value: next 32 bytes of the signature
-        mstore(add(add(_approvedHashSignatures, 32), add(_pos, 32)), _s)
-
-        // v value: final 1 byte of the signature
-        mstore8(add(add(_approvedHashSignatures, 32), add(_pos, 64)), _v)
-      }
+      _approvedHashSignatures = abi.encodePacked(_approvedHashSignatures, _signature);
     }
   }
 
@@ -465,12 +472,15 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
    * @return _sortedSigners The sorted array of signer addresses
    */
   function _sortSigners(address[] memory _signers) internal pure returns (address[] memory _sortedSigners) {
-    for (uint256 _i; _i < _signers.length; ++_i) {
-      for (uint256 _j; _j < _signers.length - _i - 1; ++_j) {
+    uint256 _signersLength = _signers.length;
+    address _temp;
+
+    for (uint256 _i; _i < _signersLength; ++_i) {
+      for (uint256 _j; _j < _signersLength - _i - 1; ++_j) {
         // If the current element is greater than the next element, swap them
         if (_signers[_j] > _signers[_j + 1]) {
           // Swap elements
-          address _temp = _signers[_j];
+          _temp = _signers[_j];
           _signers[_j] = _signers[_j + 1];
           _signers[_j + 1] = _temp;
         }
