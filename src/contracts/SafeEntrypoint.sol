@@ -251,7 +251,7 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
       baseGas: 0,
       gasPrice: 0,
       gasToken: address(0),
-      refundReceiver: payable(address(this)),
+      refundReceiver: payable(address(0)),
       signatures: _signatures
     });
   }
@@ -334,7 +334,7 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
       baseGas: 0,
       gasPrice: 0,
       gasToken: address(0),
-      refundReceiver: payable(address(this)),
+      refundReceiver: payable(address(0)),
       _nonce: _safeNonce
     });
   }
