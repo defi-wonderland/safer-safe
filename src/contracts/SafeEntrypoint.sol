@@ -112,8 +112,9 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
 
   /// @inheritdoc ISafeEntrypoint
   function executeTransaction(uint256 _txId) external payable {
-    bytes memory _multiSendData =
-      _buildMultiSendData(abi.decode(_transactionInfo[_txId].actionsData, (IActionsBuilder.Action[])));
+    IActionsBuilder.Action[] memory _actions =
+      abi.decode(_transactionInfo[_txId].actionsData, (IActionsBuilder.Action[]));
+    bytes memory _multiSendData = _buildMultiSendData(_actions);
     bytes32 _safeTxHash = _getSafeTransactionHash(_multiSendData, SAFE.nonce());
     address[] memory _signers = _getApprovedHashSigners(_safeTxHash);
 
@@ -122,8 +123,9 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
 
   /// @inheritdoc ISafeEntrypoint
   function executeTransaction(uint256 _txId, address[] memory _signers) external payable {
-    bytes memory _multiSendData =
-      _buildMultiSendData(abi.decode(_transactionInfo[_txId].actionsData, (IActionsBuilder.Action[])));
+    IActionsBuilder.Action[] memory _actions =
+      abi.decode(_transactionInfo[_txId].actionsData, (IActionsBuilder.Action[]));
+    bytes memory _multiSendData = _buildMultiSendData(_actions);
     bytes32 _safeTxHash = _getSafeTransactionHash(_multiSendData, SAFE.nonce());
 
     _executeTransaction(_txId, _safeTxHash, _signers, _multiSendData);
@@ -190,9 +192,31 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
 
   /// @inheritdoc ISafeEntrypoint
   function getSafeTransactionHash(uint256 _txId, uint256 _safeNonce) external view returns (bytes32 _safeTxHash) {
-    bytes memory _multiSendData =
-      _buildMultiSendData(abi.decode(_transactionInfo[_txId].actionsData, (IActionsBuilder.Action[])));
+    IActionsBuilder.Action[] memory _actions =
+      abi.decode(_transactionInfo[_txId].actionsData, (IActionsBuilder.Action[]));
+    bytes memory _multiSendData = _buildMultiSendData(_actions);
     _safeTxHash = _getSafeTransactionHash(_multiSendData, _safeNonce);
+  }
+
+  /// @inheritdoc ISafeEntrypoint
+  function getApprovedHashSigners(uint256 _txId) external view returns (address[] memory _approvedHashSigners) {
+    IActionsBuilder.Action[] memory _actions =
+      abi.decode(_transactionInfo[_txId].actionsData, (IActionsBuilder.Action[]));
+    bytes memory _multiSendData = _buildMultiSendData(_actions);
+    bytes32 _safeTxHash = _getSafeTransactionHash(_multiSendData, SAFE.nonce());
+    _approvedHashSigners = _getApprovedHashSigners(_safeTxHash);
+  }
+
+  /// @inheritdoc ISafeEntrypoint
+  function getApprovedHashSigners(
+    uint256 _txId,
+    uint256 _safeNonce
+  ) external view returns (address[] memory _approvedHashSigners) {
+    IActionsBuilder.Action[] memory _actions =
+      abi.decode(_transactionInfo[_txId].actionsData, (IActionsBuilder.Action[]));
+    bytes memory _multiSendData = _buildMultiSendData(_actions);
+    bytes32 _safeTxHash = _getSafeTransactionHash(_multiSendData, _safeNonce);
+    _approvedHashSigners = _getApprovedHashSigners(_safeTxHash);
   }
 
   /// @inheritdoc ISafeEntrypoint

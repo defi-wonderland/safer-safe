@@ -237,7 +237,25 @@ interface ISafeEntrypoint is ISafeManageable {
   function getSafeTransactionHash(uint256 _txId, uint256 _safeNonce) external view returns (bytes32 _safeTxHash);
 
   /**
-   * @notice Gets the list of signers who have approved a transaction
+   * @notice Gets the list of signers who have approved a Safe transaction hash for a transaction ID
+   * @param _txId The ID of the transaction
+   * @return _approvedHashSigners The array of approved hash signer addresses
+   */
+  function getApprovedHashSigners(uint256 _txId) external view returns (address[] memory _approvedHashSigners);
+
+  /**
+   * @notice Gets the list of signers who have approved a Safe transaction hash for a transaction ID with a specific Safe nonce
+   * @param _txId The ID of the transaction
+   * @param _safeNonce The Safe nonce to use for the hash calculation
+   * @return _approvedHashSigners The array of approved hash signer addresses
+   */
+  function getApprovedHashSigners(
+    uint256 _txId,
+    uint256 _safeNonce
+  ) external view returns (address[] memory _approvedHashSigners);
+
+  /**
+   * @notice Gets the list of signers who have approved a Safe transaction hash for a Safe transaction hash
    * @param _safeTxHash The hash of the Safe transaction
    * @return _approvedHashSigners The array of approved hash signer addresses
    */
