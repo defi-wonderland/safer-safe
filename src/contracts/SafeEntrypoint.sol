@@ -114,12 +114,25 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
 
   /// @inheritdoc ISafeEntrypoint
   function executeTransaction(uint256 _txId) external payable {
-    _executeTransaction(_txId, _getApprovedHashSigners(_txId));
+    TransactionInfo storage _txInfo = _transactionInfo[_txId];
+    IActionsBuilder.Action[] memory _actions = abi.decode(_txInfo.actionsData, (IActionsBuilder.Action[]));
+
+    bytes memory _multiSendData = _buildMultiSendData(_actions);
+    bytes32 _safeTxHash = _getSafeTransactionHash(_multiSendData, SAFE.nonce());
+    address[] memory _signers = _getApprovedHashSigners(_safeTxHash);
+
+    _executeTransaction(_txId, _safeTxHash, _signers, _multiSendData);
   }
 
   /// @inheritdoc ISafeEntrypoint
   function executeTransaction(uint256 _txId, address[] calldata _signers) external payable {
-    _executeTransaction(_txId, _signers);
+    TransactionInfo storage _txInfo = _transactionInfo[_txId];
+    IActionsBuilder.Action[] memory _actions = abi.decode(_txInfo.actionsData, (IActionsBuilder.Action[]));
+
+    bytes memory _multiSendData = _buildMultiSendData(_actions);
+    bytes32 _safeTxHash = _getSafeTransactionHash(_multiSendData, SAFE.nonce());
+
+    _executeTransaction(_txId, _safeTxHash, _signers, _multiSendData);
   }
 
   /// @inheritdoc ISafeEntrypoint
@@ -175,23 +188,41 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
 
   /// @inheritdoc ISafeEntrypoint
   function getSafeTransactionHash(uint256 _txId) external view returns (bytes32 _safeTxHash) {
-    TransactionInfo storage _txInfo = _transactionInfo[_txId];
-    IActionsBuilder.Action[] memory _actions = abi.decode(_txInfo.actionsData, (IActionsBuilder.Action[]));
-    bytes memory _multiSendData = _buildMultiSendData(_actions);
-    _safeTxHash = _getSafeTransactionHash(_multiSendData, SAFE.nonce());
+    _safeTxHash = getSafeTransactionHash(_txId, SAFE.nonce());
   }
 
   /// @inheritdoc ISafeEntrypoint
-  function getSafeTransactionHash(uint256 _txId, uint256 _safeNonce) external view returns (bytes32 _safeTxHash) {
+  function getApprovedHashSigners(uint256 _txId) external view returns (address[] memory _approvedHashSigners) {
+    _approvedHashSigners = getApprovedHashSigners(_txId, SAFE.nonce());
+  }
+
+  /// @inheritdoc ISafeEntrypoint
+  function getApprovedHashSigners(bytes32 _safeTxHash) external view returns (address[] memory _approvedHashSigners) {
+    _approvedHashSigners = _getApprovedHashSigners(_safeTxHash);
+  }
+
+  // ~~~ PUBLIC VIEW METHODS ~~~
+
+  /// @inheritdoc ISafeEntrypoint
+  function getSafeTransactionHash(uint256 _txId, uint256 _safeNonce) public view returns (bytes32 _safeTxHash) {
     TransactionInfo storage _txInfo = _transactionInfo[_txId];
     IActionsBuilder.Action[] memory _actions = abi.decode(_txInfo.actionsData, (IActionsBuilder.Action[]));
+
     bytes memory _multiSendData = _buildMultiSendData(_actions);
     _safeTxHash = _getSafeTransactionHash(_multiSendData, _safeNonce);
   }
 
   /// @inheritdoc ISafeEntrypoint
-  function getApprovedHashSigners(uint256 _txId) external view returns (address[] memory _approvedHashSigners) {
-    _approvedHashSigners = _getApprovedHashSigners(_txId);
+  function getApprovedHashSigners(
+    uint256 _txId,
+    uint256 _safeNonce
+  ) public view returns (address[] memory _approvedHashSigners) {
+    TransactionInfo storage _txInfo = _transactionInfo[_txId];
+    IActionsBuilder.Action[] memory _actions = abi.decode(_txInfo.actionsData, (IActionsBuilder.Action[]));
+
+    bytes memory _multiSendData = _buildMultiSendData(_actions);
+    bytes32 _safeTxHash = _getSafeTransactionHash(_multiSendData, _safeNonce);
+    _approvedHashSigners = _getApprovedHashSigners(_safeTxHash);
   }
 
   // ~~~ INTERNAL METHODS ~~~
@@ -200,22 +231,24 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
    * @notice Internal function to execute a transaction
    * @dev Checks if the transaction is executable and builds the necessary data
    * @param _txId The ID of the transaction to execute
+   * @param _safeTxHash The hash of the Safe transaction
    * @param _signers The addresses of the signers to use
+   * @param _multiSendData The encoded MultiSend data
    */
-  function _executeTransaction(uint256 _txId, address[] memory _signers) internal {
+  function _executeTransaction(
+    uint256 _txId,
+    bytes32 _safeTxHash,
+    address[] memory _signers,
+    bytes memory _multiSendData
+  ) internal {
     TransactionInfo storage _txInfo = _transactionInfo[_txId];
 
     if (_txInfo.executableAt > block.timestamp) revert TransactionNotYetExecutable();
     if (_txInfo.isExecuted) revert TransactionAlreadyExecuted();
 
-    IActionsBuilder.Action[] memory _actions = abi.decode(_txInfo.actionsData, (IActionsBuilder.Action[]));
-    bytes memory _multiSendData = _buildMultiSendData(_actions);
     address[] memory _sortedSigners = _sortSigners(_signers);
     bytes memory _signatures = _buildApprovedHashSignatures(_sortedSigners);
 
-    // NOTE: only for event logging
-    uint256 _safeNonce = SAFE.nonce();
-    bytes32 _safeTxHash = _getSafeTransactionHash(_multiSendData, _safeNonce);
     _execSafeTransaction(_multiSendData, _signatures);
 
     // Mark the transaction as executed
@@ -238,14 +271,14 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   /**
    * @notice Internal function to execute a Safe transaction
    * @dev Uses the Safe's execTransaction function
-   * @param _safeTxData The Safe transaction data
+   * @param _multiSendData The encoded MultiSend data
    * @param _signatures The signatures for the transaction
    */
-  function _execSafeTransaction(bytes memory _safeTxData, bytes memory _signatures) internal {
+  function _execSafeTransaction(bytes memory _multiSendData, bytes memory _signatures) internal {
     SAFE.execTransaction{value: msg.value}({
       to: MULTI_SEND_CALL_ONLY,
       value: 0, // Value must be 0 for delegatecall operations
-      data: _safeTxData,
+      data: _multiSendData,
       operation: Enum.Operation.DelegateCall,
       safeTxGas: 0,
       baseGas: 0,
@@ -317,18 +350,18 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
 
   /**
    * @notice Internal function to get the Safe transaction hash
-   * @param _safeTxData The Safe transaction data
+   * @param _multiSendData The encoded MultiSend data
    * @param _safeNonce The Safe nonce to use for the hash calculation
    * @return _safeTxHash The Safe transaction hash
    */
   function _getSafeTransactionHash(
-    bytes memory _safeTxData,
+    bytes memory _multiSendData,
     uint256 _safeNonce
   ) internal view returns (bytes32 _safeTxHash) {
     _safeTxHash = SAFE.getTransactionHash({
       to: MULTI_SEND_CALL_ONLY,
       value: 0,
-      data: _safeTxData,
+      data: _multiSendData,
       operation: Enum.Operation.DelegateCall,
       safeTxGas: 0,
       baseGas: 0,
@@ -341,15 +374,10 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
 
   /**
    * @notice Internal function to get the list of approved hash signers for a transaction
-   * @param _txId The ID of the transaction
+   * @param _safeTxHash The hash of the Safe transaction
    * @return _approvedHashSigners The array of approved hash signer addresses
    */
-  function _getApprovedHashSigners(uint256 _txId) internal view returns (address[] memory _approvedHashSigners) {
-    TransactionInfo storage _txInfo = _transactionInfo[_txId];
-    IActionsBuilder.Action[] memory _actions = abi.decode(_txInfo.actionsData, (IActionsBuilder.Action[]));
-    bytes memory _multiSendData = _buildMultiSendData(_actions);
-    bytes32 _safeTxHash = _getSafeTransactionHash(_multiSendData, SAFE.nonce());
-
+  function _getApprovedHashSigners(bytes32 _safeTxHash) internal view returns (address[] memory _approvedHashSigners) {
     address[] memory _safeOwners = SAFE.getOwners();
     uint256 _safeOwnersLength = _safeOwners.length;
 

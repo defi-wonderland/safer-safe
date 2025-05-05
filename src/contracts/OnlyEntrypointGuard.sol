@@ -54,7 +54,7 @@ contract OnlyEntrypointGuard is BaseTransactionGuard, IOnlyEntrypointGuard {
     address payable, /*  _refundReceiver */
     bytes memory _signatures,
     address _msgSender
-  ) external override {
+  ) external view override {
     // If operation is delegateCall, to must be MULTI_SEND_CALL_ONLY
     if (_operation == Enum.Operation.DelegateCall) {
       if (_to != MULTI_SEND_CALL_ONLY) {
