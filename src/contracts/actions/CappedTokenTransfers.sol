@@ -45,7 +45,7 @@ contract CappedTokenTransfers is SafeManageable, ICappedTokenTransfers {
     uint256 _validCount = 0;
     uint256 _totalAmount = 0;
     for (uint256 i = 0; i < tokenTransfers.length; i++) {
-      if (tokenTransfers[i].recipient != address(0)) {
+      if (tokenTransfers[i].amount != 0) {
         _validCount++;
         _totalAmount += tokenTransfers[i].amount;
       }
@@ -65,7 +65,7 @@ contract CappedTokenTransfers is SafeManageable, ICappedTokenTransfers {
     // Remaining actions: valid token transfers
     uint256 _actionIndex = 1;
     for (uint256 i = 0; i < tokenTransfers.length; i++) {
-      if (tokenTransfers[i].recipient != address(0)) {
+      if (tokenTransfers[i].amount != 0) {
         _actions[_actionIndex] = Action({
           target: TOKEN,
           data: abi.encodeWithSelector(IERC20.transfer.selector, tokenTransfers[i].recipient, tokenTransfers[i].amount),
