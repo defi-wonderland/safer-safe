@@ -74,10 +74,8 @@ contract OnlyEntrypointGuard is BaseTransactionGuard, IOnlyEntrypointGuard {
   /**
    * @notice Checks if a transaction is allowed to be executed after execution
    * @dev This function is called after a transaction is executed
-   * @param _txHash The hash of the transaction
-   * @param _success Whether the transaction was successful
    */
-  function checkAfterExecution(bytes32 _txHash, bool _success) external override {
+  function checkAfterExecution(bytes32, /* _txHash */ bool /* _success */ ) external override {
     // No post-execution checks needed
   }
 

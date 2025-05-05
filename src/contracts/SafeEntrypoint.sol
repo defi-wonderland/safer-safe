@@ -29,7 +29,7 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   uint256 public transactionNonce;
 
   /// @notice Maps an actions builder to its information
-  mapping(address _actionsBuilder => ActionsBuilderInfo _actionsBuilderInfo) internal _actionsBuilderInfo;
+  mapping(address _actionsBuilder => ActionsBuilderInfo _actionsBldrInfo) internal _actionsBuilderInfo;
 
   /// @notice Maps a transaction ID to its information
   mapping(uint256 _txId => TransactionInfo _txInfo) internal _transactionInfo;
@@ -49,7 +49,9 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   function approveActionsBuilder(address _actionsBuilder, uint256 _approvalDuration) external isSafe {
     uint256 _approvalExpiryTime = block.timestamp + _approvalDuration;
 
-    _actionsBuilderInfo[_actionsBuilder].approvalExpiryTime = _approvalExpiryTime;
+    ActionsBuilderInfo storage _actionsBldrInfo = _actionsBuilderInfo[_actionsBuilder];
+    _actionsBldrInfo.approvalExpiryTime = _approvalExpiryTime;
+
     emit ActionsBuilderApproved(_actionsBuilder, _approvalDuration, _approvalExpiryTime);
   }
 
@@ -66,13 +68,16 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     _txId = ++transactionNonce;
 
     // Validate all contracts are allowed and not already queued
+    ActionsBuilderInfo storage _actionsBldrInfo;
     for (uint256 _i; _i < _actionsBuildersLength; ++_i) {
-      if (_actionsBuilderInfo[_actionsBuilders[_i]].approvalExpiryTime <= block.timestamp) {
+      _actionsBldrInfo = _actionsBuilderInfo[_actionsBuilders[_i]];
+
+      if (_actionsBldrInfo.approvalExpiryTime <= block.timestamp) {
         revert ActionsBuilderNotApproved();
       }
-      if (_actionsBuilderInfo[_actionsBuilders[_i]].queuedTransactionId != 0) revert ActionsBuilderAlreadyQueued();
+      if (_actionsBldrInfo.queuedTransactionId != 0) revert ActionsBuilderAlreadyQueued();
 
-      _actionsBuilderInfo[_actionsBuilders[_i]].queuedTransactionId = _txId;
+      _actionsBldrInfo.queuedTransactionId = _txId;
     }
 
     // Collect all actions
@@ -148,8 +153,10 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     // Unqueue all actions builders
     address[] memory _actionsBuildersToUnqueue = _txInfo.actionsBuilders;
     uint256 _actionsBuildersToUnqueueLength = _actionsBuildersToUnqueue.length;
+    ActionsBuilderInfo storage _actionsBldrInfo;
     for (uint256 _i; _i < _actionsBuildersToUnqueueLength; ++_i) {
-      _actionsBuilderInfo[_actionsBuildersToUnqueue[_i]].queuedTransactionId = 0;
+      _actionsBldrInfo = _actionsBuilderInfo[_actionsBuildersToUnqueue[_i]];
+      _actionsBldrInfo.queuedTransactionId = 0;
     }
 
     // Clear the transaction information
@@ -170,9 +177,9 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     view
     returns (uint256 _approvalExpiryTime, uint256 _queuedTransactionId)
   {
-    (_approvalExpiryTime, _queuedTransactionId) = (
-      _actionsBuilderInfo[_actionsBuilder].approvalExpiryTime, _actionsBuilderInfo[_actionsBuilder].queuedTransactionId
-    );
+    ActionsBuilderInfo storage _actionsBldrInfo = _actionsBuilderInfo[_actionsBuilder];
+    (_approvalExpiryTime, _queuedTransactionId) =
+      (_actionsBldrInfo.approvalExpiryTime, _actionsBldrInfo.queuedTransactionId);
   }
 
   /// @inheritdoc ISafeEntrypoint
@@ -257,8 +264,10 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     // Unqueue all actions builders
     address[] memory _actionsBuildersToUnqueue = _txInfo.actionsBuilders;
     uint256 _actionsBuildersToUnqueueLength = _actionsBuildersToUnqueue.length;
+    ActionsBuilderInfo storage _actionsBldrInfo;
     for (uint256 _i; _i < _actionsBuildersToUnqueueLength; ++_i) {
-      _actionsBuilderInfo[_actionsBuildersToUnqueue[_i]].queuedTransactionId = 0;
+      _actionsBldrInfo = _actionsBuilderInfo[_actionsBuildersToUnqueue[_i]];
+      _actionsBldrInfo.queuedTransactionId = 0;
     }
 
     // NOTE: only for event logging
@@ -419,11 +428,10 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     // Initialize an empty bytes array to avoid null reference
     _multiSendData = new bytes(0);
 
+    // Loop through each action and encode it
     uint256 _actionsLength = _actions.length;
     IActionsBuilder.Action memory _action;
     bytes memory _encodedAction;
-
-    // Loop through each action and encode it
     for (uint256 _i; _i < _actionsLength; ++_i) {
       // Extract the current action
       _action = _actions[_i];
@@ -477,7 +485,6 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     uint256 _signersLength = _signers.length;
     bytes32 _r;
     bytes memory _signature;
-
     for (uint256 _i; _i < _signersLength; ++_i) {
       // Set r to the signer address (converted to bytes32)
       _r = bytes32(uint256(uint160(_signers[_i])));
@@ -502,7 +509,6 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   function _sortSigners(address[] memory _signers) internal pure returns (address[] memory _sortedSigners) {
     uint256 _signersLength = _signers.length;
     address _temp;
-
     for (uint256 _i; _i < _signersLength; ++_i) {
       for (uint256 _j; _j < _signersLength - _i - 1; ++_j) {
         // If the current element is greater than the next element, swap them
