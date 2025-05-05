@@ -23,7 +23,7 @@ interface ICappedTokenTransfers is ISafeManageable, IActionsBuilder {
 
   error CapExceeded();
   error InvalidIndex();
-
+  error InvalidAmount();
   // ~~~ ADMIN METHODS ~~~
 
   function addTokenTransfer(address _recipient, uint256 _amount) external;

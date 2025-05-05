@@ -29,6 +29,7 @@ contract CappedTokenTransfers is SafeManageable, ICappedTokenTransfers {
   // ~~~ ADMIN METHODS ~~~
 
   function addTokenTransfer(address _recipient, uint256 _amount) external isSafeOwner {
+    if (_amount == 0) revert InvalidAmount();
     tokenTransfers.push(TokenTransfer({recipient: _recipient, amount: _amount}));
   }
 
