@@ -17,13 +17,13 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   // ~~~ STORAGE ~~~
 
   /// @inheritdoc ISafeEntrypoint
-  uint256 public constant SHORT_DELAY = 1 hours;
-
-  /// @inheritdoc ISafeEntrypoint
-  uint256 public constant LONG_DELAY = 7 days;
-
-  /// @inheritdoc ISafeEntrypoint
   address public immutable MULTI_SEND_CALL_ONLY;
+
+  /// @inheritdoc ISafeEntrypoint
+  uint256 public immutable SHORT_EXECUTION_DELAY;
+
+  /// @inheritdoc ISafeEntrypoint
+  uint256 public immutable LONG_EXECUTION_DELAY;
 
   /// @inheritdoc ISafeEntrypoint
   uint256 public transactionNonce;
@@ -38,9 +38,19 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
    * @notice Constructor that sets up the Safe and MultiSendCallOnly contracts
    * @param _safe The Gnosis Safe contract address
    * @param _multiSendCallOnly The MultiSendCallOnly contract address
+   * @param _shortExecutionDelay The short execution delay (in seconds)
+   * @param _longExecutionDelay The long execution delay (in seconds)
    */
-  constructor(address _safe, address _multiSendCallOnly) SafeManageable(_safe) {
+  constructor(
+    address _safe,
+    address _multiSendCallOnly,
+    uint256 _shortExecutionDelay,
+    uint256 _longExecutionDelay
+  ) SafeManageable(_safe) {
     MULTI_SEND_CALL_ONLY = _multiSendCallOnly;
+
+    SHORT_EXECUTION_DELAY = _shortExecutionDelay;
+    LONG_EXECUTION_DELAY = _longExecutionDelay;
   }
 
   // ~~~ ADMIN METHODS ~~~
@@ -80,7 +90,7 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     _transactionInfo[_txId] = TransactionInfo({
       actionsBuilders: _actionsBuilders,
       actionsData: abi.encode(_allActions),
-      executableAt: block.timestamp + SHORT_DELAY,
+      executableAt: block.timestamp + SHORT_EXECUTION_DELAY,
       isExecuted: false
     });
 
@@ -102,7 +112,7 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     _transactionInfo[_txId] = TransactionInfo({
       actionsBuilders: new address[](0),
       actionsData: abi.encode(_actions),
-      executableAt: block.timestamp + LONG_DELAY,
+      executableAt: block.timestamp + LONG_EXECUTION_DELAY,
       isExecuted: false
     });
 
