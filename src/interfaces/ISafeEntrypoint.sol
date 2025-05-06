@@ -44,16 +44,16 @@ interface ISafeEntrypoint is ISafeManageable {
   function MULTI_SEND_CALL_ONLY() external view returns (address _multiSendCallOnly);
 
   /**
-   * @notice Gets the short delay applied to pre-approved transactions
-   * @return _shortDelay The short delay (in seconds)
+   * @notice Gets the short execution delay applied to pre-approved transactions
+   * @return _shortExecutionDelay The short execution delay (in seconds)
    */
-  function SHORT_DELAY() external view returns (uint256 _shortDelay);
+  function SHORT_EXECUTION_DELAY() external view returns (uint256 _shortExecutionDelay);
 
   /**
-   * @notice Gets the long delay applied to arbitrary transactions
-   * @return _longDelay The long delay (in seconds)
+   * @notice Gets the long execution delay applied to arbitrary transactions
+   * @return _longExecutionDelay The long execution delay (in seconds)
    */
-  function LONG_DELAY() external view returns (uint256 _longDelay);
+  function LONG_EXECUTION_DELAY() external view returns (uint256 _longExecutionDelay);
 
   /**
    * @notice Gets the global nonce

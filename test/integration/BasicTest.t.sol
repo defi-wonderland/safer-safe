@@ -47,12 +47,13 @@ contract BasicTest is Test {
     });
 
     // Deploy the SafeEntrypoint contract
-    uint256 _shortDelay = 1 hours;
-    uint256 _longDelay = 7 days;
+    uint256 _shortExecutionDelay = 1 hours;
+    uint256 _longExecutionDelay = 7 days;
 
     SafeEntrypointFactory _safeEntrypointFactory = new SafeEntrypointFactory(_MULTI_SEND_CALL_ONLY);
-    SafeEntrypoint _safeEntrypoint =
-      SafeEntrypoint(_safeEntrypointFactory.createSafeEntrypoint(address(_safe), _shortDelay, _longDelay));
+    SafeEntrypoint _safeEntrypoint = SafeEntrypoint(
+      _safeEntrypointFactory.createSafeEntrypoint(address(_safe), _shortExecutionDelay, _longExecutionDelay)
+    );
 
     // Deploy SimpleAction contract
     ISimpleActions.SimpleAction[] memory _simpleActions = new ISimpleActions.SimpleAction[](2);
@@ -82,7 +83,7 @@ contract BasicTest is Test {
     uint256 _txId = _safeEntrypoint.queueTransaction(_actionsBuilders);
 
     // Wait for the timelock period
-    vm.warp(block.timestamp + _safeEntrypoint.SHORT_DELAY());
+    vm.warp(block.timestamp + _shortExecutionDelay);
 
     // Get and approve the Safe transaction hash
     bytes32 _safeTxHash = _safeEntrypoint.getSafeTransactionHash(_txId);

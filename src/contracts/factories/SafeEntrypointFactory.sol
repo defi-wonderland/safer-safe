@@ -12,7 +12,11 @@ contract SafeEntrypointFactory is ISafeEntrypointFactory {
     MULTI_SEND_CALL_ONLY = _multiSend;
   }
 
-  function createSafeEntrypoint(address _safe, uint256 _shortDelay, uint256 _longDelay) external returns (address) {
-    return address(new SafeEntrypoint(_safe, MULTI_SEND_CALL_ONLY, _shortDelay, _longDelay));
+  function createSafeEntrypoint(
+    address _safe,
+    uint256 _shortExecutionDelay,
+    uint256 _longExecutionDelay
+  ) external returns (address) {
+    return address(new SafeEntrypoint(_safe, MULTI_SEND_CALL_ONLY, _shortExecutionDelay, _longExecutionDelay));
   }
 }
