@@ -47,14 +47,16 @@ contract BasicTest is Test {
     });
 
     // Deploy the SafeEntrypoint contract
+    uint256 _shortDelay = 1 hours;
+    uint256 _longDelay = 7 days;
+
     SafeEntrypointFactory _safeEntrypointFactory = new SafeEntrypointFactory(_MULTI_SEND_CALL_ONLY);
-    SafeEntrypoint _safeEntrypoint = SafeEntrypoint(_safeEntrypointFactory.createSafeEntrypoint(address(_safe)));
+    SafeEntrypoint _safeEntrypoint =
+      SafeEntrypoint(_safeEntrypointFactory.createSafeEntrypoint(address(_safe), _shortDelay, _longDelay));
 
     // Deploy SimpleAction contract
-    SimpleActionsFactory _simpleActionsFactory = new SimpleActionsFactory();
     ISimpleActions.SimpleAction[] memory _simpleActions = new ISimpleActions.SimpleAction[](2);
     _simpleActions[0] = ISimpleActions.SimpleAction({target: _WETH, signature: 'deposit()', data: bytes(''), value: 1});
-
     _simpleActions[1] = ISimpleActions.SimpleAction({
       target: _WETH,
       signature: 'transfer(address,uint256)',
@@ -62,11 +64,13 @@ contract BasicTest is Test {
       value: 0
     });
 
+    SimpleActionsFactory _simpleActionsFactory = new SimpleActionsFactory();
     address _actionsBuilder = _simpleActionsFactory.createSimpleActions(_simpleActions);
 
     // Allow the SafeEntrypoint to call the SimpleActions contract
-    vm.prank(address(_safe)); // TODO: Replicate Safe transaction without pranking it
     uint256 _approvalDuration = block.timestamp + 1 days;
+
+    vm.prank(address(_safe)); // TODO: Replicate Safe transaction without pranking it
     _safeEntrypoint.approveActionsBuilder(_actionsBuilder, _approvalDuration);
 
     vm.startPrank(_OWNER);
@@ -74,6 +78,7 @@ contract BasicTest is Test {
     // Queue the transaction
     address[] memory _actionsBuilders = new address[](1);
     _actionsBuilders[0] = _actionsBuilder;
+
     uint256 _txId = _safeEntrypoint.queueTransaction(_actionsBuilders);
 
     // Wait for the timelock period

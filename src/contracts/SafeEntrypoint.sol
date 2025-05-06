@@ -17,13 +17,13 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   // ~~~ STORAGE ~~~
 
   /// @inheritdoc ISafeEntrypoint
-  uint256 public constant SHORT_DELAY = 1 hours;
-
-  /// @inheritdoc ISafeEntrypoint
-  uint256 public constant LONG_DELAY = 7 days;
-
-  /// @inheritdoc ISafeEntrypoint
   address public immutable MULTI_SEND_CALL_ONLY;
+
+  /// @inheritdoc ISafeEntrypoint
+  uint256 public immutable SHORT_DELAY;
+
+  /// @inheritdoc ISafeEntrypoint
+  uint256 public immutable LONG_DELAY;
 
   /// @inheritdoc ISafeEntrypoint
   uint256 public transactionNonce;
@@ -38,9 +38,14 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
    * @notice Constructor that sets up the Safe and MultiSendCallOnly contracts
    * @param _safe The Gnosis Safe contract address
    * @param _multiSendCallOnly The MultiSendCallOnly contract address
+   * @param _shortDelay The short delay (in seconds)
+   * @param _longDelay The long delay (in seconds)
    */
-  constructor(address _safe, address _multiSendCallOnly) SafeManageable(_safe) {
+  constructor(address _safe, address _multiSendCallOnly, uint256 _shortDelay, uint256 _longDelay) SafeManageable(_safe) {
     MULTI_SEND_CALL_ONLY = _multiSendCallOnly;
+
+    SHORT_DELAY = _shortDelay;
+    LONG_DELAY = _longDelay;
   }
 
   // ~~~ ADMIN METHODS ~~~

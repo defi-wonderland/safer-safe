@@ -38,6 +38,12 @@ interface ISafeEntrypoint is ISafeManageable {
   // ~~~ STORAGE METHODS ~~~
 
   /**
+   * @notice Gets the MultiSendCallOnly contract
+   * @return _multiSendCallOnly The MultiSendCallOnly contract address
+   */
+  function MULTI_SEND_CALL_ONLY() external view returns (address _multiSendCallOnly);
+
+  /**
    * @notice Gets the short delay applied to pre-approved transactions
    * @return _shortDelay The short delay (in seconds)
    */
@@ -48,12 +54,6 @@ interface ISafeEntrypoint is ISafeManageable {
    * @return _longDelay The long delay (in seconds)
    */
   function LONG_DELAY() external view returns (uint256 _longDelay);
-
-  /**
-   * @notice Gets the MultiSendCallOnly contract
-   * @return _multiSendCallOnly The MultiSendCallOnly contract address
-   */
-  function MULTI_SEND_CALL_ONLY() external view returns (address _multiSendCallOnly);
 
   /**
    * @notice Gets the global nonce
