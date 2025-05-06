@@ -16,7 +16,8 @@ contract SafeEntrypointFactory is ISafeEntrypointFactory {
     address _safe,
     uint256 _shortExecutionDelay,
     uint256 _longExecutionDelay
-  ) external returns (address) {
-    return address(new SafeEntrypoint(_safe, MULTI_SEND_CALL_ONLY, _shortExecutionDelay, _longExecutionDelay));
+  ) external returns (address _safeEntrypoint) {
+    _safeEntrypoint =
+      address(new SafeEntrypoint(_safe, MULTI_SEND_CALL_ONLY, _shortExecutionDelay, _longExecutionDelay));
   }
 }

@@ -160,7 +160,7 @@ interface ISafeEntrypoint is ISafeManageable {
    * @param _actionsBuilders The batch of actions builder contract addresses to queue
    * @return _txId The ID of the queued transaction
    */
-  function queueTransaction(address[] memory _actionsBuilders) external returns (uint256 _txId);
+  function queueTransaction(address[] calldata _actionsBuilders) external returns (uint256 _txId);
 
   /**
    * @notice Queues an arbitrary transaction for execution after a 7-day delay
@@ -169,7 +169,7 @@ interface ISafeEntrypoint is ISafeManageable {
    * @param _actions The batch of actions to queue
    * @return _txId The ID of the queued transaction
    */
-  function queueTransaction(IActionsBuilder.Action[] memory _actions) external returns (uint256 _txId);
+  function queueTransaction(IActionsBuilder.Action[] calldata _actions) external returns (uint256 _txId);
 
   /**
    * @notice Executes a queued transaction using the approved hash signers
@@ -186,7 +186,7 @@ interface ISafeEntrypoint is ISafeManageable {
    * @param _txId The ID of the transaction to execute
    * @param _signers The array of signer addresses
    */
-  function executeTransaction(uint256 _txId, address[] memory _signers) external payable;
+  function executeTransaction(uint256 _txId, address[] calldata _signers) external payable;
 
   /**
    * @notice Unqueues a pending transaction before it is executed

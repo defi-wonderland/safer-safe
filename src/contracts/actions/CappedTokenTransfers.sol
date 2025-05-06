@@ -27,26 +27,30 @@ contract CappedTokenTransfers is SafeManageable, ICappedTokenTransfers {
   }
 
   function addTokenTransfers(
-    address[] memory _tokens,
-    address[] memory _recipients,
-    uint256[] memory _amounts
+    address[] calldata _tokens,
+    address[] calldata _recipients,
+    uint256[] calldata _amounts
   ) external isSafeOwner {
-    if (_tokens.length != _recipients.length || _tokens.length != _amounts.length) {
+    uint256 _tokensLength = _tokens.length;
+
+    if (_tokensLength != _recipients.length || _tokensLength != _amounts.length) {
       revert LengthMismatch();
     }
-    for (uint256 i = 0; i < _tokens.length; i++) {
+    for (uint256 i; i < _tokensLength; ++i) {
       _addTokenTransfer(_tokens[i], _recipients[i], _amounts[i]);
     }
   }
 
   // ~~~ ACTIONS METHODS ~~~
 
-  function getActions() external returns (Action[] memory) {
-    Action[] memory actions = new Action[](tokenTransfers.length);
+  function getActions() external returns (Action[] memory _actions) {
+    uint256 _tokenTransfersLength = tokenTransfers.length;
 
-    for (uint256 i = 0; i < tokenTransfers.length; i++) {
+    _actions = new Action[](_tokenTransfersLength);
+
+    for (uint256 i; i < _tokenTransfersLength; ++i) {
       TokenTransfer memory tokenTransfer = tokenTransfers[i];
-      actions[i] = Action({
+      _actions[i] = Action({
         target: tokenTransfer.token,
         data: abi.encodeWithSelector(IERC20.transfer.selector, tokenTransfer.recipient, tokenTransfer.amount),
         value: 0
@@ -54,7 +58,7 @@ contract CappedTokenTransfers is SafeManageable, ICappedTokenTransfers {
       capSpent[tokenTransfer.token] += tokenTransfer.amount;
     }
 
-    for (uint256 i = 0; i < tokenTransfers.length; i++) {
+    for (uint256 i; i < _tokenTransfersLength; ++i) {
       address _token = tokenTransfers[i].token;
       uint256 capSpentForToken = capSpent[_token];
       if (capSpentForToken == 0) {
@@ -83,8 +87,6 @@ contract CappedTokenTransfers is SafeManageable, ICappedTokenTransfers {
 
     // NOTE: cleanup token transfers (as they're already queued)
     delete tokenTransfers;
-
-    return actions;
   }
 
   // ~~~ INTERNAL METHODS ~~~

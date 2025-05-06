@@ -74,10 +74,8 @@ contract OnlyEntrypointGuard is BaseTransactionGuard, IOnlyEntrypointGuard {
   /**
    * @notice Checks if a transaction is allowed to be executed after execution
    * @dev This function is called after a transaction is executed
-   * @param _txHash The hash of the transaction
-   * @param _success Whether the transaction was successful
    */
-  function checkAfterExecution(bytes32 _txHash, bool _success) external override {
+  function checkAfterExecution(bytes32, /* _txHash */ bool /* _success */ ) external override {
     // No post-execution checks needed
   }
 
@@ -87,22 +85,24 @@ contract OnlyEntrypointGuard is BaseTransactionGuard, IOnlyEntrypointGuard {
    * @return _isValid Whether all signatures are pre-approved hash signatures
    */
   function _isValidSignatureFormat(bytes memory _signatures) internal pure returns (bool _isValid) {
+    uint256 _signaturesLength = _signatures.length;
+
     // Check if the signatures length is a multiple of 65 bytes
-    if (_signatures.length % 65 != 0) {
-      return false;
+    if (_signaturesLength % 65 != 0) {
+      return _isValid = false;
     }
 
     // Check each signature
-    for (uint256 i = 0; i < _signatures.length; i += 65) {
+    for (uint256 _i; _i < _signaturesLength; _i += 65) {
       // Get the signature type (last byte of each 65-byte signature)
-      uint8 _signatureType = uint8(_signatures[i + 64]);
+      uint8 _signatureType = uint8(_signatures[_i + 64]);
 
       // Only allow pre-approved hash signatures (type 0x01)
       if (_signatureType != PRE_VALIDATED_SIGNATURE_TYPE) {
-        return false;
+        return _isValid = false;
       }
     }
 
-    return true;
+    _isValid = true;
   }
 }
