@@ -77,10 +77,7 @@ contract BasicTest is Test {
     vm.startPrank(_OWNER);
 
     // Queue the transaction
-    address[] memory _actionsBuilders = new address[](1);
-    _actionsBuilders[0] = _actionsBuilder;
-
-    uint256 _txId = _safeEntrypoint.queueTransaction(_actionsBuilders);
+    uint256 _txId = _safeEntrypoint.queueTransaction(_actionsBuilder);
 
     // Wait for the timelock period
     vm.warp(block.timestamp + _shortExecutionDelay);

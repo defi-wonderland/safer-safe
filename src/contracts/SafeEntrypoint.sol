@@ -28,8 +28,8 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   /// @inheritdoc ISafeEntrypoint
   uint256 public transactionNonce;
 
-  /// @notice Maps an actions builder to its information
-  mapping(address _actionsBuilder => ActionsBuilderInfo _actionsBldrInfo) internal _actionsBuilderInfo;
+  /// @notice Maps an actions builder to its approval expiry time
+  mapping(address _actionsBuilder => uint256 _approvalExpiryTime) internal _actionsBuilderExpiryTime;
 
   /// @notice Maps a transaction ID to its information
   mapping(uint256 _txId => TransactionInfo _txInfo) internal _transactionInfo;
@@ -57,46 +57,29 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
 
   /// @inheritdoc ISafeEntrypoint
   function approveActionsBuilder(address _actionsBuilder, uint256 _approvalDuration) external isSafe {
-    uint256 _approvalExpiryTime = block.timestamp + _approvalDuration;
-
-    ActionsBuilderInfo storage _actionsBldrInfo = _actionsBuilderInfo[_actionsBuilder];
-    _actionsBldrInfo.approvalExpiryTime = _approvalExpiryTime;
-
-    emit ActionsBuilderApproved(_actionsBuilder, _approvalDuration, _approvalExpiryTime);
+    uint256 _expiryTime = block.timestamp + _approvalDuration;
+    _actionsBuilderExpiryTime[_actionsBuilder] = _expiryTime;
+    emit ActionsBuilderApproved(_actionsBuilder, _approvalDuration, _expiryTime);
   }
 
   // ~~~ TRANSACTION METHODS ~~~
 
   /// @inheritdoc ISafeEntrypoint
-  function queueTransaction(address[] calldata _actionsBuilders) external isSafeOwner returns (uint256 _txId) {
-    uint256 _actionsBuildersLength = _actionsBuilders.length;
-
-    // Validate input array is not empty
-    if (_actionsBuildersLength == 0) revert EmptyActionsBuildersArray();
+  function queueTransaction(address _actionsBuilder) external isSafeOwner returns (uint256 _txId) {
+    if (_actionsBuilderExpiryTime[_actionsBuilder] <= block.timestamp) {
+      revert ActionsBuilderNotApproved();
+    }
 
     // Generate a simple transaction ID
     _txId = ++transactionNonce;
 
-    // Validate all contracts are allowed and not already queued
-    ActionsBuilderInfo storage _actionsBldrInfo;
-    for (uint256 _i; _i < _actionsBuildersLength; ++_i) {
-      _actionsBldrInfo = _actionsBuilderInfo[_actionsBuilders[_i]];
-
-      if (_actionsBldrInfo.approvalExpiryTime <= block.timestamp) {
-        revert ActionsBuilderNotApproved();
-      }
-      if (_actionsBldrInfo.queuedTransactionId != 0) revert ActionsBuilderAlreadyQueued();
-
-      _actionsBldrInfo.queuedTransactionId = _txId;
-    }
-
-    // Collect all actions
-    IActionsBuilder.Action[] memory _allActions = _collectActions(_actionsBuilders);
+    // Collect actions from the builder
+    IActionsBuilder.Action[] memory _actions = _fetchActions(_actionsBuilder);
 
     // Store the transaction information
     _transactionInfo[_txId] = TransactionInfo({
-      actionsBuilders: _actionsBuilders,
-      actionsData: abi.encode(_allActions),
+      actionsBuilder: _actionsBuilder,
+      actionsData: abi.encode(_actions),
       executableAt: block.timestamp + SHORT_EXECUTION_DELAY,
       isExecuted: false
     });
@@ -106,19 +89,14 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   }
 
   /// @inheritdoc ISafeEntrypoint
-  function queueTransaction(IActionsBuilder.Action[] calldata _actions) external isSafeOwner returns (uint256 _txId) {
-    // Validate that the actions array is not empty
-    if (_actions.length == 0) {
-      revert EmptyActionsArray();
-    }
-
+  function queueTransaction(IActionsBuilder.Action calldata _action) external isSafeOwner returns (uint256 _txId) {
     // Generate a simple transaction ID
     _txId = ++transactionNonce;
 
     // Store the transaction information
     _transactionInfo[_txId] = TransactionInfo({
-      actionsBuilders: new address[](0),
-      actionsData: abi.encode(_actions),
+      actionsBuilder: address(0),
+      actionsData: abi.encode(_action),
       executableAt: block.timestamp + LONG_EXECUTION_DELAY,
       isExecuted: false
     });
@@ -160,20 +138,11 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     // Check if the transaction has already been executed
     if (_txInfo.isExecuted) revert TransactionAlreadyExecuted();
 
-    // Unqueue all actions builders
-    address[] memory _actionsBuildersToUnqueue = _txInfo.actionsBuilders;
-    uint256 _actionsBuildersToUnqueueLength = _actionsBuildersToUnqueue.length;
-    ActionsBuilderInfo storage _actionsBldrInfo;
-    for (uint256 _i; _i < _actionsBuildersToUnqueueLength; ++_i) {
-      _actionsBldrInfo = _actionsBuilderInfo[_actionsBuildersToUnqueue[_i]];
-      _actionsBldrInfo.queuedTransactionId = 0;
-    }
-
     // Clear the transaction information
     delete _transactionInfo[_txId];
 
     // NOTE: only for event logging
-    bool _isArbitrary = _actionsBuildersToUnqueueLength == 0;
+    bool _isArbitrary = _txInfo.actionsBuilder == address(0);
 
     // NOTE: emit event for off-chain monitoring
     emit TransactionUnqueued(_txId, _isArbitrary);
@@ -182,25 +151,14 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   // ~~~ EXTERNAL VIEW METHODS ~~~
 
   /// @inheritdoc ISafeEntrypoint
-  function getActionsBuilderInfo(address _actionsBuilder)
-    external
-    view
-    returns (uint256 _approvalExpiryTime, uint256 _queuedTransactionId)
-  {
-    ActionsBuilderInfo storage _actionsBldrInfo = _actionsBuilderInfo[_actionsBuilder];
-    (_approvalExpiryTime, _queuedTransactionId) =
-      (_actionsBldrInfo.approvalExpiryTime, _actionsBldrInfo.queuedTransactionId);
-  }
-
-  /// @inheritdoc ISafeEntrypoint
   function getTransactionInfo(uint256 _txId)
     external
     view
-    returns (address[] memory _actionsBuilders, bytes memory _actionsData, uint256 _executableAt, bool _isExecuted)
+    returns (address _actionsBuilder, bytes memory _actionsData, uint256 _executableAt, bool _isExecuted)
   {
     TransactionInfo storage _txInfo = _transactionInfo[_txId];
-    (_actionsBuilders, _actionsData, _executableAt, _isExecuted) =
-      (_txInfo.actionsBuilders, _txInfo.actionsData, _txInfo.executableAt, _txInfo.isExecuted);
+    (_actionsBuilder, _actionsData, _executableAt, _isExecuted) =
+      (_txInfo.actionsBuilder, _txInfo.actionsData, _txInfo.executableAt, _txInfo.isExecuted);
   }
 
   /// @inheritdoc ISafeEntrypoint
@@ -219,6 +177,11 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   }
 
   // ~~~ PUBLIC VIEW METHODS ~~~
+
+  /// @inheritdoc ISafeEntrypoint
+  function actionsBuilderExpiryTime(address _actionsBuilder) external view returns (uint256 _expiryTime) {
+    _expiryTime = _actionsBuilderExpiryTime[_actionsBuilder];
+  }
 
   /// @inheritdoc ISafeEntrypoint
   function getSafeTransactionHash(uint256 _txId, uint256 _safeNonce) public view returns (bytes32 _safeTxHash) {
@@ -271,17 +234,8 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     // Mark the transaction as executed
     _txInfo.isExecuted = true;
 
-    // Unqueue all actions builders
-    address[] memory _actionsBuildersToUnqueue = _txInfo.actionsBuilders;
-    uint256 _actionsBuildersToUnqueueLength = _actionsBuildersToUnqueue.length;
-    ActionsBuilderInfo storage _actionsBldrInfo;
-    for (uint256 _i; _i < _actionsBuildersToUnqueueLength; ++_i) {
-      _actionsBldrInfo = _actionsBuilderInfo[_actionsBuildersToUnqueue[_i]];
-      _actionsBldrInfo.queuedTransactionId = 0;
-    }
-
     // NOTE: only for event logging
-    bool _isArbitrary = _actionsBuildersToUnqueueLength == 0;
+    bool _isArbitrary = _txInfo.actionsBuilder == address(0);
 
     // NOTE: event emitted to log successful execution
     emit TransactionExecuted(_txId, _isArbitrary, _safeTxHash, _signers);
