@@ -188,13 +188,6 @@ interface ISafeEntrypoint is ISafeManageable {
    */
   function executeTransaction(uint256 _txId, address[] calldata _signers) external payable;
 
-  /**
-   * @notice Unqueues a pending transaction before it is executed
-   * @dev Can only be called by the Safe owners
-   * @param _txId The ID of the transaction to unqueue
-   */
-  function unqueueTransaction(uint256 _txId) external;
-
   // ~~~ VIEW METHODS ~~~
 
   /**
