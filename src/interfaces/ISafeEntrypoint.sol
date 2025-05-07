@@ -98,6 +98,13 @@ interface ISafeEntrypoint is ISafeManageable {
    */
   event TransactionUnqueued(uint256 indexed _txId, bool indexed _isArbitrary);
 
+  /**
+   * @notice Emitted when a transaction hash is disapproved
+   * @param _signer The address of the signer who disapproved the hash
+   * @param _safeTxHash The hash of the Safe transaction that was disapproved
+   */
+  event TxHashDisapproved(address indexed _signer, bytes32 indexed _safeTxHash);
+
   // ~~~ ERRORS ~~~
 
   /**
@@ -139,6 +146,12 @@ interface ISafeEntrypoint is ISafeManageable {
    * @notice Thrown when a call to an actions builder fails
    */
   error NotSuccess();
+
+  /**
+   * @notice Thrown when a transaction hash has been disapproved by a signer
+   * @param _signer The address of the signer who disapproved the hash
+   */
+  error TxHashDisapprovedBySigner(address _signer);
 
   // ~~~ ADMIN METHODS ~~~
 
@@ -194,6 +207,13 @@ interface ISafeEntrypoint is ISafeManageable {
    * @param _txId The ID of the transaction to unqueue
    */
   function unqueueTransaction(uint256 _txId) external;
+
+  /**
+   * @notice Disapproves a Safe transaction hash
+   * @dev Can be called by any Safe owner
+   * @param _safeTxHash The hash of the Safe transaction to disapprove
+   */
+  function disapproveTransactionHash(bytes32 _safeTxHash) external;
 
   // ~~~ VIEW METHODS ~~~
 

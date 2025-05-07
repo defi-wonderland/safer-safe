@@ -34,6 +34,9 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   /// @notice Maps a transaction ID to its information
   mapping(uint256 _txId => TransactionInfo _txInfo) internal _transactionInfo;
 
+  /// @notice Maps a signer's disapproved transaction hashes
+  mapping(address _signer => mapping(bytes32 _safeTxHash => bool _isDisapproved)) internal _disapprovedHashes;
+
   /**
    * @notice Constructor that sets up the Safe and MultiSendCallOnly contracts
    * @param _safe The Gnosis Safe contract address
@@ -147,6 +150,13 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     bytes memory _multiSendData = _buildMultiSendData(_actions);
     bytes32 _safeTxHash = _getSafeTransactionHash(_multiSendData, SAFE.nonce());
 
+    // Check if any of the provided signers have disapproved this hash
+    for (uint256 _i; _i < _signers.length; ++_i) {
+      if (_disapprovedHashes[_signers[_i]][_safeTxHash]) {
+        revert TxHashDisapprovedBySigner(_signers[_i]);
+      }
+    }
+
     _executeTransaction(_txId, _safeTxHash, _signers, _multiSendData);
   }
 
@@ -177,6 +187,21 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
 
     // NOTE: emit event for off-chain monitoring
     emit TransactionUnqueued(_txId, _isArbitrary);
+  }
+
+  /**
+   * @notice Disapproves a Safe transaction hash
+   * @dev Can be called by any Safe owner
+   * @param _safeTxHash The hash of the Safe transaction to disapprove
+   */
+  function disapproveTransactionHash(bytes32 _safeTxHash) external {
+    // Check if caller is a Safe owner
+    if (!SAFE.isOwner(msg.sender)) revert NotSafeOwner();
+
+    // Mark the hash as disapproved for this signer
+    _disapprovedHashes[msg.sender][_safeTxHash] = true;
+
+    emit TxHashDisapproved(msg.sender, _safeTxHash);
   }
 
   // ~~~ EXTERNAL VIEW METHODS ~~~
@@ -406,9 +431,10 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
 
     // Single pass through all owners
     for (uint256 _i; _i < _safeOwnersLength; ++_i) {
-      // Check if this owner has approved the hash
-      if (SAFE.approvedHashes(_safeOwners[_i], _safeTxHash) == 1) {
-        _tempSigners[_approvedHashSignersCount] = _safeOwners[_i];
+      address _owner = _safeOwners[_i];
+      // Check if this owner has approved the hash and hasn't disapproved it
+      if (SAFE.approvedHashes(_owner, _safeTxHash) == 1 && !_disapprovedHashes[_owner][_safeTxHash]) {
+        _tempSigners[_approvedHashSignersCount] = _owner;
         ++_approvedHashSignersCount;
       }
     }
