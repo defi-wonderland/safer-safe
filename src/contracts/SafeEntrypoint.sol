@@ -194,10 +194,7 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
    * @dev Can be called by any Safe owner
    * @param _safeTxHash The hash of the Safe transaction to disapprove
    */
-  function disapproveTransactionHash(bytes32 _safeTxHash) external {
-    // Check if caller is a Safe owner
-    if (!SAFE.isOwner(msg.sender)) revert NotSafeOwner();
-
+  function disapproveTransactionHash(bytes32 _safeTxHash) external isSafeOwner {
     // Mark the hash as disapproved for this signer
     _disapprovedHashes[msg.sender][_safeTxHash] = true;
 
