@@ -106,6 +106,13 @@ interface ISafeEntrypoint is ISafeManageable {
    */
   event TransactionUnqueued(uint256 indexed _txId, bool indexed _isArbitrary);
 
+  /**
+   * @notice Emitted when a transaction hash is disapproved
+   * @param _signer The address of the signer who disapproved the hash
+   * @param _safeTxHash The hash of the Safe transaction that was disapproved
+   */
+  event TxHashDisapproved(address indexed _signer, bytes32 indexed _safeTxHash);
+
   // ~~~ ERRORS ~~~
 
   /**
@@ -152,6 +159,18 @@ interface ISafeEntrypoint is ISafeManageable {
    * @notice Thrown when a transaction has expired
    */
   error TransactionExpired();
+
+  /**
+   * @notice Thrown when a signer is invalid
+   * @param _safeTxHash The hash of the Safe transaction
+   * @param _signer The address of the signer
+   */
+  error InvalidSigner(bytes32 _safeTxHash, address _signer);
+
+  /**
+   * @notice Thrown when attempting to disapprove a transaction hash that hasn't been approved
+   */
+  error TxHashNotApproved();
 
   // ~~~ ADMIN METHODS ~~~
 
@@ -210,11 +229,11 @@ interface ISafeEntrypoint is ISafeManageable {
   function executeTransaction(uint256 _txId, address[] calldata _signers) external payable;
 
   /**
-   * @notice Unqueues a pending transaction before it is executed
-   * @dev Can only be called by the Safe owners
-   * @param _txId The ID of the transaction to unqueue
+   * @notice Disapproves a Safe transaction hash
+   * @dev Can be called by any Safe owner
+   * @param _safeTxHash The hash of the Safe transaction to disapprove
    */
-  function unqueueTransaction(uint256 _txId) external;
+  function disapproveSafeTransactionHash(bytes32 _safeTxHash) external;
 
   // ~~~ VIEW METHODS ~~~
 
