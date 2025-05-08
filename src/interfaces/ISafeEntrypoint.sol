@@ -61,6 +61,14 @@ interface ISafeEntrypoint is ISafeManageable {
    */
   function transactionNonce() external view returns (uint256 _txNonce);
 
+  /**
+   * @notice Gets a signer's disapproved Safe transaction hashes
+   * @param _signer The address of the signer
+   * @param _safeTxHash The hash of the Safe transaction
+   * @return _isDisapproved Whether the Safe transaction hash has been disapproved by the signer
+   */
+  function disapprovedHashes(address _signer, bytes32 _safeTxHash) external view returns (bool _isDisapproved);
+
   // ~~~ EVENTS ~~~
 
   /**
@@ -92,18 +100,11 @@ interface ISafeEntrypoint is ISafeManageable {
   );
 
   /**
-   * @notice Emitted when a transaction is unqueued
-   * @param _txId The ID of the transaction
-   * @param _isArbitrary Whether the transaction is arbitrary or pre-approved
-   */
-  event TransactionUnqueued(uint256 indexed _txId, bool indexed _isArbitrary);
-
-  /**
-   * @notice Emitted when a transaction hash is disapproved
-   * @param _signer The address of the signer who disapproved the hash
+   * @notice Emitted when a Safe transaction hash is disapproved
    * @param _safeTxHash The hash of the Safe transaction that was disapproved
+   * @param _signer The address of the signer who disapproved the hash
    */
-  event TxHashDisapproved(address indexed _signer, bytes32 indexed _safeTxHash);
+  event SafeTransactionHashDisapproved(bytes32 indexed _safeTxHash, address indexed _signer);
 
   // ~~~ ERRORS ~~~
 
@@ -133,6 +134,18 @@ interface ISafeEntrypoint is ISafeManageable {
   error TransactionNotQueued();
 
   /**
+   * @notice Thrown when attempting to disapprove a Safe transaction hash that hasn't been approved
+   */
+  error SafeTransactionHashNotApproved();
+
+  /**
+   * @notice Thrown when a signer is invalid
+   * @param _signer The address of the signer
+   * @param _safeTxHash The hash of the Safe transaction
+   */
+  error InvalidSigner(address _signer, bytes32 _safeTxHash);
+
+  /**
    * @notice Thrown when an empty actions builders array is provided
    */
   error EmptyActionsBuildersArray();
@@ -146,18 +159,6 @@ interface ISafeEntrypoint is ISafeManageable {
    * @notice Thrown when a call to an actions builder fails
    */
   error NotSuccess();
-
-  /**
-   * @notice Thrown when a signer is invalid
-   * @param _safeTxHash The hash of the Safe transaction
-   * @param _signer The address of the signer
-   */
-  error InvalidSigner(bytes32 _safeTxHash, address _signer);
-
-  /**
-   * @notice Thrown when attempting to disapprove a transaction hash that hasn't been approved
-   */
-  error TxHashNotApproved();
 
   // ~~~ ADMIN METHODS ~~~
 
