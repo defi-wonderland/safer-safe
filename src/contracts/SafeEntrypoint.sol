@@ -162,35 +162,6 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     _executeTransaction(_txId, _safeTxHash, _signers, _multiSendData);
   }
 
-  /// @inheritdoc ISafeEntrypoint
-  function unqueueTransaction(uint256 _txId) external isSafeOwner {
-    TransactionInfo storage _txInfo = _transactionInfo[_txId];
-
-    // Check if the transaction exists
-    if (_txInfo.executableAt == 0) revert TransactionNotQueued();
-
-    // Check if the transaction has already been executed
-    if (_txInfo.isExecuted) revert TransactionAlreadyExecuted();
-
-    // Unqueue all actions builders
-    address[] memory _actionsBuildersToUnqueue = _txInfo.actionsBuilders;
-    uint256 _actionsBuildersToUnqueueLength = _actionsBuildersToUnqueue.length;
-    ActionsBuilderInfo storage _actionsBldrInfo;
-    for (uint256 _i; _i < _actionsBuildersToUnqueueLength; ++_i) {
-      _actionsBldrInfo = _actionsBuilderInfo[_actionsBuildersToUnqueue[_i]];
-      _actionsBldrInfo.queuedTransactionId = 0;
-    }
-
-    // Clear the transaction information
-    delete _transactionInfo[_txId];
-
-    // NOTE: only for event logging
-    bool _isArbitrary = _actionsBuildersToUnqueueLength == 0;
-
-    // NOTE: emit event for off-chain monitoring
-    emit TransactionUnqueued(_txId, _isArbitrary);
-  }
-
   /**
    * @notice Disapproves a Safe transaction hash
    * @dev Can be called by any Safe owner
@@ -315,13 +286,13 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     // NOTE: event emitted to log successful execution
     emit TransactionExecuted(_txId, _isArbitrary, _safeTxHash, _signers);
   }
-
   /**
    * @notice Internal function to execute a Safe transaction
    * @dev Uses the Safe's execTransaction function
    * @param _multiSendData The encoded MultiSend data
    * @param _signatures The signatures for the transaction
    */
+
   function _execSafeTransaction(bytes memory _multiSendData, bytes memory _signatures) internal {
     SAFE.execTransaction{value: msg.value}({
       to: MULTI_SEND_CALL_ONLY,
