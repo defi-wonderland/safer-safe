@@ -36,6 +36,13 @@ contract OnlyEntrypointGuard is BaseTransactionGuard, IOnlyEntrypointGuard {
   }
 
   /**
+   * @notice Fallback to avoid issues in case of a Safe upgrade
+   * @dev The expected check method might change and then the Safe would be locked
+   */
+  // solhint-disable-next-line payable-fallback
+  fallback() external {}
+
+  /**
    * @notice Checks if a transaction is allowed to be executed before execution
    * @param _to The address to which the transaction is intended
    * @param _operation The type of operation of the transaction
