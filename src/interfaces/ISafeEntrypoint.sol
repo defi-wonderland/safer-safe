@@ -148,10 +148,16 @@ interface ISafeEntrypoint is ISafeManageable {
   error NotSuccess();
 
   /**
-   * @notice Thrown when a transaction hash has been disapproved by a signer
-   * @param _signer The address of the signer who disapproved the hash
+   * @notice Thrown when a signer is invalid
+   * @param _safeTxHash The hash of the Safe transaction
+   * @param _signer The address of the signer
    */
-  error TxHashDisapprovedBySigner(address _signer);
+  error InvalidSigner(bytes32 _safeTxHash, address _signer);
+
+  /**
+   * @notice Thrown when attempting to disapprove a transaction hash that hasn't been approved
+   */
+  error TxHashNotApproved();
 
   // ~~~ ADMIN METHODS ~~~
 
@@ -213,7 +219,7 @@ interface ISafeEntrypoint is ISafeManageable {
    * @dev Can be called by any Safe owner
    * @param _safeTxHash The hash of the Safe transaction to disapprove
    */
-  function disapproveTransactionHash(bytes32 _safeTxHash) external;
+  function disapproveSafeTransactionHash(bytes32 _safeTxHash) external;
 
   // ~~~ VIEW METHODS ~~~
 

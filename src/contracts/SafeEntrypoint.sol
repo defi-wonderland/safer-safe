@@ -150,10 +150,12 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     bytes memory _multiSendData = _buildMultiSendData(_actions);
     bytes32 _safeTxHash = _getSafeTransactionHash(_multiSendData, SAFE.nonce());
 
-    // Check if any of the provided signers have disapproved this hash
-    for (uint256 _i; _i < _signers.length; ++_i) {
-      if (_disapprovedHashes[_signers[_i]][_safeTxHash]) {
-        revert TxHashDisapprovedBySigner(_signers[_i]);
+    uint256 _signersLength = _signers.length;
+
+    // Check if any of the provided signers have disapproved this hash or has not approved it
+    for (uint256 _i; _i < _signersLength; ++_i) {
+      if (_disapprovedHashes[_signers[_i]][_safeTxHash] || SAFE.approvedHashes(_signers[_i], _safeTxHash) != 1) {
+        revert InvalidSigner(_safeTxHash, _signers[_i]);
       }
     }
 
@@ -194,7 +196,12 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
    * @dev Can be called by any Safe owner
    * @param _safeTxHash The hash of the Safe transaction to disapprove
    */
-  function disapproveTransactionHash(bytes32 _safeTxHash) external isSafeOwner {
+  function disapproveSafeTransactionHash(bytes32 _safeTxHash) external isSafeOwner {
+    // Check if the hash has been approved in the Safe
+    if (SAFE.approvedHashes(msg.sender, _safeTxHash) != 1) {
+      revert TxHashNotApproved();
+    }
+
     // Mark the hash as disapproved for this signer
     _disapprovedHashes[msg.sender][_safeTxHash] = true;
 
