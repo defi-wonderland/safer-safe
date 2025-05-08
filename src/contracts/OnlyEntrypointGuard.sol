@@ -4,15 +4,16 @@ pragma solidity 0.8.29;
 import {IOnlyEntrypointGuard} from 'interfaces/IOnlyEntrypointGuard.sol';
 
 import {BaseTransactionGuard} from '@safe-smart-account/base/GuardManager.sol';
+import {SignatureDecoder} from '@safe-smart-account/common/SignatureDecoder.sol';
 import {Enum} from '@safe-smart-account/libraries/Enum.sol';
 
 /**
  * @title OnlyEntrypointGuard
  * @notice Guard that ensures transactions are either executed through the entrypoint or by an emergency caller
  */
-contract OnlyEntrypointGuard is BaseTransactionGuard, IOnlyEntrypointGuard {
+contract OnlyEntrypointGuard is BaseTransactionGuard, SignatureDecoder, IOnlyEntrypointGuard {
   /// @inheritdoc IOnlyEntrypointGuard
-  uint256 public constant APPROVED_HASH_SIGNATURE_TYPE = 0x01;
+  uint8 public constant APPROVED_HASH_SIGNATURE_TYPE = 1;
 
   /// @inheritdoc IOnlyEntrypointGuard
   address public immutable ENTRYPOINT;
@@ -74,9 +75,9 @@ contract OnlyEntrypointGuard is BaseTransactionGuard, IOnlyEntrypointGuard {
       }
     }
 
-    // Validate signature format - only allow approved hash signatures
-    if (!_isValidSignatureFormat(_signatures)) {
-      revert InvalidSignatureFormat();
+    // Validate signature type – only allow approved hash signatures
+    if (!_isValidSignatureType(_signatures)) {
+      revert InvalidSignatureType();
     }
   }
 
@@ -91,20 +92,15 @@ contract OnlyEntrypointGuard is BaseTransactionGuard, IOnlyEntrypointGuard {
    * @param _signatures The signatures to validate
    * @return _isValid Whether all signatures are approved hash signatures
    */
-  function _isValidSignatureFormat(bytes memory _signatures) internal pure returns (bool _isValid) {
-    // Check if the signatures length is a multiple of 65 bytes
-    uint256 _signaturesLength = _signatures.length;
-    if (_signaturesLength % 65 != 0) {
-      return _isValid = false;
-    }
-
-    // Check each signature
+  function _isValidSignatureType(bytes memory _signatures) internal pure returns (bool _isValid) {
+    // Check each 65-byte signature
+    uint256 _signaturesAmount = _signatures.length / 65;
     uint8 _signatureType;
-    for (uint256 _i; _i < _signaturesLength; _i += 65) {
+    for (uint256 _i; _i < _signaturesAmount; ++_i) {
       // Get the signature type (last byte of each 65-byte signature)
-      _signatureType = uint8(_signatures[_i + 64]);
+      (_signatureType,,) = signatureSplit(_signatures, _i);
 
-      // Only allow approved hash signatures (type 0x01)
+      // Only allow approved hash signatures (type 1)
       if (_signatureType != APPROVED_HASH_SIGNATURE_TYPE) {
         return _isValid = false;
       }

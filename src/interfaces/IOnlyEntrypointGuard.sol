@@ -14,7 +14,7 @@ interface IOnlyEntrypointGuard is ITransactionGuard {
    * @notice Gets the signature type constant for approved hash signatures
    * @return _approvedHashSignatureType The signature type constant for approved hash signatures
    */
-  function APPROVED_HASH_SIGNATURE_TYPE() external view returns (uint256 _approvedHashSignatureType);
+  function APPROVED_HASH_SIGNATURE_TYPE() external view returns (uint8 _approvedHashSignatureType);
 
   /**
    * @notice Gets the address of the SafeEntrypoint contract
@@ -49,7 +49,7 @@ interface IOnlyEntrypointGuard is ITransactionGuard {
   error UnauthorizedDelegateCall(address _target);
 
   /**
-   * @notice Thrown when the signature format is invalid
+   * @notice Thrown when the signature type is invalid
    */
-  error InvalidSignatureFormat();
+  error InvalidSignatureType();
 }
