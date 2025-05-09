@@ -38,28 +38,36 @@ interface ISafeEntrypoint is ISafeManageable {
   // ~~~ STORAGE METHODS ~~~
 
   /**
-   * @notice Gets the short delay applied to pre-approved transactions
-   * @return _shortDelay The short delay (in seconds)
-   */
-  function SHORT_DELAY() external view returns (uint256 _shortDelay);
-
-  /**
-   * @notice Gets the long delay applied to arbitrary transactions
-   * @return _longDelay The long delay (in seconds)
-   */
-  function LONG_DELAY() external view returns (uint256 _longDelay);
-
-  /**
    * @notice Gets the MultiSendCallOnly contract
    * @return _multiSendCallOnly The MultiSendCallOnly contract address
    */
   function MULTI_SEND_CALL_ONLY() external view returns (address _multiSendCallOnly);
 
   /**
+   * @notice Gets the short execution delay applied to pre-approved transactions
+   * @return _shortExecutionDelay The short execution delay (in seconds)
+   */
+  function SHORT_EXECUTION_DELAY() external view returns (uint256 _shortExecutionDelay);
+
+  /**
+   * @notice Gets the long execution delay applied to arbitrary transactions
+   * @return _longExecutionDelay The long execution delay (in seconds)
+   */
+  function LONG_EXECUTION_DELAY() external view returns (uint256 _longExecutionDelay);
+
+  /**
    * @notice Gets the global nonce
    * @return _txNonce The nonce to ensure unique IDs for identical transactions
    */
   function transactionNonce() external view returns (uint256 _txNonce);
+
+  /**
+   * @notice Gets a signer's disapproved Safe transaction hashes
+   * @param _signer The address of the signer
+   * @param _safeTxHash The hash of the Safe transaction
+   * @return _isDisapproved Whether the Safe transaction hash has been disapproved by the signer
+   */
+  function disapprovedHashes(address _signer, bytes32 _safeTxHash) external view returns (bool _isDisapproved);
 
   // ~~~ EVENTS ~~~
 
@@ -92,11 +100,11 @@ interface ISafeEntrypoint is ISafeManageable {
   );
 
   /**
-   * @notice Emitted when a transaction is unqueued
-   * @param _txId The ID of the transaction
-   * @param _isArbitrary Whether the transaction is arbitrary or pre-approved
+   * @notice Emitted when a Safe transaction hash is disapproved
+   * @param _safeTxHash The hash of the Safe transaction that was disapproved
+   * @param _signer The address of the signer who disapproved the hash
    */
-  event TransactionUnqueued(uint256 indexed _txId, bool indexed _isArbitrary);
+  event SafeTransactionHashDisapproved(bytes32 indexed _safeTxHash, address indexed _signer);
 
   // ~~~ ERRORS ~~~
 
@@ -124,6 +132,18 @@ interface ISafeEntrypoint is ISafeManageable {
    * @notice Thrown when a transaction is not queued
    */
   error TransactionNotQueued();
+
+  /**
+   * @notice Thrown when attempting to disapprove a Safe transaction hash that hasn't been approved
+   */
+  error SafeTransactionHashNotApproved();
+
+  /**
+   * @notice Thrown when a signer is invalid
+   * @param _signer The address of the signer
+   * @param _safeTxHash The hash of the Safe transaction
+   */
+  error InvalidSigner(address _signer, bytes32 _safeTxHash);
 
   /**
    * @notice Thrown when an empty actions builders array is provided
@@ -160,7 +180,7 @@ interface ISafeEntrypoint is ISafeManageable {
    * @param _actionsBuilders The batch of actions builder contract addresses to queue
    * @return _txId The ID of the queued transaction
    */
-  function queueTransaction(address[] memory _actionsBuilders) external returns (uint256 _txId);
+  function queueTransaction(address[] calldata _actionsBuilders) external returns (uint256 _txId);
 
   /**
    * @notice Queues an arbitrary transaction for execution after a 7-day delay
@@ -169,7 +189,7 @@ interface ISafeEntrypoint is ISafeManageable {
    * @param _actions The batch of actions to queue
    * @return _txId The ID of the queued transaction
    */
-  function queueTransaction(IActionsBuilder.Action[] memory _actions) external returns (uint256 _txId);
+  function queueTransaction(IActionsBuilder.Action[] calldata _actions) external returns (uint256 _txId);
 
   /**
    * @notice Executes a queued transaction using the approved hash signers
@@ -186,14 +206,14 @@ interface ISafeEntrypoint is ISafeManageable {
    * @param _txId The ID of the transaction to execute
    * @param _signers The array of signer addresses
    */
-  function executeTransaction(uint256 _txId, address[] memory _signers) external payable;
+  function executeTransaction(uint256 _txId, address[] calldata _signers) external payable;
 
   /**
-   * @notice Unqueues a pending transaction before it is executed
-   * @dev Can only be called by the Safe owners
-   * @param _txId The ID of the transaction to unqueue
+   * @notice Disapproves a Safe transaction hash
+   * @dev Can be called by any Safe owner
+   * @param _safeTxHash The hash of the Safe transaction to disapprove
    */
-  function unqueueTransaction(uint256 _txId) external;
+  function disapproveSafeTransactionHash(bytes32 _safeTxHash) external;
 
   // ~~~ VIEW METHODS ~~~
 
@@ -237,9 +257,27 @@ interface ISafeEntrypoint is ISafeManageable {
   function getSafeTransactionHash(uint256 _txId, uint256 _safeNonce) external view returns (bytes32 _safeTxHash);
 
   /**
-   * @notice Gets the list of signers who have approved a transaction
+   * @notice Gets the list of signers who have approved a Safe transaction hash for a transaction ID
    * @param _txId The ID of the transaction
    * @return _approvedHashSigners The array of approved hash signer addresses
    */
   function getApprovedHashSigners(uint256 _txId) external view returns (address[] memory _approvedHashSigners);
+
+  /**
+   * @notice Gets the list of signers who have approved a Safe transaction hash for a transaction ID with a specific Safe nonce
+   * @param _txId The ID of the transaction
+   * @param _safeNonce The Safe nonce to use for the hash calculation
+   * @return _approvedHashSigners The array of approved hash signer addresses
+   */
+  function getApprovedHashSigners(
+    uint256 _txId,
+    uint256 _safeNonce
+  ) external view returns (address[] memory _approvedHashSigners);
+
+  /**
+   * @notice Gets the list of signers who have approved a Safe transaction hash for a Safe transaction hash
+   * @param _safeTxHash The hash of the Safe transaction
+   * @return _approvedHashSigners The array of approved hash signer addresses
+   */
+  function getApprovedHashSigners(bytes32 _safeTxHash) external view returns (address[] memory _approvedHashSigners);
 }

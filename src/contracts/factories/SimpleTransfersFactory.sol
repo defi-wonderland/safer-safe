@@ -18,7 +18,10 @@ contract SimpleTransfersFactory is ISimpleTransfersFactory {
    *    ]
    *  ]
    */
-  function createSimpleTransfers(ISimpleTransfers.Transfer[] memory _transfers) external returns (address) {
-    return address(new SimpleTransfers(_transfers));
+  function createSimpleTransfers(ISimpleTransfers.Transfer[] calldata _transfers)
+    external
+    returns (address _simpleTransfers)
+  {
+    _simpleTransfers = address(new SimpleTransfers(_transfers));
   }
 }
