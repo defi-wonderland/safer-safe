@@ -37,8 +37,8 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   /// @notice Maps a transaction ID to its information
   mapping(uint256 _txId => TransactionInfo _txInfo) internal _transactionInfo;
 
-  /// @notice Maps a signer's disapproved transaction hashes
-  mapping(address _signer => mapping(bytes32 _safeTxHash => bool _isDisapproved)) internal _disapprovedHashes;
+  /// @inheritdoc ISafeEntrypoint
+  mapping(address _signer => mapping(bytes32 _safeTxHash => bool _isDisapproved)) public disapprovedHashes;
 
   /**
    * @notice Constructor that sets up the Safe and MultiSendCallOnly contracts
@@ -170,12 +170,13 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     bytes memory _multiSendData = _buildMultiSendData(_actions);
     bytes32 _safeTxHash = _getSafeTransactionHash(_multiSendData, SAFE.nonce());
 
+    // Check if any of the provided signers has disapproved the hash or has not approved it
     uint256 _signersLength = _signers.length;
-
-    // Check if any of the provided signers have disapproved this hash or has not approved it
+    address _signer;
     for (uint256 _i; _i < _signersLength; ++_i) {
-      if (_disapprovedHashes[_signers[_i]][_safeTxHash] || SAFE.approvedHashes(_signers[_i], _safeTxHash) != 1) {
-        revert InvalidSigner(_safeTxHash, _signers[_i]);
+      _signer = _signers[_i];
+      if (disapprovedHashes[_signer][_safeTxHash] || SAFE.approvedHashes(_signer, _safeTxHash) != 1) {
+        revert InvalidSigner(_signer, _safeTxHash);
       }
     }
 
@@ -190,13 +191,13 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   function disapproveSafeTransactionHash(bytes32 _safeTxHash) external isSafeOwner {
     // Check if the hash has been approved in the Safe
     if (SAFE.approvedHashes(msg.sender, _safeTxHash) != 1) {
-      revert TxHashNotApproved();
+      revert SafeTransactionHashNotApproved();
     }
 
     // Mark the hash as disapproved for this signer
-    _disapprovedHashes[msg.sender][_safeTxHash] = true;
+    disapprovedHashes[msg.sender][_safeTxHash] = true;
 
-    emit TxHashDisapproved(msg.sender, _safeTxHash);
+    emit SafeTransactionHashDisapproved(_safeTxHash, msg.sender);
   }
 
   // ~~~ EXTERNAL VIEW METHODS ~~~
@@ -313,13 +314,13 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     // NOTE: event emitted to log successful execution
     emit TransactionExecuted(_txId, _isArbitrary, _safeTxHash, _signers);
   }
+
   /**
    * @notice Internal function to execute a Safe transaction
    * @dev Uses the Safe's execTransaction function
    * @param _multiSendData The encoded MultiSend data
    * @param _signatures The signatures for the transaction
    */
-
   function _execSafeTransaction(bytes memory _multiSendData, bytes memory _signatures) internal {
     SAFE.execTransaction{value: msg.value}({
       to: MULTI_SEND_CALL_ONLY,
@@ -432,11 +433,12 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     uint256 _approvedHashSignersCount;
 
     // Single pass through all owners
+    address _safeOwner;
     for (uint256 _i; _i < _safeOwnersLength; ++_i) {
-      address _owner = _safeOwners[_i];
+      _safeOwner = _safeOwners[_i];
       // Check if this owner has approved the hash and hasn't disapproved it
-      if (SAFE.approvedHashes(_owner, _safeTxHash) == 1 && !_disapprovedHashes[_owner][_safeTxHash]) {
-        _tempSigners[_approvedHashSignersCount] = _owner;
+      if (!disapprovedHashes[_safeOwner][_safeTxHash] && SAFE.approvedHashes(_safeOwner, _safeTxHash) == 1) {
+        _tempSigners[_approvedHashSignersCount] = _safeOwner;
         ++_approvedHashSignersCount;
       }
     }
