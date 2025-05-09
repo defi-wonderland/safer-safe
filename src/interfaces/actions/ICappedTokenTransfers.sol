@@ -15,7 +15,7 @@ interface ICappedTokenTransfers is ISafeManageable, IActionsBuilder {
   function EPOCH_LENGTH() external view returns (uint256);
 
   function totalSpent() external view returns (uint256);
-  function startingTimestamp() external view returns (uint256);
+  function currentEpoch() external view returns (uint256);
 
   function tokenTransfers(uint256 _index) external view returns (address _recipient, uint256 _amount);
 
