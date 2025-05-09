@@ -83,7 +83,7 @@ contract BasicTest is Test {
     address[] memory _actionsBuilders = new address[](1);
     _actionsBuilders[0] = _actionsBuilder;
 
-    uint256 _txId = _safeEntrypoint.queueTransaction(_actionsBuilders, 7 days);
+    uint256 _txId = _safeEntrypoint.queueTransaction(_actionsBuilders, _defaultTxExpirationTime);
 
     // Wait for the timelock period
     vm.warp(block.timestamp + _shortExecutionDelay);

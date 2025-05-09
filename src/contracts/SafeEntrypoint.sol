@@ -106,14 +106,14 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     IActionsBuilder.Action[] memory _allActions = _collectActions(_actionsBuilders);
 
     // Use default expiry delay if duration is 0
-    uint256 _expiryTime = _expiryDelay == 0 ? DEFAULT_TX_EXPIRY_DELAY : _expiryDelay;
+    _expiryDelay = _expiryDelay == 0 ? DEFAULT_TX_EXPIRY_DELAY : _expiryDelay;
 
     // Store the transaction information
     _transactionInfo[_txId] = TransactionInfo({
       actionsBuilders: _actionsBuilders,
       actionsData: abi.encode(_allActions),
       executableAt: block.timestamp + SHORT_EXECUTION_DELAY,
-      expiresAt: block.timestamp + SHORT_EXECUTION_DELAY + _expiryTime,
+      expiresAt: block.timestamp + SHORT_EXECUTION_DELAY + _expiryDelay,
       isExecuted: false
     });
 

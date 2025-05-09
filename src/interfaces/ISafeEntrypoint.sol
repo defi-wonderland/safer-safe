@@ -196,7 +196,7 @@ interface ISafeEntrypoint is ISafeManageable {
    * @dev The actions builder contracts must be pre-approved using approveActionsBuilder
    * @dev The actions builder contracts must not be already in the queue
    * @param _actionsBuilders The batch of actions builder contract addresses to queue
-   * @param _expiryDelay The duration (in seconds) after which the transaction expires
+   * @param _expiryDelay The duration (in seconds) after which the transaction expires (after execution delay)
    * @return _txId The ID of the queued transaction
    */
   function queueTransaction(address[] calldata _actionsBuilders, uint256 _expiryDelay) external returns (uint256 _txId);
@@ -206,7 +206,7 @@ interface ISafeEntrypoint is ISafeManageable {
    * @dev Can only be called by the Safe owners
    * @dev The actions must be properly formatted for each target contract
    * @param _actions The batch of actions to queue
-   * @param _expiryDelay The duration (in seconds) after which the transaction expires
+   * @param _expiryDelay The duration (in seconds) after which the transaction expires (after execution delay)
    * @return _txId The ID of the queued transaction
    */
   function queueTransaction(
