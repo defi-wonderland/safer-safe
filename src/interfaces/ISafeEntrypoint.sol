@@ -59,9 +59,9 @@ interface ISafeEntrypoint is ISafeManageable {
 
   /**
    * @notice Gets the default expiration time for transactions
-   * @return _defaultTxExpirationTime The default expiration time (in seconds)
+   * @return _defaultTxExpiryDelay The default expiry delay (in seconds)
    */
-  function DEFAULT_TX_EXPIRATION_TIME() external view returns (uint256 _defaultTxExpirationTime);
+  function DEFAULT_TX_EXPIRY_DELAY() external view returns (uint256 _defaultTxExpiryDelay);
 
   /**
    * @notice Gets the global nonce
@@ -185,30 +185,27 @@ interface ISafeEntrypoint is ISafeManageable {
   // ~~~ TRANSACTION METHODS ~~~
 
   /**
-   * @notice Queues a transaction bulked from multiple actions builders for execution after a delay
+   * @notice Queues a transaction bulked from multiple actions builders for execution after a small delay
    * @dev Can only be called by the Safe owners
    * @dev The actions builder contracts must be pre-approved using approveActionsBuilder
    * @dev The actions builder contracts must not be already in the queue
    * @param _actionsBuilders The batch of actions builder contract addresses to queue
-   * @param _expirationDuration The duration (in seconds) after which the transaction expires
+   * @param _expiryDelay The duration (in seconds) after which the transaction expires
    * @return _txId The ID of the queued transaction
    */
-  function queueTransaction(
-    address[] calldata _actionsBuilders,
-    uint256 _expirationDuration
-  ) external returns (uint256 _txId);
+  function queueTransaction(address[] calldata _actionsBuilders, uint256 _expiryDelay) external returns (uint256 _txId);
 
   /**
-   * @notice Queues an arbitrary transaction for execution after a delay
+   * @notice Queues an arbitrary transaction for execution after a long delay
    * @dev Can only be called by the Safe owners
    * @dev The actions must be properly formatted for each target contract
    * @param _actions The batch of actions to queue
-   * @param _expirationDuration The duration (in seconds) after which the transaction expires
+   * @param _expiryDelay The duration (in seconds) after which the transaction expires
    * @return _txId The ID of the queued transaction
    */
   function queueTransaction(
     IActionsBuilder.Action[] calldata _actions,
-    uint256 _expirationDuration
+    uint256 _expiryDelay
   ) external returns (uint256 _txId);
 
   /**

@@ -26,7 +26,7 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   uint256 public immutable LONG_EXECUTION_DELAY;
 
   /// @inheritdoc ISafeEntrypoint
-  uint256 public immutable DEFAULT_TX_EXPIRATION_TIME;
+  uint256 public immutable DEFAULT_TX_EXPIRY_DELAY;
 
   /// @inheritdoc ISafeEntrypoint
   uint256 public transactionNonce;
@@ -46,20 +46,20 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
    * @param _multiSendCallOnly The MultiSendCallOnly contract address
    * @param _shortExecutionDelay The short execution delay (in seconds)
    * @param _longExecutionDelay The long execution delay (in seconds)
-   * @param _defaultTxExpirationTime The default expiration time for transactions
+   * @param _defaultTxExpiryDelay The default expiry delay for transactions
    */
   constructor(
     address _safe,
     address _multiSendCallOnly,
     uint256 _shortExecutionDelay,
     uint256 _longExecutionDelay,
-    uint256 _defaultTxExpirationTime
+    uint256 _defaultTxExpiryDelay
   ) SafeManageable(_safe) {
     MULTI_SEND_CALL_ONLY = _multiSendCallOnly;
 
     SHORT_EXECUTION_DELAY = _shortExecutionDelay;
     LONG_EXECUTION_DELAY = _longExecutionDelay;
-    DEFAULT_TX_EXPIRATION_TIME = _defaultTxExpirationTime;
+    DEFAULT_TX_EXPIRY_DELAY = _defaultTxExpiryDelay;
   }
 
   // ~~~ ADMIN METHODS ~~~
@@ -79,7 +79,7 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   /// @inheritdoc ISafeEntrypoint
   function queueTransaction(
     address[] calldata _actionsBuilders,
-    uint256 _expirationDuration
+    uint256 _expiryDelay
   ) external isSafeOwner returns (uint256 _txId) {
     uint256 _actionsBuildersLength = _actionsBuilders.length;
 
@@ -105,15 +105,15 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     // Collect all actions
     IActionsBuilder.Action[] memory _allActions = _collectActions(_actionsBuilders);
 
-    // Use default expiration time if duration is 0
-    uint256 _expirationTime = _expirationDuration == 0 ? DEFAULT_TX_EXPIRATION_TIME : _expirationDuration;
+    // Use default expiry delay if duration is 0
+    uint256 _expiryTime = _expiryDelay == 0 ? DEFAULT_TX_EXPIRY_DELAY : _expiryDelay;
 
     // Store the transaction information
     _transactionInfo[_txId] = TransactionInfo({
       actionsBuilders: _actionsBuilders,
       actionsData: abi.encode(_allActions),
       executableAt: block.timestamp + SHORT_EXECUTION_DELAY,
-      expiresAt: block.timestamp + SHORT_EXECUTION_DELAY + _expirationTime,
+      expiresAt: block.timestamp + SHORT_EXECUTION_DELAY + _expiryTime,
       isExecuted: false
     });
 
@@ -124,7 +124,7 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   /// @inheritdoc ISafeEntrypoint
   function queueTransaction(
     IActionsBuilder.Action[] calldata _actions,
-    uint256 _expirationDuration
+    uint256 _expiryDelay
   ) external isSafeOwner returns (uint256 _txId) {
     // Validate that the actions array is not empty
     if (_actions.length == 0) {
@@ -134,15 +134,15 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     // Generate a simple transaction ID
     _txId = ++transactionNonce;
 
-    // Use default expiration time if duration is 0
-    uint256 _expirationTime = _expirationDuration == 0 ? DEFAULT_TX_EXPIRATION_TIME : _expirationDuration;
+    // Use default expiry delay if duration is 0
+    uint256 _expiryTime = _expiryDelay == 0 ? DEFAULT_TX_EXPIRY_DELAY : _expiryDelay;
 
     // Store the transaction information
     _transactionInfo[_txId] = TransactionInfo({
       actionsBuilders: new address[](0),
       actionsData: abi.encode(_actions),
       executableAt: block.timestamp + LONG_EXECUTION_DELAY,
-      expiresAt: block.timestamp + LONG_EXECUTION_DELAY + _expirationTime,
+      expiresAt: block.timestamp + LONG_EXECUTION_DELAY + _expiryTime,
       isExecuted: false
     });
 
