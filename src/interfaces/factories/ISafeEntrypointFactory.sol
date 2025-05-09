@@ -7,6 +7,7 @@ interface ISafeEntrypointFactory {
   function createSafeEntrypoint(
     address _safe,
     uint256 _shortExecutionDelay,
-    uint256 _longExecutionDelay
+    uint256 _longExecutionDelay,
+    uint256 _defaultExpirationTime
   ) external returns (address);
 }
