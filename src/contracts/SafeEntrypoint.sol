@@ -135,14 +135,14 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     _txId = ++transactionNonce;
 
     // Use default expiry delay if duration is 0
-    uint256 _expiryTime = _expiryDelay == 0 ? DEFAULT_TX_EXPIRY_DELAY : _expiryDelay;
+    _expiryDelay = _expiryDelay == 0 ? DEFAULT_TX_EXPIRY_DELAY : _expiryDelay;
 
     // Store the transaction information
     _transactionInfo[_txId] = TransactionInfo({
       actionsBuilders: new address[](0),
       actionsData: abi.encode(_actions),
       executableAt: block.timestamp + LONG_EXECUTION_DELAY,
-      expiresAt: block.timestamp + LONG_EXECUTION_DELAY + _expiryTime,
+      expiresAt: block.timestamp + LONG_EXECUTION_DELAY + _expiryDelay,
       isExecuted: false
     });
 
