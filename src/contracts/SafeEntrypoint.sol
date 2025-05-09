@@ -176,7 +176,7 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     for (uint256 _i; _i < _signersLength; ++_i) {
       _signer = _signers[_i];
       if (disapprovedHashes[_signer][_safeTxHash] || SAFE.approvedHashes(_signer, _safeTxHash) != 1) {
-        revert InvalidSigner(_signer, _safeTxHash);
+        revert InvalidSigner(_safeTxHash, _signer);
       }
     }
 

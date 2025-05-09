@@ -147,13 +147,6 @@ interface ISafeEntrypoint is ISafeManageable {
   error SafeTransactionHashNotApproved();
 
   /**
-   * @notice Thrown when a signer is invalid
-   * @param _signer The address of the signer
-   * @param _safeTxHash The hash of the Safe transaction
-   */
-  error InvalidSigner(address _signer, bytes32 _safeTxHash);
-
-  /**
    * @notice Thrown when an empty actions builders array is provided
    */
   error EmptyActionsBuildersArray();
