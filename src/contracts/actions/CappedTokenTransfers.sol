@@ -8,90 +8,97 @@ import {ICappedTokenTransfers} from 'interfaces/actions/ICappedTokenTransfers.so
 import {IERC20} from 'forge-std/interfaces/IERC20.sol';
 
 contract CappedTokenTransfers is SafeManageable, ICappedTokenTransfers {
-  mapping(address _token => uint256 _transferCap) public tokenCap;
-  mapping(address _token => uint256 _transferCapSpent) public capSpent;
-  mapping(address _token => uint256 _transferCooldown) public tokenCooldown;
+  // Token configuration
+  address public immutable TOKEN;
+  uint256 public immutable CAP;
+  uint256 public immutable EPOCH_LENGTH;
+
+  // State tracking
+  uint256 public totalSpent;
+  uint256 public currentEpoch;
+  uint256 public startingTimestamp;
 
   TokenTransfer[] public tokenTransfers;
 
-  constructor(address _safe) SafeManageable(_safe) {}
+  constructor(address _safe, address _token, uint256 _cap, uint256 _epochLength) SafeManageable(_safe) {
+    TOKEN = _token;
+    CAP = _cap;
+    EPOCH_LENGTH = _epochLength;
+    startingTimestamp = block.timestamp;
+  }
 
   // ~~~ ADMIN METHODS ~~~
 
-  function addCappedToken(address _token, uint256 _cap) external isSafe {
-    tokenCap[_token] = _cap;
+  function addTokenTransfer(address _recipient, uint256 _amount) external isSafeOwner {
+    if (_amount == 0) revert InvalidAmount();
+    tokenTransfers.push(TokenTransfer({recipient: _recipient, amount: _amount}));
   }
 
-  function addTokenTransfer(address _token, address _recipient, uint256 _amount) external isSafeOwner {
-    _addTokenTransfer(_token, _recipient, _amount);
-  }
+  function removeTokenTransfer(uint256 _index) external isSafeOwner {
+    if (_index >= tokenTransfers.length) revert InvalidIndex();
 
-  function addTokenTransfers(
-    address[] calldata _tokens,
-    address[] calldata _recipients,
-    uint256[] calldata _amounts
-  ) external isSafeOwner {
-    uint256 _tokensLength = _tokens.length;
-
-    if (_tokensLength != _recipients.length || _tokensLength != _amounts.length) {
-      revert LengthMismatch();
-    }
-    for (uint256 i; i < _tokensLength; ++i) {
-      _addTokenTransfer(_tokens[i], _recipients[i], _amounts[i]);
-    }
+    delete tokenTransfers[_index];
   }
 
   // ~~~ ACTIONS METHODS ~~~
 
-  function getActions() external returns (Action[] memory _actions) {
-    uint256 _tokenTransfersLength = tokenTransfers.length;
-
-    _actions = new Action[](_tokenTransfersLength);
-
-    for (uint256 i; i < _tokenTransfersLength; ++i) {
-      TokenTransfer memory tokenTransfer = tokenTransfers[i];
-      _actions[i] = Action({
-        target: tokenTransfer.token,
-        data: abi.encodeWithSelector(IERC20.transfer.selector, tokenTransfer.recipient, tokenTransfer.amount),
-        value: 0
-      });
-      capSpent[tokenTransfer.token] += tokenTransfer.amount;
+  function getActions() external view returns (Action[] memory) {
+    // Count valid transfers
+    uint256 _validCount = 0;
+    uint256 _totalAmount = 0;
+    for (uint256 i = 0; i < tokenTransfers.length; i++) {
+      if (tokenTransfers[i].amount != 0) {
+        _validCount++;
+        _totalAmount += tokenTransfers[i].amount;
+      }
     }
 
-    for (uint256 i; i < _tokenTransfersLength; ++i) {
-      address _token = tokenTransfers[i].token;
-      uint256 capSpentForToken = capSpent[_token];
-      if (capSpentForToken == 0) {
-        // NOTE: already processed this token
-        continue;
-      }
-      uint256 cap = tokenCap[_token];
+    // Create actions array: one for updateState + one for each valid transfer
+    uint256 _numActions = _validCount + 1;
+    Action[] memory _actions = new Action[](_numActions);
 
-      // NOTE: safety checks
-      if (cap == 0) {
-        revert UnallowedToken();
-      }
-      if (capSpentForToken > cap) {
-        revert ExceededCap();
-      }
-      if (block.timestamp < tokenCooldown[_token]) {
-        revert TokenCooldown();
-      }
+    // First action: update state
+    _actions[0] = Action({
+      target: address(this),
+      data: abi.encodeWithSelector(ICappedTokenTransfers.updateState.selector, abi.encode(_totalAmount)),
+      value: 0
+    });
 
-      // NOTE: update cooldown
-      tokenCooldown[_token] = block.timestamp + 1 days;
-
-      // NOTE: reset cap spent (cap is per token per tx, with 1 day cooldown)
-      delete capSpent[_token];
+    // Remaining actions: valid token transfers
+    uint256 _actionIndex = 1;
+    for (uint256 i = 0; i < tokenTransfers.length; i++) {
+      if (tokenTransfers[i].amount != 0) {
+        _actions[_actionIndex] = Action({
+          target: TOKEN,
+          data: abi.encodeWithSelector(IERC20.transfer.selector, tokenTransfers[i].recipient, tokenTransfers[i].amount),
+          value: 0
+        });
+        _actionIndex++;
+      }
     }
 
-    // NOTE: cleanup token transfers (as they're already queued)
-    delete tokenTransfers;
+    return _actions;
   }
 
-  // ~~~ INTERNAL METHODS ~~~
+  function updateState(bytes memory _data) external isSafe {
+    uint256 _currentEpoch = (block.timestamp - startingTimestamp) / EPOCH_LENGTH;
 
-  function _addTokenTransfer(address _token, address _recipient, uint256 _amount) internal {
-    tokenTransfers.push(TokenTransfer({token: _token, recipient: _recipient, amount: _amount}));
+    // If we're in a new epoch, reset the spending
+    if (_currentEpoch > currentEpoch) {
+      totalSpent = 0;
+      currentEpoch = _currentEpoch;
+    }
+
+    uint256 _amount = abi.decode(_data, (uint256));
+    uint256 _totalSpent = totalSpent + _amount;
+
+    if (_totalSpent > CAP) {
+      revert CapExceeded();
+    }
+
+    totalSpent = _totalSpent;
+
+    // Clean up
+    delete tokenTransfers;
   }
 }

@@ -26,5 +26,5 @@ interface IActionsBuilder {
    * @notice Gets the list of transaction actions
    * @return _actions The array of actions
    */
-  function getActions() external returns (Action[] memory _actions);
+  function getActions() external view returns (Action[] memory _actions);
 }
