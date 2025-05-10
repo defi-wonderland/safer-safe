@@ -16,6 +16,7 @@ contract CappedTokenTransfers is SafeManageable, ICappedTokenTransfers {
   // State tracking
   uint256 public totalSpent;
   uint256 public currentEpoch;
+  uint256 public startingTimestamp;
 
   TokenTransfer[] public tokenTransfers;
 
@@ -23,7 +24,7 @@ contract CappedTokenTransfers is SafeManageable, ICappedTokenTransfers {
     TOKEN = _token;
     CAP = _cap;
     EPOCH_LENGTH = _epochLength;
-    currentEpoch = (block.timestamp + EPOCH_LENGTH - 1) / EPOCH_LENGTH;
+    startingTimestamp = block.timestamp;
   }
 
   // ~~~ ADMIN METHODS ~~~
@@ -80,8 +81,7 @@ contract CappedTokenTransfers is SafeManageable, ICappedTokenTransfers {
   }
 
   function updateState(bytes memory _data) external isSafe {
-    // Round up to the next epoch
-    uint256 _currentEpoch = (block.timestamp + EPOCH_LENGTH - 1) / EPOCH_LENGTH;
+    uint256 _currentEpoch = (block.timestamp - startingTimestamp) / EPOCH_LENGTH;
 
     // If we're in a new epoch, reset the spending
     if (_currentEpoch > currentEpoch) {
