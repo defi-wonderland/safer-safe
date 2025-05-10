@@ -15,9 +15,13 @@ contract SafeEntrypointFactory is ISafeEntrypointFactory {
   function createSafeEntrypoint(
     address _safe,
     uint256 _shortExecutionDelay,
-    uint256 _longExecutionDelay
+    uint256 _longExecutionDelay,
+    uint256 _defaultTxExpirationTime
   ) external returns (address _safeEntrypoint) {
-    _safeEntrypoint =
-      address(new SafeEntrypoint(_safe, MULTI_SEND_CALL_ONLY, _shortExecutionDelay, _longExecutionDelay));
+    _safeEntrypoint = address(
+      new SafeEntrypoint(
+        _safe, MULTI_SEND_CALL_ONLY, _shortExecutionDelay, _longExecutionDelay, _defaultTxExpirationTime
+      )
+    );
   }
 }

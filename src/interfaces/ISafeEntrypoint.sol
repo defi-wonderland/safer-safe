@@ -16,12 +16,14 @@ interface ISafeEntrypoint is ISafeManageable {
    * @param actionsBuilder The actions builder contract address associated
    * @param actionsData The encoded actions data
    * @param executableAt The timestamp from which the transaction can be executed
+   * @param expiresAt The timestamp from which the transaction expires
    * @param isExecuted Whether the transaction has been executed
    */
   struct TransactionInfo {
     address actionsBuilder;
     bytes actionsData;
     uint256 executableAt;
+    uint256 expiresAt;
     bool isExecuted;
   }
 
@@ -46,17 +48,24 @@ interface ISafeEntrypoint is ISafeManageable {
   function LONG_EXECUTION_DELAY() external view returns (uint256 _longExecutionDelay);
 
   /**
+   * @notice Gets the default expiration time for transactions
+   * @return _defaultTxExpiryDelay The default expiry delay (in seconds)
+   */
+  function DEFAULT_TX_EXPIRY_DELAY() external view returns (uint256 _defaultTxExpiryDelay);
+
+  /**
    * @notice Gets the global nonce
    * @return _txNonce The nonce to ensure unique IDs for identical transactions
    */
   function transactionNonce() external view returns (uint256 _txNonce);
 
   /**
-   * @notice Gets the expiry time for an actions builder
-   * @param _actionsBuilder The address of the actions builder contract
-   * @return _expiryTime The timestamp from which the actions builder contract is no longer approved to be queued
+   * @notice Gets a signer's disapproved Safe transaction hashes
+   * @param _signer The address of the signer
+   * @param _safeTxHash The hash of the Safe transaction
+   * @return _isDisapproved Whether the Safe transaction hash has been disapproved by the signer
    */
-  function actionsBuilderExpiryTime(address _actionsBuilder) external view returns (uint256 _expiryTime);
+  function disapprovedHashes(address _signer, bytes32 _safeTxHash) external view returns (bool _isDisapproved);
 
   // ~~~ EVENTS ~~~
 
@@ -89,11 +98,11 @@ interface ISafeEntrypoint is ISafeManageable {
   );
 
   /**
-   * @notice Emitted when a transaction is unqueued
-   * @param _txId The ID of the transaction
-   * @param _isArbitrary Whether the transaction is arbitrary or pre-approved
+   * @notice Emitted when a Safe transaction hash is disapproved
+   * @param _safeTxHash The hash of the Safe transaction that was disapproved
+   * @param _signer The address of the signer who disapproved the hash
    */
-  event TransactionUnqueued(uint256 indexed _txId, bool indexed _isArbitrary);
+  event SafeTransactionHashDisapproved(bytes32 indexed _safeTxHash, address indexed _signer);
 
   // ~~~ ERRORS ~~~
 
@@ -123,6 +132,11 @@ interface ISafeEntrypoint is ISafeManageable {
   error TransactionNotQueued();
 
   /**
+   * @notice Thrown when attempting to disapprove a Safe transaction hash that hasn't been approved
+   */
+  error SafeTransactionHashNotApproved();
+
+  /**
    * @notice Thrown when an empty actions builders array is provided
    */
   error EmptyActionsBuildersArray();
@@ -136,6 +150,23 @@ interface ISafeEntrypoint is ISafeManageable {
    * @notice Thrown when a call to an actions builder fails
    */
   error NotSuccess();
+
+  /**
+   * @notice Thrown when a transaction has expired
+   */
+  error TransactionExpired();
+
+  /**
+   * @notice Thrown when a signer is invalid
+   * @param _safeTxHash The hash of the Safe transaction
+   * @param _signer The address of the signer
+   */
+  error InvalidSigner(bytes32 _safeTxHash, address _signer);
+
+  /**
+   * @notice Thrown when attempting to disapprove a transaction hash that hasn't been approved
+   */
+  error TxHashNotApproved();
 
   // ~~~ ADMIN METHODS ~~~
 
@@ -159,7 +190,7 @@ interface ISafeEntrypoint is ISafeManageable {
   function queueTransaction(address _actionsBuilder) external returns (uint256 _txId);
 
   /**
-   * @notice Queues an arbitrary transaction for execution after a 7-day delay
+   * @notice Queues an arbitrary transaction for execution after a long delay
    * @dev Can only be called by the Safe owners
    * @param _action The action to queue
    * @return _txId The ID of the queued transaction
@@ -184,11 +215,11 @@ interface ISafeEntrypoint is ISafeManageable {
   function executeTransaction(uint256 _txId, address[] calldata _signers) external payable;
 
   /**
-   * @notice Unqueues a pending transaction before it is executed
-   * @dev Can only be called by the Safe owners
-   * @param _txId The ID of the transaction to unqueue
+   * @notice Disapproves a Safe transaction hash
+   * @dev Can be called by any Safe owner
+   * @param _safeTxHash The hash of the Safe transaction to disapprove
    */
-  function unqueueTransaction(uint256 _txId) external;
+  function disapproveSafeTransactionHash(bytes32 _safeTxHash) external;
 
   // ~~~ VIEW METHODS ~~~
 
@@ -198,6 +229,7 @@ interface ISafeEntrypoint is ISafeManageable {
    * @return _actionsBuilder The actions builder contract address associated
    * @return _actionsData The encoded actions data
    * @return _executableAt The timestamp from which the transaction can be executed
+   * @return _expiresAt The timestamp from which the transaction expires
    * @return _isExecuted Whether the transaction has been executed
    */
   function getTransactionInfo(uint256 _txId)

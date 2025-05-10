@@ -26,6 +26,9 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   uint256 public immutable LONG_EXECUTION_DELAY;
 
   /// @inheritdoc ISafeEntrypoint
+  uint256 public immutable DEFAULT_TX_EXPIRY_DELAY;
+
+  /// @inheritdoc ISafeEntrypoint
   uint256 public transactionNonce;
 
   /// @notice Maps an actions builder to its approval expiry time
@@ -34,23 +37,29 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
   /// @notice Maps a transaction ID to its information
   mapping(uint256 _txId => TransactionInfo _txInfo) internal _transactionInfo;
 
+  /// @inheritdoc ISafeEntrypoint
+  mapping(address _signer => mapping(bytes32 _safeTxHash => bool _isDisapproved)) public disapprovedHashes;
+
   /**
    * @notice Constructor that sets up the Safe and MultiSendCallOnly contracts
    * @param _safe The Gnosis Safe contract address
    * @param _multiSendCallOnly The MultiSendCallOnly contract address
    * @param _shortExecutionDelay The short execution delay (in seconds)
    * @param _longExecutionDelay The long execution delay (in seconds)
+   * @param _defaultTxExpiryDelay The default expiry delay for transactions
    */
   constructor(
     address _safe,
     address _multiSendCallOnly,
     uint256 _shortExecutionDelay,
-    uint256 _longExecutionDelay
+    uint256 _longExecutionDelay,
+    uint256 _defaultTxExpiryDelay
   ) SafeManageable(_safe) {
     MULTI_SEND_CALL_ONLY = _multiSendCallOnly;
 
     SHORT_EXECUTION_DELAY = _shortExecutionDelay;
     LONG_EXECUTION_DELAY = _longExecutionDelay;
+    DEFAULT_TX_EXPIRY_DELAY = _defaultTxExpiryDelay;
   }
 
   // ~~~ ADMIN METHODS ~~~
@@ -76,11 +85,15 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     // Collect actions from the builder
     IActionsBuilder.Action[] memory _actions = _fetchActions(_actionsBuilder);
 
+    // Use default expiry delay if duration is 0
+    _expiryDelay = _expiryDelay == 0 ? DEFAULT_TX_EXPIRY_DELAY : _expiryDelay;
+
     // Store the transaction information
     _transactionInfo[_txId] = TransactionInfo({
       actionsBuilder: _actionsBuilder,
       actionsData: abi.encode(_actions),
       executableAt: block.timestamp + SHORT_EXECUTION_DELAY,
+      expiresAt: block.timestamp + SHORT_EXECUTION_DELAY + _expiryDelay,
       isExecuted: false
     });
 
@@ -93,11 +106,15 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     // Generate a simple transaction ID
     _txId = ++transactionNonce;
 
+    // Use default expiry delay if duration is 0
+    _expiryDelay = _expiryDelay == 0 ? DEFAULT_TX_EXPIRY_DELAY : _expiryDelay;
+
     // Store the transaction information
     _transactionInfo[_txId] = TransactionInfo({
       actionsBuilder: address(0),
       actionsData: abi.encode(_action),
       executableAt: block.timestamp + LONG_EXECUTION_DELAY,
+      expiresAt: block.timestamp + LONG_EXECUTION_DELAY + _expiryDelay,
       isExecuted: false
     });
 
@@ -125,27 +142,34 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     bytes memory _multiSendData = _buildMultiSendData(_actions);
     bytes32 _safeTxHash = _getSafeTransactionHash(_multiSendData, SAFE.nonce());
 
+    // Check if any of the provided signers has disapproved the hash or has not approved it
+    uint256 _signersLength = _signers.length;
+    address _signer;
+    for (uint256 _i; _i < _signersLength; ++_i) {
+      _signer = _signers[_i];
+      if (disapprovedHashes[_signer][_safeTxHash] || SAFE.approvedHashes(_signer, _safeTxHash) != 1) {
+        revert InvalidSigner(_safeTxHash, _signer);
+      }
+    }
+
     _executeTransaction(_txId, _safeTxHash, _signers, _multiSendData);
   }
 
-  /// @inheritdoc ISafeEntrypoint
-  function unqueueTransaction(uint256 _txId) external isSafeOwner {
-    TransactionInfo storage _txInfo = _transactionInfo[_txId];
+  /**
+   * @notice Disapproves a Safe transaction hash
+   * @dev Can be called by any Safe owner
+   * @param _safeTxHash The hash of the Safe transaction to disapprove
+   */
+  function disapproveSafeTransactionHash(bytes32 _safeTxHash) external isSafeOwner {
+    // Check if the hash has been approved in the Safe
+    if (SAFE.approvedHashes(msg.sender, _safeTxHash) != 1) {
+      revert SafeTransactionHashNotApproved();
+    }
 
-    // Check if the transaction exists
-    if (_txInfo.executableAt == 0) revert TransactionNotQueued();
+    // Mark the hash as disapproved for this signer
+    disapprovedHashes[msg.sender][_safeTxHash] = true;
 
-    // Check if the transaction has already been executed
-    if (_txInfo.isExecuted) revert TransactionAlreadyExecuted();
-
-    // Clear the transaction information
-    delete _transactionInfo[_txId];
-
-    // NOTE: only for event logging
-    bool _isArbitrary = _txInfo.actionsBuilder == address(0);
-
-    // NOTE: emit event for off-chain monitoring
-    emit TransactionUnqueued(_txId, _isArbitrary);
+    emit SafeTransactionHashDisapproved(_safeTxHash, msg.sender);
   }
 
   // ~~~ EXTERNAL VIEW METHODS ~~~
@@ -225,6 +249,7 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
 
     if (_txInfo.executableAt > block.timestamp) revert TransactionNotYetExecutable();
     if (_txInfo.isExecuted) revert TransactionAlreadyExecuted();
+    if (_txInfo.expiresAt <= block.timestamp) revert TransactionExpired();
 
     address[] memory _sortedSigners = _sortSigners(_signers);
     bytes memory _signatures = _buildApprovedHashSignatures(_sortedSigners);
@@ -359,10 +384,12 @@ contract SafeEntrypoint is SafeManageable, ISafeEntrypoint {
     uint256 _approvedHashSignersCount;
 
     // Single pass through all owners
+    address _safeOwner;
     for (uint256 _i; _i < _safeOwnersLength; ++_i) {
-      // Check if this owner has approved the hash
-      if (SAFE.approvedHashes(_safeOwners[_i], _safeTxHash) == 1) {
-        _tempSigners[_approvedHashSignersCount] = _safeOwners[_i];
+      _safeOwner = _safeOwners[_i];
+      // Check if this owner has approved the hash and hasn't disapproved it
+      if (!disapprovedHashes[_safeOwner][_safeTxHash] && SAFE.approvedHashes(_safeOwner, _safeTxHash) == 1) {
+        _tempSigners[_approvedHashSignersCount] = _safeOwner;
         ++_approvedHashSignersCount;
       }
     }
