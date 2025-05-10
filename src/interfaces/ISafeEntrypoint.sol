@@ -26,12 +26,14 @@ interface ISafeEntrypoint is ISafeManageable {
    * @param actionsBuilders The batch of actions builder contract addresses associated
    * @param actionsData The encoded actions data
    * @param executableAt The timestamp from which the transaction can be executed
+   * @param expiresAt The timestamp from which the transaction expires
    * @param isExecuted Whether the transaction has been executed
    */
   struct TransactionInfo {
     address[] actionsBuilders;
     bytes actionsData;
     uint256 executableAt;
+    uint256 expiresAt;
     bool isExecuted;
   }
 
@@ -54,6 +56,12 @@ interface ISafeEntrypoint is ISafeManageable {
    * @return _longExecutionDelay The long execution delay (in seconds)
    */
   function LONG_EXECUTION_DELAY() external view returns (uint256 _longExecutionDelay);
+
+  /**
+   * @notice Gets the default expiration time for transactions
+   * @return _defaultTxExpiryDelay The default expiry delay (in seconds)
+   */
+  function DEFAULT_TX_EXPIRY_DELAY() external view returns (uint256 _defaultTxExpiryDelay);
 
   /**
    * @notice Gets the global nonce
@@ -139,13 +147,6 @@ interface ISafeEntrypoint is ISafeManageable {
   error SafeTransactionHashNotApproved();
 
   /**
-   * @notice Thrown when a signer is invalid
-   * @param _signer The address of the signer
-   * @param _safeTxHash The hash of the Safe transaction
-   */
-  error InvalidSigner(address _signer, bytes32 _safeTxHash);
-
-  /**
    * @notice Thrown when an empty actions builders array is provided
    */
   error EmptyActionsBuildersArray();
@@ -160,6 +161,23 @@ interface ISafeEntrypoint is ISafeManageable {
    */
   error NotSuccess();
 
+  /**
+   * @notice Thrown when a transaction has expired
+   */
+  error TransactionExpired();
+
+  /**
+   * @notice Thrown when a signer is invalid
+   * @param _safeTxHash The hash of the Safe transaction
+   * @param _signer The address of the signer
+   */
+  error InvalidSigner(bytes32 _safeTxHash, address _signer);
+
+  /**
+   * @notice Thrown when attempting to disapprove a transaction hash that hasn't been approved
+   */
+  error TxHashNotApproved();
+
   // ~~~ ADMIN METHODS ~~~
 
   /**
@@ -173,23 +191,28 @@ interface ISafeEntrypoint is ISafeManageable {
   // ~~~ TRANSACTION METHODS ~~~
 
   /**
-   * @notice Queues a transaction bulked from multiple actions builders for execution after a 1-hour delay
+   * @notice Queues a transaction bulked from multiple actions builders for execution after a small delay
    * @dev Can only be called by the Safe owners
    * @dev The actions builder contracts must be pre-approved using approveActionsBuilder
    * @dev The actions builder contracts must not be already in the queue
    * @param _actionsBuilders The batch of actions builder contract addresses to queue
+   * @param _expiryDelay The duration (in seconds) after which the transaction expires (after execution delay)
    * @return _txId The ID of the queued transaction
    */
-  function queueTransaction(address[] calldata _actionsBuilders) external returns (uint256 _txId);
+  function queueTransaction(address[] calldata _actionsBuilders, uint256 _expiryDelay) external returns (uint256 _txId);
 
   /**
-   * @notice Queues an arbitrary transaction for execution after a 7-day delay
+   * @notice Queues an arbitrary transaction for execution after a long delay
    * @dev Can only be called by the Safe owners
    * @dev The actions must be properly formatted for each target contract
    * @param _actions The batch of actions to queue
+   * @param _expiryDelay The duration (in seconds) after which the transaction expires (after execution delay)
    * @return _txId The ID of the queued transaction
    */
-  function queueTransaction(IActionsBuilder.Action[] calldata _actions) external returns (uint256 _txId);
+  function queueTransaction(
+    IActionsBuilder.Action[] calldata _actions,
+    uint256 _expiryDelay
+  ) external returns (uint256 _txId);
 
   /**
    * @notice Executes a queued transaction using the approved hash signers
@@ -234,12 +257,19 @@ interface ISafeEntrypoint is ISafeManageable {
    * @return _actionsBuilders The batch of actions builder contract addresses associated
    * @return _actionsData The encoded actions data
    * @return _executableAt The timestamp from which the transaction can be executed
+   * @return _expiresAt The timestamp from which the transaction expires
    * @return _isExecuted Whether the transaction has been executed
    */
   function getTransactionInfo(uint256 _txId)
     external
     view
-    returns (address[] memory _actionsBuilders, bytes memory _actionsData, uint256 _executableAt, bool _isExecuted);
+    returns (
+      address[] memory _actionsBuilders,
+      bytes memory _actionsData,
+      uint256 _executableAt,
+      uint256 _expiresAt,
+      bool _isExecuted
+    );
 
   /**
    * @notice Gets the Safe transaction hash for a transaction ID
