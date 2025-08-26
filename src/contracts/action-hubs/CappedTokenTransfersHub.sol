@@ -4,10 +4,13 @@ pragma solidity 0.8.29;
 import {ICappedTokenTransfersHub} from 'interfaces/action-hubs/ICappedTokenTransfersHub.sol';
 import {SafeManageable} from 'src/contracts/SafeManageable.sol';
 
+import {EnumerableSetLib} from 'solady/utils/EnumerableSetLib.sol';
 import {ActionHub} from 'src/contracts/action-hubs/ActionHub.sol';
 import {CappedTokenTransfers} from 'src/contracts/actions-builders/CappedTokenTransfers.sol';
 
 contract CappedTokenTransfersHub is ActionHub, ICappedTokenTransfersHub, SafeManageable {
+  using EnumerableSetLib for EnumerableSetLib.AddressSet;
+
   /// @inheritdoc ICappedTokenTransfersHub
   address public immutable RECIPIENT;
 
@@ -25,6 +28,12 @@ contract CappedTokenTransfersHub is ActionHub, ICappedTokenTransfersHub, SafeMan
 
   /// @inheritdoc ICappedTokenTransfersHub
   mapping(address _token => uint256 _totalSpent) public totalSpent;
+
+  EnumerableSetLib.AddressSet private __tokens;
+
+  function tokens() external view returns (address[] memory) {
+    return __tokens.values();
+  }
 
   /**
    * @notice Constructor that sets up the actionHub
@@ -49,6 +58,7 @@ contract CappedTokenTransfersHub is ActionHub, ICappedTokenTransfersHub, SafeMan
 
     for (uint256 i = 0; i < _tokens.length; i++) {
       cap[_tokens[i]] = _caps[i];
+      __tokens.add(_tokens[i]);
     }
   }
 

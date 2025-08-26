@@ -34,19 +34,35 @@ contract DeploySaferSafe is Constants, Script {
   function deploySaferSafe() public {
     vm.startBroadcast();
 
-    // Deploy the SafeEntrypointFactory contract
-    safeEntrypointFactory = new SafeEntrypointFactory(address(MULTI_SEND_CALL_ONLY));
+    // // Deploy the SafeEntrypointFactory contract
+    // safeEntrypointFactory = new SafeEntrypointFactory(address(MULTI_SEND_CALL_ONLY));
 
-    // Deploy the AllowanceClaimorFactory contract
-    allowanceClaimorFactory = new AllowanceClaimorFactory();
-    // Deploy the ApproveActionFactory contract
-    approveActionFactory = new ApproveActionFactory();
+    // // Deploy the AllowanceClaimorFactory contract
+    // allowanceClaimorFactory = new AllowanceClaimorFactory();
+    // // Deploy the ApproveActionFactory contract
+    // approveActionFactory = new ApproveActionFactory();
     // Deploy the CappedTokenTransfersFactory contract
     cappedTokenTransfersHubFactory = new CappedTokenTransfersHubFactory();
-    // Deploy the SimpleActionsFactory contract
-    simpleActionsFactory = new SimpleActionsFactory();
-    // Deploy the SimpleTransfersFactory contract
-    simpleTransfersFactory = new SimpleTransfersFactory();
+
+    address[] memory _tokens = new address[](1);
+    _tokens[0] = 0xBad58e133138549936D2576ebC33251bE841d3e9;
+
+    uint256[] memory _caps = new uint256[](1);
+    _caps[0] = 1;
+
+    address CTT = cappedTokenTransfersHubFactory.createCappedTokenTransfersHub({
+      _safe: 0x3935C871e4f33EfE65400A010954024Ed3E352f2,
+      _recipient: 0xBad58e133138549936D2576ebC33251bE841d3e9,
+      _tokens: _tokens,
+      _caps: _caps,
+      _epochLength: 1
+    });
+
+    CappedTokenTransfersHub(CTT).createNewActionBuilder(0xBad58e133138549936D2576ebC33251bE841d3e9, 1);
+    // // Deploy the SimpleActionsFactory contract
+    // simpleActionsFactory = new SimpleActionsFactory();
+    // // Deploy the SimpleTransfersFactory contract
+    // simpleTransfersFactory = new SimpleTransfersFactory();
 
     vm.stopBroadcast();
   }
