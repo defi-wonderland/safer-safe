@@ -1,6 +1,6 @@
-# Safer Safe
+# Canon Guard
 
-Safer Safe is a multisig solution designed to significantly enhance security, minimize reliance on external services, and simplify the verification of recurring transactions. Safer Safe leverages fully on-chain Actions contracts and dynamic timelocks to ensure security, transparency, and resilience.
+Canon Guard is a multisig solution designed to significantly enhance security, minimize reliance on external services, and simplify the verification of recurring transactions. Safer Safe leverages fully on-chain Actions contracts and dynamic timelocks to ensure security, transparency, and resilience.
 
 ## Setup
 

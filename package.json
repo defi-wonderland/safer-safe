@@ -1,11 +1,10 @@
 {
-  "name": "safer-safe",
-  "version": "0.0.1",
-  "description": "Safer Safe",
-  "homepage": "https://github.com/defi-wonderland/safer-safe#readme",
+  "name": "@defi-wonderland/canon-guard",
+  "version": "0.0.1-beta1",
+  "description": "Canon Guard",
+  "homepage": "https://github.com/defi-wonderland/canon-guard#readme",
   "repository": {
-    "type": "git",
-    "url": "git+https://github.com/defi-wonderland/safer-safe.git"
+    "url": "https://github.com/defi-wonderland/canon-guard"
   },
   "license": "MIT",
   "author": "Wonderland",
