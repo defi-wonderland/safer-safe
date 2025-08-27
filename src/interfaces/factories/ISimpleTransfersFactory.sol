@@ -22,9 +22,13 @@ interface ISimpleTransfersFactory {
    *    ]
    *  ]
    * @param _transferActions The array of transfer actions
-   * @return _simpleTransfers The SimpleTransfers contract address
+   * @return _actionBuilder The SimpleTransfers action builder address
    */
   function createSimpleTransfers(ISimpleTransfers.TransferAction[] memory _transferActions)
     external
-    returns (address _simpleTransfers);
+    returns (address _actionBuilder);
+
+  function createSimpleTransfers(ISimpleTransfers.TransferAction memory _transferAction)
+    external
+    returns (address _actionBuilder);
 }

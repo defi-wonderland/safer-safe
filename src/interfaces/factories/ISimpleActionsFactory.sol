@@ -30,10 +30,14 @@ interface ISimpleActionsFactory {
    *  ]
    * Where 0x0000000000000000000000000000000000000000000000000000000000c0ffee0000000000000000000000000000000000000000000000000000000000000001
    * is the result of abi.encode(address(0xC0FFEE), uint256(1))
-   * @param _smplActions The array of simple actions
-   * @return _simpleActions The SimpleActions contract address
+   * @param _simpleActions The array of simple actions
+   * @return _actionBuilder The SimpleActions action builder address
    */
-  function createSimpleActions(ISimpleActions.SimpleAction[] memory _smplActions)
+  function createSimpleActions(ISimpleActions.SimpleAction[] memory _simpleActions)
     external
-    returns (address _simpleActions);
+    returns (address _actionBuilder);
+
+  function createSimpleActions(ISimpleActions.SimpleAction memory _simpleAction)
+    external
+    returns (address _actionBuilder);
 }
