@@ -71,4 +71,10 @@ interface ICappedTokenTransfersHub is IActionHub, ISafeManageable {
    * @return _totalSpent The total amount of tokens spent
    */
   function totalSpent(address _token) external view returns (uint256 _totalSpent);
+
+  /**
+   * @notice Gets the list of tokens capped
+   * @return _tokens List of token addresses
+   */
+  function tokens() external view returns (address[] memory _tokens);
 }
