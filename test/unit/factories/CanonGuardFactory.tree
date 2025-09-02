@@ -1,0 +1,8 @@
+UnitCanonGuardFactory::constructor
+└── when called
+    └── it should deploy a new CanonGuardFactory with correct parameters
+
+UnitCanonGuardFactory::createCanonGuard
+└── when called
+    ├── it should deploy a new CanonGuard
+    └── it should match the parameters sent to the constructor

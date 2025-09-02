@@ -13,9 +13,9 @@ contract DisapproveActionFactory is IDisapproveActionFactory {
 
   /// @inheritdoc IDisapproveActionFactory
   function createDisapproveAction(
-    address _safeEntrypoint,
+    address _canonGuard,
     address _actionsBuilder
   ) external returns (address _disapproveAction) {
-    _disapproveAction = address(new DisapproveAction(_safeEntrypoint, _actionsBuilder));
+    _disapproveAction = address(new DisapproveAction(_canonGuard, _actionsBuilder));
   }
 }

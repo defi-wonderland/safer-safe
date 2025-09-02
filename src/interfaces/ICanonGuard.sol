@@ -4,10 +4,10 @@ pragma solidity 0.8.29;
 import {ISafeManageable} from 'interfaces/ISafeManageable.sol';
 
 /**
- * @title ISafeEntrypoint
- * @notice Interface for the SafeEntrypoint contract
+ * @title ICanonGuard
+ * @notice Interface for the CanonGuard contract
  */
-interface ISafeEntrypoint is ISafeManageable {
+interface ICanonGuard is ISafeManageable {
   // ~~~ STRUCTS ~~~
 
   /**

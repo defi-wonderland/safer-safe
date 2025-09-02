@@ -8,29 +8,29 @@ import {IApprover} from 'src/interfaces/IApprover.sol';
 import {ISafeManageable} from 'src/interfaces/ISafeManageable.sol';
 
 contract UnitApprover is Test {
-  address public entrypoint;
+  address public canonGuard;
   address public safe;
   Approver public approver;
 
   function setUp() external {
-    entrypoint = makeAddr('entrypoint');
+    canonGuard = makeAddr('canonGuard');
     safe = makeAddr('safe');
 
-    _mockAndExpect(entrypoint, abi.encodeWithSelector(ISafeManageable.SAFE.selector), abi.encode(ISafe(safe)));
+    _mockAndExpect(canonGuard, abi.encodeWithSelector(ISafeManageable.SAFE.selector), abi.encode(ISafe(safe)));
 
-    approver = new Approver(entrypoint);
+    approver = new Approver(canonGuard);
   }
 
-  function test_ConstructorWhenCalled(address _entrypoint, address _safe) external {
-    _assumeFuzzable(_entrypoint);
+  function test_ConstructorWhenCalled(address _canonGuard, address _safe) external {
+    _assumeFuzzable(_canonGuard);
     _assumeFuzzable(_safe);
 
-    _mockAndExpect(_entrypoint, abi.encodeWithSelector(ISafeManageable.SAFE.selector), abi.encode(ISafe(_safe)));
+    _mockAndExpect(_canonGuard, abi.encodeWithSelector(ISafeManageable.SAFE.selector), abi.encode(ISafe(_safe)));
 
-    approver = new Approver(_entrypoint);
+    approver = new Approver(_canonGuard);
 
-    // it sets the entrypoint
-    assertEq(address(approver.ENTRYPOINT()), _entrypoint);
+    // it sets the canonGuard
+    assertEq(address(approver.CANON_GUARD()), _canonGuard);
     // it sets the safe
     assertEq(address(approver.SAFE()), _safe);
   }
@@ -42,7 +42,7 @@ contract UnitApprover is Test {
   ) external {
     // it gets the safe tx hash
     _mockAndExpect(
-      entrypoint,
+      canonGuard,
       abi.encodeWithSignature('getSafeTransactionHash(address,uint256)', _actionBuilder, _safeNonce),
       abi.encode(_safeTxHash)
     );

@@ -3,7 +3,7 @@ pragma solidity 0.8.29;
 
 import {Test} from 'forge-std/Test.sol';
 
-import {DeploySaferSafe} from 'script/DeploySaferSafe.s.sol';
+import {DeployCanonGuardFactories} from 'script/DeployCanonGuardFactories.s.sol';
 
 import {AllowanceClaimorFactory} from 'contracts/factories/AllowanceClaimorFactory.sol';
 import {CappedTokenTransfersHubFactory} from 'contracts/factories/CappedTokenTransfersHubFactory.sol';
@@ -11,41 +11,42 @@ import {SimpleActionsFactory} from 'contracts/factories/SimpleActionsFactory.sol
 import {SimpleTransfersFactory} from 'contracts/factories/SimpleTransfersFactory.sol';
 
 import {IAllowanceClaimorFactory} from 'interfaces/factories/IAllowanceClaimorFactory.sol';
+
+import {ICanonGuardFactory} from 'interfaces/factories/ICanonGuardFactory.sol';
 import {ICappedTokenTransfersHubFactory} from 'interfaces/factories/ICappedTokenTransfersHubFactory.sol';
-import {ISafeEntrypointFactory} from 'interfaces/factories/ISafeEntrypointFactory.sol';
 import {ISimpleActionsFactory} from 'interfaces/factories/ISimpleActionsFactory.sol';
 import {ISimpleTransfersFactory} from 'interfaces/factories/ISimpleTransfersFactory.sol';
 
 import {Constants} from 'script/Constants.sol';
 
-contract UnitDeploySaferSafe is Constants, Test {
-  DeploySaferSafe public deploySaferSafe;
+contract UnitDeployCanonGuardFactories is Constants, Test {
+  DeployCanonGuardFactories public deployCanonGuardFactories;
 
-  ISafeEntrypointFactory internal _auxSafeEntrypointFactory;
+  ICanonGuardFactory internal _auxCanonGuardFactory;
 
   function setUp() public {
-    // Deploy the DeploySaferSafe contract
-    deploySaferSafe = new DeploySaferSafe();
+    // Deploy the DeployCanonGuardFactories contract
+    deployCanonGuardFactories = new DeployCanonGuardFactories();
 
-    // Deploy the SafeEntrypointFactory contract
-    _auxSafeEntrypointFactory =
-      ISafeEntrypointFactory(deployCode('SafeEntrypointFactory', abi.encode(MULTI_SEND_CALL_ONLY)));
+    // Deploy the CanonGuardFactory contract
+    _auxCanonGuardFactory = ICanonGuardFactory(deployCode('CanonGuardFactory', abi.encode(MULTI_SEND_CALL_ONLY)));
   }
 
   function test_WhenRun() public {
     // Run the deployment script
-    deploySaferSafe.deploySaferSafe();
+    deployCanonGuardFactories.deployCanonGuardFactories();
 
     // Get the deployed contracts
-    ISafeEntrypointFactory _safeEntrypointFactory = deploySaferSafe.safeEntrypointFactory();
-    IAllowanceClaimorFactory _allowanceClaimorFactory = deploySaferSafe.allowanceClaimorFactory();
-    ICappedTokenTransfersHubFactory _cappedTokenTransfersHubFactory = deploySaferSafe.cappedTokenTransfersHubFactory();
-    ISimpleActionsFactory _simpleActionsFactory = deploySaferSafe.simpleActionsFactory();
-    ISimpleTransfersFactory _simpleTransfersFactory = deploySaferSafe.simpleTransfersFactory();
+    ICanonGuardFactory _canonGuardFactory = deployCanonGuardFactories.canonGuardFactory();
+    IAllowanceClaimorFactory _allowanceClaimorFactory = deployCanonGuardFactories.allowanceClaimorFactory();
+    ICappedTokenTransfersHubFactory _cappedTokenTransfersHubFactory =
+      deployCanonGuardFactories.cappedTokenTransfersHubFactory();
+    ISimpleActionsFactory _simpleActionsFactory = deployCanonGuardFactories.simpleActionsFactory();
+    ISimpleTransfersFactory _simpleTransfersFactory = deployCanonGuardFactories.simpleTransfersFactory();
 
-    // It should deploy the SafeEntrypointFactory contract with correct args
-    assertEq(address(_safeEntrypointFactory).code, address(_auxSafeEntrypointFactory).code);
-    assertEq(_safeEntrypointFactory.MULTI_SEND_CALL_ONLY(), address(MULTI_SEND_CALL_ONLY));
+    // It should deploy the CanonGuardFactory contract with correct args
+    assertEq(address(_canonGuardFactory).code, address(_auxCanonGuardFactory).code);
+    assertEq(_canonGuardFactory.MULTI_SEND_CALL_ONLY(), address(MULTI_SEND_CALL_ONLY));
 
     // It should deploy the AllowanceClaimorFactory contract
     assertEq(address(_allowanceClaimorFactory).code, type(AllowanceClaimorFactory).runtimeCode);

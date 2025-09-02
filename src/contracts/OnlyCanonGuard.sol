@@ -4,14 +4,14 @@ pragma solidity 0.8.29;
 import {BaseTransactionGuard} from '@safe-smart-account/base/GuardManager.sol';
 import {ITransactionGuard} from '@safe-smart-account/base/GuardManager.sol';
 import {Enum} from '@safe-smart-account/libraries/Enum.sol';
-import {IOnlyEntrypointGuard} from 'interfaces/IOnlyEntrypointGuard.sol';
+import {IOnlyCanonGuard} from 'interfaces/IOnlyCanonGuard.sol';
 
 /**
- * @title OnlyEntrypointGuard
- * @notice Guard that ensures transactions are executed through the entrypoint
+ * @title OnlyCanonGuard
+ * @notice Guard that ensures transactions are executed through the canon guard
  */
 // solhint-disable-next-line payable-fallback
-abstract contract OnlyEntrypointGuard is BaseTransactionGuard, IOnlyEntrypointGuard {
+abstract contract OnlyCanonGuard is BaseTransactionGuard, IOnlyCanonGuard {
   // ~~~ FALLBACK ~~~
 
   /**
@@ -36,7 +36,7 @@ abstract contract OnlyEntrypointGuard is BaseTransactionGuard, IOnlyEntrypointGu
     bytes memory, /* _signatures */
     address _msgSender
   ) external view virtual override {
-    // Allow transactions from the entrypoint or emergency caller
+    // Allow transactions from the canon guard or emergency caller
     if (_msgSender != address(this)) {
       revert UnauthorizedSender(_msgSender);
     }

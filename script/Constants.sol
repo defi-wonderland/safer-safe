@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.29;
 
-import {ISafeEntrypointFactory} from 'interfaces/factories/ISafeEntrypointFactory.sol';
+import {ICanonGuardFactory} from 'interfaces/factories/ICanonGuardFactory.sol';
 
 import {ISafe} from '@safe-smart-account/interfaces/ISafe.sol';
 import {MultiSendCallOnly} from '@safe-smart-account/libraries/MultiSendCallOnly.sol';
@@ -15,11 +15,11 @@ abstract contract Constants {
   SafeProxyFactory public constant SAFE_PROXY_FACTORY = SafeProxyFactory(0x4e1DCf7AD4e460CfD30791CCC4F9c8a4f820ec67);
   MultiSendCallOnly public constant MULTI_SEND_CALL_ONLY = MultiSendCallOnly(0x9641d764fc13c8B624c04430C7356C1C7C8102e2);
 
-  // Safer Safe
-  ISafeEntrypointFactory public constant SAFE_ENTRYPOINT_FACTORY =
-    ISafeEntrypointFactory(0x34A1D3fff3958843C43aD80F30b94c510645C316); // TODO: Replace with the address of the SafeEntrypointFactory contract once deployed
+  // Canon Guard
+  ICanonGuardFactory public constant CANON_GUARD_FACTORY =
+    ICanonGuardFactory(0x34A1D3fff3958843C43aD80F30b94c510645C316); // TODO: Replace with the address of the CanonGuardFactory contract once deployed
 
-  // Wonderland Safer Safe
+  // Wonderland Canon Guard
   ISafe public constant SAFE_PROXY = ISafe(0x74fEa3FB0eD030e9228026E7F413D66186d3D107);
   uint256 public constant SHORT_TX_EXECUTION_DELAY = 1 hours;
   uint256 public constant LONG_TX_EXECUTION_DELAY = 7 days;

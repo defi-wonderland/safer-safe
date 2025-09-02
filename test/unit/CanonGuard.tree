@@ -1,4 +1,4 @@
-UnitSafeEntrypoint::constructor
+UnitCanonGuard::constructor
 └── when passing valid parameters
     ├── it sets safe address
     ├── it sets multiSendCallOnly address
@@ -7,7 +7,7 @@ UnitSafeEntrypoint::constructor
     └── it set transaction expiry delay
 
 
-UnitSafeEntrypoint::approveActionsBuilder
+UnitCanonGuard::approveActionsBuilder
 ├── when caller is safe
 │   ├── when approval duration is greater than max approval duration
 │   │   └── it reverts with InvalidApprovalDuration
@@ -20,7 +20,7 @@ UnitSafeEntrypoint::approveActionsBuilder
     └── it reverts with NotSafeOwner
 
 
-UnitSafeEntrypoint::queueTransaction
+UnitCanonGuard::queueTransaction
 ├── when caller is safe owner
 │   ├── when queueing pre approved action
 │   │   ├── it sets transaction info
@@ -40,7 +40,7 @@ UnitSafeEntrypoint::queueTransaction
     └── it reverts with TransactionAlreadyQueued
 
 
-UnitSafeEntrypoint::queueHubTransaction
+UnitCanonGuard::queueHubTransaction
 ├── when hub is not a child
 │   └── it reverts with InvalidHubOrActionsBuilder
 ├── when caller is safe owner
@@ -62,7 +62,7 @@ UnitSafeEntrypoint::queueHubTransaction
     └── it reverts with TransactionAlreadyQueued
 
 
-UnitSafeEntrypoint::executeTransaction
+UnitCanonGuard::executeTransaction
 ├── when transaction is expired
 │   └── it reverts with TransactionExpired
 ├── when approved transaction is not yet executable
@@ -75,7 +75,7 @@ UnitSafeEntrypoint::executeTransaction
     └── it emits TransactionExecuted event
 
 
-UnitSafeEntrypoint::getSafeTransactionHash
+UnitCanonGuard::getSafeTransactionHash
 ├── when transaction exists
 │   ├── it returns correct hash
 │   └── when getting hash with nonce
@@ -83,11 +83,11 @@ UnitSafeEntrypoint::getSafeTransactionHash
 └── when transaction does not exist
     └── it reverts with NoTransactionQueued
 
-UnitSafeEntrypoint::getApprovedHashSigners
+UnitCanonGuard::getApprovedHashSigners
 ├── when transaction exists
 │   └── it returns approved signers
 └── when transaction does not exist
     └── it reverts with NoTransactionQueued
 
-UnitSafeEntrypoint::getSafeNonce
+UnitCanonGuard::getSafeNonce
 └── it returns correct nonce

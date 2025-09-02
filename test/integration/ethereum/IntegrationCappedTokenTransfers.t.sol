@@ -46,21 +46,21 @@ contract IntegrationCappedTokenTransfers is IntegrationEthereumBase {
     vm.prank(_safeOwners[0]);
     address _actionsBuilder = _cappedTokenTransfersHub.createNewActionBuilder(address(WETH), _safeBalance);
 
-    // Allow the SafeEntrypoint to call the contract
+    // Allow the CanonGuard to call the contract
     uint256 _approvalDuration = 1 days;
 
     vm.prank(address(SAFE_PROXY));
-    safeEntrypoint.approveActionsBuilder(address(_cappedTokenTransfersHub), _approvalDuration);
+    canonGuard.approveActionsBuilder(address(_cappedTokenTransfersHub), _approvalDuration);
 
     // Queue the transaction
     vm.prank(_safeOwners[0]);
-    safeEntrypoint.queueHubTransaction(address(_cappedTokenTransfersHub), _actionsBuilder);
+    canonGuard.queueHubTransaction(address(_cappedTokenTransfersHub), _actionsBuilder);
 
     // Wait for the timelock period
     vm.warp(block.timestamp + SHORT_TX_EXECUTION_DELAY);
 
     // Get the Safe transaction hash
-    bytes32 _safeTxHash = safeEntrypoint.getSafeTransactionHash(_actionsBuilder);
+    bytes32 _safeTxHash = canonGuard.getSafeTransactionHash(_actionsBuilder);
 
     // Approve the Safe transaction hash
     for (uint256 _i; _i < _safeThreshold; ++_i) {
@@ -70,7 +70,7 @@ contract IntegrationCappedTokenTransfers is IntegrationEthereumBase {
     vm.stopPrank();
 
     // Execute the transaction
-    safeEntrypoint.executeTransaction(_actionsBuilder);
+    canonGuard.executeTransaction(_actionsBuilder);
 
     // Assert the token balances
     assertEq(WETH.balanceOf(_recipient), _safeBalance);
@@ -82,21 +82,21 @@ contract IntegrationCappedTokenTransfers is IntegrationEthereumBase {
     vm.prank(_safeOwners[0]);
     address _actionsBuilder = _cappedTokenTransfersHub.createNewActionBuilder(address(WETH), 1000 ether);
 
-    // Allow the SafeEntrypoint to call the contract
+    // Allow the CanonGuard to call the contract
     uint256 _approvalDuration = 1 days;
 
     vm.prank(address(SAFE_PROXY));
-    safeEntrypoint.approveActionsBuilder(address(_cappedTokenTransfersHub), _approvalDuration);
+    canonGuard.approveActionsBuilder(address(_cappedTokenTransfersHub), _approvalDuration);
 
     // Queue the transaction
     vm.prank(_safeOwners[0]);
-    safeEntrypoint.queueHubTransaction(address(_cappedTokenTransfersHub), _actionsBuilder);
+    canonGuard.queueHubTransaction(address(_cappedTokenTransfersHub), _actionsBuilder);
 
     // Wait for the timelock period
     vm.warp(block.timestamp + SHORT_TX_EXECUTION_DELAY);
 
     // Get the Safe transaction hash
-    bytes32 _safeTxHash = safeEntrypoint.getSafeTransactionHash(_actionsBuilder);
+    bytes32 _safeTxHash = canonGuard.getSafeTransactionHash(_actionsBuilder);
 
     // Approve the Safe transaction hash
     for (uint256 _i; _i < _safeThreshold; ++_i) {
@@ -107,7 +107,7 @@ contract IntegrationCappedTokenTransfers is IntegrationEthereumBase {
 
     // Execute the transaction
     vm.expectRevert('GS013'); // tx does revert with CapExceeded(), but the revert is catched by the safe
-    safeEntrypoint.executeTransaction(_actionsBuilder);
+    canonGuard.executeTransaction(_actionsBuilder);
 
     // Assert the token balances
     assertEq(WETH.balanceOf(_recipient), 0);
