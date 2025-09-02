@@ -1,0 +1,4 @@
+UnitDisapproveActionFactory::createDisapproveAction
+└── when called
+    ├── it should deploy a DisapproveAction
+    └── it should match the parameters sent to the constructor
