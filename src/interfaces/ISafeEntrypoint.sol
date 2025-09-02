@@ -95,6 +95,21 @@ interface ISafeEntrypoint is ISafeManageable {
    */
   error InvalidDelayConfiguration();
 
+  /**
+   * @notice Thrown when the short transaction execution delay is greater than the long transaction execution delay
+   */
+  error ShortDelayCannotBeGreaterThanLongDelay();
+
+  /**
+   * @notice Thrown when the transaction expiry delay is greater than the maximum value (uint128.max)
+   */
+  error TxExpiryDelayCannotBeGreaterThanMax();
+
+  /**
+   * @notice Thrown when the long transaction execution delay is greater than the maximum value (uint128.max)
+   */
+  error LongDelayCannotBeGreaterThanMax();
+
   // ~~~ ADMIN METHODS ~~~
 
   /**

@@ -69,9 +69,10 @@ contract UnitSafeEntrypoint is Test {
     uint256 _txExpiryDelay,
     uint256 _maxApprovalDuration
   ) external {
-    _txExpiryDelay = bound(_txExpiryDelay, safeEntrypoint.MIN_EXPIRY_TIME(), type(uint256).max - type(uint64).max);
+    _txExpiryDelay = bound(_txExpiryDelay, safeEntrypoint.MIN_EXPIRY_TIME(), type(uint128).max - type(uint64).max);
     _maxApprovalDuration = bound(_maxApprovalDuration, safeEntrypoint.MIN_EXPIRY_TIME(), type(uint256).max);
-    _longTxExecutionDelay = bound(_longTxExecutionDelay, 0, type(uint256).max - type(uint64).max - _txExpiryDelay);
+    _shortTxExecutionDelay = bound(_shortTxExecutionDelay, 0, type(uint128).max - 1);
+    _longTxExecutionDelay = bound(_longTxExecutionDelay, _shortTxExecutionDelay, type(uint128).max);
 
     safeEntrypoint = new SafeEntrypointForTest(
       _safe,
@@ -125,21 +126,55 @@ contract UnitSafeEntrypoint is Test {
     );
   }
 
-  function test_ConstructorWhenTheDelayConfigurationIsInvalid(
-    uint256 _longTxExecutionDelay,
-    uint256 _txExpiryDelay
+  function test_ConstructorWhenTheShortExecutionDelayIsGreaterThanTheLongExecutionDelay(
+    uint256 _shortTxExecutionDelay,
+    uint256 _longTxExecutionDelay
   ) external {
-    _txExpiryDelay = bound(_txExpiryDelay, safeEntrypoint.MIN_EXPIRY_TIME(), type(uint256).max);
-    _longTxExecutionDelay = bound(_longTxExecutionDelay, type(uint256).max - _txExpiryDelay, type(uint256).max);
+    _longTxExecutionDelay = bound(_longTxExecutionDelay, 0, type(uint256).max - 1);
+    _shortTxExecutionDelay = bound(_shortTxExecutionDelay, _longTxExecutionDelay + 1, type(uint256).max);
 
     // it reverts
-    vm.expectRevert(ISafeEntrypoint.InvalidDelayConfiguration.selector);
+    vm.expectRevert(ISafeEntrypoint.ShortDelayCannotBeGreaterThanLongDelay.selector);
+    new SafeEntrypointForTest(
+      SAFE,
+      MULTI_SEND_CALL_ONLY,
+      _shortTxExecutionDelay,
+      _longTxExecutionDelay,
+      TX_EXPIRY_DELAY,
+      MAX_APPROVAL_DURATION,
+      EMERGENCY_TRIGGER,
+      EMERGENCY_CALLER
+    );
+  }
+
+  function test_ConstructorWhenTxExpiryDelayIsGreaterThanMax(uint256 _txExpiryDelay) external {
+    _txExpiryDelay = bound(_txExpiryDelay, uint256(type(uint128).max) + 1, type(uint256).max);
+
+    // it reverts
+    vm.expectRevert(ISafeEntrypoint.TxExpiryDelayCannotBeGreaterThanMax.selector);
+    new SafeEntrypointForTest(
+      SAFE,
+      MULTI_SEND_CALL_ONLY,
+      SHORT_TX_EXECUTION_DELAY,
+      LONG_TX_EXECUTION_DELAY,
+      _txExpiryDelay,
+      MAX_APPROVAL_DURATION,
+      EMERGENCY_TRIGGER,
+      EMERGENCY_CALLER
+    );
+  }
+
+  function test_ConstructorWhenLongDelayIsGreaterThanMax(uint256 _longTxExecutionDelay) external {
+    _longTxExecutionDelay = bound(_longTxExecutionDelay, uint256(type(uint128).max) + 1, type(uint256).max);
+
+    // it reverts
+    vm.expectRevert(ISafeEntrypoint.LongDelayCannotBeGreaterThanMax.selector);
     new SafeEntrypointForTest(
       SAFE,
       MULTI_SEND_CALL_ONLY,
       SHORT_TX_EXECUTION_DELAY,
       _longTxExecutionDelay,
-      _txExpiryDelay,
+      TX_EXPIRY_DELAY,
       MAX_APPROVAL_DURATION,
       EMERGENCY_TRIGGER,
       EMERGENCY_CALLER

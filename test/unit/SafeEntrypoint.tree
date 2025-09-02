@@ -9,7 +9,11 @@ UnitSafeEntrypoint::constructor
 │   └── it reverts
 ├── when the maximum approval duration is less than the minimum expiry time
 │   └── it reverts
-└── when the delay configuration is invalid
+├── when the short execution delay is greater than the long execution delay
+│   └── it reverts
+├── when tx expiry delay is greater than max
+│   └── it reverts
+└── when long delay is greater than max
     └── it reverts
 
 UnitSafeEntrypoint::approveActionsBuilder

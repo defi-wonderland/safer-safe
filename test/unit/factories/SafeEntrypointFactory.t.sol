@@ -34,9 +34,10 @@ contract UnitSafeEntrypointFactory is Test {
     vm.assume(_emergencyTrigger != address(0));
     vm.assume(_emergencyCaller != address(0));
 
-    _txExpiryDelay = bound(_txExpiryDelay, MIN_EXPIRY_TIME, type(uint256).max - type(uint64).max);
+    _txExpiryDelay = bound(_txExpiryDelay, MIN_EXPIRY_TIME, type(uint128).max);
     _maxApprovalDuration = bound(_maxApprovalDuration, MIN_EXPIRY_TIME, type(uint256).max);
-    _longTxExecutionDelay = bound(_longTxExecutionDelay, 0, type(uint256).max - type(uint64).max - _txExpiryDelay);
+    _shortTxExecutionDelay = bound(_shortTxExecutionDelay, 0, type(uint128).max - 1);
+    _longTxExecutionDelay = bound(_longTxExecutionDelay, _shortTxExecutionDelay, type(uint128).max);
 
     address _safeEntrypoint = safeEntrypointFactory.createSafeEntrypoint(
       _safe,

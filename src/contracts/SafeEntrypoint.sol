@@ -89,17 +89,9 @@ contract SafeEntrypoint is SafeManageable, OnlyEntrypointGuard, EmergencyModeHoo
 
     if (_txExpiryDelay < MIN_EXPIRY_TIME) revert TxExpiryDelayCannotBeLessThanMin();
     if (_maxApprovalDuration < MIN_EXPIRY_TIME) revert MaxApprovalDurationCannotBeLessThanMin();
-
-    /// NOTE: Reverts if both delays + max block.timestamp overflows.
-    /// Prevents wrong configuration that could brick the contract.
-    /// Assuming LONG_TX_EXECUTION_DELAY is bigger than SHORT_TX_EXECUTION_DELAY.
-    uint256 _max;
-    unchecked {
-      _max = type(uint64).max + _txExpiryDelay + _longTxExecutionDelay;
-    }
-    if (_max < type(uint64).max || _max < _txExpiryDelay || _max < _longTxExecutionDelay) {
-      revert InvalidDelayConfiguration();
-    }
+    if (_shortTxExecutionDelay > _longTxExecutionDelay) revert ShortDelayCannotBeGreaterThanLongDelay();
+    if (_txExpiryDelay > type(uint128).max) revert TxExpiryDelayCannotBeGreaterThanMax();
+    if (_longTxExecutionDelay > type(uint128).max) revert LongDelayCannotBeGreaterThanMax();
   }
 
   // ~~~ ADMIN METHODS ~~~
