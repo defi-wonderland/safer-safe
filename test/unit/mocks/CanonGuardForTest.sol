@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.29;
 
-import {ISafeEntrypoint, SafeEntrypoint} from 'contracts/SafeEntrypoint.sol';
+import {CanonGuard, ICanonGuard} from 'contracts/CanonGuard.sol';
 
-contract SafeEntrypointForTest is SafeEntrypoint {
+contract CanonGuardForTest is CanonGuard {
   constructor(
     address _safe,
     address _multiSendCallOnly,
@@ -14,7 +14,7 @@ contract SafeEntrypointForTest is SafeEntrypoint {
     address _emergencyTrigger,
     address _emergencyCaller
   )
-    SafeEntrypoint(
+    CanonGuard(
       _safe,
       _multiSendCallOnly,
       _shortTxExecutionDelay,
@@ -34,7 +34,7 @@ contract SafeEntrypointForTest is SafeEntrypoint {
     uint256 _expiresAt
   ) external {
     queuedTransactions[_actionsBuilder] =
-      ISafeEntrypoint.TransactionInfo({actionsData: _actionsData, executableAt: _executableAt, expiresAt: _expiresAt});
+      ICanonGuard.TransactionInfo({actionsData: _actionsData, executableAt: _executableAt, expiresAt: _expiresAt});
   }
 
   function mockApprovalExpiry(address _actionsBuilder, uint256 _expiry) external {

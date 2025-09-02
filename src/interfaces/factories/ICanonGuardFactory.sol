@@ -2,14 +2,14 @@
 pragma solidity 0.8.29;
 
 /**
- * @title ISafeEntrypointFactory
- * @notice Interface for the SafeEntrypointFactory contract
+ * @title ICanonGuardFactory
+ * @notice Interface for the CanonGuardFactory contract
  */
-interface ISafeEntrypointFactory {
+interface ICanonGuardFactory {
   // ~~~ FACTORY METHODS ~~~
 
   /**
-   * @notice Creates a SafeEntrypoint contract
+   * @notice Creates a CanonGuard contract
    * @param _safe The Gnosis Safe contract address
    * @param _shortTxExecutionDelay The short transaction execution delay (in seconds)
    * @param _longTxExecutionDelay The long transaction execution delay (in seconds)
@@ -17,9 +17,9 @@ interface ISafeEntrypointFactory {
    * @param _maxApprovalDuration The maximum approval duration for an actions builder or hub (in seconds)
    * @param _emergencyTrigger The emergency trigger address
    * @param _emergencyCaller The emergency caller address
-   * @return _safeEntrypoint The SafeEntrypoint contract address
+   * @return _canonGuard The CanonGuard contract address
    */
-  function createSafeEntrypoint(
+  function createCanonGuard(
     address _safe,
     uint256 _shortTxExecutionDelay,
     uint256 _longTxExecutionDelay,
@@ -27,7 +27,7 @@ interface ISafeEntrypointFactory {
     uint256 _maxApprovalDuration,
     address _emergencyTrigger,
     address _emergencyCaller
-  ) external returns (address _safeEntrypoint);
+  ) external returns (address _canonGuard);
 
   // ~~~ STORAGE METHODS ~~~
 

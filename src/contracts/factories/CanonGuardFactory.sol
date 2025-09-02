@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.29;
 
-import {SafeEntrypoint} from 'contracts/SafeEntrypoint.sol';
+import {CanonGuard} from 'contracts/CanonGuard.sol';
 
-import {ISafeEntrypointFactory} from 'interfaces/factories/ISafeEntrypointFactory.sol';
+import {ICanonGuardFactory} from 'interfaces/factories/ICanonGuardFactory.sol';
 
 /**
- * @title SafeEntrypointFactory
- * @notice Contract that deploys SafeEntrypoint contracts
+ * @title CanonGuardFactory
+ * @notice Contract that deploys CanonGuard contracts
  */
-contract SafeEntrypointFactory is ISafeEntrypointFactory {
+contract CanonGuardFactory is ICanonGuardFactory {
   // ~~~ STORAGE ~~~
 
-  /// @inheritdoc ISafeEntrypointFactory
+  /// @inheritdoc ICanonGuardFactory
   address public immutable MULTI_SEND_CALL_ONLY;
 
   // ~~~ CONSTRUCTOR ~~~
@@ -27,8 +27,8 @@ contract SafeEntrypointFactory is ISafeEntrypointFactory {
 
   // ~~~ FACTORY METHODS ~~~
 
-  /// @inheritdoc ISafeEntrypointFactory
-  function createSafeEntrypoint(
+  /// @inheritdoc ICanonGuardFactory
+  function createCanonGuard(
     address _safe,
     uint256 _shortTxExecutionDelay,
     uint256 _longTxExecutionDelay,
@@ -36,9 +36,9 @@ contract SafeEntrypointFactory is ISafeEntrypointFactory {
     uint256 _maxApprovalDuration,
     address _emergencyTrigger,
     address _emergencyCaller
-  ) external returns (address _safeEntrypoint) {
-    _safeEntrypoint = address(
-      new SafeEntrypoint(
+  ) external returns (address _canonGuard) {
+    _canonGuard = address(
+      new CanonGuard(
         _safe,
         MULTI_SEND_CALL_ONLY,
         _shortTxExecutionDelay,

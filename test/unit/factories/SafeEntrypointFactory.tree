@@ -1,8 +1,0 @@
-UnitSafeEntrypointFactory::constructor
-└── when called
-    └── it should deploy a new SafeEntrypointFactory with correct parameters
-
-UnitSafeEntrypointFactory::createSafeEntrypoint
-└── when called
-    ├── it should deploy a new SafeEntrypoint
-    └── it should match the parameters sent to the constructor

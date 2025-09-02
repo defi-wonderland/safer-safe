@@ -9,7 +9,7 @@ import {IApproveActionFactory} from 'interfaces/factories/IApproveActionFactory.
 import {IDisapproveActionFactory} from 'interfaces/factories/IDisapproveActionFactory.sol';
 import {IntegrationEthereumBase} from 'test/integration/ethereum/IntegrationEthereumBase.sol';
 
-contract IntegrationEntrypointManageActions is IntegrationEthereumBase {
+contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
   IApproveActionFactory public approveActionFactory;
   IApproveAction public approveAction;
 
@@ -27,26 +27,25 @@ contract IntegrationEntrypointManageActions is IntegrationEthereumBase {
     // Deploy the ApproveAction contract
     approveActionFactory = new ApproveActionFactory();
     approveAction = IApproveAction(
-      approveActionFactory.createApproveAction(address(safeEntrypoint), address(actionsBuilder), APPROVAL_DURATION)
+      approveActionFactory.createApproveAction(address(canonGuard), address(actionsBuilder), APPROVAL_DURATION)
     );
 
     // Deploy the DisapproveAction contract
     disapproveActionFactory = new DisapproveActionFactory();
-    disapproveAction = IDisapproveAction(
-      disapproveActionFactory.createDisapproveAction(address(safeEntrypoint), address(actionsBuilder))
-    );
+    disapproveAction =
+      IDisapproveAction(disapproveActionFactory.createDisapproveAction(address(canonGuard), address(actionsBuilder)));
   }
 
   function test_ApproveActionsBuilder() public {
     // Queue the transaction
     vm.prank(_safeOwners[0]);
-    safeEntrypoint.queueTransaction(address(approveAction));
+    canonGuard.queueTransaction(address(approveAction));
 
     // Wait for the timelock period
     vm.warp(block.timestamp + LONG_TX_EXECUTION_DELAY);
 
     // Get the Safe transaction hash
-    bytes32 _safeTxHash = safeEntrypoint.getSafeTransactionHash(address(approveAction));
+    bytes32 _safeTxHash = canonGuard.getSafeTransactionHash(address(approveAction));
 
     // Approve the Safe transaction hash
     for (uint256 _i; _i < _safeThreshold; ++_i) {
@@ -56,22 +55,22 @@ contract IntegrationEntrypointManageActions is IntegrationEthereumBase {
     vm.stopPrank();
 
     // Execute the transaction
-    safeEntrypoint.executeTransaction(address(approveAction));
+    canonGuard.executeTransaction(address(approveAction));
 
     // Assert if the actions builder is approved
-    assertEq(safeEntrypoint.approvalExpiries(address(actionsBuilder)), block.timestamp + APPROVAL_DURATION);
+    assertEq(canonGuard.approvalExpiries(address(actionsBuilder)), block.timestamp + APPROVAL_DURATION);
   }
 
   function test_DisapproveActionsBuilder() public {
     // Queue the transaction
     vm.prank(_safeOwners[0]);
-    safeEntrypoint.queueTransaction(address(disapproveAction));
+    canonGuard.queueTransaction(address(disapproveAction));
 
     // Wait for the timelock period
     vm.warp(block.timestamp + LONG_TX_EXECUTION_DELAY);
 
     // Get the Safe transaction hash
-    bytes32 _safeTxHash = safeEntrypoint.getSafeTransactionHash(address(disapproveAction));
+    bytes32 _safeTxHash = canonGuard.getSafeTransactionHash(address(disapproveAction));
 
     // Approve the Safe transaction hash
     for (uint256 _i; _i < _safeThreshold; ++_i) {
@@ -81,9 +80,9 @@ contract IntegrationEntrypointManageActions is IntegrationEthereumBase {
     vm.stopPrank();
 
     // Execute the transaction
-    safeEntrypoint.executeTransaction(address(disapproveAction));
+    canonGuard.executeTransaction(address(disapproveAction));
 
     // Assert if the actions builder is approved
-    assertEq(safeEntrypoint.approvalExpiries(address(actionsBuilder)), block.timestamp);
+    assertEq(canonGuard.approvalExpiries(address(actionsBuilder)), block.timestamp);
   }
 }

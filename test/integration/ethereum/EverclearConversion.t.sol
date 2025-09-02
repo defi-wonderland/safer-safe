@@ -22,21 +22,21 @@ contract IntegrationEverclearConversion is IntegrationEthereumBase {
     assertEq(NEXT.balanceOf(address(SAFE_PROXY)), _safeBalance);
     assertEq(CLEAR.balanceOf(address(SAFE_PROXY)), _safeBalance);
 
-    // Allow the SafeEntrypoint to call the SimpleTransfers contract
+    // Allow the CanonGuard to call the SimpleTransfers contract
     uint256 _approvalDuration = 1 days;
 
     vm.prank(address(SAFE_PROXY));
-    safeEntrypoint.approveActionsBuilder(_actionsBuilder, _approvalDuration);
+    canonGuard.approveActionsBuilder(_actionsBuilder, _approvalDuration);
 
     // Queue the transaction
     vm.prank(_safeOwners[0]);
-    safeEntrypoint.queueTransaction(_actionsBuilder);
+    canonGuard.queueTransaction(_actionsBuilder);
 
     // Wait for the timelock period
     vm.warp(block.timestamp + SHORT_TX_EXECUTION_DELAY);
 
     // Get the Safe transaction hash
-    bytes32 _safeTxHash = safeEntrypoint.getSafeTransactionHash(_actionsBuilder);
+    bytes32 _safeTxHash = canonGuard.getSafeTransactionHash(_actionsBuilder);
 
     // Approve the Safe transaction hash
     for (uint256 _i; _i < _safeThreshold; ++_i) {
@@ -46,7 +46,7 @@ contract IntegrationEverclearConversion is IntegrationEthereumBase {
     vm.stopPrank();
 
     // Execute the transaction
-    safeEntrypoint.executeTransaction(_actionsBuilder);
+    canonGuard.executeTransaction(_actionsBuilder);
 
     // Assert the token balances. All NEXT was converted to CLEAR
     assertEq(NEXT.balanceOf(address(SAFE_PROXY)), 0);

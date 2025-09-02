@@ -4,10 +4,10 @@ pragma solidity 0.8.29;
 import {ITransactionGuard} from '@safe-smart-account/base/GuardManager.sol';
 
 /**
- * @title IOnlyEntrypointGuard
- * @notice Interface for the OnlyEntrypointGuard contract
+ * @title IOnlyCanonGuard
+ * @notice Interface for the OnlyCanonGuard contract
  */
-interface IOnlyEntrypointGuard is ITransactionGuard {
+interface IOnlyCanonGuard is ITransactionGuard {
   // ~~~ ERRORS ~~~
 
   /**

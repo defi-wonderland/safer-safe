@@ -1,6 +1,6 @@
 UnitApprover::constructor
 └── when called
-    ├── it sets the entrypoint
+    ├── it sets the canon guard
     └── it sets the safe
 
 UnitApprover::approveTx
