@@ -2,4 +2,3 @@ UnitSetEmergencyTriggerActionFactory::createSetEmergencyTriggerAction
 └── When called
     ├── It should deploy a SetEmergencyTriggerAction contract with correct args
     └── It should match the parameters sent to the constructor
-    

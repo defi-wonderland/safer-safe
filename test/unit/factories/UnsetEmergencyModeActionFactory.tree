@@ -2,4 +2,3 @@ UnitUnsetEmergencyModeActionFactory::createUnsetEmergencyModeAction
 └── When called
     ├── It should deploy an UnsetEmergencyModeAction contract with correct args
     └── It should match the parameters sent to the constructor
-    
