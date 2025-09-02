@@ -88,3 +88,6 @@ UnitSafeEntrypoint::getApprovedHashSigners
 │   └── it returns approved signers
 └── when transaction does not exist
     └── it reverts with NoTransactionQueued
+
+UnitSafeEntrypoint::getSafeNonce
+└── it returns correct nonce

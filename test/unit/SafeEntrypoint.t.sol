@@ -644,6 +644,12 @@ contract UnitSafeEntrypoint is Test {
     safeEntrypoint.getApprovedHashSigners(_actionsBuilder, _nonce);
   }
 
+  function test_GetSafeNonceReturnsCorrectNonce(uint256 _nonce) external {
+    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.nonce.selector), abi.encode(_nonce));
+
+    assertEq(safeEntrypoint.getSafeNonce(), _nonce);
+  }
+
   modifier givenCallerIsSafeOwner(address _caller) {
     _mockAndExpect(SAFE, abi.encodeWithSelector(IOwnerManager.isOwner.selector), abi.encode(true));
     _;

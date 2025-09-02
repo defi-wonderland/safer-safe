@@ -1,4 +1,20 @@
 // SPDX-License-Identifier: MIT
+
+/*
+
+Made with ♥ by
+
+░██╗░░░░░░░██╗░█████╗░███╗░░██╗██████╗░███████╗██████╗░██╗░░░░░░█████╗░███╗░░██╗██████╗░
+░██║░░██╗░░██║██╔══██╗████╗░██║██╔══██╗██╔════╝██╔══██╗██║░░░░░██╔══██╗████╗░██║██╔══██╗
+░╚██╗████╗██╔╝██║░░██║██╔██╗██║██║░░██║█████╗░░██████╔╝██║░░░░░███████║██╔██╗██║██║░░██║
+░░████╔═████║░██║░░██║██║╚████║██║░░██║██╔══╝░░██╔══██╗██║░░░░░██╔══██║██║╚████║██║░░██║
+░░╚██╔╝░╚██╔╝░╚█████╔╝██║░╚███║██████╔╝███████╗██║░░██║███████╗██║░░██║██║░╚███║██████╔╝
+░░░╚═╝░░░╚═╝░░░╚════╝░╚═╝░░╚══╝╚═════╝░╚══════╝╚═╝░░╚═╝╚══════╝╚═╝░░╚═╝╚═╝░░╚══╝╚═════╝░
+
+https://wonderland.xyz
+
+*/
+
 pragma solidity 0.8.29;
 
 import {Enum} from '@safe-smart-account/libraries/Enum.sol';
@@ -134,6 +150,11 @@ contract SafeEntrypoint is SafeManageable, OnlyEntrypointGuard, EmergencyModeHoo
     bytes memory _multiSendData = _buildMultiSendData(_actions);
     bytes32 _safeTxHash = _getSafeTransactionHash(_multiSendData, _safeNonce);
     _approvedHashSigners = _getApprovedHashSigners(_safeTxHash);
+  }
+
+  /// @inheritdoc ISafeEntrypoint
+  function getSafeNonce() external view returns (uint256 _safeNonce) {
+    _safeNonce = SAFE.nonce();
   }
 
   /// @inheritdoc ISafeEntrypoint
