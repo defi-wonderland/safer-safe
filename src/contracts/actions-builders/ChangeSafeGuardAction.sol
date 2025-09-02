@@ -15,7 +15,7 @@ contract ChangeSafeGuardAction is IChangeSafeGuardAction {
   /**
    * @notice Constructor that sets up the ChangeSafeGuardAction contract
    * @param _safe The Safe contract address
-   * @param _safeGuard The safe guard contract address
+   * @param _safeGuard The new safe guard contract address. If the idea is to remove the guard, set it to address(0)
    */
   constructor(address _safe, address _safeGuard) {
     SAFE = _safe;
