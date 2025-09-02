@@ -168,7 +168,7 @@ contract UnitCanonGuard is Test {
 
     // it emits TransactionQueued event
     vm.expectEmit(address(canonGuard));
-    emit ICanonGuard.TransactionQueued(address(0), _actionsBuilder);
+    emit ICanonGuard.TransactionQueued(address(0), _actionsBuilder, true);
 
     vm.prank(_caller);
     canonGuard.queueTransaction(_actionsBuilder);
@@ -203,7 +203,7 @@ contract UnitCanonGuard is Test {
 
     // it emits TransactionQueued event
     vm.expectEmit(address(canonGuard));
-    emit ICanonGuard.TransactionQueued(address(0), _actionsBuilder);
+    emit ICanonGuard.TransactionQueued(address(0), _actionsBuilder, false);
 
     vm.prank(_caller);
     canonGuard.queueTransaction(_actionsBuilder);
@@ -306,7 +306,7 @@ contract UnitCanonGuard is Test {
 
     // it emits TransactionQueued event
     vm.expectEmit(address(canonGuard));
-    emit ICanonGuard.TransactionQueued(_actionHub, _actionsBuilder);
+    emit ICanonGuard.TransactionQueued(_actionHub, _actionsBuilder, true);
 
     vm.prank(_caller);
     canonGuard.queueHubTransaction(_actionHub, _actionsBuilder);
@@ -346,7 +346,7 @@ contract UnitCanonGuard is Test {
 
     // it emits TransactionQueued event
     vm.expectEmit(address(canonGuard));
-    emit ICanonGuard.TransactionQueued(_actionHub, _actionsBuilder);
+    emit ICanonGuard.TransactionQueued(_actionHub, _actionsBuilder, false);
 
     vm.prank(_caller);
     canonGuard.queueHubTransaction(_actionHub, _actionsBuilder);

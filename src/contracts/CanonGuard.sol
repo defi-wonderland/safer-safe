@@ -104,7 +104,7 @@ contract CanonGuard is SafeManageable, OnlyCanonGuard, EmergencyModeHook, ICanon
     bool _txIsPreApproved = _isPreApproved(_actionHub);
     _queueTransaction(_actionsBuilder, _txIsPreApproved);
 
-    emit TransactionQueued(_actionHub, _actionsBuilder);
+    emit TransactionQueued(_actionHub, _actionsBuilder, _txIsPreApproved);
   }
 
   /// @inheritdoc ICanonGuard
@@ -112,7 +112,7 @@ contract CanonGuard is SafeManageable, OnlyCanonGuard, EmergencyModeHook, ICanon
     bool _txIsPreApproved = _isPreApproved(_actionsBuilder);
     _queueTransaction(_actionsBuilder, _txIsPreApproved);
 
-    emit TransactionQueued(address(0), _actionsBuilder);
+    emit TransactionQueued(address(0), _actionsBuilder, _txIsPreApproved);
   }
 
   /// @inheritdoc ICanonGuard
