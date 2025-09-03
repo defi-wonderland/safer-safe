@@ -2,12 +2,17 @@
 pragma solidity 0.8.29;
 
 import {ICappedTokenTransfersHub} from 'interfaces/action-hubs/ICappedTokenTransfersHub.sol';
+
+import {EnumerableSetLib} from 'solady/utils/EnumerableSetLib.sol';
 import {SafeManageable} from 'src/contracts/SafeManageable.sol';
 
 import {ActionHub} from 'src/contracts/action-hubs/ActionHub.sol';
 import {CappedTokenTransfers} from 'src/contracts/actions-builders/CappedTokenTransfers.sol';
 
 contract CappedTokenTransfersHub is ActionHub, ICappedTokenTransfersHub, SafeManageable {
+  using EnumerableSetLib for EnumerableSetLib.AddressSet;
+  using EnumerableSetLib for EnumerableSetLib.Uint256Set;
+
   /// @inheritdoc ICappedTokenTransfersHub
   address public immutable RECIPIENT;
 
@@ -21,10 +26,13 @@ contract CappedTokenTransfersHub is ActionHub, ICappedTokenTransfersHub, SafeMan
   uint256 public currentEpoch;
 
   /// @inheritdoc ICappedTokenTransfersHub
-  mapping(address _token => uint256 _cap) public cap;
-
-  /// @inheritdoc ICappedTokenTransfersHub
   mapping(address _token => uint256 _totalSpent) public totalSpent;
+
+  /// @notice The caps for the tokens
+  EnumerableSetLib.Uint256Set private __caps;
+
+  /// @notice The tokens to cap
+  EnumerableSetLib.AddressSet private __tokens;
 
   /**
    * @notice Constructor that sets up the actionHub
@@ -32,7 +40,8 @@ contract CappedTokenTransfersHub is ActionHub, ICappedTokenTransfersHub, SafeMan
    * @param _recipient The recipient of the tokens
    * @param _tokens The tokens to cap
    * @param _caps The caps for the tokens
-   * @param _epochLength The length of the epoch
+   * @param _epochLength Duration of each epoch in seconds. Epochs are counted from STARTING_TIMESTAMP and computed as
+   *  (block.timestamp - STARTING_TIMESTAMP) / _epochLength. Per token caps reset when the epoch increments.
    */
   constructor(
     address _safe,
@@ -46,7 +55,8 @@ contract CappedTokenTransfersHub is ActionHub, ICappedTokenTransfersHub, SafeMan
     STARTING_TIMESTAMP = block.timestamp;
 
     for (uint256 i = 0; i < _tokens.length; i++) {
-      cap[_tokens[i]] = _caps[i];
+      __tokens.add(_tokens[i]);
+      __caps.add(_caps[i]);
     }
   }
 
@@ -76,8 +86,32 @@ contract CappedTokenTransfersHub is ActionHub, ICappedTokenTransfersHub, SafeMan
 
     totalSpent[_token] += _amount;
 
-    if (totalSpent[_token] > cap[_token]) {
+    if (totalSpent[_token] > __caps.at(__tokens.indexOf(_token))) {
       revert CapExceeded();
+    }
+  }
+
+  /// @inheritdoc ICappedTokenTransfersHub
+  function tokens() external view returns (address[] memory _tokens) {
+    _tokens = __tokens.values();
+  }
+
+  /// @inheritdoc ICappedTokenTransfersHub
+  function caps() external view returns (uint256[] memory _caps) {
+    _caps = __caps.values();
+  }
+
+  /// @inheritdoc ICappedTokenTransfersHub
+  function capLeft(address _token) external view returns (uint256 _capLeft) {
+    uint256 _currentEpoch = (block.timestamp - STARTING_TIMESTAMP) / EPOCH_LENGTH;
+    uint256 _tokenCap = __caps.at(__tokens.indexOf(_token));
+
+    // If we're in a new epoch, return the full cap
+    if (_currentEpoch > currentEpoch) {
+      _capLeft = _tokenCap;
+    } else {
+      // Otherwise, return the cap left for the token
+      _capLeft = _tokenCap - totalSpent[_token];
     }
   }
 }

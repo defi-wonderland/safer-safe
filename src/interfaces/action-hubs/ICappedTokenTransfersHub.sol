@@ -54,16 +54,28 @@ interface ICappedTokenTransfersHub is IActionHub, ISafeManageable {
   function currentEpoch() external view returns (uint256 _currentEpoch);
 
   /**
-   * @notice Gets the cap
-   * @param _token The token to get the cap for
-   * @return _cap The cap
-   */
-  function cap(address _token) external view returns (uint256 _cap);
-
-  /**
    * @notice Gets the total amount of tokens spent
    * @param _token The token to get the total amount of tokens spent for
    * @return _totalSpent The total amount of tokens spent
    */
   function totalSpent(address _token) external view returns (uint256 _totalSpent);
+
+  /**
+   * @notice Gets the tokens
+   * @return _tokens The tokens
+   */
+  function tokens() external view returns (address[] memory _tokens);
+
+  /**
+   * @notice Gets the caps
+   * @return _caps The caps
+   */
+  function caps() external view returns (uint256[] memory _caps);
+
+  /**
+   * @notice Gets the cap left for a token in the current epoch
+   * @param _token The token to get the cap left for
+   * @return _capLeft The cap left
+   */
+  function capLeft(address _token) external view returns (uint256 _capLeft);
 }
