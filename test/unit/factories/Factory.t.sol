@@ -2,18 +2,19 @@
 pragma solidity 0.8.29;
 
 import {Factory} from 'contracts/factories/Factory.sol';
+
 import {Test} from 'forge-std/Test.sol';
+import {FactoryForTest} from 'test/unit/mocks/FactoryForTest.sol';
 
 contract UnitFactoryisChild is Test {
-  Factory public factory;
+  FactoryForTest public factory;
 
   function setUp() external {
-    factory = new Factory();
+    factory = new FactoryForTest();
   }
 
   function test_WhenTheContractIsCreatedByTheFactory(address _contract) external {
-    vm.store(address(factory), keccak256(abi.encode(_contract, 0)), bytes32(uint256(1)));
-
+    factory.createContract(_contract);
     // it returns true
     assertTrue(factory.isChild(_contract));
   }

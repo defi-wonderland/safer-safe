@@ -3,7 +3,7 @@ pragma solidity 0.8.29;
 
 import {IFactory} from 'interfaces/factories/IFactory.sol';
 
-contract Factory is IFactory {
+abstract contract Factory is IFactory {
   /**
    * @notice Mapping of contracts created by the factory
    */
