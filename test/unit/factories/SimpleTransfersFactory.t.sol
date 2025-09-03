@@ -35,6 +35,9 @@ contract UnitSimpleTransfersFactory is Test {
     assertEq(_actions[1].target, _transferActionB.token);
     assertEq(_actions[1].data, abi.encodeCall(IERC20.transfer, (_transferActionB.to, _transferActionB.amount)));
     assertEq(_actions[1].value, 0);
+
+    // it should store the contract in the factory
+    assertTrue(simpleTransfersFactory.isChild(_simpleTransfers));
   }
 
   function test_CreateSimpleTransferWhenCreatingASimpleTransfersContractWithASingleTransferAction(
