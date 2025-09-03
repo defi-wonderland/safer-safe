@@ -20,4 +20,14 @@ contract SimpleTransfersFactory is ISimpleTransfersFactory {
   {
     _simpleTransfers = address(new SimpleTransfers(_transferActions));
   }
+
+  /// @inheritdoc ISimpleTransfersFactory
+  function createSimpleTransfer(ISimpleTransfers.TransferAction calldata _transferAction)
+    external
+    returns (address _simpleTransfers)
+  {
+    ISimpleTransfers.TransferAction[] memory _transferActions = new ISimpleTransfers.TransferAction[](1);
+    _transferActions[0] = _transferAction;
+    _simpleTransfers = address(new SimpleTransfers(_transferActions));
+  }
 }
