@@ -26,5 +26,8 @@ contract UnitApproveActionFactorycreateApproveAction is Test {
     assertEq(IApproveAction(_approveAction).CANON_GUARD(), _canonGuard);
     assertEq(IApproveAction(_approveAction).ACTIONS_BUILDER(), _actionsBuilder);
     assertEq(IApproveAction(_approveAction).APPROVAL_DURATION(), _approvalDuration);
+
+    // it should store the contract in the factory
+    assertTrue(approveActionFactory.isChild(_approveAction));
   }
 }

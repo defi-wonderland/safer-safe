@@ -2,3 +2,4 @@ UnitSimpleTransfersFactory::createSimpleTransfers
 └── when called
     ├── it should deploy a SimpleTransfers contract with correct args
     └── it should match the parameters sent to the constructor
+    └── it should store the contract in the factory

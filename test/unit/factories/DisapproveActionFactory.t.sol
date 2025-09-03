@@ -24,5 +24,8 @@ contract UnitDisapproveActionFactorycreateDisapproveAction is Test {
     // it should match the parameters sent to the constructor
     assertEq(IDisapproveAction(_disapproveAction).CANON_GUARD(), _canonGuard);
     assertEq(IDisapproveAction(_disapproveAction).ACTIONS_BUILDER(), _actionsBuilder);
+
+    // it should store the contract in the factory
+    assertTrue(disapproveActionFactory.isChild(_disapproveAction));
   }
 }

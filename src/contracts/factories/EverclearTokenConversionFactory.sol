@@ -2,13 +2,14 @@
 pragma solidity 0.8.29;
 
 import {EverclearTokenConversion} from 'contracts/actions-builders/EverclearTokenConversion.sol';
+import {Factory} from 'contracts/factories/Factory.sol';
 import {IEverclearTokenConversionFactory} from 'interfaces/factories/IEverclearTokenConversionFactory.sol';
 
 /**
  * @title EverclearTokenConversionFactory
  * @notice Contract that deploys EverclearTokenConversion contracts
  */
-contract EverclearTokenConversionFactory is IEverclearTokenConversionFactory {
+contract EverclearTokenConversionFactory is IEverclearTokenConversionFactory, Factory {
   // ~~~ FACTORY METHODS ~~~
 
   /// @inheritdoc IEverclearTokenConversionFactory
@@ -18,5 +19,7 @@ contract EverclearTokenConversionFactory is IEverclearTokenConversionFactory {
     address _safe
   ) external returns (address _everclearTokenConversion) {
     _everclearTokenConversion = address(new EverclearTokenConversion(_lockbox, _next, _safe));
+
+    _contractsCreated[_everclearTokenConversion] = true;
   }
 }

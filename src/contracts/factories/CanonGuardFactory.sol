@@ -2,14 +2,14 @@
 pragma solidity 0.8.29;
 
 import {CanonGuard} from 'contracts/CanonGuard.sol';
-
+import {Factory} from 'contracts/factories/Factory.sol';
 import {ICanonGuardFactory} from 'interfaces/factories/ICanonGuardFactory.sol';
 
 /**
  * @title CanonGuardFactory
  * @notice Contract that deploys CanonGuard contracts
  */
-contract CanonGuardFactory is ICanonGuardFactory {
+contract CanonGuardFactory is ICanonGuardFactory, Factory {
   // ~~~ STORAGE ~~~
 
   /// @inheritdoc ICanonGuardFactory
@@ -49,5 +49,7 @@ contract CanonGuardFactory is ICanonGuardFactory {
         _emergencyCaller
       )
     );
+
+    _contractsCreated[_canonGuard] = true;
   }
 }
