@@ -120,7 +120,7 @@ interface ICanonGuard is ISafeManageable {
 
   /**
    * @notice Gets the factory address
-   * @return _factory The factory address
+   * @return _factory The factory address. Returns address(0) if it was not deployed by a factory
    */
   function FACTORY() external view returns (address _factory);
 
