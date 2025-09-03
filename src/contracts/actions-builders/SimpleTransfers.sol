@@ -13,6 +13,9 @@ import {IERC20} from 'forge-std/interfaces/IERC20.sol';
 contract SimpleTransfers is ISimpleTransfers {
   // ~~~ STORAGE ~~~
 
+  /// @inheritdoc IActionsBuilder
+  address public immutable FACTORY;
+
   /// @notice The array of actions
   Action[] internal _actions;
 
@@ -20,9 +23,10 @@ contract SimpleTransfers is ISimpleTransfers {
 
   /**
    * @notice Constructor that sets up the array of actions
+   * @param _factory The factory that deployed the action builder
    * @param _transferActions The array of transfer actions
    */
-  constructor(TransferAction[] memory _transferActions) {
+  constructor(address _factory, TransferAction[] memory _transferActions) {
     uint256 _transferActionsLength = _transferActions.length;
     TransferAction memory _transferAction;
     Action memory _action;
@@ -39,6 +43,8 @@ contract SimpleTransfers is ISimpleTransfers {
       _actions.push(_action);
       emit TransferActionAdded(_transferAction.token, _transferAction.to, _transferAction.amount);
     }
+
+    FACTORY = _factory;
   }
 
   // ~~~ ACTIONS METHODS ~~~

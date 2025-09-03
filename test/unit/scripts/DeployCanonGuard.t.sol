@@ -23,6 +23,7 @@ contract UnitDeployCanonGuard is Constants, Test {
       deployCode(
         'CanonGuard',
         abi.encode(
+          address(CANON_GUARD_FACTORY),
           SAFE_PROXY,
           MULTI_SEND_CALL_ONLY,
           SHORT_TX_EXECUTION_DELAY,

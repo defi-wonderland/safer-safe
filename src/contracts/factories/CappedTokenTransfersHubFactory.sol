@@ -20,7 +20,8 @@ contract CappedTokenTransfersHubFactory is ICappedTokenTransfersHubFactory, Fact
     uint256[] memory _caps,
     uint256 _epochLength
   ) external returns (address _cappedTokenTransfersHub) {
-    _cappedTokenTransfersHub = address(new CappedTokenTransfersHub(_safe, _recipient, _tokens, _caps, _epochLength));
+    _cappedTokenTransfersHub =
+      address(new CappedTokenTransfersHub(address(this), _safe, _recipient, _tokens, _caps, _epochLength));
 
     _contractsCreated[_cappedTokenTransfersHub] = true;
   }

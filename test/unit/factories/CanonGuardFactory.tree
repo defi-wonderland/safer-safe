@@ -1,6 +1,6 @@
 UnitCanonGuardFactory::constructor
 └── when called
-    └── it should save the multi send call only address
+    └── it should store the multi send call only address
 
 UnitCanonGuardFactory::createCanonGuard
 └── when called

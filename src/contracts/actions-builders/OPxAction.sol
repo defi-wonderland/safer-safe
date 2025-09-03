@@ -13,6 +13,9 @@ import {IOPx} from 'interfaces/external/IOPx.sol';
 contract OPxAction is IOPxAction {
   // ~~~ STORAGE ~~~
 
+  /// @inheritdoc IActionsBuilder
+  address public immutable FACTORY;
+
   /// @inheritdoc IOPxAction
   address public immutable OPX;
 
@@ -23,10 +26,12 @@ contract OPxAction is IOPxAction {
 
   /**
    * @notice Constructor that sets up the OPX contract address
+   * @param _factory The factory that deployed the action builder
    * @param _opx The OPX contract address
    * @param _safe The SAFE contract address
    */
-  constructor(address _opx, address _safe) {
+  constructor(address _factory, address _opx, address _safe) {
+    FACTORY = _factory;
     OPX = _opx;
     SAFE = _safe;
   }

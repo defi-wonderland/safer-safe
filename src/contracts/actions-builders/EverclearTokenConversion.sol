@@ -13,6 +13,9 @@ import {IxERC20Lockbox} from 'interfaces/external/IxERC20Lockbox.sol';
 contract EverclearTokenConversion is IEverclearTokenConversion {
   // ~~~ STORAGE ~~~
 
+  /// @inheritdoc IActionsBuilder
+  address public immutable FACTORY;
+
   /// @inheritdoc IEverclearTokenConversion
   IxERC20Lockbox public immutable CLEAR_LOCKBOX;
 
@@ -26,11 +29,13 @@ contract EverclearTokenConversion is IEverclearTokenConversion {
 
   /**
    * @notice Constructor that sets up the xERC20Lockbox and NEXT
+   * @param _factory The factory that deployed the action builder
    * @param _lockbox The xERC20Lockbox contract address
    * @param _next The NEXT contract address
    * @param _safe The SAFE contract address
    */
-  constructor(address _lockbox, address _next, address _safe) {
+  constructor(address _factory, address _lockbox, address _next, address _safe) {
+    FACTORY = _factory;
     CLEAR_LOCKBOX = IxERC20Lockbox(_lockbox);
     NEXT = IERC20(_next);
     SAFE = _safe;

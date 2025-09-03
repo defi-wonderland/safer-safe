@@ -18,7 +18,7 @@ contract SimpleTransfersFactory is ISimpleTransfersFactory, Factory {
     external
     returns (address _simpleTransfers)
   {
-    _simpleTransfers = address(new SimpleTransfers(_transferActions));
+    _simpleTransfers = address(new SimpleTransfers(address(this), _transferActions));
 
     _contractsCreated[_simpleTransfers] = true;
   }

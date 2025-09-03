@@ -119,6 +119,12 @@ interface ICanonGuard is ISafeManageable {
   // ~~~ STORAGE METHODS ~~~
 
   /**
+   * @notice Gets the factory address
+   * @return _factory The factory address
+   */
+  function FACTORY() external view returns (address _factory);
+
+  /**
    * @notice Gets the MultiSendCallOnly contract
    * @return _multiSendCallOnly The MultiSendCallOnly contract address
    */

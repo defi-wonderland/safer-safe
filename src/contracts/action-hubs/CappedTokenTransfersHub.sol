@@ -28,6 +28,7 @@ contract CappedTokenTransfersHub is ActionHub, ICappedTokenTransfersHub, SafeMan
 
   /**
    * @notice Constructor that sets up the actionHub
+   * @param _factory The factory that deployed the actionHub
    * @param _safe The safe to use
    * @param _recipient The recipient of the tokens
    * @param _tokens The tokens to cap
@@ -35,12 +36,14 @@ contract CappedTokenTransfersHub is ActionHub, ICappedTokenTransfersHub, SafeMan
    * @param _epochLength The length of the epoch
    */
   constructor(
+    address _factory,
     address _safe,
     address _recipient,
     address[] memory _tokens,
     uint256[] memory _caps,
     uint256 _epochLength
   ) SafeManageable(_safe) {
+    FACTORY = _factory;
     RECIPIENT = _recipient;
     EPOCH_LENGTH = _epochLength;
     STARTING_TIMESTAMP = block.timestamp;
@@ -55,8 +58,9 @@ contract CappedTokenTransfersHub is ActionHub, ICappedTokenTransfersHub, SafeMan
     address _token,
     uint256 _amount
   ) external isSafeOwner returns (address _actionBuilder) {
-    bytes memory _initCode =
-      abi.encodePacked(type(CappedTokenTransfers).creationCode, abi.encode(_token, _amount, RECIPIENT, address(this)));
+    bytes memory _initCode = abi.encodePacked(
+      type(CappedTokenTransfers).creationCode, abi.encode(address(this), _token, _amount, RECIPIENT, address(this))
+    );
     bytes32 _salt = keccak256(abi.encode(_token, _amount, RECIPIENT));
 
     _actionBuilder = _createNewActionBuilder(_initCode, _salt);

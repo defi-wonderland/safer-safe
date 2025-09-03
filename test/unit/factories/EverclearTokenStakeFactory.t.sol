@@ -30,7 +30,17 @@ contract UnitEverclearTokenStakeFactorycreateEverclearTokenStake is Test {
     auxEverclearTokenStake = IEverclearTokenStake(
       deployCode(
         'EverclearTokenStake',
-        abi.encode(_vestingEscrow, _vestingWallet, _spokeBridge, _clearLockbox, _next, _clear, _safe, _lockTime)
+        abi.encode(
+          address(everclearTokenStakeFactory),
+          _vestingEscrow,
+          _vestingWallet,
+          _spokeBridge,
+          _clearLockbox,
+          _next,
+          _clear,
+          _safe,
+          _lockTime
+        )
       )
     );
     // it should deploy a EverclearTokenStake

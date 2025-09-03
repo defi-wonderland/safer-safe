@@ -39,6 +39,7 @@ contract CanonGuardFactory is ICanonGuardFactory, Factory {
   ) external returns (address _canonGuard) {
     _canonGuard = address(
       new CanonGuard(
+        address(this),
         _safe,
         MULTI_SEND_CALL_ONLY,
         _shortTxExecutionDelay,

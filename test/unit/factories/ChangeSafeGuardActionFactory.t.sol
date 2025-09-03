@@ -19,8 +19,9 @@ contract UnitChangeSafeGuardActionFactorycreateChangeSafeGuardAction is Test {
 
     address _changeSafeGuardActionContract = changeSafeGuardActionFactory.createChangeSafeGuardAction(_safe, _safeGuard);
 
-    auxChangeSafeGuardAction =
-      IChangeSafeGuardAction(deployCode('ChangeSafeGuardAction', abi.encode(_safe, _safeGuard)));
+    auxChangeSafeGuardAction = IChangeSafeGuardAction(
+      deployCode('ChangeSafeGuardAction', abi.encode(address(changeSafeGuardActionFactory), _safe, _safeGuard))
+    );
 
     // it should deploy a ChangeSafeGuardAction contract
     assertEq(address(auxChangeSafeGuardAction).code, _changeSafeGuardActionContract.code);

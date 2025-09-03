@@ -34,8 +34,10 @@ contract UnitActionHub is Test {
     uint256 _amount,
     address _recipient
   ) external {
-    bytes memory _initCode =
-      abi.encodePacked(type(CappedTokenTransfers).creationCode, abi.encode(_token, _amount, _recipient, address(this)));
+    bytes memory _initCode = abi.encodePacked(
+      type(CappedTokenTransfers).creationCode,
+      abi.encode(address(actionHub), _token, _amount, _recipient, address(this))
+    );
 
     address _expectedActionBuilder = CREATE3.predictDeterministicAddress(_salt, address(actionHub));
 

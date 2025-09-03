@@ -16,7 +16,9 @@ contract UnitDisapproveActionFactorycreateDisapproveAction is Test {
   function test_WhenCalled(address _canonGuard, address _actionsBuilder) external {
     address _disapproveAction = disapproveActionFactory.createDisapproveAction(_canonGuard, _actionsBuilder);
 
-    auxDisapproveAction = IDisapproveAction(deployCode('DisapproveAction', abi.encode(_canonGuard, _actionsBuilder)));
+    auxDisapproveAction = IDisapproveAction(
+      deployCode('DisapproveAction', abi.encode(address(disapproveActionFactory), _canonGuard, _actionsBuilder))
+    );
 
     // it should deploy a DisapproveAction
     assertEq(address(auxDisapproveAction).code, _disapproveAction.code);

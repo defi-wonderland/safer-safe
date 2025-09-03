@@ -25,7 +25,8 @@ contract IntegrationCappedTokenTransfers is IntegrationEthereumBase {
     _caps[1] = 200 ether;
 
     // Deploy the CappedTokenTransfersHub
-    _cappedTokenTransfersHub = new CappedTokenTransfersHub(address(SAFE_PROXY), _recipient, _tokens, _caps, 7 days);
+    _cappedTokenTransfersHub =
+      new CappedTokenTransfersHub(address(0), address(SAFE_PROXY), _recipient, _tokens, _caps, 7 days);
   }
 
   function test_CreateNewActionBuilder() public {
@@ -46,7 +47,7 @@ contract IntegrationCappedTokenTransfers is IntegrationEthereumBase {
     vm.prank(_safeOwners[0]);
     address _actionsBuilder = _cappedTokenTransfersHub.createNewActionBuilder(address(WETH), _safeBalance);
 
-    // Allow the CanonGuard to call the contract
+    // Allow the SafeEntrypoint to call the contract
     uint256 _approvalDuration = 1 days;
 
     vm.prank(address(SAFE_PROXY));
@@ -82,7 +83,7 @@ contract IntegrationCappedTokenTransfers is IntegrationEthereumBase {
     vm.prank(_safeOwners[0]);
     address _actionsBuilder = _cappedTokenTransfersHub.createNewActionBuilder(address(WETH), 1000 ether);
 
-    // Allow the CanonGuard to call the contract
+    // Allow the SafeEntrypoint to call the contract
     uint256 _approvalDuration = 1 days;
 
     vm.prank(address(SAFE_PROXY));

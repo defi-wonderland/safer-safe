@@ -8,6 +8,7 @@ import {ISimpleActions} from 'interfaces/actions-builders/ISimpleActions.sol';
 
 contract UnitSimpleActionsFactorycreateSimpleActions is Test {
   SimpleActionsFactory public simpleActionsFactory;
+  ISimpleActions public auxSimpleActions;
 
   function setUp() external {
     simpleActionsFactory = new SimpleActionsFactory();
@@ -20,7 +21,8 @@ contract UnitSimpleActionsFactorycreateSimpleActions is Test {
     address _simpleActionsContract = simpleActionsFactory.createSimpleActions(_actions);
 
     // it should deploy a SimpleActions contract with correct args
-    assertEq(type(SimpleActions).runtimeCode, _simpleActionsContract.code);
+    auxSimpleActions = ISimpleActions(deployCode('SimpleActions', abi.encode(address(simpleActionsFactory), _actions)));
+    assertEq(address(auxSimpleActions).code, _simpleActionsContract.code);
 
     // it should match the parameters sent to the constructor
     bytes4 _selector = bytes4(keccak256(bytes(_simpleActions.signature)));

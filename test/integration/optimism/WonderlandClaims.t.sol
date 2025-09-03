@@ -41,7 +41,7 @@ contract IntegrationWonderlandClaims is IntegrationOptimismBase {
     _simpleActions[1] = _claimWLD;
 
     _actionsBuilder = simpleActionsFactory.createSimpleActions(_simpleActions);
-    _opxAction = address(new OPxAction(_opx, address(SAFE_PROXY)));
+    _opxAction = address(new OPxAction(address(0), _opx, address(SAFE_PROXY)));
   }
 
   function test_ExecuteTransaction() public {

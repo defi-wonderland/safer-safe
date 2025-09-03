@@ -5,7 +5,9 @@ import {IOwnerManager} from '@safe-smart-account/interfaces/IOwnerManager.sol';
 import {Test} from 'forge-std/Test.sol';
 import {CappedTokenTransfersHub} from 'src/contracts/action-hubs/CappedTokenTransfersHub.sol';
 import {ISafeManageable} from 'src/interfaces/ISafeManageable.sol';
+
 import {ICappedTokenTransfersHub} from 'src/interfaces/action-hubs/ICappedTokenTransfersHub.sol';
+import {ICappedTokenTransfers} from 'src/interfaces/actions-builders/ICappedTokenTransfers.sol';
 
 contract UnitCappedTokenTransfersHub is Test {
   CappedTokenTransfersHub public cappedTokenTransfersHub;
@@ -27,11 +29,11 @@ contract UnitCappedTokenTransfersHub is Test {
     caps.push(200);
     caps.push(300);
 
-    cappedTokenTransfersHub = new CappedTokenTransfersHub(safe, recipient, tokens, caps, epochLength);
+    cappedTokenTransfersHub = new CappedTokenTransfersHub(address(0), safe, recipient, tokens, caps, epochLength);
   }
 
   function test_ConstructorWhenCalled(address _safe, address _recipient, uint256 _epochLength) external {
-    cappedTokenTransfersHub = new CappedTokenTransfersHub(_safe, _recipient, tokens, caps, _epochLength);
+    cappedTokenTransfersHub = new CappedTokenTransfersHub(address(0), _safe, _recipient, tokens, caps, _epochLength);
 
     // it sets the safe
     assertEq(address(cappedTokenTransfersHub.SAFE()), _safe);
@@ -51,8 +53,9 @@ contract UnitCappedTokenTransfersHub is Test {
     vm.mockCall(address(safe), abi.encodeWithSelector(IOwnerManager.isOwner.selector), abi.encode(true));
 
     // it creates a new CappedTokenTransfers action builder
-    address actionBuilder = cappedTokenTransfersHub.createNewActionBuilder(tokens[0], 100);
-    assertNotEq(actionBuilder, address(0));
+    address _actionBuilder = cappedTokenTransfersHub.createNewActionBuilder(tokens[0], 100);
+    assertEq(ICappedTokenTransfers(_actionBuilder).FACTORY(), address(cappedTokenTransfersHub));
+    assertNotEq(_actionBuilder, address(0));
   }
 
   function test_CreateNewActionBuilderWhenNotCalledByTheSafeOwner() external {

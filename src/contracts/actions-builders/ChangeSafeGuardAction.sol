@@ -6,6 +6,9 @@ import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 import {IChangeSafeGuardAction} from 'interfaces/actions-builders/IChangeSafeGuardAction.sol';
 
 contract ChangeSafeGuardAction is IChangeSafeGuardAction {
+  /// @inheritdoc IActionsBuilder
+  address public immutable FACTORY;
+
   /// @inheritdoc IChangeSafeGuardAction
   address public immutable SAFE;
 
@@ -14,10 +17,12 @@ contract ChangeSafeGuardAction is IChangeSafeGuardAction {
 
   /**
    * @notice Constructor that sets up the ChangeSafeGuardAction contract
+   * @param _factory The factory that deployed the action builder
    * @param _safe The Safe contract address
    * @param _safeGuard The new safe guard contract address. If the idea is to remove the guard, set it to address(0)
    */
-  constructor(address _safe, address _safeGuard) {
+  constructor(address _factory, address _safe, address _safeGuard) {
+    FACTORY = _factory;
     SAFE = _safe;
     SAFE_GUARD = _safeGuard;
   }

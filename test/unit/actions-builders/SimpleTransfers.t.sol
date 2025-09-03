@@ -25,7 +25,7 @@ contract UnitSimpleTransfersconstructor is Test {
       );
     }
 
-    simpleTransfers = new SimpleTransfers(transferActions);
+    simpleTransfers = new SimpleTransfers(address(0), transferActions);
 
     // it should add the transfer to the actions array with correct values
     IActionsBuilder.Action[] memory _actions = simpleTransfers.getActions();

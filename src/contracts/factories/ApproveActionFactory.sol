@@ -18,7 +18,7 @@ contract ApproveActionFactory is IApproveActionFactory, Factory {
     address _actionsBuilder,
     uint256 _approvalDuration
   ) external returns (address _approveAction) {
-    _approveAction = address(new ApproveAction(_canonGuard, _actionsBuilder, _approvalDuration));
+    _approveAction = address(new ApproveAction(address(this), _canonGuard, _actionsBuilder, _approvalDuration));
 
     _contractsCreated[_approveAction] = true;
   }

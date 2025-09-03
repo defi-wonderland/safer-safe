@@ -20,4 +20,10 @@ interface IActionHub {
    * @return _isChild True if the action builder is a child of the actionHub, false otherwise
    */
   function isChild(address _actionBuilder) external view returns (bool _isChild);
+
+  /**
+   * @notice Gets the factory address
+   * @return _factory The factory address
+   */
+  function FACTORY() external view returns (address _factory);
 }

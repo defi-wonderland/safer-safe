@@ -17,7 +17,7 @@ contract ChangeSafeGuardActionFactory is IChangeSafeGuardActionFactory, Factory 
     address _safe,
     address _safeGuard
   ) external returns (address _changeSafeGuardAction) {
-    _changeSafeGuardAction = address(new ChangeSafeGuardAction(_safe, _safeGuard));
+    _changeSafeGuardAction = address(new ChangeSafeGuardAction(address(this), _safe, _safeGuard));
 
     _contractsCreated[_changeSafeGuardAction] = true;
   }

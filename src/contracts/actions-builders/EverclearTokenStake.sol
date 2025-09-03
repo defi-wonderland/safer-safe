@@ -17,6 +17,9 @@ import {IxERC20Lockbox} from 'interfaces/external/IxERC20Lockbox.sol';
 contract EverclearTokenStake is IEverclearTokenStake {
   // ~~~ STORAGE ~~~
 
+  /// @inheritdoc IActionsBuilder
+  address public immutable FACTORY;
+
   /// @inheritdoc IEverclearTokenStake
   IVestingEscrow public immutable VESTING_ESCROW;
 
@@ -45,6 +48,7 @@ contract EverclearTokenStake is IEverclearTokenStake {
 
   /**
    * @notice Constructor that sets up the variables
+   * @param _factory The factory that deployed the action builder
    * @param _vestingEscrow The vesting escrow contract address
    * @param _vestingWallet The vesting wallet contract address
    * @param _spokeBridge The spoke bridge contract address
@@ -55,6 +59,7 @@ contract EverclearTokenStake is IEverclearTokenStake {
    * @param _lockTime The lock time
    */
   constructor(
+    address _factory,
     address _vestingEscrow,
     address _vestingWallet,
     address _spokeBridge,
@@ -64,6 +69,7 @@ contract EverclearTokenStake is IEverclearTokenStake {
     address _safe,
     uint256 _lockTime
   ) {
+    FACTORY = _factory;
     VESTING_ESCROW = IVestingEscrow(_vestingEscrow);
     VESTING_WALLET = IVestingWallet(_vestingWallet);
     SPOKE_BRIDGE = ISpokeBridge(_spokeBridge);

@@ -6,6 +6,9 @@ import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 import {IDisapproveAction} from 'interfaces/actions-builders/IDisapproveAction.sol';
 
 contract DisapproveAction is IDisapproveAction {
+  /// @inheritdoc IActionsBuilder
+  address public immutable FACTORY;
+
   /// @inheritdoc IDisapproveAction
   address public immutable CANON_GUARD;
 
@@ -14,10 +17,12 @@ contract DisapproveAction is IDisapproveAction {
 
   /**
    * @notice Constructor that sets up the DisapproveAction contract
+   * @param _factory The factory that deployed the action builder
    * @param _canonGuard The CanonGuard contract address
    * @param _actionsBuilder The actions builder contract address
    */
-  constructor(address _canonGuard, address _actionsBuilder) {
+  constructor(address _factory, address _canonGuard, address _actionsBuilder) {
+    FACTORY = _factory;
     CANON_GUARD = _canonGuard;
     ACTIONS_BUILDER = _actionsBuilder;
   }

@@ -15,6 +15,7 @@ contract CanonGuardForTest is CanonGuard {
     address _emergencyCaller
   )
     CanonGuard(
+      address(0),
       _safe,
       _multiSendCallOnly,
       _shortTxExecutionDelay,

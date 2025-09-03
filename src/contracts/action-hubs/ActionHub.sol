@@ -5,6 +5,9 @@ import {IActionHub} from 'interfaces/action-hubs/IActionHub.sol';
 import {CREATE3} from 'solady/utils/CREATE3.sol';
 
 abstract contract ActionHub is IActionHub {
+  /// @inheritdoc IActionHub
+  address public immutable FACTORY;
+
   /**
    * @notice The mapping of action builders. Returns true if the action builder is a child of the actionHub.
    */

@@ -8,6 +8,7 @@ import {IERC20} from 'forge-std/interfaces/IERC20.sol';
 
 contract UnitSimpleTransfersFactorycreateSimpleTransfers is Test {
   SimpleTransfersFactory public simpleTransfersFactory;
+  ISimpleTransfers public auxSimpleTransfers;
 
   function setUp() external {
     simpleTransfersFactory = new SimpleTransfersFactory();
@@ -20,7 +21,9 @@ contract UnitSimpleTransfersFactorycreateSimpleTransfers is Test {
     address _simpleTransfers = simpleTransfersFactory.createSimpleTransfers(_transferActions);
 
     // it should deploy a SimpleTransfers contract with correct args
-    assertEq(type(SimpleTransfers).runtimeCode, _simpleTransfers.code);
+    auxSimpleTransfers =
+      ISimpleTransfers(deployCode('SimpleTransfers', abi.encode(address(simpleTransfersFactory), _transferActions)));
+    assertEq(address(auxSimpleTransfers).code, _simpleTransfers.code);
 
     // it should match the parameters sent to the constructor
     ISimpleTransfers.Action[] memory _actions = ISimpleTransfers(_simpleTransfers).getActions();
@@ -28,6 +31,8 @@ contract UnitSimpleTransfersFactorycreateSimpleTransfers is Test {
     assertEq(_actions[0].target, _token);
     assertEq(_actions[0].data, abi.encodeCall(IERC20.transfer, (_to, _amount)));
     assertEq(_actions[0].value, 0);
+
+    assertEq(ISimpleTransfers(_simpleTransfers).FACTORY(), address(simpleTransfersFactory));
 
     // it should store the contract in the factory
     assertTrue(simpleTransfersFactory.isChild(_simpleTransfers));

@@ -13,6 +13,9 @@ import {IERC20} from 'forge-std/interfaces/IERC20.sol';
 contract AllowanceClaimor is IAllowanceClaimor {
   // ~~~ STORAGE ~~~
 
+  /// @inheritdoc IActionsBuilder
+  address public immutable FACTORY;
+
   /// @inheritdoc IAllowanceClaimor
   address public immutable SAFE;
 
@@ -29,12 +32,14 @@ contract AllowanceClaimor is IAllowanceClaimor {
 
   /**
    * @notice Constructor that sets up the Safe, token, token owner and token recipient
+   * @param _factory The factory that deployed the action builder
    * @param _safe The Gnosis Safe contract address
    * @param _token The token contract address
    * @param _tokenOwner The token owner address
    * @param _tokenRecipient The token recipient address
    */
-  constructor(address _safe, address _token, address _tokenOwner, address _tokenRecipient) {
+  constructor(address _factory, address _safe, address _token, address _tokenOwner, address _tokenRecipient) {
+    FACTORY = _factory;
     SAFE = _safe;
     TOKEN = IERC20(_token);
     TOKEN_OWNER = _tokenOwner;

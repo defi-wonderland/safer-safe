@@ -46,6 +46,7 @@ contract UnitCanonGuardFactory is Test {
       deployCode(
         'CanonGuard',
         abi.encode(
+          address(canonGuardFactory),
           _safe,
           multiSendCallOnly,
           _shortTxExecutionDelay,

@@ -11,6 +11,9 @@ import {ISimpleActions} from 'interfaces/actions-builders/ISimpleActions.sol';
 contract SimpleActions is ISimpleActions {
   // ~~~ STORAGE ~~~
 
+  /// @inheritdoc IActionsBuilder
+  address public immutable FACTORY;
+
   /// @notice The array of actions
   Action[] internal _actions;
 
@@ -18,9 +21,10 @@ contract SimpleActions is ISimpleActions {
 
   /**
    * @notice Constructor that sets up the array of actions
+   * @param _factory The factory that deployed the action builder
    * @param _simpleActions The array of simple actions
    */
-  constructor(SimpleAction[] memory _simpleActions) {
+  constructor(address _factory, SimpleAction[] memory _simpleActions) {
     uint256 _simpleActionsLength = _simpleActions.length;
     SimpleAction memory _simpleAction;
     Action memory _action;
@@ -38,6 +42,8 @@ contract SimpleActions is ISimpleActions {
       _actions.push(_action);
       emit SimpleActionAdded(_simpleAction.target, _simpleAction.signature, _simpleAction.data, _simpleAction.value);
     }
+
+    FACTORY = _factory;
   }
 
   // ~~~ ACTIONS METHODS ~~~

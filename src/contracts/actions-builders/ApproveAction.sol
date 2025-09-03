@@ -6,6 +6,9 @@ import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 import {IApproveAction} from 'interfaces/actions-builders/IApproveAction.sol';
 
 contract ApproveAction is IApproveAction {
+  /// @inheritdoc IActionsBuilder
+  address public immutable FACTORY;
+
   /// @inheritdoc IApproveAction
   address public immutable CANON_GUARD;
 
@@ -17,11 +20,13 @@ contract ApproveAction is IApproveAction {
 
   /**
    * @notice Constructor that sets up the ApproveAction contract
+   * @param _factory The factory that deployed the action builder
    * @param _canonGuard The CanonGuard contract address
    * @param _actionsBuilder The actions builder contract address
    * @param _approvalDuration The approval duration
    */
-  constructor(address _canonGuard, address _actionsBuilder, uint256 _approvalDuration) {
+  constructor(address _factory, address _canonGuard, address _actionsBuilder, uint256 _approvalDuration) {
+    FACTORY = _factory;
     CANON_GUARD = _canonGuard;
     ACTIONS_BUILDER = _actionsBuilder;
     APPROVAL_DURATION = _approvalDuration;

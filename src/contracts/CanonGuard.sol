@@ -34,6 +34,9 @@ contract CanonGuard is SafeManageable, OnlyCanonGuard, EmergencyModeHook, ICanon
   // ~~~ STORAGE ~~~
 
   /// @inheritdoc ICanonGuard
+  address public immutable FACTORY;
+
+  /// @inheritdoc ICanonGuard
   address public immutable MULTI_SEND_CALL_ONLY;
 
   /// @inheritdoc ICanonGuard
@@ -58,6 +61,7 @@ contract CanonGuard is SafeManageable, OnlyCanonGuard, EmergencyModeHook, ICanon
 
   /**
    * @notice Constructor that sets up the Safe, MultiSendCallOnly, execution delays and default expiry delay
+   * @param _factory The factory that deployed the CanonGuard contract
    * @param _safe The Gnosis Safe contract address
    * @param _multiSendCallOnly The MultiSendCallOnly contract address
    * @param _shortTxExecutionDelay The short transaction execution delay (in seconds)
@@ -68,6 +72,7 @@ contract CanonGuard is SafeManageable, OnlyCanonGuard, EmergencyModeHook, ICanon
    * @param _emergencyCaller The emergency caller address
    */
   constructor(
+    address _factory,
     address _safe,
     address _multiSendCallOnly,
     uint256 _shortTxExecutionDelay,
@@ -77,6 +82,7 @@ contract CanonGuard is SafeManageable, OnlyCanonGuard, EmergencyModeHook, ICanon
     address _emergencyTrigger,
     address _emergencyCaller
   ) SafeManageable(_safe) EmergencyModeHook(_emergencyTrigger, _emergencyCaller) {
+    FACTORY = _factory;
     MULTI_SEND_CALL_ONLY = _multiSendCallOnly;
 
     SHORT_TX_EXECUTION_DELAY = _shortTxExecutionDelay;

@@ -14,6 +14,9 @@ import {ICappedTokenTransfers} from 'interfaces/actions-builders/ICappedTokenTra
 contract CappedTokenTransfers is ICappedTokenTransfers {
   // ~~~ STORAGE ~~~
 
+  /// @inheritdoc IActionsBuilder
+  address public immutable FACTORY;
+
   /// @inheritdoc ICappedTokenTransfers
   address public immutable TOKEN;
 
@@ -30,12 +33,14 @@ contract CappedTokenTransfers is ICappedTokenTransfers {
 
   /**
    * @notice Constructor that sets up the token, amount and recipient
+   * @param _factory The factory that deployed the action builder
    * @param _token The token contract address
    * @param _amount The amount of tokens to transfer
    * @param _recipient The recipient of the tokens
    * @param _actionHub The hub of the action
    */
-  constructor(address _token, uint256 _amount, address _recipient, address _actionHub) {
+  constructor(address _factory, address _token, uint256 _amount, address _recipient, address _actionHub) {
+    FACTORY = _factory;
     TOKEN = _token;
     AMOUNT = _amount;
     RECIPIENT = _recipient;

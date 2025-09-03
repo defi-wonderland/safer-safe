@@ -18,7 +18,7 @@ contract SimpleActionsFactory is ISimpleActionsFactory, Factory {
     external
     returns (address _simpleActions)
   {
-    _simpleActions = address(new SimpleActions(_smplActions));
+    _simpleActions = address(new SimpleActions(address(this), _smplActions));
 
     _contractsCreated[_simpleActions] = true;
   }
