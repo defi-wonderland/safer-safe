@@ -32,7 +32,6 @@ contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
   address public newOwner;
   address public ownerToRemove;
   address public previousOwner;
-  uint256 public currentThreshold;
   uint256 public constant APPROVAL_DURATION = 7 days;
 
   function setUp() public override {
