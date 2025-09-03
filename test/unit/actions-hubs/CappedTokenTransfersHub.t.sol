@@ -59,7 +59,7 @@ contract UnitCappedTokenTransfersHub is Test {
     vm.assume(_token != tokens[0] && _token != tokens[1] && _token != tokens[2]);
     _amount = bound(_amount, 0, 1 ether);
 
-    // It reverts
+    // it reverts
     vm.expectRevert(ICappedTokenTransfersHub.TokenNotRegisteredInHub.selector);
     cappedTokenTransfersHub.createNewActionBuilder(_token, _amount);
   }
