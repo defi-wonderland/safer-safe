@@ -1,5 +1,11 @@
 UnitSimpleActionsFactory::createSimpleActions
-└── when called
+└── when creating a SimpleActions contract
     ├── it should deploy a SimpleActions contract with correct args
-    └── it should match the parameters sent to the constructor
+    ├── it should match the parameters sent to the constructor
+    └── it should store the contract in the factory
+
+UnitSimpleActionsFactory::createSimpleAction
+└── when creating a SimpleActions contract with a single simple action
+    ├── it should deploy a SimpleActions contract with a single simple action args
+    ├── it should match the parameters sent to the constructor
     └── it should store the contract in the factory
