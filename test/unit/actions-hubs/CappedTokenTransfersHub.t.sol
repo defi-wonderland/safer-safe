@@ -54,8 +54,10 @@ contract UnitCappedTokenTransfersHub is Test {
 
     // it creates a new CappedTokenTransfers action builder
     address _actionBuilder = cappedTokenTransfersHub.createNewActionBuilder(tokens[0], 100);
-    assertEq(ICappedTokenTransfers(_actionBuilder).FACTORY(), address(cappedTokenTransfersHub));
     assertNotEq(_actionBuilder, address(0));
+
+    // it sets the hub address in the child contract
+    assertEq(ICappedTokenTransfers(_actionBuilder).FACTORY(), address(cappedTokenTransfersHub));
   }
 
   function test_CreateNewActionBuilderWhenNotCalledByTheSafeOwner() external {

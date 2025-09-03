@@ -47,7 +47,7 @@ contract IntegrationCappedTokenTransfers is IntegrationEthereumBase {
     vm.prank(_safeOwners[0]);
     address _actionsBuilder = _cappedTokenTransfersHub.createNewActionBuilder(address(WETH), _safeBalance);
 
-    // Allow the SafeEntrypoint to call the contract
+    // Allow the CanonGuard to call the contract
     uint256 _approvalDuration = 1 days;
 
     vm.prank(address(SAFE_PROXY));
@@ -83,7 +83,7 @@ contract IntegrationCappedTokenTransfers is IntegrationEthereumBase {
     vm.prank(_safeOwners[0]);
     address _actionsBuilder = _cappedTokenTransfersHub.createNewActionBuilder(address(WETH), 1000 ether);
 
-    // Allow the SafeEntrypoint to call the contract
+    // Allow the CanonGuard to call the contract
     uint256 _approvalDuration = 1 days;
 
     vm.prank(address(SAFE_PROXY));

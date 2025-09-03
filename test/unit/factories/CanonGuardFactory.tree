@@ -6,4 +6,5 @@ UnitCanonGuardFactory::createCanonGuard
 └── when called
     ├── it should deploy a new CanonGuard
     └── it should match the parameters sent to the constructor
+    └── it should set the factory address in the child contract
     └── it should store the contract in the factory

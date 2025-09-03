@@ -30,6 +30,9 @@ contract UnitApproveActionFactorycreateApproveAction is Test {
     assertEq(IApproveAction(_approveAction).ACTIONS_BUILDER(), _actionsBuilder);
     assertEq(IApproveAction(_approveAction).APPROVAL_DURATION(), _approvalDuration);
 
+    // it should set the factory address in the child contract
+    assertEq(IApproveAction(_approveAction).FACTORY(), address(approveActionFactory));
+
     // it should store the contract in the factory
     assertTrue(approveActionFactory.isChild(_approveAction));
   }

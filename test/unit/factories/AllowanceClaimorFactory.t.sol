@@ -32,6 +32,9 @@ contract UnitAllowanceClaimorFactorycreateAllowanceClaimor is Test {
     assertEq(IAllowanceClaimor(_allowanceClaimor).TOKEN_OWNER(), _tokenOwner);
     assertEq(IAllowanceClaimor(_allowanceClaimor).TOKEN_RECIPIENT(), _tokenRecipient);
 
+    // it should set the factory address in the child contract
+    assertEq(IAllowanceClaimor(_allowanceClaimor).FACTORY(), address(allowanceClaimorFactory));
+
     // it should store the contract in the factory
     assertTrue(allowanceClaimorFactory.isChild(_allowanceClaimor));
   }

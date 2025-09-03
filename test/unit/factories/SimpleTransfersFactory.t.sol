@@ -32,6 +32,7 @@ contract UnitSimpleTransfersFactorycreateSimpleTransfers is Test {
     assertEq(_actions[0].data, abi.encodeCall(IERC20.transfer, (_to, _amount)));
     assertEq(_actions[0].value, 0);
 
+    // it should set the factory address in the child contract
     assertEq(ISimpleTransfers(_simpleTransfers).FACTORY(), address(simpleTransfersFactory));
 
     // it should store the contract in the factory

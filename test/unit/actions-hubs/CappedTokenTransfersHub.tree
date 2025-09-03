@@ -9,7 +9,8 @@ UnitCappedTokenTransfersHub::constructor
 
 UnitCappedTokenTransfersHub::createNewActionBuilder
 ├── When called by the safe owner
-│   └── it creates a new CappedTokenTransfers action builder
+│   ├── it creates a new CappedTokenTransfers action builder
+│   └── it sets the hub address in the child contract
 └── When not called by the safe owner
     └── It reverts
 

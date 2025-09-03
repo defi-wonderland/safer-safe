@@ -33,6 +33,9 @@ contract UnitSimpleActionsFactorycreateSimpleActions is Test {
     assertEq(_savedActions[0].data, _completeCallData);
     assertEq(_savedActions[0].value, _simpleActions.value);
 
+    // it should set the factory address in the child contract
+    assertEq(ISimpleActions(_simpleActionsContract).FACTORY(), address(simpleActionsFactory));
+
     // it should store the contract in the factory
     assertTrue(simpleActionsFactory.isChild(_simpleActionsContract));
   }

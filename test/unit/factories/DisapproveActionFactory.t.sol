@@ -27,6 +27,9 @@ contract UnitDisapproveActionFactorycreateDisapproveAction is Test {
     assertEq(IDisapproveAction(_disapproveAction).CANON_GUARD(), _canonGuard);
     assertEq(IDisapproveAction(_disapproveAction).ACTIONS_BUILDER(), _actionsBuilder);
 
+    // it should set the factory address in the child contract
+    assertEq(IDisapproveAction(_disapproveAction).FACTORY(), address(disapproveActionFactory));
+
     // it should store the contract in the factory
     assertTrue(disapproveActionFactory.isChild(_disapproveAction));
   }

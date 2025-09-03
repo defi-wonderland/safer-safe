@@ -35,6 +35,9 @@ contract UnitCappedTokenTransfersHubFactorycreateCappedTokenTransfersHub is Test
       assertEq(ICappedTokenTransfersHub(hub).cap(tokens[i]), caps[i]);
     }
 
+    // it should set the factory address in the child contract
+    assertEq(ICappedTokenTransfersHub(hub).FACTORY(), address(cappedTokenTransfersHubFactory));
+
     // it should store the contract in the factory
     assertTrue(cappedTokenTransfersHubFactory.isChild(hub));
   }

@@ -70,6 +70,9 @@ contract UnitCanonGuardFactory is Test {
     assertEq(ICanonGuard(_canonGuard).TX_EXPIRY_DELAY(), _txExpiryDelay);
     assertEq(ICanonGuard(_canonGuard).MAX_APPROVAL_DURATION(), _maxApprovalDuration);
 
+    // it should set the factory address in the child contract
+    assertEq(ICanonGuard(_canonGuard).FACTORY(), address(canonGuardFactory));
+
     // it should store the contract in the factory
     assertTrue(canonGuardFactory.isChild(_canonGuard));
   }
