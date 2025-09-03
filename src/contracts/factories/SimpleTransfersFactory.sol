@@ -22,4 +22,16 @@ contract SimpleTransfersFactory is ISimpleTransfersFactory, Factory {
 
     _contractsCreated[_simpleTransfers] = true;
   }
+
+  /// @inheritdoc ISimpleTransfersFactory
+  function createSimpleTransfer(ISimpleTransfers.TransferAction calldata _transferAction)
+    external
+    returns (address _simpleTransfers)
+  {
+    ISimpleTransfers.TransferAction[] memory _transferActions = new ISimpleTransfers.TransferAction[](1);
+    _transferActions[0] = _transferAction;
+    _simpleTransfers = address(new SimpleTransfers(address(this), _transferActions));
+
+    _contractsCreated[_simpleTransfers] = true;
+  }
 }
