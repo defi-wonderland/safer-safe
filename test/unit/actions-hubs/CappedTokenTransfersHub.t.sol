@@ -52,15 +52,16 @@ contract UnitCappedTokenTransfersHub is Test {
     _;
   }
 
-  function test_CreateNewActionBuilderWhenTheTokenIsNotRegisteredInTheHub(address _token)
-    external
-    whenCalledByTheSafeOwner
-  {
+  function test_CreateNewActionBuilderWhenTheTokenIsNotRegisteredInTheHub(
+    address _token,
+    uint256 _amount
+  ) external whenCalledByTheSafeOwner {
     vm.assume(_token != tokens[0] && _token != tokens[1] && _token != tokens[2]);
+    _amount = bound(_amount, 0, 1 ether);
 
     // It reverts
     vm.expectRevert(ICappedTokenTransfersHub.TokenNotRegisteredInHub.selector);
-    cappedTokenTransfersHub.createNewActionBuilder(_token, 100);
+    cappedTokenTransfersHub.createNewActionBuilder(_token, _amount);
   }
 
   function test_CreateNewActionBuilderWhenTheTokenIsRegisteredInTheHub() external whenCalledByTheSafeOwner {
