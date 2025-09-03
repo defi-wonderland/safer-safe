@@ -47,9 +47,23 @@ contract UnitCappedTokenTransfersHub is Test {
     }
   }
 
-  function test_CreateNewActionBuilderWhenCalledByTheSafeOwner() external {
+  modifier whenCalledByTheSafeOwner() {
     vm.mockCall(address(safe), abi.encodeWithSelector(IOwnerManager.isOwner.selector), abi.encode(true));
+    _;
+  }
 
+  function test_CreateNewActionBuilderWhenTheTokenIsNotRegisteredInTheHub(address _token)
+    external
+    whenCalledByTheSafeOwner
+  {
+    vm.assume(_token != tokens[0] && _token != tokens[1] && _token != tokens[2]);
+
+    // It reverts
+    vm.expectRevert(ICappedTokenTransfersHub.TokenNotRegisteredInHub.selector);
+    cappedTokenTransfersHub.createNewActionBuilder(_token, 100);
+  }
+
+  function test_CreateNewActionBuilderWhenTheTokenIsRegisteredInTheHub() external whenCalledByTheSafeOwner {
     // it creates a new CappedTokenTransfers action builder
     address actionBuilder = cappedTokenTransfersHub.createNewActionBuilder(tokens[0], 100);
     assertNotEq(actionBuilder, address(0));
