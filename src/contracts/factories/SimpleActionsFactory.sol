@@ -20,4 +20,14 @@ contract SimpleActionsFactory is ISimpleActionsFactory {
   {
     _simpleActions = address(new SimpleActions(_smplActions));
   }
+
+  /// @inheritdoc ISimpleActionsFactory
+  function createSimpleAction(ISimpleActions.SimpleAction calldata _simpleAction)
+    external
+    returns (address _simpleActions)
+  {
+    ISimpleActions.SimpleAction[] memory _simpleActionsArray = new ISimpleActions.SimpleAction[](1);
+    _simpleActionsArray[0] = _simpleAction;
+    _simpleActions = address(new SimpleActions(_simpleActionsArray));
+  }
 }
