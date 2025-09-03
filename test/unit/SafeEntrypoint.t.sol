@@ -69,7 +69,7 @@ contract UnitSafeEntrypoint is Test {
     uint256 _txExpiryDelay,
     uint256 _maxApprovalDuration
   ) external {
-    _txExpiryDelay = bound(_txExpiryDelay, safeEntrypoint.MIN_EXPIRY_TIME(), type(uint128).max - type(uint64).max);
+    _txExpiryDelay = bound(_txExpiryDelay, safeEntrypoint.MIN_EXPIRY_TIME(), type(uint128).max);
     _maxApprovalDuration = bound(_maxApprovalDuration, safeEntrypoint.MIN_EXPIRY_TIME(), type(uint256).max);
     _shortTxExecutionDelay = bound(_shortTxExecutionDelay, 0, type(uint128).max - 1);
     _longTxExecutionDelay = bound(_longTxExecutionDelay, _shortTxExecutionDelay, type(uint128).max);
