@@ -45,5 +45,8 @@ contract UnitEverclearTokenStakeFactorycreateEverclearTokenStake is Test {
     assertEq(address(IEverclearTokenStake(_everclearTokenStake).CLEAR()), _clear);
     assertEq(address(IEverclearTokenStake(_everclearTokenStake).SAFE()), _safe);
     assertEq(IEverclearTokenStake(_everclearTokenStake).LOCK_TIME(), _lockTime);
+
+    // it should store the contract as a factory children
+    assertTrue(everclearTokenStakeFactory.isChild(_everclearTokenStake));
   }
 }

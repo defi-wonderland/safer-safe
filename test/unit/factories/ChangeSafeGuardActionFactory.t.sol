@@ -29,5 +29,8 @@ contract UnitChangeSafeGuardActionFactorycreateChangeSafeGuardAction is Test {
     IChangeSafeGuardAction _changeSafeGuardAction = IChangeSafeGuardAction(_changeSafeGuardActionContract);
     assertEq(_changeSafeGuardAction.SAFE(), _safe);
     assertEq(_changeSafeGuardAction.SAFE_GUARD(), _safeGuard);
+
+    // it should store the contract as a factory children
+    assertTrue(changeSafeGuardActionFactory.isChild(_changeSafeGuardActionContract));
   }
 }
