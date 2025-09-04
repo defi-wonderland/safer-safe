@@ -7,18 +7,18 @@ import {ISetEmergencyTriggerAction} from 'interfaces/actions-builders/ISetEmerge
 
 contract SetEmergencyTriggerAction is ISetEmergencyTriggerAction {
   /// @inheritdoc ISetEmergencyTriggerAction
-  address public immutable SAFE_ENTRYPOINT;
+  address public immutable CANON_GUARD;
 
   /// @inheritdoc ISetEmergencyTriggerAction
   address public immutable EMERGENCY_TRIGGER;
 
   /**
    * @notice Constructor that sets up the SetEmergencyTriggerAction contract
-   * @param _safeEntrypoint The safe entrypoint contract address that implements IEmergencyModeHook
+   * @param _canonGuard The canon guard contract address that implements IEmergencyModeHook
    * @param _emergencyTrigger The emergency trigger address
    */
-  constructor(address _safeEntrypoint, address _emergencyTrigger) {
-    SAFE_ENTRYPOINT = _safeEntrypoint;
+  constructor(address _canonGuard, address _emergencyTrigger) {
+    CANON_GUARD = _canonGuard;
     EMERGENCY_TRIGGER = _emergencyTrigger;
   }
 
@@ -28,7 +28,7 @@ contract SetEmergencyTriggerAction is ISetEmergencyTriggerAction {
   function getActions() external view returns (Action[] memory _actions) {
     _actions = new Action[](1);
     _actions[0] = Action({
-      target: SAFE_ENTRYPOINT,
+      target: CANON_GUARD,
       data: abi.encodeCall(IEmergencyModeHook.setEmergencyTrigger, (EMERGENCY_TRIGGER)),
       value: 0
     });

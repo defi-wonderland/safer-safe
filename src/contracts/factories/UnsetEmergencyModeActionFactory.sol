@@ -12,7 +12,7 @@ contract UnsetEmergencyModeActionFactory is IUnsetEmergencyModeActionFactory {
   // ~~~ FACTORY METHODS ~~~
 
   /// @inheritdoc IUnsetEmergencyModeActionFactory
-  function createUnsetEmergencyModeAction(address _safeEntrypoint) external returns (address _unsetEmergencyModeAction) {
-    _unsetEmergencyModeAction = address(new UnsetEmergencyModeAction(_safeEntrypoint));
+  function createUnsetEmergencyModeAction(address _canonGuard) external returns (address _unsetEmergencyModeAction) {
+    _unsetEmergencyModeAction = address(new UnsetEmergencyModeAction(_canonGuard));
   }
 }

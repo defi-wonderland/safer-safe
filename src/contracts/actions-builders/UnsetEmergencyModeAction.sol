@@ -7,14 +7,14 @@ import {IUnsetEmergencyModeAction} from 'interfaces/actions-builders/IUnsetEmerg
 
 contract UnsetEmergencyModeAction is IUnsetEmergencyModeAction {
   /// @inheritdoc IUnsetEmergencyModeAction
-  address public immutable SAFE_ENTRYPOINT;
+  address public immutable CANON_GUARD;
 
   /**
    * @notice Constructor that sets up the UnsetEmergencyModeAction contract
-   * @param _safeEntrypoint The safe entrypoint contract address that implements IEmergencyModeHook
+   * @param _canonGuard The canon guard contract address that implements IEmergencyModeHook
    */
-  constructor(address _safeEntrypoint) {
-    SAFE_ENTRYPOINT = _safeEntrypoint;
+  constructor(address _canonGuard) {
+    CANON_GUARD = _canonGuard;
   }
 
   // ~~~ ACTIONS METHODS ~~~
@@ -23,6 +23,6 @@ contract UnsetEmergencyModeAction is IUnsetEmergencyModeAction {
   function getActions() external view returns (Action[] memory _actions) {
     _actions = new Action[](1);
     _actions[0] =
-      Action({target: SAFE_ENTRYPOINT, data: abi.encodeCall(IEmergencyModeHook.unsetEmergencyMode, ()), value: 0});
+      Action({target: CANON_GUARD, data: abi.encodeCall(IEmergencyModeHook.unsetEmergencyMode, ()), value: 0});
   }
 }

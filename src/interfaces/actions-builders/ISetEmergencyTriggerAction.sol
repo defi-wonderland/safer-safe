@@ -11,10 +11,10 @@ interface ISetEmergencyTriggerAction is IActionsBuilder {
   // ~~~ STORAGE METHODS ~~~
 
   /**
-   * @notice Gets the safe entrypoint contract address
-   * @return _safeEntrypoint The safe entrypoint contract address
+   * @notice Gets the canon guard contract address
+   * @return _canonGuard The canon guard contract address
    */
-  function SAFE_ENTRYPOINT() external view returns (address _safeEntrypoint);
+  function CANON_GUARD() external view returns (address _canonGuard);
 
   /**
    * @notice Gets the emergency trigger address

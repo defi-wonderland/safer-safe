@@ -13,9 +13,9 @@ contract SetEmergencyCallerActionFactory is ISetEmergencyCallerActionFactory {
 
   /// @inheritdoc ISetEmergencyCallerActionFactory
   function createSetEmergencyCallerAction(
-    address _safeEntrypoint,
+    address _canonGuard,
     address _emergencyCaller
   ) external returns (address _setEmergencyCallerAction) {
-    _setEmergencyCallerAction = address(new SetEmergencyCallerAction(_safeEntrypoint, _emergencyCaller));
+    _setEmergencyCallerAction = address(new SetEmergencyCallerAction(_canonGuard, _emergencyCaller));
   }
 }

@@ -7,18 +7,18 @@ import {ISetEmergencyCallerAction} from 'interfaces/actions-builders/ISetEmergen
 
 contract SetEmergencyCallerAction is ISetEmergencyCallerAction {
   /// @inheritdoc ISetEmergencyCallerAction
-  address public immutable SAFE_ENTRYPOINT;
+  address public immutable CANON_GUARD;
 
   /// @inheritdoc ISetEmergencyCallerAction
   address public immutable EMERGENCY_CALLER;
 
   /**
    * @notice Constructor that sets up the SetEmergencyCallerAction contract
-   * @param _safeEntrypoint The safe entrypoint contract address that implements IEmergencyModeHook
+   * @param _canonGuard The canon guard contract address that implements IEmergencyModeHook
    * @param _emergencyCaller The emergency caller address
    */
-  constructor(address _safeEntrypoint, address _emergencyCaller) {
-    SAFE_ENTRYPOINT = _safeEntrypoint;
+  constructor(address _canonGuard, address _emergencyCaller) {
+    CANON_GUARD = _canonGuard;
     EMERGENCY_CALLER = _emergencyCaller;
   }
 
@@ -28,7 +28,7 @@ contract SetEmergencyCallerAction is ISetEmergencyCallerAction {
   function getActions() external view returns (Action[] memory _actions) {
     _actions = new Action[](1);
     _actions[0] = Action({
-      target: SAFE_ENTRYPOINT,
+      target: CANON_GUARD,
       data: abi.encodeCall(IEmergencyModeHook.setEmergencyCaller, (EMERGENCY_CALLER)),
       value: 0
     });

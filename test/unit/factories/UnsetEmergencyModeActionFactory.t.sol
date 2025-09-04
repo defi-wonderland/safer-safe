@@ -13,16 +13,16 @@ contract UnitUnsetEmergencyModeActionFactorycreateUnsetEmergencyModeAction is Te
     unsetEmergencyModeActionFactory = new UnsetEmergencyModeActionFactory();
   }
 
-  function test_WhenCalled(address _safeEntrypoint) external {
-    address _unsetEmergencyModeAction = unsetEmergencyModeActionFactory.createUnsetEmergencyModeAction(_safeEntrypoint);
+  function test_WhenCalled(address _canonGuard) external {
+    address _unsetEmergencyModeAction = unsetEmergencyModeActionFactory.createUnsetEmergencyModeAction(_canonGuard);
 
     auxUnsetEmergencyModeAction =
-      IUnsetEmergencyModeAction(deployCode('UnsetEmergencyModeAction', abi.encode(_safeEntrypoint)));
+      IUnsetEmergencyModeAction(deployCode('UnsetEmergencyModeAction', abi.encode(_canonGuard)));
 
     // it should deploy an UnsetEmergencyModeAction contract with correct args
     assertEq(address(auxUnsetEmergencyModeAction).code, _unsetEmergencyModeAction.code);
 
     // it should match the parameters sent to the constructor
-    assertEq(IUnsetEmergencyModeAction(_unsetEmergencyModeAction).SAFE_ENTRYPOINT(), _safeEntrypoint);
+    assertEq(IUnsetEmergencyModeAction(_unsetEmergencyModeAction).CANON_GUARD(), _canonGuard);
   }
 }

@@ -13,19 +13,18 @@ contract UnitSetEmergencyTriggerActionFactorycreateSetEmergencyTriggerAction is 
     setEmergencyTriggerActionFactory = new SetEmergencyTriggerActionFactory();
   }
 
-  function test_WhenCalled(address _safeEntrypoint, address _emergencyTrigger) external {
+  function test_WhenCalled(address _canonGuard, address _emergencyTrigger) external {
     address _setEmergencyTriggerAction =
-      setEmergencyTriggerActionFactory.createSetEmergencyTriggerAction(_safeEntrypoint, _emergencyTrigger);
+      setEmergencyTriggerActionFactory.createSetEmergencyTriggerAction(_canonGuard, _emergencyTrigger);
 
-    auxSetEmergencyTriggerAction = ISetEmergencyTriggerAction(
-      deployCode('SetEmergencyTriggerAction', abi.encode(_safeEntrypoint, _emergencyTrigger))
-    );
+    auxSetEmergencyTriggerAction =
+      ISetEmergencyTriggerAction(deployCode('SetEmergencyTriggerAction', abi.encode(_canonGuard, _emergencyTrigger)));
 
     // it should deploy a SetEmergencyTriggerAction contract with correct args
     assertEq(address(auxSetEmergencyTriggerAction).code, _setEmergencyTriggerAction.code);
 
     // it should match the parameters sent to the constructor
-    assertEq(ISetEmergencyTriggerAction(_setEmergencyTriggerAction).SAFE_ENTRYPOINT(), _safeEntrypoint);
+    assertEq(ISetEmergencyTriggerAction(_setEmergencyTriggerAction).CANON_GUARD(), _canonGuard);
     assertEq(ISetEmergencyTriggerAction(_setEmergencyTriggerAction).EMERGENCY_TRIGGER(), _emergencyTrigger);
   }
 }

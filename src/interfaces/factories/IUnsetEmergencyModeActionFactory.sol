@@ -10,8 +10,8 @@ interface IUnsetEmergencyModeActionFactory {
 
   /**
    * @notice Creates an UnsetEmergencyModeAction contract
-   * @param _safeEntrypoint The safe entrypoint contract address
+   * @param _canonGuard The canon guard contract address
    * @return _unsetEmergencyModeAction The UnsetEmergencyModeAction contract address
    */
-  function createUnsetEmergencyModeAction(address _safeEntrypoint) external returns (address _unsetEmergencyModeAction);
+  function createUnsetEmergencyModeAction(address _canonGuard) external returns (address _unsetEmergencyModeAction);
 }
