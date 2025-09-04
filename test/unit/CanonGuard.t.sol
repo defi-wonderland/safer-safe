@@ -1,17 +1,17 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.29;
 
-import {SafeEntrypointForTest} from './mocks/SafeEntrypointForTest.sol';
+import {CanonGuardForTest} from './mocks/CanonGuardForTest.sol';
 import {IOwnerManager} from '@safe-smart-account/interfaces/IOwnerManager.sol';
 import {ISafe} from '@safe-smart-account/interfaces/ISafe.sol';
-import {ISafeEntrypoint} from 'contracts/SafeEntrypoint.sol';
+import {ICanonGuard} from 'contracts/CanonGuard.sol';
 import {ISafeManageable} from 'contracts/SafeManageable.sol';
 import {Test} from 'forge-std/Test.sol';
 import {IActionHub} from 'interfaces/action-hubs/IActionHub.sol';
 import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 
-contract UnitSafeEntrypoint is Test {
-  SafeEntrypointForTest public safeEntrypoint;
+contract UnitCanonGuard is Test {
+  CanonGuardForTest public canonGuard;
 
   uint256 public constant SHORT_TX_EXECUTION_DELAY = 1 hours;
   uint256 public constant LONG_TX_EXECUTION_DELAY = 7 days;
@@ -24,7 +24,7 @@ contract UnitSafeEntrypoint is Test {
   address public immutable EMERGENCY_CALLER = makeAddr('EMERGENCY_CALLER');
 
   function setUp() public {
-    safeEntrypoint = new SafeEntrypointForTest(
+    canonGuard = new CanonGuardForTest(
       SAFE,
       MULTI_SEND_CALL_ONLY,
       SHORT_TX_EXECUTION_DELAY,
@@ -69,12 +69,12 @@ contract UnitSafeEntrypoint is Test {
     uint256 _txExpiryDelay,
     uint256 _maxApprovalDuration
   ) external {
-    _txExpiryDelay = bound(_txExpiryDelay, safeEntrypoint.MIN_EXPIRY_TIME(), type(uint128).max);
-    _maxApprovalDuration = bound(_maxApprovalDuration, safeEntrypoint.MIN_EXPIRY_TIME(), type(uint256).max);
+    _txExpiryDelay = bound(_txExpiryDelay, canonGuard.MIN_EXPIRY_TIME(), type(uint128).max);
+    _maxApprovalDuration = bound(_maxApprovalDuration, canonGuard.MIN_EXPIRY_TIME(), type(uint256).max);
     _shortTxExecutionDelay = bound(_shortTxExecutionDelay, 0, type(uint128).max - 1);
     _longTxExecutionDelay = bound(_longTxExecutionDelay, _shortTxExecutionDelay, type(uint128).max);
 
-    safeEntrypoint = new SafeEntrypointForTest(
+    canonGuard = new CanonGuardForTest(
       _safe,
       _multiSendCallOnly,
       _shortTxExecutionDelay,
@@ -84,20 +84,20 @@ contract UnitSafeEntrypoint is Test {
       EMERGENCY_TRIGGER,
       EMERGENCY_CALLER
     );
-    assertEq(address(ISafeManageable(address(safeEntrypoint)).SAFE()), _safe);
-    assertEq(safeEntrypoint.MULTI_SEND_CALL_ONLY(), _multiSendCallOnly);
-    assertEq(safeEntrypoint.SHORT_TX_EXECUTION_DELAY(), _shortTxExecutionDelay);
-    assertEq(safeEntrypoint.LONG_TX_EXECUTION_DELAY(), _longTxExecutionDelay);
-    assertEq(safeEntrypoint.TX_EXPIRY_DELAY(), _txExpiryDelay);
-    assertEq(safeEntrypoint.MAX_APPROVAL_DURATION(), _maxApprovalDuration);
+    assertEq(address(ISafeManageable(address(canonGuard)).SAFE()), _safe);
+    assertEq(canonGuard.MULTI_SEND_CALL_ONLY(), _multiSendCallOnly);
+    assertEq(canonGuard.SHORT_TX_EXECUTION_DELAY(), _shortTxExecutionDelay);
+    assertEq(canonGuard.LONG_TX_EXECUTION_DELAY(), _longTxExecutionDelay);
+    assertEq(canonGuard.TX_EXPIRY_DELAY(), _txExpiryDelay);
+    assertEq(canonGuard.MAX_APPROVAL_DURATION(), _maxApprovalDuration);
   }
 
   function test_ConstructorWhenTheTransactionExpiryDelayIsLessThanTheMinimumExpiryTime(uint256 _delay) external {
-    _delay = bound(_delay, 0, safeEntrypoint.MIN_EXPIRY_TIME() - 1);
+    _delay = bound(_delay, 0, canonGuard.MIN_EXPIRY_TIME() - 1);
 
     // it reverts
-    vm.expectRevert(ISafeEntrypoint.TxExpiryDelayCannotBeLessThanMin.selector);
-    new SafeEntrypointForTest(
+    vm.expectRevert(ICanonGuard.TxExpiryDelayCannotBeLessThanMin.selector);
+    new CanonGuardForTest(
       SAFE,
       MULTI_SEND_CALL_ONLY,
       SHORT_TX_EXECUTION_DELAY,
@@ -110,11 +110,11 @@ contract UnitSafeEntrypoint is Test {
   }
 
   function test_ConstructorWhenTheMaximumApprovalDurationIsLessThanTheMinimumExpiryTime(uint256 _duration) external {
-    _duration = bound(_duration, 0, safeEntrypoint.MIN_EXPIRY_TIME() - 1);
+    _duration = bound(_duration, 0, canonGuard.MIN_EXPIRY_TIME() - 1);
 
     // it reverts
-    vm.expectRevert(ISafeEntrypoint.MaxApprovalDurationCannotBeLessThanMin.selector);
-    new SafeEntrypointForTest(
+    vm.expectRevert(ICanonGuard.MaxApprovalDurationCannotBeLessThanMin.selector);
+    new CanonGuardForTest(
       SAFE,
       MULTI_SEND_CALL_ONLY,
       SHORT_TX_EXECUTION_DELAY,
@@ -134,8 +134,8 @@ contract UnitSafeEntrypoint is Test {
     _shortTxExecutionDelay = bound(_shortTxExecutionDelay, _longTxExecutionDelay + 1, type(uint256).max);
 
     // it reverts
-    vm.expectRevert(ISafeEntrypoint.ShortDelayCannotBeGreaterThanLongDelay.selector);
-    new SafeEntrypointForTest(
+    vm.expectRevert(ICanonGuard.ShortDelayCannotBeGreaterThanLongDelay.selector);
+    new CanonGuardForTest(
       SAFE,
       MULTI_SEND_CALL_ONLY,
       _shortTxExecutionDelay,
@@ -151,8 +151,8 @@ contract UnitSafeEntrypoint is Test {
     _txExpiryDelay = bound(_txExpiryDelay, uint256(type(uint128).max) + 1, type(uint256).max);
 
     // it reverts
-    vm.expectRevert(ISafeEntrypoint.TxExpiryDelayCannotBeGreaterThanMax.selector);
-    new SafeEntrypointForTest(
+    vm.expectRevert(ICanonGuard.TxExpiryDelayCannotBeGreaterThanMax.selector);
+    new CanonGuardForTest(
       SAFE,
       MULTI_SEND_CALL_ONLY,
       SHORT_TX_EXECUTION_DELAY,
@@ -168,8 +168,8 @@ contract UnitSafeEntrypoint is Test {
     _longTxExecutionDelay = bound(_longTxExecutionDelay, uint256(type(uint128).max) + 1, type(uint256).max);
 
     // it reverts
-    vm.expectRevert(ISafeEntrypoint.LongDelayCannotBeGreaterThanMax.selector);
-    new SafeEntrypointForTest(
+    vm.expectRevert(ICanonGuard.LongDelayCannotBeGreaterThanMax.selector);
+    new CanonGuardForTest(
       SAFE,
       MULTI_SEND_CALL_ONLY,
       SHORT_TX_EXECUTION_DELAY,
@@ -190,25 +190,25 @@ contract UnitSafeEntrypoint is Test {
   function test_ApproveActionsBuilderOrHubWhenCallerIsSafe(uint256 _approvalDuration, address _actionsBuilder) external {
     _approvalDuration = bound(_approvalDuration, 0, MAX_APPROVAL_DURATION);
 
-    vm.expectEmit(address(safeEntrypoint));
-    emit ISafeEntrypoint.ActionsBuilderOrHubApproved(
+    vm.expectEmit(address(canonGuard));
+    emit ICanonGuard.ActionsBuilderOrHubApproved(
       _actionsBuilder, _approvalDuration, block.timestamp + _approvalDuration
     );
 
     vm.prank(SAFE);
-    safeEntrypoint.approveActionsBuilderOrHub(_actionsBuilder, _approvalDuration);
+    canonGuard.approveActionsBuilderOrHub(_actionsBuilder, _approvalDuration);
 
-    assertEq(safeEntrypoint.approvalExpiries(_actionsBuilder), block.timestamp + _approvalDuration);
+    assertEq(canonGuard.approvalExpiries(_actionsBuilder), block.timestamp + _approvalDuration);
   }
 
   function test_ApproveActionsBuilderOrHubWhenApprovalDurationIsGreaterThanMaxApprovalDuration(
     uint256 _approvalDuration
   ) external whenCallerIsSafe {
-    _approvalDuration = bound(_approvalDuration, safeEntrypoint.MAX_APPROVAL_DURATION() + 1, type(uint256).max);
+    _approvalDuration = bound(_approvalDuration, canonGuard.MAX_APPROVAL_DURATION() + 1, type(uint256).max);
 
     // it reverts with InvalidApprovalDuration
-    vm.expectRevert(ISafeEntrypoint.InvalidApprovalDuration.selector);
-    safeEntrypoint.approveActionsBuilderOrHub(address(0), _approvalDuration);
+    vm.expectRevert(ICanonGuard.InvalidApprovalDuration.selector);
+    canonGuard.approveActionsBuilderOrHub(address(0), _approvalDuration);
   }
 
   function test_ApproveActionsBuilderOrHubWhenExtendingApproval(
@@ -218,19 +218,19 @@ contract UnitSafeEntrypoint is Test {
   ) external {
     _newApprovalDuration = bound(_newApprovalDuration, 0, MAX_APPROVAL_DURATION);
 
-    safeEntrypoint.mockApprovalExpiry(_actionsBuilder, _previousApprovalExpiry);
+    canonGuard.mockApprovalExpiry(_actionsBuilder, _previousApprovalExpiry);
 
-    assertEq(safeEntrypoint.approvalExpiries(_actionsBuilder), _previousApprovalExpiry);
+    assertEq(canonGuard.approvalExpiries(_actionsBuilder), _previousApprovalExpiry);
 
-    vm.expectEmit(address(safeEntrypoint));
-    emit ISafeEntrypoint.ActionsBuilderOrHubApproved(
+    vm.expectEmit(address(canonGuard));
+    emit ICanonGuard.ActionsBuilderOrHubApproved(
       _actionsBuilder, _newApprovalDuration, block.timestamp + _newApprovalDuration
     );
 
     vm.prank(SAFE);
-    safeEntrypoint.approveActionsBuilderOrHub(_actionsBuilder, _newApprovalDuration);
+    canonGuard.approveActionsBuilderOrHub(_actionsBuilder, _newApprovalDuration);
 
-    assertEq(safeEntrypoint.approvalExpiries(_actionsBuilder), block.timestamp + _newApprovalDuration);
+    assertEq(canonGuard.approvalExpiries(_actionsBuilder), block.timestamp + _newApprovalDuration);
   }
 
   function test_ApproveActionsBuilderOrHubWhenCallerIsNotSafe(
@@ -241,7 +241,7 @@ contract UnitSafeEntrypoint is Test {
     vm.assume(_caller != SAFE);
     vm.expectRevert(ISafeManageable.NotSafe.selector);
     vm.prank(_caller);
-    safeEntrypoint.approveActionsBuilderOrHub(_actionsBuilder, _approvalDuration);
+    canonGuard.approveActionsBuilderOrHub(_actionsBuilder, _approvalDuration);
   }
 
   modifier whenCallerIsSafeOwner() {
@@ -262,15 +262,15 @@ contract UnitSafeEntrypoint is Test {
     );
 
     // it emits TransactionQueued event
-    vm.expectEmit(address(safeEntrypoint));
-    emit ISafeEntrypoint.TransactionQueued(address(0), _actionsBuilder);
+    vm.expectEmit(address(canonGuard));
+    emit ICanonGuard.TransactionQueued(address(0), _actionsBuilder, true);
 
     vm.prank(_caller);
-    safeEntrypoint.queueTransaction(_actionsBuilder);
+    canonGuard.queueTransaction(_actionsBuilder);
 
     // Verify transaction info using the new interface
     (bytes memory _actionsData, uint256 _executableAt, uint256 _expiresAt) =
-      safeEntrypoint.queuedTransactions(_actionsBuilder);
+      canonGuard.queuedTransactions(_actionsBuilder);
 
     // it sets transaction info
     assertEq(_actionsData, abi.encode(new IActionsBuilder.Action[](0)));
@@ -297,15 +297,15 @@ contract UnitSafeEntrypoint is Test {
     );
 
     // it emits TransactionQueued event
-    vm.expectEmit(address(safeEntrypoint));
-    emit ISafeEntrypoint.TransactionQueued(address(0), _actionsBuilder);
+    vm.expectEmit(address(canonGuard));
+    emit ICanonGuard.TransactionQueued(address(0), _actionsBuilder, false);
 
     vm.prank(_caller);
-    safeEntrypoint.queueTransaction(_actionsBuilder);
+    canonGuard.queueTransaction(_actionsBuilder);
 
     // Verify transaction info using the new interface
     (bytes memory _actionsData, uint256 _executableAt, uint256 _expiresAt) =
-      safeEntrypoint.queuedTransactions(_actionsBuilder);
+      canonGuard.queuedTransactions(_actionsBuilder);
 
     // it sets transaction info
     assertEq(_actionsData, abi.encode(_actions));
@@ -332,16 +332,16 @@ contract UnitSafeEntrypoint is Test {
     );
 
     vm.prank(_caller);
-    safeEntrypoint.queueTransaction(_actionsBuilder);
+    canonGuard.queueTransaction(_actionsBuilder);
 
     // Move time forward past expiry
     vm.warp(block.timestamp + LONG_TX_EXECUTION_DELAY + TX_EXPIRY_DELAY + 1);
 
     vm.prank(_caller);
-    safeEntrypoint.queueTransaction(_actionsBuilder);
+    canonGuard.queueTransaction(_actionsBuilder);
 
     // Verify transaction info using the new interface
-    (,, uint256 _expiresAt) = safeEntrypoint.queuedTransactions(_actionsBuilder);
+    (,, uint256 _expiresAt) = canonGuard.queuedTransactions(_actionsBuilder);
 
     // it should queue the transaction
     assertEq(_expiresAt, block.timestamp + LONG_TX_EXECUTION_DELAY + TX_EXPIRY_DELAY);
@@ -354,7 +354,7 @@ contract UnitSafeEntrypoint is Test {
     // it reverts with NotSafeOwner
     vm.expectRevert(ISafeManageable.NotSafeOwner.selector);
     vm.prank(_caller);
-    safeEntrypoint.queueTransaction(_actionsBuilder);
+    canonGuard.queueTransaction(_actionsBuilder);
   }
 
   function test_QueueTransactionWhenTransactionIsAlreadyQueuedAndNotExpired(
@@ -364,13 +364,11 @@ contract UnitSafeEntrypoint is Test {
   ) external givenCallerIsSafeOwner(_caller) {
     _expiry = bound(_expiry, block.timestamp + 1, block.timestamp + TX_EXPIRY_DELAY);
 
-    safeEntrypoint.mockTransaction(
-      _actionsBuilder, abi.encode(new IActionsBuilder.Action[](0)), block.timestamp, _expiry
-    );
+    canonGuard.mockTransaction(_actionsBuilder, abi.encode(new IActionsBuilder.Action[](0)), block.timestamp, _expiry);
 
     // it reverts with TransactionAlreadyQueued
-    vm.expectRevert(abi.encodeWithSelector(ISafeEntrypoint.TransactionAlreadyQueued.selector, _actionsBuilder));
-    safeEntrypoint.queueTransaction(_actionsBuilder);
+    vm.expectRevert(abi.encodeWithSelector(ICanonGuard.TransactionAlreadyQueued.selector, _actionsBuilder));
+    canonGuard.queueTransaction(_actionsBuilder);
   }
 
   function test_QueueHubTransactionWhenHubIsNotAChild(
@@ -382,8 +380,8 @@ contract UnitSafeEntrypoint is Test {
     _modifyIsChildReturnValue(_actionHub, _actionsBuilder, false);
 
     // it reverts with InvalidHubOrActionsBuilder
-    vm.expectRevert(ISafeEntrypoint.InvalidHubOrActionsBuilder.selector);
-    safeEntrypoint.queueHubTransaction(_actionHub, _actionsBuilder);
+    vm.expectRevert(ICanonGuard.InvalidHubOrActionsBuilder.selector);
+    canonGuard.queueHubTransaction(_actionHub, _actionsBuilder);
   }
 
   function test_QueueHubTransactionWhenQueueingPreApprovedAction(
@@ -402,15 +400,15 @@ contract UnitSafeEntrypoint is Test {
     );
 
     // it emits TransactionQueued event
-    vm.expectEmit(address(safeEntrypoint));
-    emit ISafeEntrypoint.TransactionQueued(_actionHub, _actionsBuilder);
+    vm.expectEmit(address(canonGuard));
+    emit ICanonGuard.TransactionQueued(_actionHub, _actionsBuilder, true);
 
     vm.prank(_caller);
-    safeEntrypoint.queueHubTransaction(_actionHub, _actionsBuilder);
+    canonGuard.queueHubTransaction(_actionHub, _actionsBuilder);
 
     // Verify transaction info using the new interface
     (bytes memory _actionsData, uint256 _executableAt, uint256 _expiresAt) =
-      safeEntrypoint.queuedTransactions(_actionsBuilder);
+      canonGuard.queuedTransactions(_actionsBuilder);
 
     // it sets transaction info
     assertEq(_actionsData, abi.encode(new IActionsBuilder.Action[](0)));
@@ -442,15 +440,15 @@ contract UnitSafeEntrypoint is Test {
     );
 
     // it emits TransactionQueued event
-    vm.expectEmit(address(safeEntrypoint));
-    emit ISafeEntrypoint.TransactionQueued(_actionHub, _actionsBuilder);
+    vm.expectEmit(address(canonGuard));
+    emit ICanonGuard.TransactionQueued(_actionHub, _actionsBuilder, false);
 
     vm.prank(_caller);
-    safeEntrypoint.queueHubTransaction(_actionHub, _actionsBuilder);
+    canonGuard.queueHubTransaction(_actionHub, _actionsBuilder);
 
     // Verify transaction info using the new interface
     (bytes memory _actionsData, uint256 _executableAt, uint256 _expiresAt) =
-      safeEntrypoint.queuedTransactions(_actionsBuilder);
+      canonGuard.queuedTransactions(_actionsBuilder);
 
     // it sets transaction info
     assertEq(_actionsData, abi.encode(_actions));
@@ -482,16 +480,16 @@ contract UnitSafeEntrypoint is Test {
     );
 
     vm.prank(_caller);
-    safeEntrypoint.queueHubTransaction(_actionHub, _actionsBuilder);
+    canonGuard.queueHubTransaction(_actionHub, _actionsBuilder);
 
     // Move time forward past expiry
     vm.warp(block.timestamp + LONG_TX_EXECUTION_DELAY + TX_EXPIRY_DELAY + 1);
 
     vm.prank(_caller);
-    safeEntrypoint.queueHubTransaction(_actionHub, _actionsBuilder);
+    canonGuard.queueHubTransaction(_actionHub, _actionsBuilder);
 
     // Verify transaction info using the new interface
-    (,, uint256 _expiresAt) = safeEntrypoint.queuedTransactions(_actionsBuilder);
+    (,, uint256 _expiresAt) = canonGuard.queuedTransactions(_actionsBuilder);
 
     // it should queue the transaction
     assertEq(_expiresAt, block.timestamp + LONG_TX_EXECUTION_DELAY + TX_EXPIRY_DELAY);
@@ -510,7 +508,7 @@ contract UnitSafeEntrypoint is Test {
     // it reverts with NotSafeOwner
     vm.expectRevert(ISafeManageable.NotSafeOwner.selector);
     vm.prank(_caller);
-    safeEntrypoint.queueHubTransaction(_actionHub, _actionsBuilder);
+    canonGuard.queueHubTransaction(_actionHub, _actionsBuilder);
   }
 
   function test_QueueHubTransactionWhenTransactionIsAlreadyQueuedAndNotExpired(
@@ -527,21 +525,19 @@ contract UnitSafeEntrypoint is Test {
 
     _expiry = bound(_expiry, block.timestamp + 1, block.timestamp + TX_EXPIRY_DELAY);
 
-    safeEntrypoint.mockTransaction(
-      _actionsBuilder, abi.encode(new IActionsBuilder.Action[](0)), block.timestamp, _expiry
-    );
+    canonGuard.mockTransaction(_actionsBuilder, abi.encode(new IActionsBuilder.Action[](0)), block.timestamp, _expiry);
 
     // it reverts with TransactionAlreadyQueued
-    vm.expectRevert(abi.encodeWithSelector(ISafeEntrypoint.TransactionAlreadyQueued.selector, _actionsBuilder));
+    vm.expectRevert(abi.encodeWithSelector(ICanonGuard.TransactionAlreadyQueued.selector, _actionsBuilder));
     vm.prank(_caller);
-    safeEntrypoint.queueHubTransaction(_actionHub, _actionsBuilder);
+    canonGuard.queueHubTransaction(_actionHub, _actionsBuilder);
   }
 
   function test_ExecuteTransactionWhenTransactionIsExpired(
     address _caller,
     address _actionsBuilder,
     IActionsBuilder.Action calldata _action,
-    ISafeEntrypoint.TransactionInfo memory _txInfo
+    ICanonGuard.TransactionInfo memory _txInfo
   ) external {
     // Ensure expiresAt is valid and not 0, and that it's less than type(uint64).max - 1
     _txInfo.expiresAt = bound(_txInfo.expiresAt, 1, type(uint64).max - 1);
@@ -555,21 +551,21 @@ contract UnitSafeEntrypoint is Test {
     _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.getTransactionHash.selector), abi.encode(bytes32(0)));
     _mockAndExpect(SAFE, abi.encodeWithSelector(IOwnerManager.getOwners.selector), abi.encode(new address[](0)));
 
-    safeEntrypoint.mockTransaction(_actionsBuilder, _actionsData, _txInfo.executableAt, _txInfo.expiresAt);
+    canonGuard.mockTransaction(_actionsBuilder, _actionsData, _txInfo.executableAt, _txInfo.expiresAt);
 
     // Move time forward past expiry
     vm.warp(_txInfo.expiresAt + 1);
 
-    vm.expectRevert(ISafeEntrypoint.TransactionExpired.selector);
+    vm.expectRevert(ICanonGuard.TransactionExpired.selector);
     vm.prank(_caller);
-    safeEntrypoint.executeTransaction(_actionsBuilder);
+    canonGuard.executeTransaction(_actionsBuilder);
   }
 
   function test_ExecuteTransactionWhenApprovedTransactionIsNotYetExecutable(
     address _caller,
     address _actionsBuilder,
     IActionsBuilder.Action calldata _action,
-    ISafeEntrypoint.TransactionInfo memory _txInfo
+    ICanonGuard.TransactionInfo memory _txInfo
   ) external {
     _txInfo.expiresAt = bound(_txInfo.expiresAt, block.timestamp + 1, type(uint256).max);
     _txInfo.executableAt = bound(_txInfo.executableAt, block.timestamp + 1, type(uint256).max);
@@ -584,31 +580,31 @@ contract UnitSafeEntrypoint is Test {
     _mockAndExpect(SAFE, abi.encodeWithSelector(IOwnerManager.getOwners.selector), abi.encode(new address[](0)));
 
     // Mock a transaction that is not yet executable
-    safeEntrypoint.mockTransaction(
+    canonGuard.mockTransaction(
       _actionsBuilder, // actionsBuilder
       _actionsData, // actionsData
       _txInfo.executableAt, // executableAt
       _txInfo.expiresAt // expiresAt
     );
 
-    vm.expectRevert(ISafeEntrypoint.TransactionNotYetExecutable.selector);
+    vm.expectRevert(ICanonGuard.TransactionNotYetExecutable.selector);
     vm.prank(_caller);
-    safeEntrypoint.executeTransaction(_actionsBuilder);
+    canonGuard.executeTransaction(_actionsBuilder);
   }
 
   function test_ExecuteTransactionWhenTransactionIsNotQueued(address _actionsBuilder) external {
     _assumeFuzzable(_actionsBuilder);
 
     // it reverts with TransactionNotQueued
-    vm.expectRevert(ISafeEntrypoint.NoTransactionQueued.selector);
-    safeEntrypoint.executeTransaction(_actionsBuilder);
+    vm.expectRevert(ICanonGuard.NoTransactionQueued.selector);
+    canonGuard.executeTransaction(_actionsBuilder);
   }
 
   function test_ExecuteTransactionWhenApprovedTransactionIsValid(
     address _caller,
     address _actionsBuilder,
     IActionsBuilder.Action calldata _action,
-    ISafeEntrypoint.TransactionInfo memory _txInfo
+    ICanonGuard.TransactionInfo memory _txInfo
   ) external {
     _txInfo.expiresAt = bound(_txInfo.expiresAt, block.timestamp + 1, type(uint256).max);
     _txInfo.executableAt = bound(_txInfo.executableAt, block.timestamp - 1, block.timestamp);
@@ -623,7 +619,7 @@ contract UnitSafeEntrypoint is Test {
     // it executes transaction
     _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.execTransaction.selector), abi.encode(true));
 
-    safeEntrypoint.mockTransaction(
+    canonGuard.mockTransaction(
       _actionsBuilder, // actionsBuilder
       _actionsData, // actionsData
       _txInfo.executableAt, // executableAt
@@ -631,15 +627,15 @@ contract UnitSafeEntrypoint is Test {
     );
 
     // it emits TransactionExecuted event
-    vm.expectEmit(address(safeEntrypoint));
-    emit ISafeEntrypoint.TransactionExecuted(_actionsBuilder, bytes32(0), new address[](0));
+    vm.expectEmit(address(canonGuard));
+    emit ICanonGuard.TransactionExecuted(_actionsBuilder, bytes32(0), new address[](0));
 
     vm.prank(_caller);
-    safeEntrypoint.executeTransaction(_actionsBuilder);
+    canonGuard.executeTransaction(_actionsBuilder);
 
     // it deletes transaction from queue
     (bytes memory __actionsData, uint256 _executableAt, uint256 _expiresAt) =
-      safeEntrypoint.queuedTransactions(_actionsBuilder);
+      canonGuard.queuedTransactions(_actionsBuilder);
     assertEq(__actionsData, bytes(''));
     assertEq(_executableAt, 0);
     assertEq(_expiresAt, 0);
@@ -652,7 +648,7 @@ contract UnitSafeEntrypoint is Test {
   function test_GetSafeTransactionHashWhenTransactionExists(
     address _actionsBuilder,
     IActionsBuilder.Action memory _action,
-    ISafeEntrypoint.TransactionInfo memory _txInfo,
+    ICanonGuard.TransactionInfo memory _txInfo,
     uint256 _safeNonce,
     bytes32 _expectedHash
   ) external {
@@ -662,19 +658,19 @@ contract UnitSafeEntrypoint is Test {
     IActionsBuilder.Action[] memory _actions = new IActionsBuilder.Action[](1);
     _actions[0] = _action;
     bytes memory _actionsData = abi.encode(_actions);
-    safeEntrypoint.mockTransaction(_actionsBuilder, _actionsData, _txInfo.executableAt, _txInfo.expiresAt);
+    canonGuard.mockTransaction(_actionsBuilder, _actionsData, _txInfo.executableAt, _txInfo.expiresAt);
 
     _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.nonce.selector), abi.encode(_safeNonce));
     _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.getTransactionHash.selector), abi.encode(_expectedHash));
 
-    bytes32 _safeTxHash = safeEntrypoint.getSafeTransactionHash(_actionsBuilder);
+    bytes32 _safeTxHash = canonGuard.getSafeTransactionHash(_actionsBuilder);
     assertEq(_safeTxHash, _expectedHash);
   }
 
   function test_GetSafeTransactionHashWhenGettingHashWithNonce(
     address _actionsBuilder,
     IActionsBuilder.Action memory _action,
-    ISafeEntrypoint.TransactionInfo memory _txInfo,
+    ICanonGuard.TransactionInfo memory _txInfo,
     uint256 _safeNonce,
     bytes32 _expectedHash
   ) external {
@@ -684,11 +680,11 @@ contract UnitSafeEntrypoint is Test {
     IActionsBuilder.Action[] memory _actions = new IActionsBuilder.Action[](1);
     _actions[0] = _action;
     bytes memory _actionsData = abi.encode(_actions);
-    safeEntrypoint.mockTransaction(_actionsBuilder, _actionsData, _txInfo.executableAt, _txInfo.expiresAt);
+    canonGuard.mockTransaction(_actionsBuilder, _actionsData, _txInfo.executableAt, _txInfo.expiresAt);
 
     _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.getTransactionHash.selector), abi.encode(_expectedHash));
 
-    bytes32 _safeTxHash = safeEntrypoint.getSafeTransactionHash(_actionsBuilder, _safeNonce);
+    bytes32 _safeTxHash = canonGuard.getSafeTransactionHash(_actionsBuilder, _safeNonce);
     assertEq(_safeTxHash, _expectedHash);
   }
 
@@ -698,8 +694,8 @@ contract UnitSafeEntrypoint is Test {
     _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.nonce.selector), abi.encode(1));
 
     // it reverts with NoTransactionQueued
-    vm.expectRevert(ISafeEntrypoint.NoTransactionQueued.selector);
-    safeEntrypoint.getSafeTransactionHash(_actionsBuilder);
+    vm.expectRevert(ICanonGuard.NoTransactionQueued.selector);
+    canonGuard.getSafeTransactionHash(_actionsBuilder);
   }
 
   function test_GetApprovedHashSignersWhenTransactionExists(
@@ -707,7 +703,7 @@ contract UnitSafeEntrypoint is Test {
     address _signer2,
     address _actionsBuilder,
     IActionsBuilder.Action memory _action,
-    ISafeEntrypoint.TransactionInfo memory _txInfo,
+    ICanonGuard.TransactionInfo memory _txInfo,
     uint256 _safeNonce
   ) external {
     // Ensure expiresAt is not 0 to avoid NoTransactionQueued error
@@ -716,7 +712,7 @@ contract UnitSafeEntrypoint is Test {
     IActionsBuilder.Action[] memory _actions = new IActionsBuilder.Action[](1);
     _actions[0] = _action;
     bytes memory _actionsData = abi.encode(_actions);
-    safeEntrypoint.mockTransaction(_actionsBuilder, _actionsData, _txInfo.executableAt, _txInfo.expiresAt);
+    canonGuard.mockTransaction(_actionsBuilder, _actionsData, _txInfo.executableAt, _txInfo.expiresAt);
 
     address[] memory _signers = new address[](2);
     _signers[0] = _signer1;
@@ -727,7 +723,7 @@ contract UnitSafeEntrypoint is Test {
     _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.getTransactionHash.selector), abi.encode(bytes32(0)));
 
     // it returns approved signers
-    address[] memory _approvedSigners = safeEntrypoint.getApprovedHashSigners(_actionsBuilder, _safeNonce);
+    address[] memory _approvedSigners = canonGuard.getApprovedHashSigners(_actionsBuilder, _safeNonce);
     assertEq(_approvedSigners, _signers);
   }
 
@@ -735,14 +731,14 @@ contract UnitSafeEntrypoint is Test {
     _assumeFuzzable(_actionsBuilder);
 
     // it reverts with NoTransactionQueued
-    vm.expectRevert(ISafeEntrypoint.NoTransactionQueued.selector);
-    safeEntrypoint.getApprovedHashSigners(_actionsBuilder, _nonce);
+    vm.expectRevert(ICanonGuard.NoTransactionQueued.selector);
+    canonGuard.getApprovedHashSigners(_actionsBuilder, _nonce);
   }
 
   function test_GetSafeNonceReturnsCorrectNonce(uint256 _nonce) external {
     _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.nonce.selector), abi.encode(_nonce));
 
-    assertEq(safeEntrypoint.getSafeNonce(), _nonce);
+    assertEq(canonGuard.getSafeNonce(), _nonce);
   }
 
   modifier givenCallerIsSafeOwner(address _caller) {
@@ -757,7 +753,7 @@ contract UnitSafeEntrypoint is Test {
 
   modifier givenActionsBuilderIsApproved(address _actionsBuilder) {
     vm.prank(SAFE);
-    safeEntrypoint.approveActionsBuilderOrHub(_actionsBuilder, ACTIONS_BUILDER_APPROVAL_DURATION);
+    canonGuard.approveActionsBuilderOrHub(_actionsBuilder, ACTIONS_BUILDER_APPROVAL_DURATION);
     _;
   }
 }

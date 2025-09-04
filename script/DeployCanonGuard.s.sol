@@ -3,20 +3,20 @@ pragma solidity 0.8.29;
 
 import {Script} from 'forge-std/Script.sol';
 
-import {ISafeEntrypoint} from 'interfaces/ISafeEntrypoint.sol';
+import {ICanonGuard} from 'interfaces/ICanonGuard.sol';
 
 import {Constants} from 'script/Constants.sol';
 
-contract DeployEntrypoint is Constants, Script {
-  // ~~~ ENTRYPOINT ~~~
-  ISafeEntrypoint public safeEntrypoint;
+contract DeployCanonGuard is Constants, Script {
+  // ~~~ CANON GUARD ~~~
+  ICanonGuard public canonGuard;
 
-  function deployEntrypoint() public {
+  function deployCanonGuard() public {
     vm.startBroadcast();
 
-    // Deploy the SafeEntrypoint contract
-    safeEntrypoint = ISafeEntrypoint(
-      SAFE_ENTRYPOINT_FACTORY.createSafeEntrypoint(
+    // Deploy the CanonGuard contract
+    canonGuard = ICanonGuard(
+      CANON_GUARD_FACTORY.createCanonGuard(
         address(SAFE_PROXY),
         SHORT_TX_EXECUTION_DELAY,
         LONG_TX_EXECUTION_DELAY,

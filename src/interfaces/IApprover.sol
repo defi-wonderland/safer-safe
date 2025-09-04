@@ -2,7 +2,7 @@
 pragma solidity 0.8.29;
 
 import {ISafe} from '@safe-smart-account/interfaces/ISafe.sol';
-import {ISafeEntrypoint} from 'src/interfaces/ISafeEntrypoint.sol';
+import {ICanonGuard} from 'src/interfaces/ICanonGuard.sol';
 
 interface IApprover {
   /**
@@ -26,10 +26,10 @@ interface IApprover {
   function approveTx(address _actionBuilder, uint256 _safeNonce) external;
 
   /**
-   * @notice Returns the address of the SafeEntrypoint contract
-   * @return _entrypoint The address of the SafeEntrypoint contract
+   * @notice Returns the address of the CanonGuard contract
+   * @return _canonGuard The address of the CanonGuard contract
    */
-  function ENTRYPOINT() external view returns (ISafeEntrypoint _entrypoint);
+  function CANON_GUARD() external view returns (ICanonGuard _canonGuard);
 
   /**
    * @notice Returns the address of the Safe contract

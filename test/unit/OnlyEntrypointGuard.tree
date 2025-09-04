@@ -1,5 +1,0 @@
-UnitOnlyEntrypointGuard::checkTransaction
-├── when caller is entrypoint
-│   └── it allows transaction
-└── when caller is not entrypoint
-    └── it reverts with UnauthorizedSender

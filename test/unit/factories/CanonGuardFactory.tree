@@ -1,0 +1,9 @@
+UnitCanonGuardFactory::constructor
+└── when called
+    └── it should save the multi send call only address
+
+UnitCanonGuardFactory::createCanonGuard
+└── when called
+    ├── it should deploy a new CanonGuard
+    └── it should match the parameters sent to the constructor
+    └── it should store the contract as a factory children

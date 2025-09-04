@@ -2,27 +2,27 @@
 pragma solidity 0.8.29;
 
 import {Test} from 'forge-std/Test.sol';
-import {SafeEntrypointFactory} from 'src/contracts/factories/SafeEntrypointFactory.sol';
-import {ISafeEntrypoint} from 'src/interfaces/ISafeEntrypoint.sol';
+import {CanonGuardFactory} from 'src/contracts/factories/CanonGuardFactory.sol';
+import {ICanonGuard} from 'src/interfaces/ICanonGuard.sol';
 import {ISafeManageable} from 'src/interfaces/ISafeManageable.sol';
 
-contract UnitSafeEntrypointFactory is Test {
-  SafeEntrypointFactory public safeEntrypointFactory;
-  ISafeEntrypoint public auxSafeEntrypoint;
+contract UnitCanonGuardFactory is Test {
+  CanonGuardFactory public canonGuardFactory;
+  ICanonGuard public auxCanonGuard;
   address public multiSendCallOnly;
   uint256 public constant MIN_EXPIRY_TIME = 1 days;
 
   function setUp() external {
     multiSendCallOnly = makeAddr('multiSendCallOnly');
-    safeEntrypointFactory = new SafeEntrypointFactory(multiSendCallOnly);
+    canonGuardFactory = new CanonGuardFactory(multiSendCallOnly);
   }
 
   function test_ConstructorWhenCalled() external view {
-    // it should deploy a new SafeEntrypointFactory with correct parameters
-    assertEq(safeEntrypointFactory.MULTI_SEND_CALL_ONLY(), multiSendCallOnly);
+    // it should store the multi send call only address
+    assertEq(canonGuardFactory.MULTI_SEND_CALL_ONLY(), multiSendCallOnly);
   }
 
-  function test_CreateSafeEntrypointWhenCalled(
+  function test_CreateCanonGuardWhenCalled(
     address _safe,
     uint256 _shortTxExecutionDelay,
     uint256 _longTxExecutionDelay,
@@ -39,7 +39,7 @@ contract UnitSafeEntrypointFactory is Test {
     _shortTxExecutionDelay = bound(_shortTxExecutionDelay, 0, type(uint128).max - 1);
     _longTxExecutionDelay = bound(_longTxExecutionDelay, _shortTxExecutionDelay, type(uint128).max);
 
-    address _safeEntrypoint = safeEntrypointFactory.createSafeEntrypoint(
+    address _canonGuard = canonGuardFactory.createCanonGuard(
       _safe,
       _shortTxExecutionDelay,
       _longTxExecutionDelay,
@@ -48,9 +48,9 @@ contract UnitSafeEntrypointFactory is Test {
       _emergencyTrigger,
       _emergencyCaller
     );
-    auxSafeEntrypoint = ISafeEntrypoint(
+    auxCanonGuard = ICanonGuard(
       deployCode(
-        'SafeEntrypoint',
+        'CanonGuard',
         abi.encode(
           _safe,
           multiSendCallOnly,
@@ -64,15 +64,18 @@ contract UnitSafeEntrypointFactory is Test {
       )
     );
 
-    // it should deploy a new SafeEntrypoint
-    assertEq(address(auxSafeEntrypoint).code, _safeEntrypoint.code);
+    // it should deploy a new CanonGuard
+    assertEq(address(auxCanonGuard).code, _canonGuard.code);
 
     // it should match the parameters sent to the constructor
-    assertEq(address(ISafeManageable(_safeEntrypoint).SAFE()), _safe);
-    assertEq(ISafeEntrypoint(_safeEntrypoint).MULTI_SEND_CALL_ONLY(), multiSendCallOnly);
-    assertEq(ISafeEntrypoint(_safeEntrypoint).SHORT_TX_EXECUTION_DELAY(), _shortTxExecutionDelay);
-    assertEq(ISafeEntrypoint(_safeEntrypoint).LONG_TX_EXECUTION_DELAY(), _longTxExecutionDelay);
-    assertEq(ISafeEntrypoint(_safeEntrypoint).TX_EXPIRY_DELAY(), _txExpiryDelay);
-    assertEq(ISafeEntrypoint(_safeEntrypoint).MAX_APPROVAL_DURATION(), _maxApprovalDuration);
+    assertEq(address(ISafeManageable(_canonGuard).SAFE()), _safe);
+    assertEq(ICanonGuard(_canonGuard).MULTI_SEND_CALL_ONLY(), multiSendCallOnly);
+    assertEq(ICanonGuard(_canonGuard).SHORT_TX_EXECUTION_DELAY(), _shortTxExecutionDelay);
+    assertEq(ICanonGuard(_canonGuard).LONG_TX_EXECUTION_DELAY(), _longTxExecutionDelay);
+    assertEq(ICanonGuard(_canonGuard).TX_EXPIRY_DELAY(), _txExpiryDelay);
+    assertEq(ICanonGuard(_canonGuard).MAX_APPROVAL_DURATION(), _maxApprovalDuration);
+
+    // it should store the contract as a factory children
+    assertTrue(canonGuardFactory.isChild(_canonGuard));
   }
 }

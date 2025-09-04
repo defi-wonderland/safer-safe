@@ -23,5 +23,8 @@ contract UnitOPxActionFactorycreateOPxAction is Test {
     // it should match the parameters sent to the constructor
     assertEq(IOPxAction(_opxAction).OPX(), _opx);
     assertEq(IOPxAction(_opxAction).SAFE(), _safe);
+
+    // it should store the contract as a factory children
+    assertTrue(opxActionFactory.isChild(_opxAction));
   }
 }

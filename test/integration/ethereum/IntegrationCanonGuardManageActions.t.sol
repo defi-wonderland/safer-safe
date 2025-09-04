@@ -16,7 +16,7 @@ import {ISetEmergencyTriggerActionFactory} from 'interfaces/factories/ISetEmerge
 import {IUnsetEmergencyModeActionFactory} from 'interfaces/factories/IUnsetEmergencyModeActionFactory.sol';
 import {IntegrationEthereumBase} from 'test/integration/ethereum/IntegrationEthereumBase.sol';
 
-contract IntegrationEntrypointManageActions is IntegrationEthereumBase {
+contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
   IApproveActionFactory public approveActionFactory;
   IApproveAction public approveAction;
 
@@ -45,7 +45,7 @@ contract IntegrationEntrypointManageActions is IntegrationEthereumBase {
     // Deploy the ApproveAction contract
     approveActionFactory = new ApproveActionFactory();
     approveAction = IApproveAction(
-      approveActionFactory.createApproveAction(address(safeEntrypoint), address(actionsBuilder), APPROVAL_DURATION)
+      approveActionFactory.createApproveAction(address(canonGuard), address(actionsBuilder), APPROVAL_DURATION)
     );
 
     // Deploy emergency action factories
@@ -55,25 +55,25 @@ contract IntegrationEntrypointManageActions is IntegrationEthereumBase {
 
     // Deploy emergency actions
     setEmergencyCallerAction = ISetEmergencyCallerAction(
-      setEmergencyCallerActionFactory.createSetEmergencyCallerAction(address(safeEntrypoint), newEmergencyCaller)
+      setEmergencyCallerActionFactory.createSetEmergencyCallerAction(address(canonGuard), newEmergencyCaller)
     );
     setEmergencyTriggerAction = ISetEmergencyTriggerAction(
-      setEmergencyTriggerActionFactory.createSetEmergencyTriggerAction(address(safeEntrypoint), newEmergencyTrigger)
+      setEmergencyTriggerActionFactory.createSetEmergencyTriggerAction(address(canonGuard), newEmergencyTrigger)
     );
     unsetEmergencyModeAction =
-      IUnsetEmergencyModeAction(unsetEmergencyModeActionFactory.createUnsetEmergencyModeAction(address(safeEntrypoint)));
+      IUnsetEmergencyModeAction(unsetEmergencyModeActionFactory.createUnsetEmergencyModeAction(address(canonGuard)));
   }
 
   function test_ApproveActionsBuilderOrHub() public {
     // Queue the transaction
     vm.prank(_safeOwners[0]);
-    safeEntrypoint.queueTransaction(address(approveAction));
+    canonGuard.queueTransaction(address(approveAction));
 
     // Wait for the timelock period
     vm.warp(block.timestamp + LONG_TX_EXECUTION_DELAY);
 
     // Get the Safe transaction hash
-    bytes32 _safeTxHash = safeEntrypoint.getSafeTransactionHash(address(approveAction));
+    bytes32 _safeTxHash = canonGuard.getSafeTransactionHash(address(approveAction));
 
     // Approve the Safe transaction hash
     for (uint256 _i; _i < _safeThreshold; ++_i) {
@@ -83,10 +83,10 @@ contract IntegrationEntrypointManageActions is IntegrationEthereumBase {
     vm.stopPrank();
 
     // Execute the transaction
-    safeEntrypoint.executeTransaction(address(approveAction));
+    canonGuard.executeTransaction(address(approveAction));
 
     // Assert if the actions builder is approved
-    assertEq(safeEntrypoint.approvalExpiries(address(actionsBuilder)), block.timestamp + APPROVAL_DURATION);
+    assertEq(canonGuard.approvalExpiries(address(actionsBuilder)), block.timestamp + APPROVAL_DURATION);
   }
 
   function test_EmergencyModeFlow() public {
@@ -97,13 +97,13 @@ contract IntegrationEntrypointManageActions is IntegrationEthereumBase {
 
     // Queue the transaction
     vm.prank(_owner);
-    safeEntrypoint.queueTransaction(address(setEmergencyCallerAction));
+    canonGuard.queueTransaction(address(setEmergencyCallerAction));
 
     // Wait for the timelock period
     vm.warp(block.timestamp + LONG_TX_EXECUTION_DELAY);
 
     // Get the Safe transaction hash
-    _safeTxHash = safeEntrypoint.getSafeTransactionHash(address(setEmergencyCallerAction));
+    _safeTxHash = canonGuard.getSafeTransactionHash(address(setEmergencyCallerAction));
 
     // Approve the Safe transaction hash
     for (uint256 _i; _i < _safeThreshold; ++_i) {
@@ -113,22 +113,22 @@ contract IntegrationEntrypointManageActions is IntegrationEthereumBase {
     vm.stopPrank();
 
     // Execute the transaction
-    safeEntrypoint.executeTransaction(address(setEmergencyCallerAction));
+    canonGuard.executeTransaction(address(setEmergencyCallerAction));
 
     // Assert that the emergency caller was set
-    assertEq(IEmergencyModeHook(address(safeEntrypoint)).emergencyCaller(), newEmergencyCaller);
+    assertEq(IEmergencyModeHook(address(canonGuard)).emergencyCaller(), newEmergencyCaller);
 
     /// 2) Set emergency trigger
 
     // Queue the transaction
     vm.prank(_owner);
-    safeEntrypoint.queueTransaction(address(setEmergencyTriggerAction));
+    canonGuard.queueTransaction(address(setEmergencyTriggerAction));
 
     // Wait for the timelock period
     vm.warp(block.timestamp + LONG_TX_EXECUTION_DELAY);
 
     // Get the Safe transaction hash
-    _safeTxHash = safeEntrypoint.getSafeTransactionHash(address(setEmergencyTriggerAction));
+    _safeTxHash = canonGuard.getSafeTransactionHash(address(setEmergencyTriggerAction));
 
     // Approve the Safe transaction hash
     for (uint256 _i; _i < _safeThreshold; ++_i) {
@@ -138,31 +138,31 @@ contract IntegrationEntrypointManageActions is IntegrationEthereumBase {
     vm.stopPrank();
 
     // Execute the transaction
-    safeEntrypoint.executeTransaction(address(setEmergencyTriggerAction));
+    canonGuard.executeTransaction(address(setEmergencyTriggerAction));
 
     // Assert that the emergency trigger was set
-    assertEq(IEmergencyModeHook(address(safeEntrypoint)).emergencyTrigger(), newEmergencyTrigger);
+    assertEq(IEmergencyModeHook(address(canonGuard)).emergencyTrigger(), newEmergencyTrigger);
 
     /// 3) Set emergency mode
 
     // Queue the transaction
     vm.prank(newEmergencyTrigger);
-    IEmergencyModeHook(address(safeEntrypoint)).setEmergencyMode();
+    IEmergencyModeHook(address(canonGuard)).setEmergencyMode();
 
     // Verify emergency mode is set
-    assertTrue(IEmergencyModeHook(address(safeEntrypoint)).emergencyMode());
+    assertTrue(IEmergencyModeHook(address(canonGuard)).emergencyMode());
 
     /// 4) Unset emergency mode
 
     // Queue the transaction to unset emergency mode
     vm.prank(_owner);
-    safeEntrypoint.queueTransaction(address(unsetEmergencyModeAction));
+    canonGuard.queueTransaction(address(unsetEmergencyModeAction));
 
     // Wait for the timelock period
     vm.warp(block.timestamp + LONG_TX_EXECUTION_DELAY);
 
     // Get the Safe transaction hash
-    _safeTxHash = safeEntrypoint.getSafeTransactionHash(address(unsetEmergencyModeAction));
+    _safeTxHash = canonGuard.getSafeTransactionHash(address(unsetEmergencyModeAction));
 
     // Approve the Safe transaction hash
     for (uint256 _i; _i < _safeThreshold; ++_i) {
@@ -172,10 +172,10 @@ contract IntegrationEntrypointManageActions is IntegrationEthereumBase {
     vm.stopPrank();
 
     // Execute the transaction
-    vm.prank(IEmergencyModeHook(address(safeEntrypoint)).emergencyCaller());
-    safeEntrypoint.executeTransaction(address(unsetEmergencyModeAction));
+    vm.prank(IEmergencyModeHook(address(canonGuard)).emergencyCaller());
+    canonGuard.executeTransaction(address(unsetEmergencyModeAction));
 
     // Assert that emergency mode was unset
-    assertFalse(IEmergencyModeHook(address(safeEntrypoint)).emergencyMode());
+    assertFalse(IEmergencyModeHook(address(canonGuard)).emergencyMode());
   }
 }

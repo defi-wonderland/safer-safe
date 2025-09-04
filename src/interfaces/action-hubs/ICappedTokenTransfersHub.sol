@@ -15,6 +15,11 @@ interface ICappedTokenTransfersHub is IActionHub, ISafeManageable {
   error CapExceeded();
 
   /**
+   * @notice Thrown when creating a hub action builder for a token that is not registered in the hub
+   */
+  error TokenNotRegisteredInHub();
+
+  /**
    * @notice Thrown when the epoch length is zero
    */
   error EpochLengthCannotBeZero();

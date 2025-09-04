@@ -20,41 +20,41 @@ pragma solidity 0.8.29;
 import {Enum} from '@safe-smart-account/libraries/Enum.sol';
 import {MultiSendCallOnly} from '@safe-smart-account/libraries/MultiSendCallOnly.sol';
 import {EmergencyModeHook} from 'contracts/EmergencyModeHook.sol';
-import {OnlyEntrypointGuard} from 'contracts/OnlyEntrypointGuard.sol';
+import {OnlyCanonGuard} from 'contracts/OnlyCanonGuard.sol';
 import {SafeManageable} from 'contracts/SafeManageable.sol';
-import {ISafeEntrypoint} from 'interfaces/ISafeEntrypoint.sol';
+import {ICanonGuard} from 'interfaces/ICanonGuard.sol';
 import {IActionHub} from 'interfaces/action-hubs/IActionHub.sol';
 import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 
 /**
- * @title SafeEntrypoint
+ * @title CanonGuard
  * @notice Contract that allows for the execution of transactions on a Safe
  */
-contract SafeEntrypoint is OnlyEntrypointGuard, EmergencyModeHook, ISafeEntrypoint {
+contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
   // ~~~ STORAGE ~~~
 
-  /// @inheritdoc ISafeEntrypoint
+  /// @inheritdoc ICanonGuard
   uint256 public constant MIN_EXPIRY_TIME = 1 days;
 
-  /// @inheritdoc ISafeEntrypoint
+  /// @inheritdoc ICanonGuard
   address public immutable MULTI_SEND_CALL_ONLY;
 
-  /// @inheritdoc ISafeEntrypoint
+  /// @inheritdoc ICanonGuard
   uint256 public immutable SHORT_TX_EXECUTION_DELAY;
 
-  /// @inheritdoc ISafeEntrypoint
+  /// @inheritdoc ICanonGuard
   uint256 public immutable LONG_TX_EXECUTION_DELAY;
 
-  /// @inheritdoc ISafeEntrypoint
+  /// @inheritdoc ICanonGuard
   uint256 public immutable TX_EXPIRY_DELAY;
 
-  /// @inheritdoc ISafeEntrypoint
+  /// @inheritdoc ICanonGuard
   uint256 public immutable MAX_APPROVAL_DURATION;
 
-  /// @inheritdoc ISafeEntrypoint
+  /// @inheritdoc ICanonGuard
   mapping(address _actionsBuilder => uint256 _approvalExpiresAt) public approvalExpiries;
 
-  /// @inheritdoc ISafeEntrypoint
+  /// @inheritdoc ICanonGuard
   mapping(address _actionsBuilder => TransactionInfo _txInfo) public queuedTransactions;
 
   // ~~~ CONSTRUCTOR ~~~
@@ -96,7 +96,7 @@ contract SafeEntrypoint is OnlyEntrypointGuard, EmergencyModeHook, ISafeEntrypoi
 
   // ~~~ ADMIN METHODS ~~~
 
-  /// @inheritdoc ISafeEntrypoint
+  /// @inheritdoc ICanonGuard
   function approveActionsBuilderOrHub(address _actionsBuilderOrHub, uint256 _approvalDuration) external isSafe {
     if (_approvalDuration > MAX_APPROVAL_DURATION) revert InvalidApprovalDuration();
 
@@ -107,24 +107,24 @@ contract SafeEntrypoint is OnlyEntrypointGuard, EmergencyModeHook, ISafeEntrypoi
 
   // ~~~ TRANSACTION METHODS ~~~
 
-  /// @inheritdoc ISafeEntrypoint
+  /// @inheritdoc ICanonGuard
   function queueHubTransaction(address _actionHub, address _actionsBuilder) external isSafeOwner {
     if (!IActionHub(_actionHub).isChild(_actionsBuilder)) revert InvalidHubOrActionsBuilder();
     bool _actionIsPreApproved = _isPreApproved(_actionHub);
     _queueTransaction(_actionsBuilder, _actionIsPreApproved);
 
-    emit TransactionQueued(_actionHub, _actionsBuilder);
+    emit TransactionQueued(_actionHub, _actionsBuilder, _actionIsPreApproved);
   }
 
-  /// @inheritdoc ISafeEntrypoint
+  /// @inheritdoc ICanonGuard
   function queueTransaction(address _actionsBuilder) external isSafeOwner {
     bool _actionIsPreApproved = _isPreApproved(_actionsBuilder);
     _queueTransaction(_actionsBuilder, _actionIsPreApproved);
 
-    emit TransactionQueued(address(0), _actionsBuilder);
+    emit TransactionQueued(address(0), _actionsBuilder, _actionIsPreApproved);
   }
 
-  /// @inheritdoc ISafeEntrypoint
+  /// @inheritdoc ICanonGuard
   function executeTransaction(address _actionsBuilder) external payable {
     TransactionInfo memory _txInfo = queuedTransactions[_actionsBuilder];
     if (_txInfo.expiresAt == 0) revert NoTransactionQueued();
@@ -141,12 +141,12 @@ contract SafeEntrypoint is OnlyEntrypointGuard, EmergencyModeHook, ISafeEntrypoi
 
   // ~~~ GETTER METHODS ~~~
 
-  /// @inheritdoc ISafeEntrypoint
+  /// @inheritdoc ICanonGuard
   function getSafeTransactionHash(address _actionsBuilder) external view returns (bytes32 _safeTxHash) {
     _safeTxHash = getSafeTransactionHash(_actionsBuilder, SAFE.nonce());
   }
 
-  /// @inheritdoc ISafeEntrypoint
+  /// @inheritdoc ICanonGuard
   function getApprovedHashSigners(
     address _actionsBuilder,
     uint256 _safeNonce
@@ -161,12 +161,12 @@ contract SafeEntrypoint is OnlyEntrypointGuard, EmergencyModeHook, ISafeEntrypoi
     _approvedHashSigners = _getApprovedHashSigners(_safeTxHash);
   }
 
-  /// @inheritdoc ISafeEntrypoint
+  /// @inheritdoc ICanonGuard
   function getSafeNonce() external view returns (uint256 _safeNonce) {
     _safeNonce = SAFE.nonce();
   }
 
-  /// @inheritdoc ISafeEntrypoint
+  /// @inheritdoc ICanonGuard
   function getSafeTransactionHash(
     address _actionsBuilder,
     uint256 _safeNonce

@@ -4,10 +4,10 @@ pragma solidity 0.8.29;
 import {ISafeManageable} from 'interfaces/ISafeManageable.sol';
 
 /**
- * @title ISafeEntrypoint
- * @notice Interface for the SafeEntrypoint contract
+ * @title ICanonGuard
+ * @notice Interface for the CanonGuard contract
  */
-interface ISafeEntrypoint is ISafeManageable {
+interface ICanonGuard is ISafeManageable {
   // ~~~ STRUCTS ~~~
 
   /**
@@ -38,8 +38,9 @@ interface ISafeEntrypoint is ISafeManageable {
    * @notice Emitted when a transaction is queued
    * @param _actionHub The actionHub contract address (0 if no actionHub was used)
    * @param _actionsBuilder The actions builder contract address
+   * @param _txIsPreApproved Whether the transaction is pre-approved
    */
-  event TransactionQueued(address _actionHub, address indexed _actionsBuilder);
+  event TransactionQueued(address indexed _actionHub, address indexed _actionsBuilder, bool _txIsPreApproved);
 
   /**
    * @notice Emitted when a transaction is executed

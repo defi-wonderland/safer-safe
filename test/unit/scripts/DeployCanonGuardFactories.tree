@@ -1,6 +1,6 @@
-UnitDeploySaferSafe
+UnitDeployCanonGuardFactories
 └── when run
-    ├── it should deploy the SafeEntrypointFactory contract with correct args
+    ├── it should deploy the CanonGuardFactory contract with correct args
     ├── it should deploy the AllowanceClaimorFactory contract
     ├── it should deploy the CappedTokenTransfersFactory contract
     ├── it should deploy the SimpleActionsFactory contract
