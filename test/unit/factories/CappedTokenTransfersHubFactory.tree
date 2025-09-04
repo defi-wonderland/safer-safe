@@ -1,5 +1,5 @@
 UnitCappedTokenTransfersHubFactory::createCappedTokenTransfersHub
 └── when called
-    └── it creates a new CappedTokenTransfersHub
-    └── it should set the factory address in the child contract
+    ├── it creates a new CappedTokenTransfersHub
+    ├── it should set the factory address in the child contract
     └── it should store the contract as a factory children

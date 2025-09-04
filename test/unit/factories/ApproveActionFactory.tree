@@ -1,6 +1,6 @@
 UnitApproveActionFactory::createApproveAction
 └── when called
     ├── it should deploy an ApproveAction contract with correct args
-    └── it should match the parameters sent to the constructor
-    └── it should set the factory address in the child contract
+    ├── it should match the parameters sent to the constructor
+    ├── it should set the factory address in the child contract
     └── it should store the contract as a factory children
