@@ -7,7 +7,7 @@ import {ICanonGuard} from 'src/interfaces/ICanonGuard.sol';
 interface IApprover {
   /**
    * @notice Emitted when a transaction is approved
-   * @param _actionsBuilder The address of the actions buider
+   * @param _actionsBuilder The address of the actions builder
    * @param _safeNonce The nonce of the Safe transaction
    * @param _txHash The hash of the transaction
    */
@@ -19,8 +19,8 @@ interface IApprover {
   error InvalidSender();
 
   /**
-   * @notice Approves a transaction with the given actions buider and safe nonce
-   * @param _actionsBuilder The address of the actions buider
+   * @notice Approves a transaction with the given actions builder and safe nonce
+   * @param _actionsBuilder The address of the actions builder
    * @param _safeNonce The nonce of the Safe transaction
    */
   function approveTx(address _actionsBuilder, uint256 _safeNonce) external;

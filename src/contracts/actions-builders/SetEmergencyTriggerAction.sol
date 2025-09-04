@@ -14,7 +14,7 @@ contract SetEmergencyTriggerAction is ISetEmergencyTriggerAction, ActionsBuilder
 
   /**
    * @notice Constructor that sets up the SetEmergencyTriggerAction contract
-   * @param _parent The parent that deployed the actions buider
+   * @param _parent The parent that deployed the actions builder
    * @param _canonGuard The canon guard contract address that implements IEmergencyModeHook
    * @param _emergencyTrigger The emergency trigger address
    */

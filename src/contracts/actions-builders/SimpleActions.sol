@@ -18,7 +18,7 @@ contract SimpleActions is ISimpleActions, ActionsBuilder {
 
   /**
    * @notice Constructor that sets up the array of actions
-   * @param _parent The parent that deployed the actions buider
+   * @param _parent The parent that deployed the actions builder
    * @param _simpleActions The array of simple actions
    */
   constructor(address _parent, SimpleAction[] memory _simpleActions) ActionsBuilder(_parent) {

@@ -45,7 +45,7 @@ contract EverclearTokenStake is IEverclearTokenStake, ActionsBuilder {
 
   /**
    * @notice Constructor that sets up the variables
-   * @param _parent The parent that deployed the actions buider
+   * @param _parent The parent that deployed the actions builder
    * @param _vestingEscrow The vesting escrow contract address
    * @param _vestingWallet The vesting wallet contract address
    * @param _spokeBridge The spoke bridge contract address

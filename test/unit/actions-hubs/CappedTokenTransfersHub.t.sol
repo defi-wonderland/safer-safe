@@ -73,7 +73,7 @@ contract UnitCappedTokenTransfersHub is Test {
   }
 
   function test_CreateNewActionsBuilderWhenTheTokenIsRegisteredInTheHub() external whenCalledByTheSafeOwner {
-    // it creates a new CappedTokenTransfers actions buider
+    // it creates a new CappedTokenTransfers actions builder
     address _actionsBuilder = cappedTokenTransfersHub.createNewActionsBuilder(tokens[0], 100);
     assertNotEq(_actionsBuilder, address(0));
 

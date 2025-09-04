@@ -28,7 +28,7 @@ contract AllowanceClaimor is IAllowanceClaimor, ActionsBuilder {
 
   /**
    * @notice Constructor that sets up the Safe, token, token owner and token recipient
-   * @param _parent The parent that deployed the actions buider
+   * @param _parent The parent that deployed the actions builder
    * @param _safe The Gnosis Safe contract address
    * @param _token The token contract address
    * @param _tokenOwner The token owner address

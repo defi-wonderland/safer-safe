@@ -29,7 +29,7 @@ contract CappedTokenTransfers is ICappedTokenTransfers, ActionsBuilder {
 
   /**
    * @notice Constructor that sets up the token, amount and recipient
-   * @param _parent The parent that deployed the actions buider
+   * @param _parent The parent that deployed the actions builder
    * @param _token The token contract address
    * @param _amount The amount of tokens to transfer
    * @param _recipient The recipient of the tokens

@@ -31,11 +31,11 @@ contract IntegrationCappedTokenTransfers is IntegrationEthereumBase {
   }
 
   function test_CreateNewActionsBuilder() public {
-    // Create the new actions buider
+    // Create the new actions builder
     vm.prank(_safeOwners[0]);
     address _actionsBuilder = _cappedTokenTransfersHub.createNewActionsBuilder(address(WETH), 10 ether);
 
-    // Check that the actions buider was created correctly
+    // Check that the actions builder was created correctly
     assertTrue(IActionHub(address(_cappedTokenTransfersHub)).isChild(_actionsBuilder));
     assertEq(ICappedTokenTransfers(_actionsBuilder).TOKEN(), address(WETH));
     assertEq(ICappedTokenTransfers(_actionsBuilder).AMOUNT(), 10 ether);
@@ -44,7 +44,7 @@ contract IntegrationCappedTokenTransfers is IntegrationEthereumBase {
   }
 
   function test_TransferSuccessfully() public {
-    // Create the new actions buider
+    // Create the new actions builder
     vm.prank(_safeOwners[0]);
     address _actionsBuilder = _cappedTokenTransfersHub.createNewActionsBuilder(address(WETH), _safeBalance);
 
@@ -80,7 +80,7 @@ contract IntegrationCappedTokenTransfers is IntegrationEthereumBase {
   }
 
   function test_TransferUnsuccessfully() public {
-    // Create the new actions buider
+    // Create the new actions builder
     vm.prank(_safeOwners[0]);
     address _actionsBuilder = _cappedTokenTransfersHub.createNewActionsBuilder(address(WETH), 1000 ether);
 

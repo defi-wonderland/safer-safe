@@ -14,7 +14,7 @@ contract ChangeSafeGuardAction is IChangeSafeGuardAction, ActionsBuilder {
 
   /**
    * @notice Constructor that sets up the ChangeSafeGuardAction contract
-   * @param _parent The parent that deployed the actions buider
+   * @param _parent The parent that deployed the actions builder
    * @param _safe The Safe contract address
    * @param _safeGuard The new safe guard contract address. If the idea is to remove the guard, set it to address(0)
    */

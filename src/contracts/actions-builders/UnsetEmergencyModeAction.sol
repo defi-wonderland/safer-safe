@@ -11,7 +11,7 @@ contract UnsetEmergencyModeAction is IUnsetEmergencyModeAction, ActionsBuilder {
 
   /**
    * @notice Constructor that sets up the UnsetEmergencyModeAction contract
-   * @param _parent The parent that deployed the actions buider
+   * @param _parent The parent that deployed the actions builder
    * @param _canonGuard The canon guard contract address that implements IEmergencyModeHook
    */
   constructor(address _parent, address _canonGuard) ActionsBuilder(_parent) {

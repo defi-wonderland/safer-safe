@@ -26,7 +26,7 @@ contract EverclearTokenConversion is IEverclearTokenConversion, ActionsBuilder {
 
   /**
    * @notice Constructor that sets up the xERC20Lockbox and NEXT
-   * @param _parent The parent that deployed the actions buider
+   * @param _parent The parent that deployed the actions builder
    * @param _lockbox The xERC20Lockbox contract address
    * @param _next The NEXT contract address
    * @param _safe The SAFE contract address

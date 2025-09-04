@@ -53,9 +53,9 @@ contract UnitActionHub is Test {
 
     address _actionsBuilder = actionHub.forTest_createNewActionsBuilder(_initCode, _salt);
 
-    // it creates a new actions buider
+    // it creates a new actions builder
     assertEq(_actionsBuilder, _expectedActionsBuilder);
-    // it marks the actions buider as a child
+    // it marks the actions builder as a child
     assertTrue(actionHub.isChild(_actionsBuilder));
   }
 }
