@@ -35,7 +35,7 @@ contract UnitCappedTokenTransfersHubFactorycreateCappedTokenTransfersHub is Test
       assertEq(ICappedTokenTransfersHub(hub).cap(tokens[i]), caps[i]);
     }
 
-    // it should store the contract as children
+    // it should store the contract as a factory children
     assertTrue(cappedTokenTransfersHubFactory.isChild(hub));
   }
 }

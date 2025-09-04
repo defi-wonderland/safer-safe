@@ -1,4 +1,4 @@
 UnitCappedTokenTransfersHubFactory::createCappedTokenTransfersHub
 └── when called
     └── it creates a new CappedTokenTransfersHub
-    └── it should store the contract as children
+    └── it should store the contract as a factory children

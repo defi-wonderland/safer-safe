@@ -2,4 +2,4 @@ UnitDisapproveActionFactory::createDisapproveAction
 └── when called
     ├── it should deploy a DisapproveAction
     └── it should match the parameters sent to the constructor
-    └── it should store the contract as children
+    └── it should store the contract as a factory children

@@ -2,4 +2,4 @@ UnitEverclearTokenStakeFactory::createEverclearTokenStake
 └── when called
     ├── it should deploy a EverclearTokenStake
     └── it should match the parameters sent to the constructor
-    └── it should store the contract as children
+    └── it should store the contract as a factory children

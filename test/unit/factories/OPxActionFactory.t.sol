@@ -24,7 +24,7 @@ contract UnitOPxActionFactorycreateOPxAction is Test {
     assertEq(IOPxAction(_opxAction).OPX(), _opx);
     assertEq(IOPxAction(_opxAction).SAFE(), _safe);
 
-    // it should store the contract as children
+    // it should store the contract as a factory children
     assertTrue(opxActionFactory.isChild(_opxAction));
   }
 }

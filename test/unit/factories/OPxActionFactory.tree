@@ -2,4 +2,4 @@ UnitOPxActionFactory::createOPxAction
 └── when called
     ├── it should deploy an OPxAction
     └── it should match the parameters sent to the constructor
-    └── it should store the contract as children
+    └── it should store the contract as a factory children
