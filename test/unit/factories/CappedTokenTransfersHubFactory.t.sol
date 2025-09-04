@@ -32,7 +32,7 @@ contract UnitCappedTokenTransfersHubFactorycreateCappedTokenTransfersHub is Test
     assertEq(ICappedTokenTransfersHub(hub).RECIPIENT(), recipient);
     assertEq(ICappedTokenTransfersHub(hub).EPOCH_LENGTH(), epochLength);
     for (uint256 i = 0; i < caps.length; i++) {
-      assertEq(ICappedTokenTransfersHub(hub).caps()[i], caps[i]);
+      assertEq(ICappedTokenTransfersHub(hub).cap(tokens[i]), caps[i]);
       assertEq(ICappedTokenTransfersHub(hub).tokens()[i], tokens[i]);
     }
   }

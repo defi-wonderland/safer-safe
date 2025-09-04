@@ -11,7 +11,6 @@ import {CappedTokenTransfers} from 'src/contracts/actions-builders/CappedTokenTr
 
 contract CappedTokenTransfersHub is ActionHub, ICappedTokenTransfersHub, SafeManageable {
   using EnumerableSetLib for EnumerableSetLib.AddressSet;
-  using EnumerableSetLib for EnumerableSetLib.Uint256Set;
 
   /// @inheritdoc ICappedTokenTransfersHub
   address public immutable RECIPIENT;
@@ -28,8 +27,8 @@ contract CappedTokenTransfersHub is ActionHub, ICappedTokenTransfersHub, SafeMan
   /// @inheritdoc ICappedTokenTransfersHub
   mapping(address _token => uint256 _totalSpent) public totalSpent;
 
-  /// @notice The caps for the tokens
-  EnumerableSetLib.Uint256Set private __caps;
+  /// @inheritdoc ICappedTokenTransfersHub
+  mapping(address _token => uint256 _cap) public cap;
 
   /// @notice The tokens to cap
   EnumerableSetLib.AddressSet private __tokens;
@@ -55,8 +54,12 @@ contract CappedTokenTransfersHub is ActionHub, ICappedTokenTransfersHub, SafeMan
     STARTING_TIMESTAMP = block.timestamp;
 
     for (uint256 i = 0; i < _tokens.length; i++) {
-      __tokens.add(_tokens[i]);
-      __caps.add(_caps[i]);
+      // If the token is already registered, add the cap to the existing cap
+      if (!__tokens.add(_tokens[i])) {
+        cap[_tokens[i]] += _caps[i];
+      } else {
+        cap[_tokens[i]] = _caps[i];
+      }
     }
   }
 
@@ -88,7 +91,7 @@ contract CappedTokenTransfersHub is ActionHub, ICappedTokenTransfersHub, SafeMan
 
     totalSpent[_token] += _amount;
 
-    if (totalSpent[_token] > __caps.at(__tokens.indexOf(_token))) {
+    if (totalSpent[_token] > cap[_token]) {
       revert CapExceeded();
     }
   }
@@ -99,14 +102,9 @@ contract CappedTokenTransfersHub is ActionHub, ICappedTokenTransfersHub, SafeMan
   }
 
   /// @inheritdoc ICappedTokenTransfersHub
-  function caps() external view returns (uint256[] memory _caps) {
-    _caps = __caps.values();
-  }
-
-  /// @inheritdoc ICappedTokenTransfersHub
   function capLeft(address _token) external view returns (uint256 _capLeft) {
     uint256 _currentEpoch = (block.timestamp - STARTING_TIMESTAMP) / EPOCH_LENGTH;
-    uint256 _tokenCap = __caps.at(__tokens.indexOf(_token));
+    uint256 _tokenCap = cap[_token];
 
     // If we're in a new epoch, return the full cap
     if (_currentEpoch > currentEpoch) {

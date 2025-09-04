@@ -30,13 +30,9 @@ UnitCappedTokenTransfersHub::tokens
 └── When called
     └── it returns the tokens
 
-UnitCappedTokenTransfersHub::caps
-└── When called
-    └── it returns the caps
-
 UnitCappedTokenTransfersHub::capLeft
 ├── When token does not exist
-│   └── it reverts
+│   └── it returns zero
 └── When token exists
     ├── when the current epoch is greater than the epoch of the state
     │   └── it returns the full cap

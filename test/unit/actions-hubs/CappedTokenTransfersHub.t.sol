@@ -10,7 +10,6 @@ import {ICappedTokenTransfersHub} from 'src/interfaces/action-hubs/ICappedTokenT
 
 contract UnitCappedTokenTransfersHub is Test {
   uint256 public constant EPOCH_LENGTH = 7 days;
-
   CappedTokenTransfersHub public cappedTokenTransfersHub;
   address public safe = makeAddr('safe');
   address public recipient = makeAddr('recipient');
@@ -21,9 +20,11 @@ contract UnitCappedTokenTransfersHub is Test {
     tokens.push(makeAddr('token1'));
     tokens.push(makeAddr('token2'));
     tokens.push(makeAddr('token3'));
+    tokens.push(makeAddr('token1')); // duplicated token
     caps.push(100);
     caps.push(200);
-    caps.push(300);
+    caps.push(100);
+    caps.push(50);
 
     cappedTokenTransfersHub = new CappedTokenTransfersHub(safe, recipient, tokens, caps, EPOCH_LENGTH);
   }
@@ -42,10 +43,12 @@ contract UnitCappedTokenTransfersHub is Test {
 
     // it sets the tokens and caps
     address[] memory _tokens = cappedTokenTransfersHub.tokens();
-    uint256[] memory _caps = cappedTokenTransfersHub.caps();
-    for (uint256 i = 0; i < tokens.length; i++) {
+    assertEq(_tokens.length, 3);
+    assertEq(_tokens[0], tokens[0]);
+    assertEq(cappedTokenTransfersHub.cap(tokens[0]), caps[0] + caps[3]);
+    for (uint256 i = 1; i < tokens.length - 1; i++) {
       assertEq(_tokens[i], tokens[i]);
-      assertEq(_caps[i], caps[i]);
+      assertEq(cappedTokenTransfersHub.cap(tokens[i]), caps[i]);
     }
   }
 
@@ -67,7 +70,7 @@ contract UnitCappedTokenTransfersHub is Test {
 
   function test_CreateNewActionBuilderWhenTheTokenIsRegisteredInTheHub() external whenCalledByTheSafeOwner {
     // it creates a new CappedTokenTransfers action builder
-    address actionBuilder = cappedTokenTransfersHub.createNewActionBuilder(tokens[0], 100);
+    address actionBuilder = cappedTokenTransfersHub.createNewActionBuilder(tokens[1], 200);
     assertNotEq(actionBuilder, address(0));
   }
 
@@ -76,7 +79,7 @@ contract UnitCappedTokenTransfersHub is Test {
 
     // It reverts
     vm.expectRevert(ISafeManageable.NotSafeOwner.selector);
-    cappedTokenTransfersHub.createNewActionBuilder(tokens[0], 100);
+    cappedTokenTransfersHub.createNewActionBuilder(tokens[1], 200);
   }
 
   modifier whenCalledByTheSafe() {
@@ -86,40 +89,40 @@ contract UnitCappedTokenTransfersHub is Test {
   }
 
   function test_UpdateStateWhenCalledByTheSafe(uint256 _amount) external whenCalledByTheSafe {
-    _amount = bound(_amount, 0, caps[0]);
+    _amount = bound(_amount, 0, caps[1]);
 
-    bytes memory data = abi.encode(_amount, tokens[0]);
+    bytes memory data = abi.encode(_amount, tokens[1]);
     cappedTokenTransfersHub.updateState(data);
 
     // it increments the total spent
-    assertEq(cappedTokenTransfersHub.totalSpent(tokens[0]), _amount);
+    assertEq(cappedTokenTransfersHub.totalSpent(tokens[1]), _amount);
   }
 
   function test_UpdateStateWhenTheCurrentEpochIsGreaterThanTheEpochOfTheState(uint256 _amount)
     external
     whenCalledByTheSafe
   {
-    _amount = bound(_amount, 0, caps[0]);
+    _amount = bound(_amount, 0, caps[1]);
 
     // spend all the cap for this epoch
-    cappedTokenTransfersHub.updateState(abi.encode(caps[0], tokens[0]));
+    cappedTokenTransfersHub.updateState(abi.encode(caps[1], tokens[1]));
 
     // move to the next epoch
     vm.warp(block.timestamp + EPOCH_LENGTH + 1);
 
-    bytes memory data = abi.encode(_amount, tokens[0]);
+    bytes memory data = abi.encode(_amount, tokens[1]);
     cappedTokenTransfersHub.updateState(data);
 
     // it resets the total spent
-    assertEq(cappedTokenTransfersHub.totalSpent(tokens[0]), _amount);
+    assertEq(cappedTokenTransfersHub.totalSpent(tokens[1]), _amount);
     // it updates the current epoch
     assertEq(cappedTokenTransfersHub.currentEpoch(), 1);
   }
 
   function test_UpdateStateWhenTheTotalSpentIsGreaterThanTheCap(uint256 _amount) external whenCalledByTheSafe {
-    _amount = bound(_amount, caps[0] + 1, type(uint256).max);
+    _amount = bound(_amount, caps[1] + 1, type(uint256).max);
 
-    bytes memory data = abi.encode(_amount, tokens[0]);
+    bytes memory data = abi.encode(_amount, tokens[1]);
 
     // it reverts
     vm.expectRevert(ICappedTokenTransfersHub.CapExceeded.selector);
@@ -136,26 +139,16 @@ contract UnitCappedTokenTransfersHub is Test {
   function test_TokensWhenCalled() external view {
     // it returns the tokens
     address[] memory _tokens = cappedTokenTransfersHub.tokens();
-    assertEq(_tokens.length, tokens.length);
-    for (uint256 i = 0; i < tokens.length; i++) {
-      assertEq(_tokens[i], tokens[i]);
-    }
+    assertEq(_tokens.length, 3);
+    assertEq(_tokens[0], tokens[0]);
+    assertEq(_tokens[1], tokens[1]);
+    assertEq(_tokens[2], tokens[2]);
   }
 
-  function test_CapsWhenCalled() external view {
-    // it returns the caps
-    uint256[] memory _caps = cappedTokenTransfersHub.caps();
-    assertEq(_caps.length, caps.length);
-    for (uint256 i = 0; i < caps.length; i++) {
-      assertEq(_caps[i], caps[i]);
-    }
-  }
-
-  function test_CapLeftWhenTokenDoesNotExist(address _token) external {
+  function test_CapLeftWhenTokenDoesNotExist(address _token) external view {
     vm.assume(_token != tokens[0] && _token != tokens[1] && _token != tokens[2]);
-    // it reverts
-    vm.expectRevert(EnumerableSetLib.IndexOutOfBounds.selector);
-    cappedTokenTransfersHub.capLeft(_token);
+    // it returns zero
+    assertEq(cappedTokenTransfersHub.capLeft(_token), 0);
   }
 
   modifier whenTokenExists() {
@@ -163,23 +156,23 @@ contract UnitCappedTokenTransfersHub is Test {
   }
 
   function test_CapLeftWhenTheCurrentEpochIsGreaterThanTheEpochOfTheState(uint256 _amount) external whenTokenExists {
-    _amount = bound(_amount, 1, caps[0]);
+    _amount = bound(_amount, 1, caps[1]);
 
     vm.prank(safe);
-    cappedTokenTransfersHub.updateState(abi.encode(_amount, tokens[0]));
+    cappedTokenTransfersHub.updateState(abi.encode(_amount, tokens[1]));
 
     vm.warp(block.timestamp + EPOCH_LENGTH + 1);
     // it returns the full cap
-    assertEq(cappedTokenTransfersHub.capLeft(tokens[0]), caps[0]);
+    assertEq(cappedTokenTransfersHub.capLeft(tokens[1]), caps[1]);
   }
 
   function test_CapLeftWhenTheCurrentEpochIsTheSameAsTheEpochOfTheState(uint256 _amount) external whenTokenExists {
-    _amount = bound(_amount, 1, caps[0]);
+    _amount = bound(_amount, 1, caps[1]);
 
     vm.prank(safe);
-    cappedTokenTransfersHub.updateState(abi.encode(_amount, tokens[0]));
+    cappedTokenTransfersHub.updateState(abi.encode(_amount, tokens[1]));
 
     // it returns the cap left for the token
-    assertEq(cappedTokenTransfersHub.capLeft(tokens[0]), caps[0] - _amount);
+    assertEq(cappedTokenTransfersHub.capLeft(tokens[1]), caps[1] - _amount);
   }
 }
