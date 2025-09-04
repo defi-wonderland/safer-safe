@@ -9,10 +9,14 @@ import {IActionHub} from 'interfaces/action-hubs/IActionHub.sol';
  * @notice Interface for the CappedTokenTransfersHub contract
  */
 interface ICappedTokenTransfersHub is IActionHub, ISafeManageable {
+  // ~~~ ERRORS ~~~
+
   /**
    * @notice Thrown when the cap is exceeded
    */
   error CapExceeded();
+
+  // ~~~ FUNCTIONS ~~~
 
   /**
    * @notice Updates the state. Checks if the cap is exceeded and resets the spending if we're in a new epoch.

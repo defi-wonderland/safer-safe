@@ -4,8 +4,7 @@ UnitCappedTokenTransfersHub::constructor
     ├── it sets the recipient
     ├── it sets the epoch length
     ├── it sets the starting timestamp
-    ├── it sets the tokens
-    └── it sets the caps
+    └── it sets the tokens and caps
 
 UnitCappedTokenTransfersHub::createNewActionBuilder
 ├── When called by the safe owner
@@ -23,3 +22,20 @@ UnitCappedTokenTransfersHub::updateState
 │       └── it reverts
 └── When not called by the safe
     └── It reverts
+
+UnitCappedTokenTransfersHub::tokens
+└── When called
+    └── it returns the tokens
+
+UnitCappedTokenTransfersHub::caps
+└── When called
+    └── it returns the caps
+
+UnitCappedTokenTransfersHub::capLeft
+├── When token does not exist
+│   └── it reverts
+└── When token exists
+    ├── when the current epoch is greater than the epoch of the state
+    │   └── it returns the full cap
+    └── when the current epoch is the same as the epoch of the state
+        └── it returns the cap left for the token

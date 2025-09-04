@@ -8,18 +8,15 @@ import {ISafeManageable} from 'src/interfaces/ISafeManageable.sol';
 import {ICappedTokenTransfersHub} from 'src/interfaces/action-hubs/ICappedTokenTransfersHub.sol';
 
 contract UnitCappedTokenTransfersHub is Test {
+  uint256 public constant EPOCH_LENGTH = 7 days;
+
   CappedTokenTransfersHub public cappedTokenTransfersHub;
-  address public safe;
-  address public recipient;
-  uint256 public epochLength;
+  address public safe = makeAddr('safe');
+  address public recipient = makeAddr('recipient');
   address[] public tokens;
   uint256[] public caps;
 
   function setUp() external {
-    safe = makeAddr('safe');
-    recipient = makeAddr('recipient');
-    epochLength = 7 days;
-
     tokens.push(makeAddr('token1'));
     tokens.push(makeAddr('token2'));
     tokens.push(makeAddr('token3'));
@@ -27,7 +24,7 @@ contract UnitCappedTokenTransfersHub is Test {
     caps.push(200);
     caps.push(300);
 
-    cappedTokenTransfersHub = new CappedTokenTransfersHub(safe, recipient, tokens, caps, epochLength);
+    cappedTokenTransfersHub = new CappedTokenTransfersHub(safe, recipient, tokens, caps, EPOCH_LENGTH);
   }
 
   function test_ConstructorWhenCalled(address _safe, address _recipient, uint256 _epochLength) external {
@@ -41,9 +38,13 @@ contract UnitCappedTokenTransfersHub is Test {
     assertEq(cappedTokenTransfersHub.EPOCH_LENGTH(), _epochLength);
     // it sets the starting timestamp
     assertEq(cappedTokenTransfersHub.STARTING_TIMESTAMP(), block.timestamp);
+
     // it sets the tokens and caps
-    for (uint256 i = 0; i < tokens.length; i++) {
-      assertEq(cappedTokenTransfersHub.cap(tokens[i]), caps[i]);
+    address[] memory _tokens = cappedTokenTransfersHub.tokens();
+    uint256[] memory _caps = cappedTokenTransfersHub.caps();
+    for (uint256 i = 0; i < _tokens.length; i++) {
+      assertEq(_tokens[i], tokens[i]);
+      assertEq(_caps[i], caps[i]);
     }
   }
 
@@ -115,5 +116,29 @@ contract UnitCappedTokenTransfersHub is Test {
     vm.prank(makeAddr('notSafe'));
     vm.expectRevert(ISafeManageable.NotSafe.selector);
     cappedTokenTransfersHub.updateState(bytes(''));
+  }
+
+  function test_TokensWhenCalled() external {
+    // it returns the tokens
+  }
+
+  function test_CapsWhenCalled() external {
+    // it returns the caps
+  }
+
+  function test_CapLeftWhenTokenDoesNotExist() external {
+    // it reverts
+  }
+
+  modifier whenTokenExists() {
+    _;
+  }
+
+  function test_CapLeftWhenTheCurrentEpochIsGreaterThanTheEpochOfTheState() external whenTokenExists {
+    // it returns the full cap
+  }
+
+  function test_CapLeftWhenTheCurrentEpochIsTheSameAsTheEpochOfTheState() external whenTokenExists {
+    // it returns the cap left for the token
   }
 }
