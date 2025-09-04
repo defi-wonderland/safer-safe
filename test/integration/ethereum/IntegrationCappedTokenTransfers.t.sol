@@ -3,6 +3,7 @@ pragma solidity 0.8.29;
 
 import {CappedTokenTransfersHub} from 'src/contracts/action-hubs/CappedTokenTransfersHub.sol';
 
+import {IActionHub} from 'src/interfaces/action-hubs/IActionHub.sol';
 import {ICappedTokenTransfersHub} from 'src/interfaces/action-hubs/ICappedTokenTransfersHub.sol';
 import {ICappedTokenTransfers} from 'src/interfaces/actions-builders/ICappedTokenTransfers.sol';
 import {IntegrationEthereumBase} from 'test/integration/ethereum/IntegrationEthereumBase.sol';
@@ -35,7 +36,7 @@ contract IntegrationCappedTokenTransfers is IntegrationEthereumBase {
     address _actionsBuilder = _cappedTokenTransfersHub.createNewActionBuilder(address(WETH), 10 ether);
 
     // Check that the action builder was created correctly
-    assertTrue(_cappedTokenTransfersHub.isChild(_actionsBuilder));
+    assertTrue(IActionHub(address(_cappedTokenTransfersHub)).isChild(_actionsBuilder));
     assertEq(ICappedTokenTransfers(_actionsBuilder).TOKEN(), address(WETH));
     assertEq(ICappedTokenTransfers(_actionsBuilder).AMOUNT(), 10 ether);
     assertEq(ICappedTokenTransfers(_actionsBuilder).RECIPIENT(), _recipient);
