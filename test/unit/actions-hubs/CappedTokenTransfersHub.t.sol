@@ -43,7 +43,7 @@ contract UnitCappedTokenTransfersHub is Test {
     // it sets the tokens and caps
     address[] memory _tokens = cappedTokenTransfersHub.tokens();
     uint256[] memory _caps = cappedTokenTransfersHub.caps();
-    for (uint256 i = 0; i < _tokens.length; i++) {
+    for (uint256 i = 0; i < tokens.length; i++) {
       assertEq(_tokens[i], tokens[i]);
       assertEq(_caps[i], caps[i]);
     }
@@ -137,7 +137,7 @@ contract UnitCappedTokenTransfersHub is Test {
     // it returns the tokens
     address[] memory _tokens = cappedTokenTransfersHub.tokens();
     assertEq(_tokens.length, tokens.length);
-    for (uint256 i = 0; i < _tokens.length; i++) {
+    for (uint256 i = 0; i < tokens.length; i++) {
       assertEq(_tokens[i], tokens[i]);
     }
   }
@@ -146,7 +146,7 @@ contract UnitCappedTokenTransfersHub is Test {
     // it returns the caps
     uint256[] memory _caps = cappedTokenTransfersHub.caps();
     assertEq(_caps.length, caps.length);
-    for (uint256 i = 0; i < _caps.length; i++) {
+    for (uint256 i = 0; i < caps.length; i++) {
       assertEq(_caps[i], caps[i]);
     }
   }
