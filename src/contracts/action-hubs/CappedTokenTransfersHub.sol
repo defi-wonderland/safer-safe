@@ -65,7 +65,7 @@ contract CappedTokenTransfersHub is ActionHub, ICappedTokenTransfersHub, SafeMan
     address _token,
     uint256 _amount
   ) external isSafeOwner returns (address _actionBuilder) {
-    if (cap[_token] == 0) revert TokenNotRegisteredInHub();
+    if (!__tokens.contains(_token)) revert TokenNotRegisteredInHub();
 
     bytes memory _initCode =
       abi.encodePacked(type(CappedTokenTransfers).creationCode, abi.encode(_token, _amount, RECIPIENT, address(this)));
