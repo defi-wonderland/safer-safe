@@ -19,6 +19,11 @@ interface ICappedTokenTransfersHub is IActionHub, ISafeManageable {
   // ~~~ FUNCTIONS ~~~
 
   /**
+   * @notice Thrown when creating a hub action builder for a token that is not registered in the hub
+   */
+  error TokenNotRegisteredInHub();
+
+  /**
    * @notice Updates the state. Checks if the cap is exceeded and resets the spending if we're in a new epoch.
    * @param _data The data to update the state with
    * @dev The data is a tuple of (amount, token)

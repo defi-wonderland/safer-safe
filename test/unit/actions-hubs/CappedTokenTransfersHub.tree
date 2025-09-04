@@ -8,7 +8,10 @@ UnitCappedTokenTransfersHub::constructor
 
 UnitCappedTokenTransfersHub::createNewActionBuilder
 ├── When called by the safe owner
-│   └── it creates a new CappedTokenTransfers action builder
+│   ├── When the token is not registered in the hub
+│   │   └── it reverts
+│   └── When the token is registered in the hub
+│       └── it creates a new CappedTokenTransfers action builder
 └── When not called by the safe owner
     └── It reverts
 
