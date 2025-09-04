@@ -26,12 +26,12 @@ interface ICanonGuard is ISafeManageable {
 
   /**
    * @notice Emitted when an actions builder is approved
-   * @param _actionsBuilder The address of the actions builder contract
-   * @param _approvalDuration The duration (in seconds) of the approval to the actions builder contract (0 means disapproval)
-   * @param _approvalExpiresAt The timestamp from which the actions builder contract is no longer approved to be queued
+   * @param _actionsBuilderOrHub The address of the actions builder or hub contract
+   * @param _approvalDuration The duration (in seconds) of the approval to the actions builder or hub contract (0 means disapproval)
+   * @param _approvalExpiresAt The timestamp from which the actions builder or hub contract is no longer approved to be queued
    */
-  event ActionsBuilderApproved(
-    address indexed _actionsBuilder, uint256 indexed _approvalDuration, uint256 indexed _approvalExpiresAt
+  event ActionsBuilderOrHubApproved(
+    address indexed _actionsBuilderOrHub, uint256 indexed _approvalDuration, uint256 indexed _approvalExpiresAt
   );
 
   /**
@@ -81,6 +81,36 @@ interface ICanonGuard is ISafeManageable {
    */
   error InvalidApprovalDuration();
 
+  /**
+   * @notice Thrown when the transaction expiry delay is less than the minimum expiry time
+   */
+  error TxExpiryDelayCannotBeLessThanMin();
+
+  /**
+   * @notice Thrown when the maximum approval duration is less than the minimum expiry time
+   */
+  error MaxApprovalDurationCannotBeLessThanMin();
+
+  /**
+   * @notice Thrown when the delay configuration is invalid
+   */
+  error InvalidDelayConfiguration();
+
+  /**
+   * @notice Thrown when the short transaction execution delay is greater than the long transaction execution delay
+   */
+  error ShortDelayCannotBeGreaterThanLongDelay();
+
+  /**
+   * @notice Thrown when the transaction expiry delay is greater than the maximum value (uint128.max)
+   */
+  error TxExpiryDelayCannotBeGreaterThanMax();
+
+  /**
+   * @notice Thrown when the long transaction execution delay is greater than the maximum value (uint128.max)
+   */
+  error LongDelayCannotBeGreaterThanMax();
+
   // ~~~ ADMIN METHODS ~~~
 
   /**
@@ -89,7 +119,7 @@ interface ICanonGuard is ISafeManageable {
    * @param _actionsBuilder The address of the actions builder contract to approve
    * @param _approvalDuration The duration (in seconds) of the approval to the actions builder contract (0 means disapproval)
    */
-  function approveActionsBuilder(address _actionsBuilder, uint256 _approvalDuration) external;
+  function approveActionsBuilderOrHub(address _actionsBuilder, uint256 _approvalDuration) external;
 
   // ~~~ TRANSACTION METHODS ~~~
 
@@ -123,6 +153,12 @@ interface ICanonGuard is ISafeManageable {
    * @return _factory The factory address. Returns address(0) if it was not deployed by a factory
    */
   function FACTORY() external view returns (address _factory);
+
+  /**
+   * @notice Gets the minimum expiry time
+   * @return _minExpiryTime The minimum expiry time (in seconds)
+   */
+  function MIN_EXPIRY_TIME() external view returns (uint256 _minExpiryTime);
 
   /**
    * @notice Gets the MultiSendCallOnly contract

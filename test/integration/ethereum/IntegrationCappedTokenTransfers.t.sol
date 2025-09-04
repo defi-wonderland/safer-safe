@@ -51,7 +51,7 @@ contract IntegrationCappedTokenTransfers is IntegrationEthereumBase {
     uint256 _approvalDuration = 1 days;
 
     vm.prank(address(SAFE_PROXY));
-    canonGuard.approveActionsBuilder(address(_cappedTokenTransfersHub), _approvalDuration);
+    canonGuard.approveActionsBuilderOrHub(address(_cappedTokenTransfersHub), _approvalDuration);
 
     // Queue the transaction
     vm.prank(_safeOwners[0]);
@@ -87,7 +87,7 @@ contract IntegrationCappedTokenTransfers is IntegrationEthereumBase {
     uint256 _approvalDuration = 1 days;
 
     vm.prank(address(SAFE_PROXY));
-    canonGuard.approveActionsBuilder(address(_cappedTokenTransfersHub), _approvalDuration);
+    canonGuard.approveActionsBuilderOrHub(address(_cappedTokenTransfersHub), _approvalDuration);
 
     // Queue the transaction
     vm.prank(_safeOwners[0]);

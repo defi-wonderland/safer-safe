@@ -34,7 +34,7 @@ contract DisapproveAction is IDisapproveAction {
     _actions = new Action[](1);
     _actions[0] = Action({
       target: CANON_GUARD,
-      data: abi.encodeCall(ICanonGuard.approveActionsBuilder, (ACTIONS_BUILDER, 0)),
+      data: abi.encodeCall(ICanonGuard.approveActionsBuilderOrHub, (ACTIONS_BUILDER, 0)),
       value: 0
     });
   }

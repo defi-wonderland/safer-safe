@@ -30,8 +30,10 @@ import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
  * @title CanonGuard
  * @notice Contract that allows for the execution of transactions on a Safe
  */
-contract CanonGuard is SafeManageable, OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
+contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
   // ~~~ STORAGE ~~~
+  /// @inheritdoc ICanonGuard
+  uint256 public constant MIN_EXPIRY_TIME = 1 days;
 
   /// @inheritdoc ICanonGuard
   address public immutable FACTORY;
@@ -82,9 +84,14 @@ contract CanonGuard is SafeManageable, OnlyCanonGuard, EmergencyModeHook, ICanon
     address _emergencyTrigger,
     address _emergencyCaller
   ) SafeManageable(_safe) EmergencyModeHook(_emergencyTrigger, _emergencyCaller) {
+    if (_txExpiryDelay < MIN_EXPIRY_TIME) revert TxExpiryDelayCannotBeLessThanMin();
+    if (_maxApprovalDuration < MIN_EXPIRY_TIME) revert MaxApprovalDurationCannotBeLessThanMin();
+    if (_shortTxExecutionDelay > _longTxExecutionDelay) revert ShortDelayCannotBeGreaterThanLongDelay();
+    if (_txExpiryDelay > type(uint128).max) revert TxExpiryDelayCannotBeGreaterThanMax();
+    if (_longTxExecutionDelay > type(uint128).max) revert LongDelayCannotBeGreaterThanMax();
+
     FACTORY = _factory;
     MULTI_SEND_CALL_ONLY = _multiSendCallOnly;
-
     SHORT_TX_EXECUTION_DELAY = _shortTxExecutionDelay;
     LONG_TX_EXECUTION_DELAY = _longTxExecutionDelay;
     TX_EXPIRY_DELAY = _txExpiryDelay;
@@ -94,12 +101,12 @@ contract CanonGuard is SafeManageable, OnlyCanonGuard, EmergencyModeHook, ICanon
   // ~~~ ADMIN METHODS ~~~
 
   /// @inheritdoc ICanonGuard
-  function approveActionsBuilder(address _actionsBuilder, uint256 _approvalDuration) external isSafe {
+  function approveActionsBuilderOrHub(address _actionsBuilderOrHub, uint256 _approvalDuration) external isSafe {
     if (_approvalDuration > MAX_APPROVAL_DURATION) revert InvalidApprovalDuration();
 
     uint256 _approvalExpiresAt = block.timestamp + _approvalDuration;
-    approvalExpiries[_actionsBuilder] = _approvalExpiresAt;
-    emit ActionsBuilderApproved(_actionsBuilder, _approvalDuration, _approvalExpiresAt);
+    approvalExpiries[_actionsBuilderOrHub] = _approvalExpiresAt;
+    emit ActionsBuilderOrHubApproved(_actionsBuilderOrHub, _approvalDuration, _approvalExpiresAt);
   }
 
   // ~~~ TRANSACTION METHODS ~~~
@@ -107,18 +114,18 @@ contract CanonGuard is SafeManageable, OnlyCanonGuard, EmergencyModeHook, ICanon
   /// @inheritdoc ICanonGuard
   function queueHubTransaction(address _actionHub, address _actionsBuilder) external isSafeOwner {
     if (!IActionHub(_actionHub).isChild(_actionsBuilder)) revert InvalidHubOrActionsBuilder();
-    bool _txIsPreApproved = _isPreApproved(_actionHub);
-    _queueTransaction(_actionsBuilder, _txIsPreApproved);
+    bool _actionIsPreApproved = _isPreApproved(_actionHub);
+    _queueTransaction(_actionsBuilder, _actionIsPreApproved);
 
-    emit TransactionQueued(_actionHub, _actionsBuilder, _txIsPreApproved);
+    emit TransactionQueued(_actionHub, _actionsBuilder, _actionIsPreApproved);
   }
 
   /// @inheritdoc ICanonGuard
   function queueTransaction(address _actionsBuilder) external isSafeOwner {
-    bool _txIsPreApproved = _isPreApproved(_actionsBuilder);
-    _queueTransaction(_actionsBuilder, _txIsPreApproved);
+    bool _actionIsPreApproved = _isPreApproved(_actionsBuilder);
+    _queueTransaction(_actionsBuilder, _actionIsPreApproved);
 
-    emit TransactionQueued(address(0), _actionsBuilder, _txIsPreApproved);
+    emit TransactionQueued(address(0), _actionsBuilder, _actionIsPreApproved);
   }
 
   /// @inheritdoc ICanonGuard
@@ -197,13 +204,12 @@ contract CanonGuard is SafeManageable, OnlyCanonGuard, EmergencyModeHook, ICanon
     if (_txInfo.executableAt > block.timestamp) revert TransactionNotYetExecutable();
     if (_txInfo.expiresAt <= block.timestamp) revert TransactionExpired();
 
-    address[] memory _sortedSigners = _sortSigners(_signers);
-    bytes memory _signatures = _buildApprovedHashSignatures(_sortedSigners);
-
-    _execSafeTransaction(_multiSendData, _signatures);
-
     // Remove the transaction from the queue
     delete queuedTransactions[_actionsBuilder];
+
+    address[] memory _sortedSigners = _sortSigners(_signers);
+    bytes memory _signatures = _buildApprovedHashSignatures(_sortedSigners);
+    _execSafeTransaction(_multiSendData, _signatures);
 
     // NOTE: event emitted to log successful execution
     emit TransactionExecuted(_actionsBuilder, _safeTxHash, _signers);
@@ -233,11 +239,11 @@ contract CanonGuard is SafeManageable, OnlyCanonGuard, EmergencyModeHook, ICanon
   /**
    * @notice Internal function to queue a transaction
    * @param _actionsBuilder The actions builder contract address
-   * @param _txIsPreApproved Whether the actions builder is pre-approved
+   * @param _actionIsPreApproved Whether the actions builder is pre-approved
    */
-  function _queueTransaction(address _actionsBuilder, bool _txIsPreApproved) internal {
+  function _queueTransaction(address _actionsBuilder, bool _actionIsPreApproved) internal {
     // If approved, use short execution delay. Otherwise, use long execution delay
-    uint256 _txExecutionDelay = _txIsPreApproved ? SHORT_TX_EXECUTION_DELAY : LONG_TX_EXECUTION_DELAY;
+    uint256 _txExecutionDelay = _actionIsPreApproved ? SHORT_TX_EXECUTION_DELAY : LONG_TX_EXECUTION_DELAY;
 
     // Revert if the transaction is already queued and not expired
     TransactionInfo memory _queuedTransactionInfo = queuedTransactions[_actionsBuilder];
@@ -433,6 +439,6 @@ contract CanonGuard is SafeManageable, OnlyCanonGuard, EmergencyModeHook, ICanon
       }
     }
 
-    return _signers;
+    _sortedSigners = _signers;
   }
 }

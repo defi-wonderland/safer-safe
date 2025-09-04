@@ -43,9 +43,7 @@ contract UnitCappedTokenTransfers is Test {
     // it returns an action to update the state
     assertEq(actions[0].target, hub);
     assertEq(actions[0].value, 0);
-    assertEq(
-      actions[0].data, abi.encodeWithSelector(ICappedTokenTransfersHub.updateState.selector, abi.encode(amount, token))
-    );
+    assertEq(actions[0].data, abi.encodeWithSelector(ICappedTokenTransfersHub.updateState.selector, token, amount));
     // it returns an action to transfer the tokens
     assertEq(actions[1].target, token);
     assertEq(actions[1].value, 0);

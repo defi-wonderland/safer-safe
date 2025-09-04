@@ -43,7 +43,7 @@ contract IntegrationWonderlandClaims is IntegrationEthereumBase {
     uint256 _approvalDuration = 1 days;
 
     vm.prank(address(SAFE_PROXY));
-    canonGuard.approveActionsBuilder(_actionsBuilder, _approvalDuration);
+    canonGuard.approveActionsBuilderOrHub(_actionsBuilder, _approvalDuration);
 
     // Queue the transaction
     vm.prank(_safeOwners[0]);

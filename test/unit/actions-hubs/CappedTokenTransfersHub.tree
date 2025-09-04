@@ -1,11 +1,13 @@
 UnitCappedTokenTransfersHub::constructor
-└── When called
-    ├── it sets the safe
-    ├── it sets the recipient
-    ├── it sets the epoch length
-    ├── it sets the starting timestamp
-    ├── it sets the tokens
-    └── it sets the caps
+├── When called
+│   ├── it sets the safe
+│   ├── it sets the recipient
+│   ├── it sets the epoch length
+│   ├── it sets the starting timestamp
+│   ├── it sets the tokens
+│   └── it sets the caps
+└── When the epoch length is zero
+    └── it reverts
 
 UnitCappedTokenTransfersHub::createNewActionBuilder
 ├── When called by the safe owner
