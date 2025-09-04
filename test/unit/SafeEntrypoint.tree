@@ -1,11 +1,20 @@
 UnitSafeEntrypoint::constructor
-└── when passing valid parameters
-    ├── it sets safe address
-    ├── it sets multiSendCallOnly address
-    ├── it sets short execution delay
-    ├── it sets long execution delay
-    └── it set transaction expiry delay
-
+├── when passing valid parameters
+│   ├── it sets safe address
+│   ├── it sets multiSendCallOnly address
+│   ├── it sets short execution delay
+│   ├── it sets long execution delay
+│   └── it set transaction expiry delay
+├── when the transaction expiry delay is less than the minimum expiry time
+│   └── it reverts
+├── when the maximum approval duration is less than the minimum expiry time
+│   └── it reverts
+├── when the short execution delay is greater than the long execution delay
+│   └── it reverts
+├── when tx expiry delay is greater than max
+│   └── it reverts
+└── when long delay is greater than max
+    └── it reverts
 
 UnitSafeEntrypoint::approveActionsBuilderOrHub
 ├── when caller is safe

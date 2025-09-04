@@ -34,6 +34,9 @@ contract SafeEntrypoint is OnlyEntrypointGuard, EmergencyModeHook, ISafeEntrypoi
   // ~~~ STORAGE ~~~
 
   /// @inheritdoc ISafeEntrypoint
+  uint256 public constant MIN_EXPIRY_TIME = 1 days;
+
+  /// @inheritdoc ISafeEntrypoint
   address public immutable MULTI_SEND_CALL_ONLY;
 
   /// @inheritdoc ISafeEntrypoint
@@ -77,6 +80,12 @@ contract SafeEntrypoint is OnlyEntrypointGuard, EmergencyModeHook, ISafeEntrypoi
     address _emergencyTrigger,
     address _emergencyCaller
   ) SafeManageable(_safe) EmergencyModeHook(_emergencyTrigger, _emergencyCaller) {
+    if (_txExpiryDelay < MIN_EXPIRY_TIME) revert TxExpiryDelayCannotBeLessThanMin();
+    if (_maxApprovalDuration < MIN_EXPIRY_TIME) revert MaxApprovalDurationCannotBeLessThanMin();
+    if (_shortTxExecutionDelay > _longTxExecutionDelay) revert ShortDelayCannotBeGreaterThanLongDelay();
+    if (_txExpiryDelay > type(uint128).max) revert TxExpiryDelayCannotBeGreaterThanMax();
+    if (_longTxExecutionDelay > type(uint128).max) revert LongDelayCannotBeGreaterThanMax();
+
     MULTI_SEND_CALL_ONLY = _multiSendCallOnly;
 
     SHORT_TX_EXECUTION_DELAY = _shortTxExecutionDelay;
