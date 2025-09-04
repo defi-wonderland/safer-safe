@@ -25,10 +25,10 @@ contract CappedTokenTransfersHub is ActionHub, ICappedTokenTransfersHub, SafeMan
   uint256 public currentEpoch;
 
   /// @inheritdoc ICappedTokenTransfersHub
-  mapping(address _token => uint256 _totalSpent) public totalSpent;
+  mapping(address _token => uint256 _cap) public cap;
 
   /// @inheritdoc ICappedTokenTransfersHub
-  mapping(address _token => uint256 _cap) public cap;
+  mapping(address _token => uint256 _totalSpent) public totalSpent;
 
   /// @notice The tokens to cap
   EnumerableSetLib.AddressSet private __tokens;

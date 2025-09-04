@@ -75,6 +75,13 @@ interface ICappedTokenTransfersHub is IActionHub, ISafeManageable {
   function totalSpent(address _token) external view returns (uint256 _totalSpent);
 
   /**
+   * @notice Gets the cap for a token
+   * @param _token The token to get the cap for
+   * @return _cap The cap for the token
+   */
+  function cap(address _token) external view returns (uint256 _cap);
+
+  /**
    * @notice Gets the tokens
    * @return _tokens The tokens registered in the hub
    */
@@ -86,11 +93,4 @@ interface ICappedTokenTransfersHub is IActionHub, ISafeManageable {
    * @return _capLeft The cap left for the token in the current epoch
    */
   function capLeft(address _token) external view returns (uint256 _capLeft);
-
-  /**
-   * @notice Gets the cap for a token
-   * @param _token The token to get the cap for
-   * @return _cap The cap for the token
-   */
-  function cap(address _token) external view returns (uint256 _cap);
 }
