@@ -5,6 +5,8 @@ UnitCappedTokenTransfersHub::constructor
 │   ├── it sets the epoch length
 │   ├── it sets the starting timestamp
 │   └── it sets the tokens and caps
+├── When tokens registered contain a duplicated token
+│   └── it reverts
 └── When the epoch length is zero
     └── it reverts
 

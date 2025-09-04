@@ -9,6 +9,7 @@ import {ICappedTokenTransfersHub} from 'src/interfaces/action-hubs/ICappedTokenT
 
 contract UnitCappedTokenTransfersHub is Test {
   uint256 public constant EPOCH_LENGTH = 7 days;
+  address public constant ZERO_SENTINEL = 0x0000000000000000000000fbb67FDa52D4Bfb8Bf;
   CappedTokenTransfersHub public cappedTokenTransfersHub;
   address public safe = makeAddr('safe');
   address public recipient = makeAddr('recipient');
@@ -19,11 +20,9 @@ contract UnitCappedTokenTransfersHub is Test {
     tokens.push(makeAddr('token1'));
     tokens.push(makeAddr('token2'));
     tokens.push(makeAddr('token3'));
-    tokens.push(makeAddr('token1')); // duplicated token
     caps.push(100);
     caps.push(200);
     caps.push(100);
-    caps.push(50);
 
     cappedTokenTransfersHub = new CappedTokenTransfersHub(safe, recipient, tokens, caps, EPOCH_LENGTH);
   }
@@ -44,13 +43,25 @@ contract UnitCappedTokenTransfersHub is Test {
 
     // it sets the tokens and caps
     address[] memory _tokens = cappedTokenTransfersHub.tokens();
-    assertEq(_tokens.length, 3);
-    assertEq(_tokens[0], tokens[0]);
-    assertEq(cappedTokenTransfersHub.cap(tokens[0]), caps[0] + caps[3]);
-    for (uint256 i = 1; i < tokens.length - 1; i++) {
+    for (uint256 i = 0; i < tokens.length; i++) {
       assertEq(_tokens[i], tokens[i]);
       assertEq(cappedTokenTransfersHub.cap(tokens[i]), caps[i]);
     }
+  }
+
+  function test_ConstructorWhenTokensRegisteredContainADuplicatedToken(address _token) external {
+    vm.assume(_token != ZERO_SENTINEL);
+
+    tokens = new address[](2);
+    tokens[0] = _token;
+    tokens[1] = _token;
+    caps = new uint256[](2);
+    caps[0] = 100;
+    caps[1] = 200;
+
+    // it reverts
+    vm.expectRevert(abi.encodeWithSelector(ICappedTokenTransfersHub.TokenAlreadyRegisteredInHub.selector, _token));
+    new CappedTokenTransfersHub(safe, recipient, tokens, caps, EPOCH_LENGTH);
   }
 
   function test_ConstructorWhenTheEpochLengthIsZero() external {
@@ -69,7 +80,7 @@ contract UnitCappedTokenTransfersHub is Test {
     uint256 _amount
   ) external whenCalledByTheSafeOwner {
     vm.assume(_token != tokens[0] && _token != tokens[1] && _token != tokens[2]);
-    vm.assume(_token != 0x0000000000000000000000fbb67FDa52D4Bfb8Bf); // _ZERO_SENTINEL
+    vm.assume(_token != ZERO_SENTINEL);
 
     // it reverts
     vm.expectRevert(ICappedTokenTransfersHub.TokenNotRegisteredInHub.selector);

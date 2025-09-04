@@ -56,12 +56,10 @@ contract CappedTokenTransfersHub is ActionHub, ICappedTokenTransfersHub, SafeMan
     if (_epochLength == 0) revert EpochLengthCannotBeZero();
 
     for (uint256 i = 0; i < _tokens.length; i++) {
-      // If the token is already registered, add the cap to the existing cap
       if (!__tokens.add(_tokens[i])) {
-        cap[_tokens[i]] += _caps[i];
-      } else {
-        cap[_tokens[i]] = _caps[i];
+        revert TokenAlreadyRegisteredInHub(_tokens[i]);
       }
+      cap[_tokens[i]] = _caps[i];
     }
   }
 
