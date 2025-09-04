@@ -52,7 +52,7 @@ contract IntegrationWonderlandClaims is IntegrationOptimismBase {
     uint256 _approvalDuration = 1 days;
 
     vm.prank(address(SAFE_PROXY));
-    canonGuard.approveActionsBuilder(_actionsBuilder, _approvalDuration);
+    canonGuard.approveActionsBuilderOrHub(_actionsBuilder, _approvalDuration);
 
     // Queue the transaction
     vm.prank(_safeOwners[0]);
@@ -86,7 +86,7 @@ contract IntegrationWonderlandClaims is IntegrationOptimismBase {
     uint256 _approvalDuration = 1 days;
 
     vm.prank(address(SAFE_PROXY));
-    canonGuard.approveActionsBuilder(_opxAction, _approvalDuration);
+    canonGuard.approveActionsBuilderOrHub(_opxAction, _approvalDuration);
 
     // Queue the transaction
     vm.prank(_safeOwners[0]);

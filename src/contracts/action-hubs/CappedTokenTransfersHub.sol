@@ -40,7 +40,7 @@ contract CappedTokenTransfersHub is ActionHub, ICappedTokenTransfersHub, SafeMan
    * @param _tokens The tokens to cap
    * @param _caps The caps for the tokens
    * @param _epochLength Duration of each epoch in seconds. Epochs are counted from STARTING_TIMESTAMP and computed as
-   *  (block.timestamp - STARTING_TIMESTAMP) / _epochLength. Per token caps reset when the epoch increments.
+   *  (block.timestamp - STARTING_TIMESTAMP) / _epochLength. Per token caps reset when the epoch increments. Can't be zero.
    */
   constructor(
     address _safe,
@@ -52,6 +52,8 @@ contract CappedTokenTransfersHub is ActionHub, ICappedTokenTransfersHub, SafeMan
     RECIPIENT = _recipient;
     EPOCH_LENGTH = _epochLength;
     STARTING_TIMESTAMP = block.timestamp;
+
+    if (_epochLength == 0) revert EpochLengthCannotBeZero();
 
     for (uint256 i = 0; i < _tokens.length; i++) {
       // If the token is already registered, add the cap to the existing cap
@@ -78,9 +80,7 @@ contract CappedTokenTransfersHub is ActionHub, ICappedTokenTransfersHub, SafeMan
   }
 
   /// @inheritdoc ICappedTokenTransfersHub
-  function updateState(bytes memory _data) external isSafe {
-    (uint256 _amount, address _token) = abi.decode(_data, (uint256, address));
-
+  function updateState(address _token, uint256 _amount) external isSafe {
     uint256 _currentEpoch = (block.timestamp - STARTING_TIMESTAMP) / EPOCH_LENGTH;
 
     // If we're in a new epoch, reset the spending

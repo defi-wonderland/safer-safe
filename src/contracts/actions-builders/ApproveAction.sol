@@ -34,7 +34,7 @@ contract ApproveAction is IApproveAction {
     _actions = new Action[](1);
     _actions[0] = Action({
       target: CANON_GUARD,
-      data: abi.encodeCall(ICanonGuard.approveActionsBuilder, (ACTIONS_BUILDER, APPROVAL_DURATION)),
+      data: abi.encodeCall(ICanonGuard.approveActionsBuilderOrHub, (ACTIONS_BUILDER, APPROVAL_DURATION)),
       value: 0
     });
   }

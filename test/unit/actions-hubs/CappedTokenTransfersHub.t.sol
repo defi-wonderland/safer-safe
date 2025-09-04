@@ -3,7 +3,6 @@ pragma solidity 0.8.29;
 
 import {IOwnerManager} from '@safe-smart-account/interfaces/IOwnerManager.sol';
 import {Test} from 'forge-std/Test.sol';
-import {EnumerableSetLib} from 'solady/utils/EnumerableSetLib.sol';
 import {CappedTokenTransfersHub} from 'src/contracts/action-hubs/CappedTokenTransfersHub.sol';
 import {ISafeManageable} from 'src/interfaces/ISafeManageable.sol';
 import {ICappedTokenTransfersHub} from 'src/interfaces/action-hubs/ICappedTokenTransfersHub.sol';
@@ -30,6 +29,8 @@ contract UnitCappedTokenTransfersHub is Test {
   }
 
   function test_ConstructorWhenCalled(address _safe, address _recipient, uint256 _epochLength) external {
+    _epochLength = bound(_epochLength, 1, type(uint256).max);
+
     cappedTokenTransfersHub = new CappedTokenTransfersHub(_safe, _recipient, tokens, caps, _epochLength);
 
     // it sets the safe
@@ -52,6 +53,12 @@ contract UnitCappedTokenTransfersHub is Test {
     }
   }
 
+  function test_ConstructorWhenTheEpochLengthIsZero() external {
+    // it reverts
+    vm.expectRevert(ICappedTokenTransfersHub.EpochLengthCannotBeZero.selector);
+    new CappedTokenTransfersHub(safe, recipient, tokens, caps, 0);
+  }
+
   modifier whenCalledByTheSafeOwner() {
     vm.mockCall(address(safe), abi.encodeWithSelector(IOwnerManager.isOwner.selector), abi.encode(true));
     _;
@@ -62,6 +69,7 @@ contract UnitCappedTokenTransfersHub is Test {
     uint256 _amount
   ) external whenCalledByTheSafeOwner {
     vm.assume(_token != tokens[0] && _token != tokens[1] && _token != tokens[2]);
+    vm.assume(_token != 0x0000000000000000000000fbb67FDa52D4Bfb8Bf); // _ZERO_SENTINEL
 
     // it reverts
     vm.expectRevert(ICappedTokenTransfersHub.TokenNotRegisteredInHub.selector);
@@ -70,7 +78,8 @@ contract UnitCappedTokenTransfersHub is Test {
 
   function test_CreateNewActionBuilderWhenTheTokenIsRegisteredInTheHub() external whenCalledByTheSafeOwner {
     // it creates a new CappedTokenTransfers action builder
-    address actionBuilder = cappedTokenTransfersHub.createNewActionBuilder(tokens[1], 200);
+    address actionBuilder =
+      cappedTokenTransfersHub.createNewActionBuilder(tokens[0], cappedTokenTransfersHub.cap(tokens[0]));
     assertNotEq(actionBuilder, address(0));
   }
 
@@ -79,7 +88,7 @@ contract UnitCappedTokenTransfersHub is Test {
 
     // It reverts
     vm.expectRevert(ISafeManageable.NotSafeOwner.selector);
-    cappedTokenTransfersHub.createNewActionBuilder(tokens[1], 200);
+    cappedTokenTransfersHub.createNewActionBuilder(tokens[0], 150);
   }
 
   modifier whenCalledByTheSafe() {
@@ -89,51 +98,47 @@ contract UnitCappedTokenTransfersHub is Test {
   }
 
   function test_UpdateStateWhenCalledByTheSafe(uint256 _amount) external whenCalledByTheSafe {
-    _amount = bound(_amount, 0, caps[1]);
+    _amount = bound(_amount, 0, cappedTokenTransfersHub.cap(tokens[0]));
 
-    bytes memory data = abi.encode(_amount, tokens[1]);
-    cappedTokenTransfersHub.updateState(data);
+    cappedTokenTransfersHub.updateState(tokens[0], _amount);
 
     // it increments the total spent
-    assertEq(cappedTokenTransfersHub.totalSpent(tokens[1]), _amount);
+    assertEq(cappedTokenTransfersHub.totalSpent(tokens[0]), _amount);
   }
 
   function test_UpdateStateWhenTheCurrentEpochIsGreaterThanTheEpochOfTheState(uint256 _amount)
     external
     whenCalledByTheSafe
   {
-    _amount = bound(_amount, 0, caps[1]);
+    _amount = bound(_amount, 0, cappedTokenTransfersHub.cap(tokens[0]));
 
     // spend all the cap for this epoch
-    cappedTokenTransfersHub.updateState(abi.encode(caps[1], tokens[1]));
+    cappedTokenTransfersHub.updateState(tokens[0], cappedTokenTransfersHub.cap(tokens[0]));
 
     // move to the next epoch
     vm.warp(block.timestamp + EPOCH_LENGTH + 1);
 
-    bytes memory data = abi.encode(_amount, tokens[1]);
-    cappedTokenTransfersHub.updateState(data);
+    cappedTokenTransfersHub.updateState(tokens[0], _amount);
 
     // it resets the total spent
-    assertEq(cappedTokenTransfersHub.totalSpent(tokens[1]), _amount);
+    assertEq(cappedTokenTransfersHub.totalSpent(tokens[0]), _amount);
     // it updates the current epoch
     assertEq(cappedTokenTransfersHub.currentEpoch(), 1);
   }
 
   function test_UpdateStateWhenTheTotalSpentIsGreaterThanTheCap(uint256 _amount) external whenCalledByTheSafe {
-    _amount = bound(_amount, caps[1] + 1, type(uint256).max);
-
-    bytes memory data = abi.encode(_amount, tokens[1]);
+    _amount = bound(_amount, cappedTokenTransfersHub.cap(tokens[0]) + 1, type(uint256).max);
 
     // it reverts
     vm.expectRevert(ICappedTokenTransfersHub.CapExceeded.selector);
-    cappedTokenTransfersHub.updateState(data);
+    cappedTokenTransfersHub.updateState(tokens[0], _amount);
   }
 
   function test_UpdateStateWhenNotCalledByTheSafe() external {
     // It reverts
     vm.prank(makeAddr('notSafe'));
     vm.expectRevert(ISafeManageable.NotSafe.selector);
-    cappedTokenTransfersHub.updateState(bytes(''));
+    cappedTokenTransfersHub.updateState(tokens[0], 0);
   }
 
   function test_TokensWhenCalled() external view {
@@ -156,23 +161,23 @@ contract UnitCappedTokenTransfersHub is Test {
   }
 
   function test_CapLeftWhenTheCurrentEpochIsGreaterThanTheEpochOfTheState(uint256 _amount) external whenTokenExists {
-    _amount = bound(_amount, 1, caps[1]);
+    _amount = bound(_amount, 1, cappedTokenTransfersHub.cap(tokens[0]));
 
     vm.prank(safe);
-    cappedTokenTransfersHub.updateState(abi.encode(_amount, tokens[1]));
+    cappedTokenTransfersHub.updateState(tokens[0], _amount);
 
     vm.warp(block.timestamp + EPOCH_LENGTH + 1);
     // it returns the full cap
-    assertEq(cappedTokenTransfersHub.capLeft(tokens[1]), caps[1]);
+    assertEq(cappedTokenTransfersHub.capLeft(tokens[0]), cappedTokenTransfersHub.cap(tokens[0]));
   }
 
   function test_CapLeftWhenTheCurrentEpochIsTheSameAsTheEpochOfTheState(uint256 _amount) external whenTokenExists {
-    _amount = bound(_amount, 1, caps[1]);
+    _amount = bound(_amount, 1, cappedTokenTransfersHub.cap(tokens[0]));
 
     vm.prank(safe);
-    cappedTokenTransfersHub.updateState(abi.encode(_amount, tokens[1]));
+    cappedTokenTransfersHub.updateState(tokens[0], _amount);
 
     // it returns the cap left for the token
-    assertEq(cappedTokenTransfersHub.capLeft(tokens[1]), caps[1] - _amount);
+    assertEq(cappedTokenTransfersHub.capLeft(tokens[0]), cappedTokenTransfersHub.cap(tokens[0]) - _amount);
   }
 }

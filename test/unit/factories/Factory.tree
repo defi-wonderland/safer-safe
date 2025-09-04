@@ -1,0 +1,5 @@
+UnitFactory::isChild
+├── when the contract is created by the factory
+│   └── it returns true
+└── when the contract is not created by the factory
+    └── it returns false

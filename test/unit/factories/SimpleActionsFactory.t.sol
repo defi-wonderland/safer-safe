@@ -42,6 +42,9 @@ contract UnitSimpleActionsFactory is Test {
     assertEq(_savedActions[1].target, _simpleActionsB.target);
     assertEq(_savedActions[1].data, _completeCallDataB);
     assertEq(_savedActions[1].value, _simpleActionsB.value);
+
+    // it should store the contract as a factory children
+    assertTrue(simpleActionsFactory.isChild(_simpleActionsContract));
   }
 
   function test_CreateSimpleActionWhenCreatingASimpleActionsContractWithASingleSimpleAction(
@@ -63,5 +66,8 @@ contract UnitSimpleActionsFactory is Test {
     assertEq(_savedActions[0].target, _simpleActions.target);
     assertEq(_savedActions[0].data, _completeCallData);
     assertEq(_savedActions[0].value, _simpleActions.value);
+
+    // it should store the contract as a factory children
+    assertTrue(simpleActionsFactory.isChild(_simpleActionsContract));
   }
 }

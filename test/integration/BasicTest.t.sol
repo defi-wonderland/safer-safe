@@ -91,7 +91,7 @@ contract IntegrationBasicTest is DeployCanonGuardFactories, EthereumConstants, T
     uint256 _approvalDuration = 1 days;
 
     vm.prank(address(_safeProxy));
-    _canonGuard.approveActionsBuilder(_actionsBuilder, _approvalDuration);
+    _canonGuard.approveActionsBuilderOrHub(_actionsBuilder, _approvalDuration);
 
     vm.startPrank(_safeOwner);
 
