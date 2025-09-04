@@ -27,7 +27,7 @@ contract UnitOPxActionFactorycreateOPxAction is Test {
     // it should set the factory address in the child contract
     assertEq(IOPxAction(_opxAction).FACTORY(), address(opxActionFactory));
 
-    // it should store the contract in the factory
+    // it should store the contract as a factory children
     assertTrue(opxActionFactory.isChild(_opxAction));
   }
 }

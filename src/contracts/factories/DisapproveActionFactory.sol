@@ -19,6 +19,6 @@ contract DisapproveActionFactory is IDisapproveActionFactory, Factory {
   ) external returns (address _disapproveAction) {
     _disapproveAction = address(new DisapproveAction(address(this), _canonGuard, _actionsBuilder));
 
-    _contractsCreated[_disapproveAction] = true;
+    _children[_disapproveAction] = true;
   }
 }

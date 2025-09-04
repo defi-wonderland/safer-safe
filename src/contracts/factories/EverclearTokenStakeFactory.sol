@@ -29,6 +29,6 @@ contract EverclearTokenStakeFactory is IEverclearTokenStakeFactory, Factory {
       )
     );
 
-    _contractsCreated[_everclearTokenStake] = true;
+    _children[_everclearTokenStake] = true;
   }
 }

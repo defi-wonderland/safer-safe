@@ -42,7 +42,7 @@ contract UnitSimpleTransfersFactory is Test {
     // it should set the factory address in the child contract
     assertEq(ISimpleTransfers(_simpleTransfers).FACTORY(), address(simpleTransfersFactory));
 
-    // it should store the contract in the factory
+    // it should store the contract as a factory children
     assertTrue(simpleTransfersFactory.isChild(_simpleTransfers));
   }
 
@@ -73,7 +73,7 @@ contract UnitSimpleTransfersFactory is Test {
     // it should set the factory address in the child contract
     assertEq(ISimpleTransfers(_simpleTransfers).FACTORY(), address(simpleTransfersFactory));
 
-    // it should store the contract in the factory
+    // it should store the contract as a factory children
     assertTrue(simpleTransfersFactory.isChild(_simpleTransfers));
   }
 }

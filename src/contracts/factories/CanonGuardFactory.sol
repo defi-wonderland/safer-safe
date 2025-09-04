@@ -51,6 +51,6 @@ contract CanonGuardFactory is ICanonGuardFactory, Factory {
       )
     );
 
-    _contractsCreated[_canonGuard] = true;
+    _children[_canonGuard] = true;
   }
 }

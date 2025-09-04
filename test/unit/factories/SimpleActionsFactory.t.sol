@@ -45,7 +45,7 @@ contract UnitSimpleActionsFactory is Test {
     assertEq(_savedActions[1].data, _completeCallDataB);
     assertEq(_savedActions[1].value, _simpleActionsB.value);
 
-    // it should store the contract in the factory
+    // it should store the contract as a factory children
     assertTrue(simpleActionsFactory.isChild(_simpleActionsContract));
 
     // it should set the factory address in the child contract
@@ -76,7 +76,7 @@ contract UnitSimpleActionsFactory is Test {
     // it should set the factory address in the child contract
     assertEq(ISimpleActions(_simpleActionsContract).FACTORY(), address(simpleActionsFactory));
 
-    // it should store the contract in the factory
+    // it should store the contract as a factory children
     assertTrue(simpleActionsFactory.isChild(_simpleActionsContract));
   }
 }

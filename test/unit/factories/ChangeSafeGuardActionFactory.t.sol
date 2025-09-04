@@ -34,7 +34,7 @@ contract UnitChangeSafeGuardActionFactorycreateChangeSafeGuardAction is Test {
     // it should set the factory address in the child contract
     assertEq(IChangeSafeGuardAction(_changeSafeGuardActionContract).FACTORY(), address(changeSafeGuardActionFactory));
 
-    // it should store the contract in the factory
+    // it should store the contract as a factory children
     assertTrue(changeSafeGuardActionFactory.isChild(_changeSafeGuardActionContract));
   }
 }

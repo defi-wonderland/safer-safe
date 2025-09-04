@@ -3,11 +3,11 @@ UnitSimpleTransfersFactory::createSimpleTransfers
     ├── it should deploy a SimpleTransfers contract with correct args
     └── it should match the parameters sent to the constructor
     └── it should set the factory address in the child contract
-    └── it should store the contract in the factory
+    └── it should store the contract as a factory children
 
 UnitSimpleTransfersFactory::createSimpleTransfer
 └── when creating a SimpleTransfers contract with a single transfer action
     ├── it should deploy a SimpleTransfers contract with a single transfer action
     ├── it should match the parameters sent to the constructor
     └── it should set the factory address in the child contract
-    └── it should store the contract in the factory
+    └── it should store the contract as a factory children

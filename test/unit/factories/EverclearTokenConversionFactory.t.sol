@@ -33,7 +33,7 @@ contract UnitEverclearTokenConversionFactorycreateEverclearTokenConversion is Te
     // it should set the factory address in the child contract
     assertEq(IEverclearTokenConversion(_everclearTokenConversion).FACTORY(), address(everclearTokenConversionFactory));
 
-    // it should store the contract in the factory
+    // it should store the contract as a factory children
     assertTrue(everclearTokenConversionFactory.isChild(_everclearTokenConversion));
   }
 }

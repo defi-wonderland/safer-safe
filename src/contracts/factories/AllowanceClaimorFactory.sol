@@ -21,6 +21,6 @@ contract AllowanceClaimorFactory is IAllowanceClaimorFactory, Factory {
   ) external returns (address _allowanceClaimor) {
     _allowanceClaimor = address(new AllowanceClaimor(address(this), _safe, _token, _tokenOwner, _tokenRecipient));
 
-    _contractsCreated[_allowanceClaimor] = true;
+    _children[_allowanceClaimor] = true;
   }
 }

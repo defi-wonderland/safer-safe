@@ -30,7 +30,7 @@ contract UnitDisapproveActionFactorycreateDisapproveAction is Test {
     // it should set the factory address in the child contract
     assertEq(IDisapproveAction(_disapproveAction).FACTORY(), address(disapproveActionFactory));
 
-    // it should store the contract in the factory
+    // it should store the contract as a factory children
     assertTrue(disapproveActionFactory.isChild(_disapproveAction));
   }
 }

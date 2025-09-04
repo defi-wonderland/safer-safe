@@ -23,6 +23,6 @@ contract CappedTokenTransfersHubFactory is ICappedTokenTransfersHubFactory, Fact
     _cappedTokenTransfersHub =
       address(new CappedTokenTransfersHub(address(this), _safe, _recipient, _tokens, _caps, _epochLength));
 
-    _contractsCreated[_cappedTokenTransfersHub] = true;
+    _children[_cappedTokenTransfersHub] = true;
   }
 }

@@ -35,7 +35,7 @@ contract UnitAllowanceClaimorFactorycreateAllowanceClaimor is Test {
     // it should set the factory address in the child contract
     assertEq(IAllowanceClaimor(_allowanceClaimor).FACTORY(), address(allowanceClaimorFactory));
 
-    // it should store the contract in the factory
+    // it should store the contract as a factory children
     assertTrue(allowanceClaimorFactory.isChild(_allowanceClaimor));
   }
 }
