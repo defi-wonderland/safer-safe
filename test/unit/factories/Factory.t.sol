@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.29;
 
-import {Factory} from 'contracts/factories/Factory.sol';
-
 import {Test} from 'forge-std/Test.sol';
 import {FactoryForTest} from 'test/unit/mocks/FactoryForTest.sol';
 

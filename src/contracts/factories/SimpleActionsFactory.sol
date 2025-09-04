@@ -20,7 +20,7 @@ contract SimpleActionsFactory is ISimpleActionsFactory, Factory {
   {
     _simpleActions = address(new SimpleActions(_smplActions));
 
-    _contractsCreated[_simpleActions] = true;
+    _children[_simpleActions] = true;
   }
 
   /// @inheritdoc ISimpleActionsFactory
@@ -32,6 +32,6 @@ contract SimpleActionsFactory is ISimpleActionsFactory, Factory {
     _simpleActionsArray[0] = _simpleAction;
     _simpleActions = address(new SimpleActions(_simpleActionsArray));
 
-    _contractsCreated[_simpleActions] = true;
+    _children[_simpleActions] = true;
   }
 }

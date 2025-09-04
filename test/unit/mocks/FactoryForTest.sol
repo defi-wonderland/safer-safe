@@ -5,6 +5,6 @@ import {Factory} from 'src/contracts/factories/Factory.sol';
 
 contract FactoryForTest is Factory {
   function createContract(address _contract) external {
-    _contractsCreated[_contract] = true;
+    _children[_contract] = true;
   }
 }

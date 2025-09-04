@@ -22,6 +22,6 @@ contract CappedTokenTransfersHubFactory is ICappedTokenTransfersHubFactory, Fact
   ) external returns (address _cappedTokenTransfersHub) {
     _cappedTokenTransfersHub = address(new CappedTokenTransfersHub(_safe, _recipient, _tokens, _caps, _epochLength));
 
-    _contractsCreated[_cappedTokenTransfersHub] = true;
+    _children[_cappedTokenTransfersHub] = true;
   }
 }

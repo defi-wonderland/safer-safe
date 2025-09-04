@@ -27,7 +27,7 @@ contract UnitEverclearTokenConversionFactorycreateEverclearTokenConversion is Te
     assertEq(address(auxEverclearTokenConversion.NEXT()), _next);
     assertEq(address(auxEverclearTokenConversion.SAFE()), _safe);
 
-    // it should store the contract in the factory
+    // it should store the contract as children
     assertTrue(everclearTokenConversionFactory.isChild(_everclearTokenConversion));
   }
 }

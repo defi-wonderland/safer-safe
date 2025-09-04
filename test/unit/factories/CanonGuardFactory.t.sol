@@ -69,7 +69,7 @@ contract UnitCanonGuardFactory is Test {
     assertEq(ICanonGuard(_canonGuard).TX_EXPIRY_DELAY(), _txExpiryDelay);
     assertEq(ICanonGuard(_canonGuard).MAX_APPROVAL_DURATION(), _maxApprovalDuration);
 
-    // it should store the contract in the factory
+    // it should store the contract as children
     assertTrue(canonGuardFactory.isChild(_canonGuard));
   }
 }
