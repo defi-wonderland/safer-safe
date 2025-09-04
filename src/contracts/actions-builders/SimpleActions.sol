@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.29;
 
-import {ActionBuilder} from 'contracts/actions-builders/ActionBuilder.sol';
+import {ActionsBuilder} from 'contracts/actions-builders/ActionsBuilder.sol';
 import {ISimpleActions} from 'interfaces/actions-builders/ISimpleActions.sol';
 
 /**
  * @title SimpleActions
  * @notice Contract that builds actions from simple actions
  */
-contract SimpleActions is ISimpleActions, ActionBuilder {
+contract SimpleActions is ISimpleActions, ActionsBuilder {
   // ~~~ STORAGE ~~~
 
   /// @notice The array of actions
@@ -18,10 +18,10 @@ contract SimpleActions is ISimpleActions, ActionBuilder {
 
   /**
    * @notice Constructor that sets up the array of actions
-   * @param _parent The parent that deployed the action builder
+   * @param _parent The parent that deployed the actions buider
    * @param _simpleActions The array of simple actions
    */
-  constructor(address _parent, SimpleAction[] memory _simpleActions) ActionBuilder(_parent) {
+  constructor(address _parent, SimpleAction[] memory _simpleActions) ActionsBuilder(_parent) {
     uint256 _simpleActionsLength = _simpleActions.length;
     SimpleAction memory _simpleAction;
     Action memory _action;
@@ -43,7 +43,7 @@ contract SimpleActions is ISimpleActions, ActionBuilder {
 
   // ~~~ ACTIONS METHODS ~~~
 
-  /// @inheritdoc ActionBuilder
+  /// @inheritdoc ActionsBuilder
   function getActions() external view override returns (Action[] memory) {
     return _actions;
   }

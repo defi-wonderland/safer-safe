@@ -17,36 +17,36 @@ abstract contract ActionHub is IActionHub {
   }
 
   /**
-   * @notice The mapping of action builders. Returns true if the action builder is a child of the actionHub.
+   * @notice The mapping of actions buiders. Returns true if the actions buider is a child of the actionHub.
    */
-  mapping(address _actionBuilder => bool _exists) internal _actionBuilders;
+  mapping(address _actionsBuilder => bool _exists) internal _actionsBuilders;
 
   /// @inheritdoc IActionHub
-  function isChild(address _actionBuilder) external view returns (bool _exists) {
-    _exists = _isChild(_actionBuilder);
+  function isChild(address _actionsBuilder) external view returns (bool _exists) {
+    _exists = _isChild(_actionsBuilder);
   }
 
   /**
-   * @notice Creates a new action builder
-   * @param _initCode The init code of the new action builder
-   * @param _salt The salt used to deploy the new action builder
-   * @return _actionBuilder The address of the new action builder
+   * @notice Creates a new actions buider
+   * @param _initCode The init code of the new actions buider
+   * @param _salt The salt used to deploy the new actions buider
+   * @return _actionsBuilder The address of the new actions buider
    */
-  function _createNewActionBuilder(bytes memory _initCode, bytes32 _salt) internal returns (address _actionBuilder) {
+  function _createNewActionsBuilder(bytes memory _initCode, bytes32 _salt) internal returns (address _actionsBuilder) {
     // Deploy with create3 to have deterministic addresses, if the child already exists, it will revert
-    _actionBuilder = CREATE3.deployDeterministic(_initCode, _salt);
+    _actionsBuilder = CREATE3.deployDeterministic(_initCode, _salt);
 
-    _actionBuilders[_actionBuilder] = true;
+    _actionsBuilders[_actionsBuilder] = true;
 
-    emit NewActionBuilderCreated(_actionBuilder, _initCode, _salt);
+    emit NewActionsBuilderCreated(_actionsBuilder, _initCode, _salt);
   }
 
   /**
-   * @notice Returns true if the action builder is a child of the actionHub
-   * @param _child The address of the action builder to check
-   * @return _exists True if the action builder is a child of the actionHub, false otherwise
+   * @notice Returns true if the actions buider is a child of the actionHub
+   * @param _child The address of the actions buider to check
+   * @return _exists True if the actions buider is a child of the actionHub, false otherwise
    */
   function _isChild(address _child) internal view returns (bool _exists) {
-    _exists = _actionBuilders[_child];
+    _exists = _actionsBuilders[_child];
   }
 }

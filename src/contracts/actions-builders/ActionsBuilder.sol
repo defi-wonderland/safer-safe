@@ -3,7 +3,7 @@ pragma solidity 0.8.29;
 
 import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 
-abstract contract ActionBuilder is IActionsBuilder {
+abstract contract ActionsBuilder is IActionsBuilder {
   /// @inheritdoc IActionsBuilder
   address public immutable PARENT;
 

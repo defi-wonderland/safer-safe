@@ -61,7 +61,7 @@ contract UnitCappedTokenTransfersHub is Test {
     _;
   }
 
-  function test_CreateNewActionBuilderWhenTheTokenIsNotRegisteredInTheHub(
+  function test_CreateNewActionsBuilderWhenTheTokenIsNotRegisteredInTheHub(
     address _token,
     uint256 _amount
   ) external whenCalledByTheSafeOwner {
@@ -69,24 +69,24 @@ contract UnitCappedTokenTransfersHub is Test {
 
     // it reverts
     vm.expectRevert(ICappedTokenTransfersHub.TokenNotRegisteredInHub.selector);
-    cappedTokenTransfersHub.createNewActionBuilder(_token, _amount);
+    cappedTokenTransfersHub.createNewActionsBuilder(_token, _amount);
   }
 
-  function test_CreateNewActionBuilderWhenTheTokenIsRegisteredInTheHub() external whenCalledByTheSafeOwner {
-    // it creates a new CappedTokenTransfers action builder
-    address _actionBuilder = cappedTokenTransfersHub.createNewActionBuilder(tokens[0], 100);
-    assertNotEq(_actionBuilder, address(0));
+  function test_CreateNewActionsBuilderWhenTheTokenIsRegisteredInTheHub() external whenCalledByTheSafeOwner {
+    // it creates a new CappedTokenTransfers actions buider
+    address _actionsBuilder = cappedTokenTransfersHub.createNewActionsBuilder(tokens[0], 100);
+    assertNotEq(_actionsBuilder, address(0));
 
     // it sets the hub address in the child contract
-    assertEq(IActionsBuilder(_actionBuilder).PARENT(), address(cappedTokenTransfersHub));
+    assertEq(IActionsBuilder(_actionsBuilder).PARENT(), address(cappedTokenTransfersHub));
   }
 
-  function test_CreateNewActionBuilderWhenNotCalledByTheSafeOwner() external {
+  function test_CreateNewActionsBuilderWhenNotCalledByTheSafeOwner() external {
     vm.mockCall(address(safe), abi.encodeWithSelector(IOwnerManager.isOwner.selector), abi.encode(false));
 
     // It reverts
     vm.expectRevert(ISafeManageable.NotSafeOwner.selector);
-    cappedTokenTransfersHub.createNewActionBuilder(tokens[0], 100);
+    cappedTokenTransfersHub.createNewActionsBuilder(tokens[0], 100);
   }
 
   modifier whenCalledByTheSafe() {

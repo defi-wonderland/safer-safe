@@ -14,7 +14,7 @@ interface ICappedTokenTransfersHub is ISafeManageable {
   error CapExceeded();
 
   /**
-   * @notice Thrown when creating a hub action builder for a token that is not registered in the hub
+   * @notice Thrown when creating a hub actions buider for a token that is not registered in the hub
    */
   error TokenNotRegisteredInHub();
 
@@ -31,12 +31,12 @@ interface ICappedTokenTransfersHub is ISafeManageable {
   function updateState(address _token, uint256 _amount) external;
 
   /**
-   * @notice Creates a new action builder
+   * @notice Creates a new actions buider
    * @param _token The token to cap
    * @param _amount The amount of tokens to transfer
-   * @return _actionBuilder The address of the new action builder
+   * @return _actionsBuilder The address of the new actions buider
    */
-  function createNewActionBuilder(address _token, uint256 _amount) external returns (address _actionBuilder);
+  function createNewActionsBuilder(address _token, uint256 _amount) external returns (address _actionsBuilder);
 
   /**
    * @notice Gets the recipient

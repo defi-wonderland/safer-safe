@@ -3,13 +3,13 @@ UnitActionHub::constructor
     └── it sets the parent
 
 UnitActionHub::isChild
-├── when the action builder is a child
+├── when the actions builder is a child
 │   └── it returns true
-└── when the action builder is not a child
+└── when the actions builder is not a child
     └── it returns false
 
-UnitActionHub::_createNewActionBuilder
+UnitActionHub::_createNewActionsBuilder
 └── When called
-    ├── it creates a new action builder
-    ├── it marks the action builder as a child
-    └── it emits a NewActionBuilderCreated event
+    ├── it creates a new actions builder
+    ├── it marks the actions builder as a child
+    └── it emits a NewActionsBuilderCreated event

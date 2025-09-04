@@ -6,14 +6,14 @@ import {ActionHub} from 'src/contracts/action-hubs/ActionHub.sol';
 contract ActionHubForTest is ActionHub {
   constructor(address _parent) ActionHub(_parent) {}
 
-  function forTest_createNewActionBuilder(
+  function forTest_createNewActionsBuilder(
     bytes memory _initCode,
     bytes32 _salt
-  ) external returns (address _actionBuilder) {
-    _actionBuilder = _createNewActionBuilder(_initCode, _salt);
+  ) external returns (address _actionsBuilder) {
+    _actionsBuilder = _createNewActionsBuilder(_initCode, _salt);
   }
 
-  function forTest_set__actionBuilders(address _actionBuilder, bool _exists) external {
-    _actionBuilders[_actionBuilder] = _exists;
+  function forTest_set__actionsBuilders(address _actionsBuilder, bool _exists) external {
+    _actionsBuilders[_actionsBuilder] = _exists;
   }
 }

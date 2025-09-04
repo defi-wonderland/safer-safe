@@ -22,12 +22,12 @@ contract Approver is IApprover {
   }
 
   /// @inheritdoc IApprover
-  function approveTx(address _actionBuilder, uint256 _safeNonce) external {
+  function approveTx(address _actionsBuilder, uint256 _safeNonce) external {
     if (msg.sender != address(this)) revert InvalidSender();
 
-    bytes32 _safeTxHash = CANON_GUARD.getSafeTransactionHash(_actionBuilder, _safeNonce);
+    bytes32 _safeTxHash = CANON_GUARD.getSafeTransactionHash(_actionsBuilder, _safeNonce);
     SAFE.approveHash(_safeTxHash);
 
-    emit TxApproved(_actionBuilder, _safeNonce, _safeTxHash);
+    emit TxApproved(_actionsBuilder, _safeNonce, _safeTxHash);
   }
 }

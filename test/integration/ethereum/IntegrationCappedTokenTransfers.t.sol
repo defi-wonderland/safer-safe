@@ -30,12 +30,12 @@ contract IntegrationCappedTokenTransfers is IntegrationEthereumBase {
       new CappedTokenTransfersHub(address(0), address(SAFE_PROXY), _recipient, _tokens, _caps, 7 days);
   }
 
-  function test_CreateNewActionBuilder() public {
-    // Create the new action builder
+  function test_CreateNewActionsBuilder() public {
+    // Create the new actions buider
     vm.prank(_safeOwners[0]);
-    address _actionsBuilder = _cappedTokenTransfersHub.createNewActionBuilder(address(WETH), 10 ether);
+    address _actionsBuilder = _cappedTokenTransfersHub.createNewActionsBuilder(address(WETH), 10 ether);
 
-    // Check that the action builder was created correctly
+    // Check that the actions buider was created correctly
     assertTrue(IActionHub(address(_cappedTokenTransfersHub)).isChild(_actionsBuilder));
     assertEq(ICappedTokenTransfers(_actionsBuilder).TOKEN(), address(WETH));
     assertEq(ICappedTokenTransfers(_actionsBuilder).AMOUNT(), 10 ether);
@@ -44,9 +44,9 @@ contract IntegrationCappedTokenTransfers is IntegrationEthereumBase {
   }
 
   function test_TransferSuccessfully() public {
-    // Create the new action builder
+    // Create the new actions buider
     vm.prank(_safeOwners[0]);
-    address _actionsBuilder = _cappedTokenTransfersHub.createNewActionBuilder(address(WETH), _safeBalance);
+    address _actionsBuilder = _cappedTokenTransfersHub.createNewActionsBuilder(address(WETH), _safeBalance);
 
     // Allow the CanonGuard to call the contract
     uint256 _approvalDuration = 1 days;
@@ -80,9 +80,9 @@ contract IntegrationCappedTokenTransfers is IntegrationEthereumBase {
   }
 
   function test_TransferUnsuccessfully() public {
-    // Create the new action builder
+    // Create the new actions buider
     vm.prank(_safeOwners[0]);
-    address _actionsBuilder = _cappedTokenTransfersHub.createNewActionBuilder(address(WETH), 1000 ether);
+    address _actionsBuilder = _cappedTokenTransfersHub.createNewActionsBuilder(address(WETH), 1000 ether);
 
     // Allow the CanonGuard to call the contract
     uint256 _approvalDuration = 1 days;

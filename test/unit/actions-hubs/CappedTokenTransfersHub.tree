@@ -9,12 +9,12 @@ UnitCappedTokenTransfersHub::constructor
 └── When the epoch length is zero
     └── it reverts
 
-UnitCappedTokenTransfersHub::createNewActionBuilder
+UnitCappedTokenTransfersHub::createNewActionsBuilder
 ├── When called by the safe owner
 │   ├── When the token is not registered in the hub
 │   │   └── it reverts
 │   └── When the token is registered in the hub
-│       └── it creates a new CappedTokenTransfers action builder
+│       └── it creates a new CappedTokenTransfers actions buider
 │       └── it sets the hub address in the child contract
 └── When not called by the safe owner
     └── It reverts

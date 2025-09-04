@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.29;
 
-import {ActionBuilder} from 'contracts/actions-builders/ActionBuilder.sol';
+import {ActionsBuilder} from 'contracts/actions-builders/ActionsBuilder.sol';
 import {IERC20} from 'forge-std/interfaces/IERC20.sol';
 import {IEverclearTokenStake} from 'interfaces/actions-builders/IEverclearTokenStake.sol';
 import {IGateway} from 'interfaces/external/IGateway.sol';
@@ -14,7 +14,7 @@ import {IxERC20Lockbox} from 'interfaces/external/IxERC20Lockbox.sol';
  * @title EverclearTokenStake
  * @notice Contract that increases the stake of CLEAR
  */
-contract EverclearTokenStake is IEverclearTokenStake, ActionBuilder {
+contract EverclearTokenStake is IEverclearTokenStake, ActionsBuilder {
   // ~~~ STORAGE ~~~
 
   /// @inheritdoc IEverclearTokenStake
@@ -45,7 +45,7 @@ contract EverclearTokenStake is IEverclearTokenStake, ActionBuilder {
 
   /**
    * @notice Constructor that sets up the variables
-   * @param _parent The parent that deployed the action builder
+   * @param _parent The parent that deployed the actions buider
    * @param _vestingEscrow The vesting escrow contract address
    * @param _vestingWallet The vesting wallet contract address
    * @param _spokeBridge The spoke bridge contract address
@@ -65,7 +65,7 @@ contract EverclearTokenStake is IEverclearTokenStake, ActionBuilder {
     address _clear,
     address _safe,
     uint256 _lockTime
-  ) ActionBuilder(_parent) {
+  ) ActionsBuilder(_parent) {
     VESTING_ESCROW = IVestingEscrow(_vestingEscrow);
     VESTING_WALLET = IVestingWallet(_vestingWallet);
     SPOKE_BRIDGE = ISpokeBridge(_spokeBridge);
@@ -78,7 +78,7 @@ contract EverclearTokenStake is IEverclearTokenStake, ActionBuilder {
 
   // ~~~ ACTIONS METHODS ~~~
 
-  /// @inheritdoc ActionBuilder
+  /// @inheritdoc ActionsBuilder
   function getActions() external view override returns (Action[] memory _actions) {
     _actions = new Action[](6);
 

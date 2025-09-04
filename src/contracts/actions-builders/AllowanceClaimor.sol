@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.29;
 
-import {ActionBuilder} from 'contracts/actions-builders/ActionBuilder.sol';
+import {ActionsBuilder} from 'contracts/actions-builders/ActionsBuilder.sol';
 import {IERC20} from 'forge-std/interfaces/IERC20.sol';
 import {IAllowanceClaimor} from 'interfaces/actions-builders/IAllowanceClaimor.sol';
 
@@ -9,7 +9,7 @@ import {IAllowanceClaimor} from 'interfaces/actions-builders/IAllowanceClaimor.s
  * @title AllowanceClaimor
  * @notice Contract that builds actions from token allowances
  */
-contract AllowanceClaimor is IAllowanceClaimor, ActionBuilder {
+contract AllowanceClaimor is IAllowanceClaimor, ActionsBuilder {
   // ~~~ STORAGE ~~~
 
   /// @inheritdoc IAllowanceClaimor
@@ -28,7 +28,7 @@ contract AllowanceClaimor is IAllowanceClaimor, ActionBuilder {
 
   /**
    * @notice Constructor that sets up the Safe, token, token owner and token recipient
-   * @param _parent The parent that deployed the action builder
+   * @param _parent The parent that deployed the actions buider
    * @param _safe The Gnosis Safe contract address
    * @param _token The token contract address
    * @param _tokenOwner The token owner address
@@ -40,7 +40,7 @@ contract AllowanceClaimor is IAllowanceClaimor, ActionBuilder {
     address _token,
     address _tokenOwner,
     address _tokenRecipient
-  ) ActionBuilder(_parent) {
+  ) ActionsBuilder(_parent) {
     SAFE = _safe;
     TOKEN = IERC20(_token);
     TOKEN_OWNER = _tokenOwner;
@@ -49,7 +49,7 @@ contract AllowanceClaimor is IAllowanceClaimor, ActionBuilder {
 
   // ~~~ ACTIONS METHODS ~~~
 
-  /// @inheritdoc ActionBuilder
+  /// @inheritdoc ActionsBuilder
   function getActions() external view override returns (Action[] memory _actions) {
     uint256 _amountToClaim = TOKEN.allowance(TOKEN_OWNER, SAFE);
     uint256 _balance = TOKEN.balanceOf(TOKEN_OWNER);
