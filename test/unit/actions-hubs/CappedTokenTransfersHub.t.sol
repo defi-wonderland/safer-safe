@@ -49,15 +49,26 @@ contract UnitCappedTokenTransfersHub is Test {
     }
   }
 
-  function test_ConstructorWhenTokensRegisteredContainADuplicatedToken(address _token) external {
+  function test_ConstructorWhenTokensRegisteredContainADuplicatedToken(
+    address _token,
+    address _tokenB,
+    uint256 _amountA,
+    uint256 _amountB,
+    uint256 _amountC
+  ) external {
     vm.assume(_token != ZERO_SENTINEL);
+    vm.assume(_tokenB != ZERO_SENTINEL);
+    vm.assume(_token != _tokenB);
 
-    tokens = new address[](2);
+    tokens = new address[](3);
     tokens[0] = _token;
-    tokens[1] = _token;
-    caps = new uint256[](2);
-    caps[0] = 100;
-    caps[1] = 200;
+    tokens[1] = _tokenB;
+    tokens[2] = _token;
+
+    caps = new uint256[](3);
+    caps[0] = _amountA;
+    caps[1] = _amountB;
+    caps[2] = _amountC;
 
     // it reverts
     vm.expectRevert(abi.encodeWithSelector(ICappedTokenTransfersHub.TokenAlreadyRegisteredInHub.selector, _token));
