@@ -15,7 +15,7 @@ contract UnitCanonGuard is Test {
 
   uint256 public constant SHORT_TX_EXECUTION_DELAY = 1 hours;
   uint256 public constant LONG_TX_EXECUTION_DELAY = 7 days;
-  uint256 public constant TX_EXPIRY_DELAY = 2 hours;
+  uint256 public constant TX_EXPIRY_DELAY = 1 days;
   uint256 public constant ACTIONS_BUILDER_APPROVAL_DURATION = 7 days;
   uint256 public constant MAX_APPROVAL_DURATION = 4 * 365 days;
   address public immutable SAFE = makeAddr('SAFE');
@@ -69,6 +69,11 @@ contract UnitCanonGuard is Test {
     uint256 _txExpiryDelay,
     uint256 _maxApprovalDuration
   ) external {
+    _txExpiryDelay = bound(_txExpiryDelay, canonGuard.MIN_EXPIRY_TIME(), type(uint128).max);
+    _maxApprovalDuration = bound(_maxApprovalDuration, canonGuard.MIN_EXPIRY_TIME(), type(uint256).max);
+    _shortTxExecutionDelay = bound(_shortTxExecutionDelay, 0, type(uint128).max - 1);
+    _longTxExecutionDelay = bound(_longTxExecutionDelay, _shortTxExecutionDelay, type(uint128).max);
+
     canonGuard = new CanonGuardForTest(
       _safe,
       _multiSendCallOnly,
@@ -87,36 +92,126 @@ contract UnitCanonGuard is Test {
     assertEq(canonGuard.MAX_APPROVAL_DURATION(), _maxApprovalDuration);
   }
 
+  function test_ConstructorWhenTheTransactionExpiryDelayIsLessThanTheMinimumExpiryTime(uint256 _delay) external {
+    _delay = bound(_delay, 0, canonGuard.MIN_EXPIRY_TIME() - 1);
+
+    // it reverts
+    vm.expectRevert(ICanonGuard.TxExpiryDelayCannotBeLessThanMin.selector);
+    new CanonGuardForTest(
+      SAFE,
+      MULTI_SEND_CALL_ONLY,
+      SHORT_TX_EXECUTION_DELAY,
+      LONG_TX_EXECUTION_DELAY,
+      _delay,
+      MAX_APPROVAL_DURATION,
+      EMERGENCY_TRIGGER,
+      EMERGENCY_CALLER
+    );
+  }
+
+  function test_ConstructorWhenTheMaximumApprovalDurationIsLessThanTheMinimumExpiryTime(uint256 _duration) external {
+    _duration = bound(_duration, 0, canonGuard.MIN_EXPIRY_TIME() - 1);
+
+    // it reverts
+    vm.expectRevert(ICanonGuard.MaxApprovalDurationCannotBeLessThanMin.selector);
+    new CanonGuardForTest(
+      SAFE,
+      MULTI_SEND_CALL_ONLY,
+      SHORT_TX_EXECUTION_DELAY,
+      LONG_TX_EXECUTION_DELAY,
+      TX_EXPIRY_DELAY,
+      _duration,
+      EMERGENCY_TRIGGER,
+      EMERGENCY_CALLER
+    );
+  }
+
+  function test_ConstructorWhenTheShortExecutionDelayIsGreaterThanTheLongExecutionDelay(
+    uint256 _shortTxExecutionDelay,
+    uint256 _longTxExecutionDelay
+  ) external {
+    _longTxExecutionDelay = bound(_longTxExecutionDelay, 0, type(uint256).max - 1);
+    _shortTxExecutionDelay = bound(_shortTxExecutionDelay, _longTxExecutionDelay + 1, type(uint256).max);
+
+    // it reverts
+    vm.expectRevert(ICanonGuard.ShortDelayCannotBeGreaterThanLongDelay.selector);
+    new CanonGuardForTest(
+      SAFE,
+      MULTI_SEND_CALL_ONLY,
+      _shortTxExecutionDelay,
+      _longTxExecutionDelay,
+      TX_EXPIRY_DELAY,
+      MAX_APPROVAL_DURATION,
+      EMERGENCY_TRIGGER,
+      EMERGENCY_CALLER
+    );
+  }
+
+  function test_ConstructorWhenTxExpiryDelayIsGreaterThanMax(uint256 _txExpiryDelay) external {
+    _txExpiryDelay = bound(_txExpiryDelay, uint256(type(uint128).max) + 1, type(uint256).max);
+
+    // it reverts
+    vm.expectRevert(ICanonGuard.TxExpiryDelayCannotBeGreaterThanMax.selector);
+    new CanonGuardForTest(
+      SAFE,
+      MULTI_SEND_CALL_ONLY,
+      SHORT_TX_EXECUTION_DELAY,
+      LONG_TX_EXECUTION_DELAY,
+      _txExpiryDelay,
+      MAX_APPROVAL_DURATION,
+      EMERGENCY_TRIGGER,
+      EMERGENCY_CALLER
+    );
+  }
+
+  function test_ConstructorWhenLongDelayIsGreaterThanMax(uint256 _longTxExecutionDelay) external {
+    _longTxExecutionDelay = bound(_longTxExecutionDelay, uint256(type(uint128).max) + 1, type(uint256).max);
+
+    // it reverts
+    vm.expectRevert(ICanonGuard.LongDelayCannotBeGreaterThanMax.selector);
+    new CanonGuardForTest(
+      SAFE,
+      MULTI_SEND_CALL_ONLY,
+      SHORT_TX_EXECUTION_DELAY,
+      _longTxExecutionDelay,
+      TX_EXPIRY_DELAY,
+      MAX_APPROVAL_DURATION,
+      EMERGENCY_TRIGGER,
+      EMERGENCY_CALLER
+    );
+  }
+
   modifier whenCallerIsSafe() {
     vm.startPrank(SAFE);
     _;
     vm.stopPrank();
   }
 
-  function test_ApproveActionsBuilderWhenCallerIsSafe(uint256 _approvalDuration, address _actionsBuilder) external {
+  function test_ApproveActionsBuilderOrHubWhenCallerIsSafe(uint256 _approvalDuration, address _actionsBuilder) external {
     _approvalDuration = bound(_approvalDuration, 0, MAX_APPROVAL_DURATION);
 
     vm.expectEmit(address(canonGuard));
-    emit ICanonGuard.ActionsBuilderApproved(_actionsBuilder, _approvalDuration, block.timestamp + _approvalDuration);
+    emit ICanonGuard.ActionsBuilderOrHubApproved(
+      _actionsBuilder, _approvalDuration, block.timestamp + _approvalDuration
+    );
 
     vm.prank(SAFE);
-    canonGuard.approveActionsBuilder(_actionsBuilder, _approvalDuration);
+    canonGuard.approveActionsBuilderOrHub(_actionsBuilder, _approvalDuration);
 
     assertEq(canonGuard.approvalExpiries(_actionsBuilder), block.timestamp + _approvalDuration);
   }
 
-  function test_ApproveActionsBuilderWhenApprovalDurationIsGreaterThanMaxApprovalDuration(uint256 _approvalDuration)
-    external
-    whenCallerIsSafe
-  {
+  function test_ApproveActionsBuilderOrHubWhenApprovalDurationIsGreaterThanMaxApprovalDuration(
+    uint256 _approvalDuration
+  ) external whenCallerIsSafe {
     _approvalDuration = bound(_approvalDuration, canonGuard.MAX_APPROVAL_DURATION() + 1, type(uint256).max);
 
     // it reverts with InvalidApprovalDuration
     vm.expectRevert(ICanonGuard.InvalidApprovalDuration.selector);
-    canonGuard.approveActionsBuilder(address(0), _approvalDuration);
+    canonGuard.approveActionsBuilderOrHub(address(0), _approvalDuration);
   }
 
-  function test_ApproveActionsBuilderWhenExtendingApproval(
+  function test_ApproveActionsBuilderOrHubWhenExtendingApproval(
     address _actionsBuilder,
     uint256 _previousApprovalExpiry,
     uint256 _newApprovalDuration
@@ -128,17 +223,17 @@ contract UnitCanonGuard is Test {
     assertEq(canonGuard.approvalExpiries(_actionsBuilder), _previousApprovalExpiry);
 
     vm.expectEmit(address(canonGuard));
-    emit ICanonGuard.ActionsBuilderApproved(
+    emit ICanonGuard.ActionsBuilderOrHubApproved(
       _actionsBuilder, _newApprovalDuration, block.timestamp + _newApprovalDuration
     );
 
     vm.prank(SAFE);
-    canonGuard.approveActionsBuilder(_actionsBuilder, _newApprovalDuration);
+    canonGuard.approveActionsBuilderOrHub(_actionsBuilder, _newApprovalDuration);
 
     assertEq(canonGuard.approvalExpiries(_actionsBuilder), block.timestamp + _newApprovalDuration);
   }
 
-  function test_ApproveActionsBuilderWhenCallerIsNotSafe(
+  function test_ApproveActionsBuilderOrHubWhenCallerIsNotSafe(
     address _caller,
     uint256 _approvalDuration,
     address _actionsBuilder
@@ -146,7 +241,7 @@ contract UnitCanonGuard is Test {
     vm.assume(_caller != SAFE);
     vm.expectRevert(ISafeManageable.NotSafe.selector);
     vm.prank(_caller);
-    canonGuard.approveActionsBuilder(_actionsBuilder, _approvalDuration);
+    canonGuard.approveActionsBuilderOrHub(_actionsBuilder, _approvalDuration);
   }
 
   modifier whenCallerIsSafeOwner() {
@@ -658,7 +753,7 @@ contract UnitCanonGuard is Test {
 
   modifier givenActionsBuilderIsApproved(address _actionsBuilder) {
     vm.prank(SAFE);
-    canonGuard.approveActionsBuilder(_actionsBuilder, ACTIONS_BUILDER_APPROVAL_DURATION);
+    canonGuard.approveActionsBuilderOrHub(_actionsBuilder, ACTIONS_BUILDER_APPROVAL_DURATION);
     _;
   }
 }

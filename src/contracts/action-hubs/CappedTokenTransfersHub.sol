@@ -45,6 +45,8 @@ contract CappedTokenTransfersHub is ActionHub, ICappedTokenTransfersHub, SafeMan
     EPOCH_LENGTH = _epochLength;
     STARTING_TIMESTAMP = block.timestamp;
 
+    if (_epochLength == 0) revert EpochLengthCannotBeZero();
+
     for (uint256 i = 0; i < _tokens.length; i++) {
       cap[_tokens[i]] = _caps[i];
     }
@@ -65,9 +67,7 @@ contract CappedTokenTransfersHub is ActionHub, ICappedTokenTransfersHub, SafeMan
   }
 
   /// @inheritdoc ICappedTokenTransfersHub
-  function updateState(bytes memory _data) external isSafe {
-    (uint256 _amount, address _token) = abi.decode(_data, (uint256, address));
-
+  function updateState(address _token, uint256 _amount) external isSafe {
     uint256 _currentEpoch = (block.timestamp - STARTING_TIMESTAMP) / EPOCH_LENGTH;
 
     // If we're in a new epoch, reset the spending

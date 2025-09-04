@@ -49,11 +49,8 @@ contract CappedTokenTransfers is ICappedTokenTransfers {
     _actions = new Action[](2);
 
     // First action: update state
-    _actions[0] = Action({
-      target: HUB,
-      data: abi.encodeCall(ICappedTokenTransfersHub.updateState, (abi.encode(AMOUNT, TOKEN))),
-      value: 0
-    });
+    _actions[0] =
+      Action({target: HUB, data: abi.encodeCall(ICappedTokenTransfersHub.updateState, (TOKEN, AMOUNT)), value: 0});
 
     // Second action: transfer
     _actions[1] = Action({target: TOKEN, data: abi.encodeCall(IERC20.transfer, (RECIPIENT, AMOUNT)), value: 0});

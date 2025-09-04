@@ -1,0 +1,4 @@
+UnitSetEmergencyCallerActionFactory::createSetEmergencyCallerAction
+└── When called
+    ├── It should deploy a SetEmergencyCallerAction contract with correct args
+    └── It should match the parameters sent to the constructor

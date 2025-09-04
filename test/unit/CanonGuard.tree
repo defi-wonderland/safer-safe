@@ -1,24 +1,32 @@
 UnitCanonGuard::constructor
-└── when passing valid parameters
-    ├── it sets safe address
-    ├── it sets multiSendCallOnly address
-    ├── it sets short execution delay
-    ├── it sets long execution delay
-    └── it set transaction expiry delay
+├── when passing valid parameters
+│   ├── it sets safe address
+│   ├── it sets multiSendCallOnly address
+│   ├── it sets short execution delay
+│   ├── it sets long execution delay
+│   └── it set transaction expiry delay
+├── when the transaction expiry delay is less than the minimum expiry time
+│   └── it reverts
+├── when the maximum approval duration is less than the minimum expiry time
+│   └── it reverts
+├── when the short execution delay is greater than the long execution delay
+│   └── it reverts
+├── when tx expiry delay is greater than max
+│   └── it reverts
+└── when long delay is greater than max
+    └── it reverts
 
-
-UnitCanonGuard::approveActionsBuilder
+UnitCanonGuard::approveActionsBuilderOrHub
 ├── when caller is safe
 │   ├── when approval duration is greater than max approval duration
 │   │   └── it reverts with InvalidApprovalDuration
 │   ├── it sets approval expiry time
-│   ├── it emits ActionsBuilderApproved event
+│   ├── it emits ActionsBuilderOrHubApproved event
 │   └── when extending approval
 │       ├── it updates approval expiry time
-│       └── it emits ActionsBuilderApproved event
+│       └── it emits ActionsBuilderOrHubApproved event
 └── when caller is not safe
     └── it reverts with NotSafeOwner
-
 
 UnitCanonGuard::queueTransaction
 ├── when caller is safe owner

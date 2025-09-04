@@ -10,6 +10,7 @@ contract UnitCanonGuardFactory is Test {
   CanonGuardFactory public canonGuardFactory;
   ICanonGuard public auxCanonGuard;
   address public multiSendCallOnly;
+  uint256 public constant MIN_EXPIRY_TIME = 1 days;
 
   function setUp() external {
     multiSendCallOnly = makeAddr('multiSendCallOnly');
@@ -32,6 +33,11 @@ contract UnitCanonGuardFactory is Test {
   ) external {
     vm.assume(_emergencyTrigger != address(0));
     vm.assume(_emergencyCaller != address(0));
+
+    _txExpiryDelay = bound(_txExpiryDelay, MIN_EXPIRY_TIME, type(uint128).max);
+    _maxApprovalDuration = bound(_maxApprovalDuration, MIN_EXPIRY_TIME, type(uint256).max);
+    _shortTxExecutionDelay = bound(_shortTxExecutionDelay, 0, type(uint128).max - 1);
+    _longTxExecutionDelay = bound(_longTxExecutionDelay, _shortTxExecutionDelay, type(uint128).max);
 
     address _canonGuard = canonGuardFactory.createCanonGuard(
       _safe,
