@@ -3,6 +3,7 @@ pragma solidity 0.8.29;
 
 import {Test} from 'forge-std/Test.sol';
 import {CappedTokenTransfersHubFactory} from 'src/contracts/factories/CappedTokenTransfersHubFactory.sol';
+import {IActionHub} from 'src/interfaces/action-hubs/IActionHub.sol';
 import {ICappedTokenTransfersHub} from 'src/interfaces/action-hubs/ICappedTokenTransfersHub.sol';
 
 contract UnitCappedTokenTransfersHubFactorycreateCappedTokenTransfersHub is Test {
@@ -35,8 +36,8 @@ contract UnitCappedTokenTransfersHubFactorycreateCappedTokenTransfersHub is Test
       assertEq(ICappedTokenTransfersHub(hub).cap(tokens[i]), caps[i]);
     }
 
-    // it should set the factory address in the child contract
-    assertEq(ICappedTokenTransfersHub(hub).FACTORY(), address(cappedTokenTransfersHubFactory));
+    // it should set the parent address in the child contract
+    assertEq(IActionHub(hub).PARENT(), address(cappedTokenTransfersHubFactory));
 
     // it should store the contract as a factory children
     assertTrue(cappedTokenTransfersHubFactory.isChild(hub));

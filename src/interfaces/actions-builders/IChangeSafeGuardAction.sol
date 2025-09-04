@@ -1,13 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.29;
 
-import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
-
 /**
  * @title IChangeSafeGuardAction
  * @notice Interface for the ChangeSafeGuardAction contract
  */
-interface IChangeSafeGuardAction is IActionsBuilder {
+interface IChangeSafeGuardAction {
   // ~~~ STORAGE METHODS ~~~
 
   /**

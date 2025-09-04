@@ -3,6 +3,8 @@ pragma solidity 0.8.29;
 
 import {SetEmergencyTriggerActionFactory} from 'contracts/factories/SetEmergencyTriggerActionFactory.sol';
 import {Test} from 'forge-std/Test.sol';
+
+import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 import {ISetEmergencyTriggerAction} from 'interfaces/actions-builders/ISetEmergencyTriggerAction.sol';
 
 contract UnitSetEmergencyTriggerActionFactorycreateSetEmergencyTriggerAction is Test {
@@ -17,8 +19,12 @@ contract UnitSetEmergencyTriggerActionFactorycreateSetEmergencyTriggerAction is 
     address _setEmergencyTriggerAction =
       setEmergencyTriggerActionFactory.createSetEmergencyTriggerAction(_canonGuard, _emergencyTrigger);
 
-    auxSetEmergencyTriggerAction =
-      ISetEmergencyTriggerAction(deployCode('SetEmergencyTriggerAction', abi.encode(_canonGuard, _emergencyTrigger)));
+    auxSetEmergencyTriggerAction = ISetEmergencyTriggerAction(
+      deployCode(
+        'SetEmergencyTriggerAction',
+        abi.encode(address(setEmergencyTriggerActionFactory), _canonGuard, _emergencyTrigger)
+      )
+    );
 
     // it should deploy a SetEmergencyTriggerAction contract with correct args
     assertEq(address(auxSetEmergencyTriggerAction).code, _setEmergencyTriggerAction.code);
@@ -26,5 +32,11 @@ contract UnitSetEmergencyTriggerActionFactorycreateSetEmergencyTriggerAction is 
     // it should match the parameters sent to the constructor
     assertEq(ISetEmergencyTriggerAction(_setEmergencyTriggerAction).CANON_GUARD(), _canonGuard);
     assertEq(ISetEmergencyTriggerAction(_setEmergencyTriggerAction).EMERGENCY_TRIGGER(), _emergencyTrigger);
+
+    // it should set the parent address in the child contract
+    assertEq(IActionsBuilder(_setEmergencyTriggerAction).PARENT(), address(setEmergencyTriggerActionFactory));
+
+    // it should store the contract as a factory children
+    assertTrue(setEmergencyTriggerActionFactory.isChild(_setEmergencyTriggerAction));
   }
 }

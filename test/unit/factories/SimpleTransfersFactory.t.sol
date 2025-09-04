@@ -5,6 +5,7 @@ import {ISimpleTransfers, SimpleTransfers} from 'contracts/actions-builders/Simp
 import {SimpleTransfersFactory} from 'contracts/factories/SimpleTransfersFactory.sol';
 import {Test} from 'forge-std/Test.sol';
 import {IERC20} from 'forge-std/interfaces/IERC20.sol';
+import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 
 contract UnitSimpleTransfersFactory is Test {
   SimpleTransfersFactory public simpleTransfersFactory;
@@ -30,7 +31,7 @@ contract UnitSimpleTransfersFactory is Test {
     assertEq(address(auxSimpleTransfers).code, _simpleTransfers.code);
 
     // it should match the parameters sent to the constructor
-    ISimpleTransfers.Action[] memory _actions = ISimpleTransfers(_simpleTransfers).getActions();
+    IActionsBuilder.Action[] memory _actions = IActionsBuilder(_simpleTransfers).getActions();
     assertEq(_actions.length, 2);
     assertEq(_actions[0].target, _transferActionA.token);
     assertEq(_actions[0].data, abi.encodeCall(IERC20.transfer, (_transferActionA.to, _transferActionA.amount)));
@@ -39,8 +40,8 @@ contract UnitSimpleTransfersFactory is Test {
     assertEq(_actions[1].data, abi.encodeCall(IERC20.transfer, (_transferActionB.to, _transferActionB.amount)));
     assertEq(_actions[1].value, 0);
 
-    // it should set the factory address in the child contract
-    assertEq(ISimpleTransfers(_simpleTransfers).FACTORY(), address(simpleTransfersFactory));
+    // it should set the parent address in the child contract
+    assertEq(IActionsBuilder(_simpleTransfers).PARENT(), address(simpleTransfersFactory));
 
     // it should store the contract as a factory children
     assertTrue(simpleTransfersFactory.isChild(_simpleTransfers));
@@ -64,14 +65,14 @@ contract UnitSimpleTransfersFactory is Test {
     assertEq(address(auxSimpleTransfers).code, _simpleTransfers.code);
 
     // it should match the parameters sent to the constructor
-    ISimpleTransfers.Action[] memory _actions = ISimpleTransfers(_simpleTransfers).getActions();
+    IActionsBuilder.Action[] memory _actions = IActionsBuilder(_simpleTransfers).getActions();
     assertEq(_actions.length, 1);
     assertEq(_actions[0].target, _token);
     assertEq(_actions[0].data, abi.encodeCall(IERC20.transfer, (_to, _amount)));
     assertEq(_actions[0].value, 0);
 
-    // it should set the factory address in the child contract
-    assertEq(ISimpleTransfers(_simpleTransfers).FACTORY(), address(simpleTransfersFactory));
+    // it should set the parent address in the child contract
+    assertEq(IActionsBuilder(_simpleTransfers).PARENT(), address(simpleTransfersFactory));
 
     // it should store the contract as a factory children
     assertTrue(simpleTransfersFactory.isChild(_simpleTransfers));

@@ -2,6 +2,7 @@
 pragma solidity 0.8.29;
 
 import {Test} from 'forge-std/Test.sol';
+import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 import {EverclearTokenConversionFactory} from 'src/contracts/factories/EverclearTokenConversionFactory.sol';
 import {IEverclearTokenConversion} from 'src/interfaces/actions-builders/IEverclearTokenConversion.sol';
 
@@ -30,8 +31,8 @@ contract UnitEverclearTokenConversionFactorycreateEverclearTokenConversion is Te
     assertEq(address(auxEverclearTokenConversion.NEXT()), _next);
     assertEq(address(auxEverclearTokenConversion.SAFE()), _safe);
 
-    // it should set the factory address in the child contract
-    assertEq(IEverclearTokenConversion(_everclearTokenConversion).FACTORY(), address(everclearTokenConversionFactory));
+    // it should set the parent address in the child contract
+    assertEq(IActionsBuilder(_everclearTokenConversion).PARENT(), address(everclearTokenConversionFactory));
 
     // it should store the contract as a factory children
     assertTrue(everclearTokenConversionFactory.isChild(_everclearTokenConversion));

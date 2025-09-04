@@ -9,9 +9,15 @@ import {ActionHubForTest} from 'test/unit/mocks/ActionHubForTest.sol';
 
 contract UnitActionHub is Test {
   ActionHubForTest public actionHub;
+  address public parent = makeAddr('parent');
 
   function setUp() public {
-    actionHub = new ActionHubForTest();
+    actionHub = new ActionHubForTest(parent);
+  }
+
+  function test_ConstructorWhenCalledByAChildContract() external view {
+    // it sets the parent
+    assertEq(actionHub.PARENT(), parent);
   }
 
   function test_IsChildWhenTheActionBuilderIsAChild(address _actionBuilder) external {

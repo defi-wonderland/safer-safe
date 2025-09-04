@@ -3,6 +3,7 @@ pragma solidity 0.8.29;
 
 import {SetEmergencyCallerActionFactory} from 'contracts/factories/SetEmergencyCallerActionFactory.sol';
 import {Test} from 'forge-std/Test.sol';
+import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 import {ISetEmergencyCallerAction} from 'interfaces/actions-builders/ISetEmergencyCallerAction.sol';
 
 contract UnitSetEmergencyCallerActionFactorycreateSetEmergencyCallerAction is Test {
@@ -17,8 +18,11 @@ contract UnitSetEmergencyCallerActionFactorycreateSetEmergencyCallerAction is Te
     address _setEmergencyCallerAction =
       setEmergencyCallerActionFactory.createSetEmergencyCallerAction(_canonGuard, _emergencyCaller);
 
-    auxSetEmergencyCallerAction =
-      ISetEmergencyCallerAction(deployCode('SetEmergencyCallerAction', abi.encode(_canonGuard, _emergencyCaller)));
+    auxSetEmergencyCallerAction = ISetEmergencyCallerAction(
+      deployCode(
+        'SetEmergencyCallerAction', abi.encode(address(setEmergencyCallerActionFactory), _canonGuard, _emergencyCaller)
+      )
+    );
 
     // it should deploy a SetEmergencyCallerAction contract with correct args
     assertEq(address(auxSetEmergencyCallerAction).code, _setEmergencyCallerAction.code);
@@ -26,5 +30,11 @@ contract UnitSetEmergencyCallerActionFactorycreateSetEmergencyCallerAction is Te
     // it should match the parameters sent to the constructor
     assertEq(ISetEmergencyCallerAction(_setEmergencyCallerAction).CANON_GUARD(), _canonGuard);
     assertEq(ISetEmergencyCallerAction(_setEmergencyCallerAction).EMERGENCY_CALLER(), _emergencyCaller);
+
+    // it should set the parent address in the child contract
+    assertEq(IActionsBuilder(_setEmergencyCallerAction).PARENT(), address(setEmergencyCallerActionFactory));
+
+    // it should store the contract as a factory children
+    assertTrue(setEmergencyCallerActionFactory.isChild(_setEmergencyCallerAction));
   }
 }

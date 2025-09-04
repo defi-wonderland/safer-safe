@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.29;
 
+import {ActionBuilder} from 'contracts/actions-builders/ActionBuilder.sol';
 import {IERC20} from 'forge-std/interfaces/IERC20.sol';
-import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 import {IOPxAction} from 'interfaces/actions-builders/IOPxAction.sol';
 import {IOPx} from 'interfaces/external/IOPx.sol';
 
@@ -10,11 +10,8 @@ import {IOPx} from 'interfaces/external/IOPx.sol';
  * @title OPxAction
  * @notice Contract that builds the actions for OPX
  */
-contract OPxAction is IOPxAction {
+contract OPxAction is IOPxAction, ActionBuilder {
   // ~~~ STORAGE ~~~
-
-  /// @inheritdoc IActionsBuilder
-  address public immutable FACTORY;
 
   /// @inheritdoc IOPxAction
   address public immutable OPX;
@@ -26,20 +23,19 @@ contract OPxAction is IOPxAction {
 
   /**
    * @notice Constructor that sets up the OPX contract address
-   * @param _factory The factory that deployed the action builder
+   * @param _parent The parent that deployed the action builder
    * @param _opx The OPX contract address
    * @param _safe The SAFE contract address
    */
-  constructor(address _factory, address _opx, address _safe) {
-    FACTORY = _factory;
+  constructor(address _parent, address _opx, address _safe) ActionBuilder(_parent) {
     OPX = _opx;
     SAFE = _safe;
   }
 
   // ~~~ ACTIONS METHODS ~~~
 
-  /// @inheritdoc IActionsBuilder
-  function getActions() external view returns (Action[] memory _actions) {
+  /// @inheritdoc ActionBuilder
+  function getActions() external view override returns (Action[] memory _actions) {
     uint256 _balance = IERC20(OPX).balanceOf(SAFE);
 
     _actions = new Action[](1);

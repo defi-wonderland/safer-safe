@@ -4,6 +4,8 @@ pragma solidity 0.8.29;
 import {ActionHub} from 'src/contracts/action-hubs/ActionHub.sol';
 
 contract ActionHubForTest is ActionHub {
+  constructor(address _parent) ActionHub(_parent) {}
+
   function forTest_createNewActionBuilder(
     bytes memory _initCode,
     bytes32 _salt

@@ -1,18 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.29;
 
-import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
+import {ActionBuilder} from 'contracts/actions-builders/ActionBuilder.sol';
 import {ISimpleActions} from 'interfaces/actions-builders/ISimpleActions.sol';
 
 /**
  * @title SimpleActions
  * @notice Contract that builds actions from simple actions
  */
-contract SimpleActions is ISimpleActions {
+contract SimpleActions is ISimpleActions, ActionBuilder {
   // ~~~ STORAGE ~~~
-
-  /// @inheritdoc IActionsBuilder
-  address public immutable FACTORY;
 
   /// @notice The array of actions
   Action[] internal _actions;
@@ -21,10 +18,10 @@ contract SimpleActions is ISimpleActions {
 
   /**
    * @notice Constructor that sets up the array of actions
-   * @param _factory The factory that deployed the action builder
+   * @param _parent The parent that deployed the action builder
    * @param _simpleActions The array of simple actions
    */
-  constructor(address _factory, SimpleAction[] memory _simpleActions) {
+  constructor(address _parent, SimpleAction[] memory _simpleActions) ActionBuilder(_parent) {
     uint256 _simpleActionsLength = _simpleActions.length;
     SimpleAction memory _simpleAction;
     Action memory _action;
@@ -42,14 +39,12 @@ contract SimpleActions is ISimpleActions {
       _actions.push(_action);
       emit SimpleActionAdded(_simpleAction.target, _simpleAction.signature, _simpleAction.data, _simpleAction.value);
     }
-
-    FACTORY = _factory;
   }
 
   // ~~~ ACTIONS METHODS ~~~
 
-  /// @inheritdoc IActionsBuilder
-  function getActions() external view returns (Action[] memory) {
+  /// @inheritdoc ActionBuilder
+  function getActions() external view override returns (Action[] memory) {
     return _actions;
   }
 }

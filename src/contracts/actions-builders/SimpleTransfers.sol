@@ -20,10 +20,10 @@ contract SimpleTransfers is ISimpleTransfers, ActionBuilder {
 
   /**
    * @notice Constructor that sets up the array of actions
-   * @param _factory The factory that deployed the action builder
+   * @param _parent The parent that deployed the action builder
    * @param _transferActions The array of transfer actions
    */
-  constructor(address _factory, TransferAction[] memory _transferActions) {
+  constructor(address _parent, TransferAction[] memory _transferActions) ActionBuilder(_parent) {
     uint256 _transferActionsLength = _transferActions.length;
     TransferAction memory _transferAction;
     Action memory _action;
@@ -40,8 +40,6 @@ contract SimpleTransfers is ISimpleTransfers, ActionBuilder {
       _actions.push(_action);
       emit TransferActionAdded(_transferAction.token, _transferAction.to, _transferAction.amount);
     }
-
-    FACTORY = _factory;
   }
 
   // ~~~ ACTIONS METHODS ~~~

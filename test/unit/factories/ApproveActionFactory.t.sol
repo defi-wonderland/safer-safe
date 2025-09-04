@@ -3,6 +3,7 @@ pragma solidity 0.8.29;
 
 import {ApproveActionFactory} from 'contracts/factories/ApproveActionFactory.sol';
 import {Test} from 'forge-std/Test.sol';
+import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 import {IApproveAction} from 'interfaces/actions-builders/IApproveAction.sol';
 
 contract UnitApproveActionFactorycreateApproveAction is Test {
@@ -30,8 +31,8 @@ contract UnitApproveActionFactorycreateApproveAction is Test {
     assertEq(IApproveAction(_approveAction).ACTIONS_BUILDER(), _actionsBuilder);
     assertEq(IApproveAction(_approveAction).APPROVAL_DURATION(), _approvalDuration);
 
-    // it should set the factory address in the child contract
-    assertEq(IApproveAction(_approveAction).FACTORY(), address(approveActionFactory));
+    // it should set the parent address in the child contract
+    assertEq(IActionsBuilder(_approveAction).PARENT(), address(approveActionFactory));
 
     // it should store the contract as a factory children
     assertTrue(approveActionFactory.isChild(_approveAction));

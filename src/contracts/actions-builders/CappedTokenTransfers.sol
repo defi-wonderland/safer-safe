@@ -1,21 +1,17 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.29;
 
+import {ActionBuilder} from 'contracts/actions-builders/ActionBuilder.sol';
 import {IERC20} from 'forge-std/interfaces/IERC20.sol';
-
 import {ICappedTokenTransfersHub} from 'interfaces/action-hubs/ICappedTokenTransfersHub.sol';
-import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 import {ICappedTokenTransfers} from 'interfaces/actions-builders/ICappedTokenTransfers.sol';
 
 /**
  * @title CappedTokenTransfers
  * @notice Contract that builds actions from capped token transfers
  */
-contract CappedTokenTransfers is ICappedTokenTransfers {
+contract CappedTokenTransfers is ICappedTokenTransfers, ActionBuilder {
   // ~~~ STORAGE ~~~
-
-  /// @inheritdoc IActionsBuilder
-  address public immutable FACTORY;
 
   /// @inheritdoc ICappedTokenTransfers
   address public immutable TOKEN;
@@ -33,14 +29,19 @@ contract CappedTokenTransfers is ICappedTokenTransfers {
 
   /**
    * @notice Constructor that sets up the token, amount and recipient
-   * @param _factory The factory that deployed the action builder
+   * @param _parent The parent that deployed the action builder
    * @param _token The token contract address
    * @param _amount The amount of tokens to transfer
    * @param _recipient The recipient of the tokens
    * @param _actionHub The hub of the action
    */
-  constructor(address _factory, address _token, uint256 _amount, address _recipient, address _actionHub) {
-    FACTORY = _factory;
+  constructor(
+    address _parent,
+    address _token,
+    uint256 _amount,
+    address _recipient,
+    address _actionHub
+  ) ActionBuilder(_parent) {
     TOKEN = _token;
     AMOUNT = _amount;
     RECIPIENT = _recipient;
@@ -49,8 +50,8 @@ contract CappedTokenTransfers is ICappedTokenTransfers {
 
   // ~~~ ACTIONS METHODS ~~~
 
-  /// @inheritdoc IActionsBuilder
-  function getActions() external view returns (Action[] memory _actions) {
+  /// @inheritdoc ActionBuilder
+  function getActions() external view override returns (Action[] memory _actions) {
     _actions = new Action[](2);
 
     // First action: update state

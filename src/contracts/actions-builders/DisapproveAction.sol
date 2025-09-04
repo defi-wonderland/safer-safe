@@ -1,14 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.29;
 
+import {ActionBuilder} from 'contracts/actions-builders/ActionBuilder.sol';
 import {ICanonGuard} from 'interfaces/ICanonGuard.sol';
-import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 import {IDisapproveAction} from 'interfaces/actions-builders/IDisapproveAction.sol';
 
-contract DisapproveAction is IDisapproveAction {
-  /// @inheritdoc IActionsBuilder
-  address public immutable FACTORY;
-
+contract DisapproveAction is IDisapproveAction, ActionBuilder {
   /// @inheritdoc IDisapproveAction
   address public immutable CANON_GUARD;
 
@@ -17,20 +14,19 @@ contract DisapproveAction is IDisapproveAction {
 
   /**
    * @notice Constructor that sets up the DisapproveAction contract
-   * @param _factory The factory that deployed the action builder
+   * @param _parent The parent that deployed the action builder
    * @param _canonGuard The CanonGuard contract address
    * @param _actionsBuilder The actions builder contract address
    */
-  constructor(address _factory, address _canonGuard, address _actionsBuilder) {
-    FACTORY = _factory;
+  constructor(address _parent, address _canonGuard, address _actionsBuilder) ActionBuilder(_parent) {
     CANON_GUARD = _canonGuard;
     ACTIONS_BUILDER = _actionsBuilder;
   }
 
   // ~~~ ACTIONS METHODS ~~~
 
-  /// @inheritdoc IActionsBuilder
-  function getActions() external view returns (Action[] memory _actions) {
+  /// @inheritdoc ActionBuilder
+  function getActions() external view override returns (Action[] memory _actions) {
     _actions = new Action[](1);
     _actions[0] = Action({
       target: CANON_GUARD,

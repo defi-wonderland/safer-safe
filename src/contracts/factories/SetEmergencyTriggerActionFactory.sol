@@ -2,13 +2,14 @@
 pragma solidity 0.8.29;
 
 import {SetEmergencyTriggerAction} from 'contracts/actions-builders/SetEmergencyTriggerAction.sol';
+import {Factory} from 'contracts/factories/Factory.sol';
 import {ISetEmergencyTriggerActionFactory} from 'interfaces/factories/ISetEmergencyTriggerActionFactory.sol';
 
 /**
  * @title SetEmergencyTriggerActionFactory
  * @notice Contract that deploys SetEmergencyTriggerAction contracts
  */
-contract SetEmergencyTriggerActionFactory is ISetEmergencyTriggerActionFactory {
+contract SetEmergencyTriggerActionFactory is ISetEmergencyTriggerActionFactory, Factory {
   // ~~~ FACTORY METHODS ~~~
 
   /// @inheritdoc ISetEmergencyTriggerActionFactory
@@ -16,6 +17,8 @@ contract SetEmergencyTriggerActionFactory is ISetEmergencyTriggerActionFactory {
     address _canonGuard,
     address _emergencyTrigger
   ) external returns (address _setEmergencyTriggerAction) {
-    _setEmergencyTriggerAction = address(new SetEmergencyTriggerAction(_canonGuard, _emergencyTrigger));
+    _setEmergencyTriggerAction = address(new SetEmergencyTriggerAction(address(this), _canonGuard, _emergencyTrigger));
+
+    _children[_setEmergencyTriggerAction] = true;
   }
 }

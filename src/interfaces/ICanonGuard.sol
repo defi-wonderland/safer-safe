@@ -149,10 +149,10 @@ interface ICanonGuard is ISafeManageable {
   // ~~~ STORAGE METHODS ~~~
 
   /**
-   * @notice Gets the factory address
-   * @return _factory The factory address. Returns address(0) if it was not deployed by a factory
+   * @notice Gets the parent address
+   * @return _parent The parent address. Returns address(0) if it was not deployed by a factory
    */
-  function FACTORY() external view returns (address _factory);
+  function PARENT() external view returns (address _parent);
 
   /**
    * @notice Gets the minimum expiry time

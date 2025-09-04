@@ -6,7 +6,15 @@ import {CREATE3} from 'solady/utils/CREATE3.sol';
 
 abstract contract ActionHub is IActionHub {
   /// @inheritdoc IActionHub
-  address public immutable FACTORY;
+  address public immutable PARENT;
+
+  /**
+   * @notice Constructor that sets up the parent
+   * @param _parent The parent address
+   */
+  constructor(address _parent) {
+    PARENT = _parent;
+  }
 
   /**
    * @notice The mapping of action builders. Returns true if the action builder is a child of the actionHub.

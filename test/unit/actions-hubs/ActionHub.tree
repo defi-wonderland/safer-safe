@@ -1,3 +1,7 @@
+UnitActionHub::constructor
+└── when called by a child contract
+    └── it sets the parent
+
 UnitActionHub::isChild
 ├── when the action builder is a child
 │   └── it returns true

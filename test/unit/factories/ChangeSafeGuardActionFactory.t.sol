@@ -3,6 +3,7 @@ pragma solidity 0.8.29;
 
 import {ChangeSafeGuardActionFactory} from 'contracts/factories/ChangeSafeGuardActionFactory.sol';
 import {Test} from 'forge-std/Test.sol';
+import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 import {IChangeSafeGuardAction} from 'interfaces/actions-builders/IChangeSafeGuardAction.sol';
 
 contract UnitChangeSafeGuardActionFactorycreateChangeSafeGuardAction is Test {
@@ -31,8 +32,8 @@ contract UnitChangeSafeGuardActionFactorycreateChangeSafeGuardAction is Test {
     assertEq(_changeSafeGuardAction.SAFE(), _safe);
     assertEq(_changeSafeGuardAction.SAFE_GUARD(), _safeGuard);
 
-    // it should set the factory address in the child contract
-    assertEq(IChangeSafeGuardAction(_changeSafeGuardActionContract).FACTORY(), address(changeSafeGuardActionFactory));
+    // it should set the parent address in the child contract
+    assertEq(IActionsBuilder(_changeSafeGuardActionContract).PARENT(), address(changeSafeGuardActionFactory));
 
     // it should store the contract as a factory children
     assertTrue(changeSafeGuardActionFactory.isChild(_changeSafeGuardActionContract));

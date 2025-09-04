@@ -1,13 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.29;
 
-import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
-
 /**
  * @title IApproveAction
  * @notice Interface for the ApproveAction contract
  */
-interface IApproveAction is IActionsBuilder {
+interface IApproveAction {
   // ~~~ STORAGE METHODS ~~~
 
   /**

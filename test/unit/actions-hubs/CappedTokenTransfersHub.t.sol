@@ -7,7 +7,7 @@ import {CappedTokenTransfersHub} from 'src/contracts/action-hubs/CappedTokenTran
 import {ISafeManageable} from 'src/interfaces/ISafeManageable.sol';
 
 import {ICappedTokenTransfersHub} from 'src/interfaces/action-hubs/ICappedTokenTransfersHub.sol';
-import {ICappedTokenTransfers} from 'src/interfaces/actions-builders/ICappedTokenTransfers.sol';
+import {IActionsBuilder} from 'src/interfaces/actions-builders/IActionsBuilder.sol';
 
 contract UnitCappedTokenTransfersHub is Test {
   CappedTokenTransfersHub public cappedTokenTransfersHub;
@@ -78,7 +78,7 @@ contract UnitCappedTokenTransfersHub is Test {
     assertNotEq(_actionBuilder, address(0));
 
     // it sets the hub address in the child contract
-    assertEq(ICappedTokenTransfers(_actionBuilder).FACTORY(), address(cappedTokenTransfersHub));
+    assertEq(IActionsBuilder(_actionBuilder).PARENT(), address(cappedTokenTransfersHub));
   }
 
   function test_CreateNewActionBuilderWhenNotCalledByTheSafeOwner() external {
