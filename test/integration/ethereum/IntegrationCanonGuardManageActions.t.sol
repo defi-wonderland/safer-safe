@@ -368,4 +368,29 @@ contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
     assertEq(SAFE_PROXY.isOwner(ownerToRemove), false);
     assertEq(SAFE_PROXY.getThreshold(), _safeThreshold - 1);
   }
+
+  function test_ExecuteTransactionInSimulationMode() public {
+    // Queue the transaction
+    vm.prank(_safeOwners[0]);
+    canonGuard.queueTransaction(address(removeOwnerSimpleActions));
+
+    // Wait for the timelock period
+    vm.warp(block.timestamp + LONG_TX_EXECUTION_DELAY);
+
+    // Get the Safe transaction hash
+    bytes32 _safeTxHash = canonGuard.getSafeTransactionHash(address(removeOwnerSimpleActions));
+
+    // sets _isSimulation to true
+    vm.store(address(canonGuard), bytes32(uint256(4)), bytes32(uint256(1)));
+
+    vm.prank(address(canonGuard));
+    SAFE_PROXY.approveHash(_safeTxHash);
+
+    // Execute the transaction
+    canonGuard.executeTransaction(address(removeOwnerSimpleActions));
+
+    // Assert if the owner is removed
+    assertEq(SAFE_PROXY.isOwner(ownerToRemove), false);
+    assertEq(SAFE_PROXY.getThreshold(), _safeThreshold - 1);
+  }
 }

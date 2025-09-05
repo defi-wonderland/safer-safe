@@ -609,14 +609,63 @@ contract UnitCanonGuard is Test {
     canonGuard.executeTransaction(_actionsBuilder);
   }
 
-  function test_ExecuteTransactionWhenApprovedTransactionIsValid(
+  modifier whenApprovedTransactionIsValid() {
+    _;
+  }
+
+  function test_ExecuteTransactionWhenInSimulationMode(
+    address _caller,
+    address _actionsBuilder,
+    IActionsBuilder.Action calldata _action,
+    ICanonGuard.TransactionInfo memory _txInfo
+  ) external whenApprovedTransactionIsValid {
+    vm.store(address(canonGuard), bytes32(uint256(4)), bytes32(uint256(1))); // sets _isSimulation to true
+
+    _txInfo.expiresAt = bound(_txInfo.expiresAt, block.timestamp + 1, type(uint256).max);
+    _txInfo.executableAt = bound(_txInfo.executableAt, block.timestamp - 1, block.timestamp);
+    IActionsBuilder.Action[] memory _actions = new IActionsBuilder.Action[](1);
+    _actions[0] = _action;
+    bytes memory _actionsData = abi.encode(_actions);
+
+    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.nonce.selector), abi.encode(1));
+    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.getTransactionHash.selector), abi.encode(bytes32(0)));
+
+    // it executes transaction with CanonGuard as signer
+    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.execTransaction.selector), abi.encode(true));
+
+    canonGuard.mockTransaction(
+      _actionsBuilder, // actionsBuilder
+      _actionsData, // actionsData
+      _txInfo.executableAt, // executableAt
+      _txInfo.expiresAt // expiresAt
+    );
+
+    address[] memory _signers = new address[](1);
+    _signers[0] = address(canonGuard);
+
+    // it emits TransactionExecuted event
+    vm.expectEmit(address(canonGuard));
+    emit ICanonGuard.TransactionExecuted(_actionsBuilder, bytes32(0), _signers);
+
+    vm.prank(_caller);
+    canonGuard.executeTransaction(_actionsBuilder);
+
+    // it deletes transaction from queue
+    (bytes memory __actionsData, uint256 _executableAt, uint256 _expiresAt) =
+      canonGuard.queuedTransactions(_actionsBuilder);
+    assertEq(__actionsData, bytes(''));
+    assertEq(_executableAt, 0);
+    assertEq(_expiresAt, 0);
+  }
+
+  function test_ExecuteTransactionWhenNotInSimulationMode(
     address _caller,
     address _actionsBuilder,
     IActionsBuilder.Action calldata _action,
     ICanonGuard.TransactionInfo memory _txInfo,
     address _signer1,
     address _signer2
-  ) external {
+  ) external whenApprovedTransactionIsValid {
     vm.assume(_signer1 > _signer2);
     vm.assume(_signer2 != address(0));
     _txInfo.expiresAt = bound(_txInfo.expiresAt, block.timestamp + 1, type(uint256).max);
