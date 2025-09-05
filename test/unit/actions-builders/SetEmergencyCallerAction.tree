@@ -1,0 +1,8 @@
+UnitSetEmergencyCallerAction::constructor
+└── when called
+    └── it sets the canon guard address
+    └── it sets the emergency caller address
+
+UnitSetEmergencyCallerAction::getActions
+└── when called
+    └── it returns an action to set the emergency caller
