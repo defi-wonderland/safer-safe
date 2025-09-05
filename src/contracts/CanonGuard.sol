@@ -122,6 +122,12 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
 
   /// @inheritdoc ICanonGuard
   function queueTransaction(address _actionsBuilder) external isSafeOwner {
+    try IActionsBuilder(_actionsBuilder).IS_BUILDER() returns (bool _isBuilder) {
+      if (!_isBuilder) revert NotAnActionsBuilder();
+    } catch {
+      revert NotAnActionsBuilder();
+    }
+
     bool _actionIsPreApproved = _isPreApproved(_actionsBuilder);
     _queueTransaction(_actionsBuilder, _actionIsPreApproved);
 

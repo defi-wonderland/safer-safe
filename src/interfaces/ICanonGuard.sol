@@ -111,6 +111,11 @@ interface ICanonGuard is ISafeManageable {
    */
   error LongDelayCannotBeGreaterThanMax();
 
+  /**
+   * @notice Thrown when queueing a transaction that is not an ActionsBuilder
+   */
+  error NotAnActionsBuilder();
+
   // ~~~ ADMIN METHODS ~~~
 
   /**
@@ -134,7 +139,7 @@ interface ICanonGuard is ISafeManageable {
   /**
    * @notice Queues a transaction from an actions builder for execution after a short delay if approved, or after a long delay if not approved
    * @dev Can only be called by the Safe owners
-   * @param _actionsBuilder The actions builder contract address to queue
+   * @param _actionsBuilder The actions builder contract address to queue. Reverts if it is not an ActionsBuilder.
    */
   function queueTransaction(address _actionsBuilder) external;
 
