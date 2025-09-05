@@ -2,13 +2,12 @@
 pragma solidity 0.8.29;
 
 import {ISafeManageable} from 'interfaces/ISafeManageable.sol';
-import {IActionHub} from 'interfaces/action-hubs/IActionHub.sol';
 
 /**
  * @title ICappedTokenTransfersHub
  * @notice Interface for the CappedTokenTransfersHub contract
  */
-interface ICappedTokenTransfersHub is IActionHub, ISafeManageable {
+interface ICappedTokenTransfersHub is ISafeManageable {
   // ~~~ ERRORS ~~~
 
   /**
