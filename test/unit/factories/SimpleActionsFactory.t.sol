@@ -1,10 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.29;
 
-import {SimpleActions} from 'contracts/actions-builders/SimpleActions.sol';
 import {SimpleActionsFactory} from 'contracts/factories/SimpleActionsFactory.sol';
 import {Test} from 'forge-std/Test.sol';
-
 import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 import {ISimpleActions} from 'interfaces/actions-builders/ISimpleActions.sol';
 

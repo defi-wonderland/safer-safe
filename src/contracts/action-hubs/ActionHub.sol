@@ -9,17 +9,17 @@ abstract contract ActionHub is IActionHub {
   address public immutable PARENT;
 
   /**
+   * @notice The mapping of actions builders. Returns true if the actions builder is a child of the actionHub.
+   */
+  mapping(address _actionsBuilder => bool _exists) internal _actionsBuilders;
+
+  /**
    * @notice Constructor that sets up the parent
    * @param _parent The parent address
    */
   constructor(address _parent) {
     PARENT = _parent;
   }
-
-  /**
-   * @notice The mapping of actions builders. Returns true if the actions builder is a child of the actionHub.
-   */
-  mapping(address _actionsBuilder => bool _exists) internal _actionsBuilders;
 
   /// @inheritdoc IActionHub
   function isChild(address _actionsBuilder) external view returns (bool _exists) {

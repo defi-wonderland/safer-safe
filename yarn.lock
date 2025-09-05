@@ -1245,9 +1245,9 @@ slice-ansi@^7.0.0:
     ansi-styles "^6.2.1"
     is-fullwidth-code-point "^5.0.0"
 
-"solady@github:vectorized/solady#701406e":
-  version "0.1.19"
-  resolved "https://codeload.github.com/vectorized/solady/tar.gz/701406e8126cfed931645727b274df303fbcd94d"
+"solady@github:vectorized/solady#0.1.26":
+  version "0.1.26"
+  resolved "https://codeload.github.com/vectorized/solady/tar.gz/acd959aa4bd04720d640bf4e6a5c71037510cc4b"
 
 solhint-community@4.0.1:
   version "4.0.1"
