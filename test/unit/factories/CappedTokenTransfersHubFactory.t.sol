@@ -33,6 +33,7 @@ contract UnitCappedTokenTransfersHubFactorycreateCappedTokenTransfersHub is Test
     assertEq(ICappedTokenTransfersHub(hub).EPOCH_LENGTH(), epochLength);
     for (uint256 i = 0; i < caps.length; i++) {
       assertEq(ICappedTokenTransfersHub(hub).cap(tokens[i]), caps[i]);
+      assertEq(ICappedTokenTransfersHub(hub).tokens()[i], tokens[i]);
     }
 
     // it should store the contract as a factory children

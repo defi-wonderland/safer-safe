@@ -38,7 +38,7 @@
   },
   "dependencies": {
     "@safe-global/safe-contracts": "github:safe-global/safe-smart-account#b75e250",
-    "solady": "github:vectorized/solady#701406e"
+    "solady": "github:vectorized/solady#0.1.26"
   },
   "devDependencies": {
     "@commitlint/cli": "19.3.0",
