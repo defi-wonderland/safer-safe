@@ -7,6 +7,9 @@ abstract contract ActionsBuilder is IActionsBuilder {
   /// @inheritdoc IActionsBuilder
   address public immutable PARENT;
 
+  /// @inheritdoc IActionsBuilder
+  bool public constant IS_BUILDER = true;
+
   /**
    * @notice Constructor that sets up the parent
    * @param _parent The parent address
