@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.29;
 
+import {ActionHubForTest} from './mocks/ActionHubForTest.sol';
 import {CanonGuardForTest} from './mocks/CanonGuardForTest.sol';
 import {IOwnerManager} from '@safe-smart-account/interfaces/IOwnerManager.sol';
 import {ISafe} from '@safe-smart-account/interfaces/ISafe.sol';
 import {ICanonGuard} from 'contracts/CanonGuard.sol';
 import {ISafeManageable} from 'contracts/SafeManageable.sol';
-
 import {CappedTokenTransfersHub} from 'contracts/action-hubs/CappedTokenTransfersHub.sol';
 import {Test} from 'forge-std/Test.sol';
 import {IActionHub} from 'interfaces/action-hubs/IActionHub.sol';
@@ -334,7 +334,15 @@ contract UnitCanonGuard is Test {
     assertEq(_expiresAt, block.timestamp + LONG_TX_EXECUTION_DELAY + TX_EXPIRY_DELAY);
   }
 
-  function test_QueueTransactionWhenAddressIsNotAnActionsBuilder(
+  function test_QueueTransactionWhenAddressIsNotAnActionsBuilder() external whenCallerIsSafeOwner {
+    address _actionHub = address(new ActionHubForTest(address(0)));
+
+    // it reverts
+    vm.expectRevert(ICanonGuard.NotAnActionsBuilder.selector);
+    canonGuard.queueTransaction(_actionHub);
+  }
+
+  function test_QueueTransactionWhenAddressDoesNotRespondToIS_BUILDER(
     address _recipient,
     uint256 _epochLength
   ) external whenCallerIsSafeOwner {
