@@ -145,6 +145,7 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
     if (!_isSimulation) {
       _signers = _getApprovedHashSigners(_safeTxHash);
     } else {
+      // To run in simulation mode first the CanonGuard needs to be added as an owner and the threshold set to 1
       _signers = new address[](1);
       _signers[0] = address(this);
     }

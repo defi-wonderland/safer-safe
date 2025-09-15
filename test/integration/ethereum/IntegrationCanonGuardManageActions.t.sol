@@ -372,25 +372,25 @@ contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
   function test_ExecuteTransactionInSimulationMode() public {
     // Queue the transaction
     vm.prank(_safeOwners[0]);
-    canonGuard.queueTransaction(address(removeOwnerSimpleActions));
+    canonGuard.queueTransaction(address(setEmergencyCallerAction));
 
     // Wait for the timelock period
     vm.warp(block.timestamp + LONG_TX_EXECUTION_DELAY);
 
-    // Get the Safe transaction hash
-    bytes32 _safeTxHash = canonGuard.getSafeTransactionHash(address(removeOwnerSimpleActions));
+    // Adds canon guard as the new owner and sets the threshold to 1
+    vm.prank(address(SAFE_PROXY));
+    SAFE_PROXY.addOwnerWithThreshold(address(canonGuard), 1);
+
+    assertEq(SAFE_PROXY.getThreshold(), 1);
+    assertEq(SAFE_PROXY.isOwner(address(canonGuard)), true);
 
     // sets _isSimulation to true
     vm.store(address(canonGuard), bytes32(uint256(4)), bytes32(uint256(1)));
 
-    vm.prank(address(canonGuard));
-    SAFE_PROXY.approveHash(_safeTxHash);
-
     // Execute the transaction
-    canonGuard.executeTransaction(address(removeOwnerSimpleActions));
+    canonGuard.executeTransaction(address(setEmergencyCallerAction));
 
-    // Assert if the owner is removed
-    assertEq(SAFE_PROXY.isOwner(ownerToRemove), false);
-    assertEq(SAFE_PROXY.getThreshold(), _safeThreshold - 1);
+    // Assert that the emergency caller was set
+    assertEq(IEmergencyModeHook(address(canonGuard)).emergencyCaller(), newEmergencyCaller);
   }
 }
