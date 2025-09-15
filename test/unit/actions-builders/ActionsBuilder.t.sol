@@ -4,7 +4,7 @@ pragma solidity 0.8.29;
 import {Test} from 'forge-std/Test.sol';
 import {ActionsBuilderForTest} from 'test/unit/mocks/ActionsBuilderForTest.sol';
 
-contract UnitActionsBuilderconstructor is Test {
+contract UnitActionsBuilder is Test {
   ActionsBuilderForTest public actionsBuilder;
   address public parent = makeAddr('parent');
 
@@ -12,8 +12,13 @@ contract UnitActionsBuilderconstructor is Test {
     actionsBuilder = new ActionsBuilderForTest(parent);
   }
 
-  function test_WhenCalledByAChildContract() external view {
+  function test_ConstructorWhenCalledByAChildContract() external view {
     // it sets the parent
     assertEq(actionsBuilder.PARENT(), parent);
+  }
+
+  function test_IS_BUILDERReturnsTrue() external view {
+    // it returns true
+    assertTrue(actionsBuilder.IS_BUILDER());
   }
 }
