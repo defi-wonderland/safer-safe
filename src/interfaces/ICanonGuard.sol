@@ -46,7 +46,7 @@ interface ICanonGuard is ISafeManageable {
    * @notice Emitted when a transaction is executed
    * @param _actionsBuilder The actions builder contract address
    * @param _safeTxHash The hash of the Safe transaction
-   * @param _signers The array of signer addresses
+   * @param _signers The array of sorted signer addresses.
    */
   event TransactionExecuted(address indexed _actionsBuilder, bytes32 indexed _safeTxHash, address[] _signers);
 

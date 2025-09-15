@@ -218,8 +218,9 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
     // Remove the transaction from the queue
     delete queuedTransactions[_actionsBuilder];
 
-    address[] memory _sortedSigners = _sortSigners(_signers);
-    bytes memory _signatures = _buildApprovedHashSignatures(_sortedSigners);
+    // Sort the _signers array
+    _sortSigners(_signers);
+    bytes memory _signatures = _buildApprovedHashSignatures(_signers);
     _execSafeTransaction(_multiSendData, _signatures);
 
     // NOTE: event emitted to log successful execution
@@ -433,9 +434,8 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
    * @notice Internal function to sort signer addresses
    * @dev Uses bubble sort to sort addresses numerically
    * @param _signers The array of signer addresses to sort
-   * @return _sortedSigners The sorted array of signer addresses
    */
-  function _sortSigners(address[] memory _signers) internal pure returns (address[] memory _sortedSigners) {
+  function _sortSigners(address[] memory _signers) internal pure {
     uint256 _signersLength = _signers.length;
     address _temp;
     for (uint256 _i; _i < _signersLength; ++_i) {
@@ -449,7 +449,5 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
         }
       }
     }
-
-    _sortedSigners = _signers;
   }
 }
