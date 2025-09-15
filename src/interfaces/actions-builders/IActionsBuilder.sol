@@ -33,4 +33,10 @@ interface IActionsBuilder {
    * @return _parent The parent address
    */
   function PARENT() external view returns (address _parent);
+
+  /**
+   * @notice Gets if the contract is an ActionsBuilder
+   * @return _isBuilder True if the contract is an ActionsBuilder, false otherwise
+   */
+  function IS_BUILDER() external view returns (bool _isBuilder);
 }
