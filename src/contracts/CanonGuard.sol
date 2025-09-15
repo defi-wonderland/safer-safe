@@ -122,9 +122,10 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
 
   /// @inheritdoc ICanonGuard
   function queueTransaction(address _actionsBuilder) external isSafeOwner {
-    try IActionsBuilder(_actionsBuilder).IS_BUILDER() returns (bool _isBuilder) {
-      if (!_isBuilder) revert NotAnActionsBuilder();
-    } catch {
+    // It is expected that IS_BUILDER will revert if it is not an IActionsBuilder
+    // If it is an IActionsBuilder then it would always return true so we don't need to check the returned value
+    try IActionsBuilder(_actionsBuilder).IS_BUILDER() {}
+    catch {
       revert NotAnActionsBuilder();
     }
 

@@ -41,8 +41,6 @@ UnitCanonGuard::queueTransaction
 │   │   ├── it sets executable time at block timestamp plus long delay
 │   │   ├── it sets expiry time at executable time plus expiry delay
 │   │   └── it emits TransactionQueued event
-│   └── when address is not an actions builder
-│       └── it reverts with NotAnActionsBuilder
 │   └── when address does not respond to IS_BUILDER
 │       └── it reverts with NotAnActionsBuilder
 ├── when transaction is already queued but expired
