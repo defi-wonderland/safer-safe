@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: UNLICENSED
+// SPDX-License-Identifier: MIT
 pragma solidity 0.8.29;
 
 import {ActionHub} from 'src/contracts/action-hubs/ActionHub.sol';
