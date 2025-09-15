@@ -347,7 +347,7 @@ contract UnitCanonGuard is Test {
     address _actionHub =
       address(new CappedTokenTransfersHub(address(0), SAFE, _recipient, _tokens, _caps, _epochLength));
 
-    // it reverts
+    // it reverts with NotAnActionsBuilder
     vm.expectRevert(ICanonGuard.NotAnActionsBuilder.selector);
     canonGuard.queueTransaction(_actionHub);
   }

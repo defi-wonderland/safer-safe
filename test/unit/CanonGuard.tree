@@ -47,7 +47,6 @@ UnitCanonGuard::queueTransaction
 │   └── it should queue the transaction
 ├── when caller is not safe owner
 │   └── it reverts with NotSafeOwner
-│   └── it reverts with NotAnActionsBuilder
 └── when transaction is already queued and not expired
     └── it reverts with TransactionAlreadyQueued
 
