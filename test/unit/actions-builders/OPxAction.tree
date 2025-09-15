@@ -1,0 +1,8 @@
+UnitOPxAction::constructor
+└── when called
+    └── it sets the OPX address
+    └── it sets the SAFE address
+
+UnitOPxAction::getActions
+└── when called
+    └── it returns an action to downgrade the OPX SAFE balance
