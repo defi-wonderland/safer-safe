@@ -146,6 +146,12 @@ interface ICanonGuard is ISafeManageable {
    */
   function executeTransaction(address _actionsBuilder) external payable;
 
+  /**
+   * @notice Executes an empty transaction, in order to override the safe nonce
+   * @dev Can be called by anyone if not in emergency mode
+   */
+  function executeNoActionTransaction() external;
+
   // ~~~ STORAGE METHODS ~~~
 
   /**
@@ -230,6 +236,13 @@ interface ICanonGuard is ISafeManageable {
   ) external view returns (bytes32 _safeTxHash);
 
   /**
+   * @notice Gets the Safe empty transaction hash
+   * @param _safeNonce The Safe nonce to use for the hash calculation
+   * @return _safeTxHash The Safe empty transaction hash
+   */
+  function getSafeEmptyTransactionHash(uint256 _safeNonce) external view returns (bytes32 _safeTxHash);
+
+  /**
    * @notice Gets the list of signers who have approved a Safe transaction hash for an actions builder with a specific Safe nonce
    * @param _actionsBuilder The actions builder contract address
    * @param _safeNonce The Safe nonce to use for the hash calculation
@@ -239,6 +252,16 @@ interface ICanonGuard is ISafeManageable {
     address _actionsBuilder,
     uint256 _safeNonce
   ) external view returns (address[] memory _approvedHashSigners);
+
+  /**
+   * @notice Gets the list of signers who have approved a Safe empty transaction hash
+   * @param _safeNonce The Safe nonce to use for the hash calculation
+   * @return _approvedHashSigners The array of approved hash signer addresses
+   */
+  function getApprovedHashSignersForEmptyTransaction(uint256 _safeNonce)
+    external
+    view
+    returns (address[] memory _approvedHashSigners);
 
   /**
    * @notice Gets the Safe nonce

@@ -143,6 +143,17 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
     _executeTransaction(_actionsBuilder, _safeTxHash, _signers, _multiSendData);
   }
 
+  /// @inheritdoc ICanonGuard
+  function executeNoActionTransaction() external {
+    bytes32 _safeTxHash = _getSafeTransactionHash(bytes(''), SAFE.nonce());
+    address[] memory _signers = _getApprovedHashSigners(_safeTxHash);
+    address[] memory _sortedSigners = _sortSigners(_signers);
+    bytes memory _signatures = _buildApprovedHashSignatures(_sortedSigners);
+
+    _onBeforeExecution();
+    _execSafeTransaction(bytes(''), _signatures);
+  }
+
   // ~~~ GETTER METHODS ~~~
 
   /// @inheritdoc ICanonGuard
@@ -166,6 +177,16 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
   }
 
   /// @inheritdoc ICanonGuard
+  function getApprovedHashSignersForEmptyTransaction(uint256 _safeNonce)
+    external
+    view
+    returns (address[] memory _approvedHashSigners)
+  {
+    bytes32 _safeTxHash = _getSafeTransactionHash(bytes(''), _safeNonce);
+    _approvedHashSigners = _getApprovedHashSigners(_safeTxHash);
+  }
+
+  /// @inheritdoc ICanonGuard
   function getSafeNonce() external view returns (uint256 _safeNonce) {
     _safeNonce = SAFE.nonce();
   }
@@ -182,6 +203,11 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
 
     bytes memory _multiSendData = _buildMultiSendData(_actions);
     _safeTxHash = _getSafeTransactionHash(_multiSendData, _safeNonce);
+  }
+
+  /// @inheritdoc ICanonGuard
+  function getSafeEmptyTransactionHash(uint256 _safeNonce) external view returns (bytes32 _safeTxHash) {
+    _safeTxHash = _getSafeTransactionHash(bytes(''), _safeNonce);
   }
 
   // ~~~ INTERNAL METHODS ~~~
