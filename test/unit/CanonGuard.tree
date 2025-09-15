@@ -33,11 +33,13 @@ UnitCanonGuard::queueTransaction
 ├── when caller is safe owner
 │   ├── when queueing pre approved action
 │   │   ├── it sets transaction info
+│   │   ├── it sets the proposer
 │   │   ├── it sets executable time at block timestamp plus short delay
 │   │   ├── it sets expiry time at executable time plus expiry delay
 │   │   └── it emits TransactionQueued event
 │   └── when queueing not approved action
 │       ├── it sets transaction info
+│       ├── it sets the proposer
 │       ├── it sets executable time at block timestamp plus long delay
 │       ├── it sets expiry time at executable time plus expiry delay
 │       └── it emits TransactionQueued event
@@ -55,11 +57,13 @@ UnitCanonGuard::queueHubTransaction
 ├── when caller is safe owner
 │   ├── when queueing pre approved action
 │   │   ├── it sets transaction info
+│   │   ├── it sets the proposer
 │   │   ├── it sets executable at to block timestamp plus short delay
 │   │   ├── it sets expiry time
 │   │   └── it emits TransactionQueued event
 │   └── when queueing not approved action
 │       ├── it sets transaction info
+│       ├── it sets the proposer
 │       ├── it sets executable at to block timestamp plus long delay
 │       ├── it sets expiry time
 │       └── it emits TransactionQueued event
