@@ -159,7 +159,7 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
 
     delete queuedTransactions[_actionsBuilder];
 
-    emit EnqueuedTransactionCancelled(msg.sender, _actionsBuilder, _safeTxHash);
+    emit EnqueuedTransactionCancelled(_actionsBuilder, msg.sender, _safeTxHash);
   }
 
   // ~~~ GETTER METHODS ~~~
