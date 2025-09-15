@@ -6,6 +6,7 @@ import {IOwnerManager} from '@safe-smart-account/interfaces/IOwnerManager.sol';
 import {ISafe} from '@safe-smart-account/interfaces/ISafe.sol';
 import {ICanonGuard} from 'contracts/CanonGuard.sol';
 import {ISafeManageable} from 'contracts/SafeManageable.sol';
+import {CappedTokenTransfersHub} from 'contracts/action-hubs/CappedTokenTransfersHub.sol';
 import {Test} from 'forge-std/Test.sol';
 import {IActionHub} from 'interfaces/action-hubs/IActionHub.sol';
 import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
@@ -270,6 +271,10 @@ contract UnitCanonGuard is Test {
       abi.encode(new IActionsBuilder.Action[](0))
     );
 
+    _mockAndExpect(
+      address(_actionsBuilder), abi.encodeWithSelector(IActionsBuilder.IS_BUILDER.selector), abi.encode(true)
+    );
+
     // it emits TransactionQueued event
     vm.expectEmit(address(canonGuard));
     emit ICanonGuard.TransactionQueued(address(0), _actionsBuilder, true);
@@ -305,6 +310,10 @@ contract UnitCanonGuard is Test {
       address(_actionsBuilder), abi.encodeWithSelector(IActionsBuilder.getActions.selector), abi.encode(_actions)
     );
 
+    _mockAndExpect(
+      address(_actionsBuilder), abi.encodeWithSelector(IActionsBuilder.IS_BUILDER.selector), abi.encode(true)
+    );
+
     // it emits TransactionQueued event
     vm.expectEmit(address(canonGuard));
     emit ICanonGuard.TransactionQueued(address(0), _actionsBuilder, false);
@@ -324,6 +333,25 @@ contract UnitCanonGuard is Test {
     assertEq(_expiresAt, block.timestamp + LONG_TX_EXECUTION_DELAY + TX_EXPIRY_DELAY);
   }
 
+  function test_QueueTransactionWhenAddressDoesNotRespondToIS_BUILDER(
+    address _recipient,
+    uint256 _epochLength
+  ) external whenCallerIsSafeOwner {
+    vm.assume(_epochLength > 0);
+    address[] memory _tokens = new address[](1);
+    _tokens[0] = makeAddr('token');
+
+    uint256[] memory _caps = new uint256[](1);
+    _caps[0] = 100;
+
+    address _actionHub =
+      address(new CappedTokenTransfersHub(address(0), SAFE, _recipient, _tokens, _caps, _epochLength));
+
+    // it reverts with NotAnActionsBuilder
+    vm.expectRevert(ICanonGuard.NotAnActionsBuilder.selector);
+    canonGuard.queueTransaction(_actionHub);
+  }
+
   function test_QueueTransactionWhenTransactionIsAlreadyQueuedButExpired(
     address _caller,
     address _target,
@@ -338,6 +366,10 @@ contract UnitCanonGuard is Test {
 
     _mockAndExpect(
       address(_actionsBuilder), abi.encodeWithSelector(IActionsBuilder.getActions.selector), abi.encode(_actions)
+    );
+
+    _mockAndExpect(
+      address(_actionsBuilder), abi.encodeWithSelector(IActionsBuilder.IS_BUILDER.selector), abi.encode(true)
     );
 
     vm.prank(_caller);
@@ -372,6 +404,10 @@ contract UnitCanonGuard is Test {
     uint256 _expiry
   ) external givenCallerIsSafeOwner(_caller) {
     _expiry = bound(_expiry, block.timestamp + 1, block.timestamp + TX_EXPIRY_DELAY);
+
+    _mockAndExpect(
+      address(_actionsBuilder), abi.encodeWithSelector(IActionsBuilder.IS_BUILDER.selector), abi.encode(true)
+    );
 
     canonGuard.mockTransaction(_actionsBuilder, abi.encode(new IActionsBuilder.Action[](0)), block.timestamp, _expiry);
 
