@@ -2,7 +2,6 @@
 pragma solidity 0.8.29;
 
 import {IERC20} from 'forge-std/interfaces/IERC20.sol';
-import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 import {ISpokeBridge} from 'interfaces/external/ISpokeBridge.sol';
 import {IVestingEscrow} from 'interfaces/external/IVestingEscrow.sol';
 import {IVestingWallet} from 'interfaces/external/IVestingWallet.sol';
@@ -12,7 +11,7 @@ import {IxERC20Lockbox} from 'interfaces/external/IxERC20Lockbox.sol';
  * @title IEverclearTokenStake
  * @notice Interface for the EverclearTokenStake contract
  */
-interface IEverclearTokenStake is IActionsBuilder {
+interface IEverclearTokenStake {
   /**
    * @notice Get the VestingEscrow contract address
    * @return _vestingEscrow The VestingEscrow contract address

@@ -2,10 +2,10 @@
 pragma solidity 0.8.29;
 
 import {IGuardManager} from '@safe-smart-account/interfaces/IGuardManager.sol';
-import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
+import {ActionsBuilder} from 'contracts/actions-builders/ActionsBuilder.sol';
 import {IChangeSafeGuardAction} from 'interfaces/actions-builders/IChangeSafeGuardAction.sol';
 
-contract ChangeSafeGuardAction is IChangeSafeGuardAction {
+contract ChangeSafeGuardAction is IChangeSafeGuardAction, ActionsBuilder {
   /// @inheritdoc IChangeSafeGuardAction
   address public immutable SAFE;
 
@@ -14,18 +14,19 @@ contract ChangeSafeGuardAction is IChangeSafeGuardAction {
 
   /**
    * @notice Constructor that sets up the ChangeSafeGuardAction contract
+   * @param _parent The parent that deployed the actions builder
    * @param _safe The Safe contract address
    * @param _safeGuard The new safe guard contract address. If the idea is to remove the guard, set it to address(0)
    */
-  constructor(address _safe, address _safeGuard) {
+  constructor(address _parent, address _safe, address _safeGuard) ActionsBuilder(_parent) {
     SAFE = _safe;
     SAFE_GUARD = _safeGuard;
   }
 
   // ~~~ ACTIONS METHODS ~~~
 
-  /// @inheritdoc IActionsBuilder
-  function getActions() external view returns (Action[] memory _actions) {
+  /// @inheritdoc ActionsBuilder
+  function getActions() external view override returns (Action[] memory _actions) {
     _actions = new Action[](1);
     _actions[0] = Action({target: SAFE, data: abi.encodeCall(IGuardManager.setGuard, (SAFE_GUARD)), value: 0});
   }

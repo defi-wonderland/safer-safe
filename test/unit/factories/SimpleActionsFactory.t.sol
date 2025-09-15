@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity 0.8.29;
 
-import {SimpleActions} from 'contracts/actions-builders/SimpleActions.sol';
 import {SimpleActionsFactory} from 'contracts/factories/SimpleActionsFactory.sol';
 import {Test} from 'forge-std/Test.sol';
+import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 import {ISimpleActions} from 'interfaces/actions-builders/ISimpleActions.sol';
 
 contract UnitSimpleActionsFactory is Test {
   SimpleActionsFactory public simpleActionsFactory;
+  ISimpleActions public auxSimpleActions;
 
   function setUp() external {
     simpleActionsFactory = new SimpleActionsFactory();
@@ -25,14 +26,15 @@ contract UnitSimpleActionsFactory is Test {
     address _simpleActionsContract = simpleActionsFactory.createSimpleActions(_actions);
 
     // it should deploy a SimpleActions contract with correct args
-    assertEq(type(SimpleActions).runtimeCode, _simpleActionsContract.code);
+    auxSimpleActions = ISimpleActions(deployCode('SimpleActions', abi.encode(address(simpleActionsFactory), _actions)));
+    assertEq(address(auxSimpleActions).code, _simpleActionsContract.code);
 
     // it should match the parameters sent to the constructor
     bytes4 _selectorA = bytes4(keccak256(bytes(_simpleActionsA.signature)));
     bytes memory _completeCallDataA = abi.encodePacked(_selectorA, _simpleActionsA.data);
     bytes4 _selectorB = bytes4(keccak256(bytes(_simpleActionsB.signature)));
     bytes memory _completeCallDataB = abi.encodePacked(_selectorB, _simpleActionsB.data);
-    ISimpleActions.Action[] memory _savedActions = ISimpleActions(_simpleActionsContract).getActions();
+    IActionsBuilder.Action[] memory _savedActions = IActionsBuilder(_simpleActionsContract).getActions();
 
     // it should match the parameters sent to the constructor
     assertEq(_savedActions.length, 2);
@@ -45,6 +47,9 @@ contract UnitSimpleActionsFactory is Test {
 
     // it should store the contract as a factory children
     assertTrue(simpleActionsFactory.isChild(_simpleActionsContract));
+
+    // it should set the parent address in the child contract
+    assertEq(IActionsBuilder(_simpleActionsContract).PARENT(), address(simpleActionsFactory));
   }
 
   function test_CreateSimpleActionWhenCreatingASimpleActionsContractWithASingleSimpleAction(
@@ -56,16 +61,20 @@ contract UnitSimpleActionsFactory is Test {
     address _simpleActionsContract = simpleActionsFactory.createSimpleAction(_simpleActions);
 
     // it should deploy a SimpleActions contract with a single simple action args
-    assertEq(type(SimpleActions).runtimeCode, _simpleActionsContract.code);
+    auxSimpleActions = ISimpleActions(deployCode('SimpleActions', abi.encode(address(simpleActionsFactory), _actions)));
+    assertEq(address(auxSimpleActions).code, _simpleActionsContract.code);
 
     // it should match the parameters sent to the constructor
     bytes4 _selector = bytes4(keccak256(bytes(_simpleActions.signature)));
     bytes memory _completeCallData = abi.encodePacked(_selector, _simpleActions.data);
-    ISimpleActions.Action[] memory _savedActions = ISimpleActions(_simpleActionsContract).getActions();
+    IActionsBuilder.Action[] memory _savedActions = IActionsBuilder(_simpleActionsContract).getActions();
     assertEq(_savedActions.length, 1);
     assertEq(_savedActions[0].target, _simpleActions.target);
     assertEq(_savedActions[0].data, _completeCallData);
     assertEq(_savedActions[0].value, _simpleActions.value);
+
+    // it should set the parent address in the child contract
+    assertEq(IActionsBuilder(_simpleActionsContract).PARENT(), address(simpleActionsFactory));
 
     // it should store the contract as a factory children
     assertTrue(simpleActionsFactory.isChild(_simpleActionsContract));

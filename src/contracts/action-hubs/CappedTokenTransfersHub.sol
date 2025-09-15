@@ -35,6 +35,7 @@ contract CappedTokenTransfersHub is ActionHub, ICappedTokenTransfersHub, SafeMan
 
   /**
    * @notice Constructor that sets up the actionHub
+   * @param _parent The parent that deployed the actionHub
    * @param _safe The safe to use
    * @param _recipient The recipient of the tokens
    * @param _tokens The tokens to cap
@@ -43,12 +44,13 @@ contract CappedTokenTransfersHub is ActionHub, ICappedTokenTransfersHub, SafeMan
    *  (block.timestamp - STARTING_TIMESTAMP) / _epochLength. Per token caps reset when the epoch increments. Can't be zero.
    */
   constructor(
+    address _parent,
     address _safe,
     address _recipient,
     address[] memory _tokens,
     uint256[] memory _caps,
     uint256 _epochLength
-  ) SafeManageable(_safe) {
+  ) SafeManageable(_safe) ActionHub(_parent) {
     RECIPIENT = _recipient;
     EPOCH_LENGTH = _epochLength;
     STARTING_TIMESTAMP = block.timestamp;
@@ -64,17 +66,18 @@ contract CappedTokenTransfersHub is ActionHub, ICappedTokenTransfersHub, SafeMan
   }
 
   /// @inheritdoc ICappedTokenTransfersHub
-  function createNewActionBuilder(
+  function createNewActionsBuilder(
     address _token,
     uint256 _amount
-  ) external isSafeOwner returns (address _actionBuilder) {
+  ) external isSafeOwner returns (address _actionsBuilder) {
     if (!__tokens.contains(_token)) revert TokenNotRegisteredInHub();
 
-    bytes memory _initCode =
-      abi.encodePacked(type(CappedTokenTransfers).creationCode, abi.encode(_token, _amount, RECIPIENT, address(this)));
+    bytes memory _initCode = abi.encodePacked(
+      type(CappedTokenTransfers).creationCode, abi.encode(address(this), _token, _amount, RECIPIENT, address(this))
+    );
     bytes32 _salt = keccak256(abi.encode(_token, _amount, RECIPIENT));
 
-    _actionBuilder = _createNewActionBuilder(_initCode, _salt);
+    _actionsBuilder = _createNewActionsBuilder(_initCode, _salt);
   }
 
   /// @inheritdoc ICappedTokenTransfersHub

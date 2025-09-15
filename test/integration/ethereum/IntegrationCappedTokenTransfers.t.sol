@@ -3,6 +3,7 @@ pragma solidity 0.8.29;
 
 import {CappedTokenTransfersHub} from 'src/contracts/action-hubs/CappedTokenTransfersHub.sol';
 
+import {IActionHub} from 'src/interfaces/action-hubs/IActionHub.sol';
 import {ICappedTokenTransfersHub} from 'src/interfaces/action-hubs/ICappedTokenTransfersHub.sol';
 import {ICappedTokenTransfers} from 'src/interfaces/actions-builders/ICappedTokenTransfers.sol';
 import {IntegrationEthereumBase} from 'test/integration/ethereum/IntegrationEthereumBase.sol';
@@ -25,16 +26,17 @@ contract IntegrationCappedTokenTransfers is IntegrationEthereumBase {
     _caps[1] = 200 ether;
 
     // Deploy the CappedTokenTransfersHub
-    _cappedTokenTransfersHub = new CappedTokenTransfersHub(address(SAFE_PROXY), _recipient, _tokens, _caps, 7 days);
+    _cappedTokenTransfersHub =
+      new CappedTokenTransfersHub(address(0), address(SAFE_PROXY), _recipient, _tokens, _caps, 7 days);
   }
 
-  function test_CreateNewActionBuilder() public {
-    // Create the new action builder
+  function test_CreateNewActionsBuilder() public {
+    // Create the new actions builder
     vm.prank(_safeOwners[0]);
-    address _actionsBuilder = _cappedTokenTransfersHub.createNewActionBuilder(address(WETH), 10 ether);
+    address _actionsBuilder = _cappedTokenTransfersHub.createNewActionsBuilder(address(WETH), 10 ether);
 
-    // Check that the action builder was created correctly
-    assertTrue(_cappedTokenTransfersHub.isChild(_actionsBuilder));
+    // Check that the actions builder was created correctly
+    assertTrue(IActionHub(address(_cappedTokenTransfersHub)).isChild(_actionsBuilder));
     assertEq(ICappedTokenTransfers(_actionsBuilder).TOKEN(), address(WETH));
     assertEq(ICappedTokenTransfers(_actionsBuilder).AMOUNT(), 10 ether);
     assertEq(ICappedTokenTransfers(_actionsBuilder).RECIPIENT(), _recipient);
@@ -42,9 +44,9 @@ contract IntegrationCappedTokenTransfers is IntegrationEthereumBase {
   }
 
   function test_TransferSuccessfully() public {
-    // Create the new action builder
+    // Create the new actions builder
     vm.prank(_safeOwners[0]);
-    address _actionsBuilder = _cappedTokenTransfersHub.createNewActionBuilder(address(WETH), _safeBalance);
+    address _actionsBuilder = _cappedTokenTransfersHub.createNewActionsBuilder(address(WETH), _safeBalance);
 
     // Allow the CanonGuard to call the contract
     uint256 _approvalDuration = 1 days;
@@ -78,9 +80,9 @@ contract IntegrationCappedTokenTransfers is IntegrationEthereumBase {
   }
 
   function test_TransferUnsuccessfully() public {
-    // Create the new action builder
+    // Create the new actions builder
     vm.prank(_safeOwners[0]);
-    address _actionsBuilder = _cappedTokenTransfersHub.createNewActionBuilder(address(WETH), 1000 ether);
+    address _actionsBuilder = _cappedTokenTransfersHub.createNewActionsBuilder(address(WETH), 1000 ether);
 
     // Allow the CanonGuard to call the contract
     uint256 _approvalDuration = 1 days;

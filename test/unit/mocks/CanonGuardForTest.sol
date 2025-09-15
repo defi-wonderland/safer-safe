@@ -5,6 +5,7 @@ import {CanonGuard, ICanonGuard} from 'contracts/CanonGuard.sol';
 
 contract CanonGuardForTest is CanonGuard {
   constructor(
+    address _parent,
     address _safe,
     address _multiSendCallOnly,
     uint256 _shortTxExecutionDelay,
@@ -15,6 +16,7 @@ contract CanonGuardForTest is CanonGuard {
     address _emergencyCaller
   )
     CanonGuard(
+      _parent,
       _safe,
       _multiSendCallOnly,
       _shortTxExecutionDelay,

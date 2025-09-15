@@ -3,6 +3,7 @@ pragma solidity 0.8.29;
 
 import {AllowanceClaimorFactory} from 'contracts/factories/AllowanceClaimorFactory.sol';
 import {Test} from 'forge-std/Test.sol';
+import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 import {IAllowanceClaimor} from 'interfaces/actions-builders/IAllowanceClaimor.sol';
 
 contract UnitAllowanceClaimorFactorycreateAllowanceClaimor is Test {
@@ -17,8 +18,11 @@ contract UnitAllowanceClaimorFactorycreateAllowanceClaimor is Test {
     address _allowanceClaimor =
       allowanceClaimorFactory.createAllowanceClaimor(_safe, _token, _tokenOwner, _tokenRecipient);
 
-    auxAllowanceClaimor =
-      IAllowanceClaimor(deployCode('AllowanceClaimor', abi.encode(_safe, _token, _tokenOwner, _tokenRecipient)));
+    auxAllowanceClaimor = IAllowanceClaimor(
+      deployCode(
+        'AllowanceClaimor', abi.encode(address(allowanceClaimorFactory), _safe, _token, _tokenOwner, _tokenRecipient)
+      )
+    );
 
     // it should deploy a AllowanceClaimor contract
     assertEq(address(auxAllowanceClaimor).code, _allowanceClaimor.code);
@@ -28,6 +32,9 @@ contract UnitAllowanceClaimorFactorycreateAllowanceClaimor is Test {
     assertEq(address(IAllowanceClaimor(_allowanceClaimor).TOKEN()), _token);
     assertEq(IAllowanceClaimor(_allowanceClaimor).TOKEN_OWNER(), _tokenOwner);
     assertEq(IAllowanceClaimor(_allowanceClaimor).TOKEN_RECIPIENT(), _tokenRecipient);
+
+    // it should set the parent address in the child contract
+    assertEq(IActionsBuilder(_allowanceClaimor).PARENT(), address(allowanceClaimorFactory));
 
     // it should store the contract as a factory children
     assertTrue(allowanceClaimorFactory.isChild(_allowanceClaimor));

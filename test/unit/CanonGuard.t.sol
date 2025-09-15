@@ -22,9 +22,11 @@ contract UnitCanonGuard is Test {
   address public immutable MULTI_SEND_CALL_ONLY = makeAddr('MULTI_SEND_CALL_ONLY');
   address public immutable EMERGENCY_TRIGGER = makeAddr('EMERGENCY_TRIGGER');
   address public immutable EMERGENCY_CALLER = makeAddr('EMERGENCY_CALLER');
+  address public immutable PARENT = makeAddr('PARENT');
 
   function setUp() public {
     canonGuard = new CanonGuardForTest(
+      PARENT,
       SAFE,
       MULTI_SEND_CALL_ONLY,
       SHORT_TX_EXECUTION_DELAY,
@@ -75,6 +77,7 @@ contract UnitCanonGuard is Test {
     _longTxExecutionDelay = bound(_longTxExecutionDelay, _shortTxExecutionDelay, type(uint128).max);
 
     canonGuard = new CanonGuardForTest(
+      PARENT,
       _safe,
       _multiSendCallOnly,
       _shortTxExecutionDelay,
@@ -90,6 +93,7 @@ contract UnitCanonGuard is Test {
     assertEq(canonGuard.LONG_TX_EXECUTION_DELAY(), _longTxExecutionDelay);
     assertEq(canonGuard.TX_EXPIRY_DELAY(), _txExpiryDelay);
     assertEq(canonGuard.MAX_APPROVAL_DURATION(), _maxApprovalDuration);
+    assertEq(canonGuard.PARENT(), PARENT);
   }
 
   function test_ConstructorWhenTheTransactionExpiryDelayIsLessThanTheMinimumExpiryTime(uint256 _delay) external {
@@ -98,6 +102,7 @@ contract UnitCanonGuard is Test {
     // it reverts
     vm.expectRevert(ICanonGuard.TxExpiryDelayCannotBeLessThanMin.selector);
     new CanonGuardForTest(
+      PARENT,
       SAFE,
       MULTI_SEND_CALL_ONLY,
       SHORT_TX_EXECUTION_DELAY,
@@ -115,6 +120,7 @@ contract UnitCanonGuard is Test {
     // it reverts
     vm.expectRevert(ICanonGuard.MaxApprovalDurationCannotBeLessThanMin.selector);
     new CanonGuardForTest(
+      PARENT,
       SAFE,
       MULTI_SEND_CALL_ONLY,
       SHORT_TX_EXECUTION_DELAY,
@@ -136,6 +142,7 @@ contract UnitCanonGuard is Test {
     // it reverts
     vm.expectRevert(ICanonGuard.ShortDelayCannotBeGreaterThanLongDelay.selector);
     new CanonGuardForTest(
+      PARENT,
       SAFE,
       MULTI_SEND_CALL_ONLY,
       _shortTxExecutionDelay,
@@ -153,6 +160,7 @@ contract UnitCanonGuard is Test {
     // it reverts
     vm.expectRevert(ICanonGuard.TxExpiryDelayCannotBeGreaterThanMax.selector);
     new CanonGuardForTest(
+      PARENT,
       SAFE,
       MULTI_SEND_CALL_ONLY,
       SHORT_TX_EXECUTION_DELAY,
@@ -170,6 +178,7 @@ contract UnitCanonGuard is Test {
     // it reverts
     vm.expectRevert(ICanonGuard.LongDelayCannotBeGreaterThanMax.selector);
     new CanonGuardForTest(
+      PARENT,
       SAFE,
       MULTI_SEND_CALL_ONLY,
       SHORT_TX_EXECUTION_DELAY,

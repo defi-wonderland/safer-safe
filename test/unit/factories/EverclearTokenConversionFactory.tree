@@ -1,5 +1,6 @@
 UnitEverclearTokenConversionFactory::createEverclearTokenConversion
 └── when called
     ├── it should deploy a EverclearTokenConversion
-    └── it should match the parameters sent to the constructor
+    ├── it should match the parameters sent to the constructor
+    ├── it should set the parent address in the child contract
     └── it should store the contract as a factory children

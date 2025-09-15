@@ -19,7 +19,7 @@ contract UnitAllowanceClaimor is Test {
     tokenOwner = makeAddr('tokenOwner');
     tokenRecipient = makeAddr('tokenRecipient');
 
-    allowanceClaimor = new AllowanceClaimor(safe, token, tokenOwner, tokenRecipient);
+    allowanceClaimor = new AllowanceClaimor(address(0), safe, token, tokenOwner, tokenRecipient);
   }
 
   function _mockAndExpect(address _target, bytes memory _call, bytes memory _returnData) internal {
@@ -33,7 +33,7 @@ contract UnitAllowanceClaimor is Test {
     address _tokenOwner,
     address _tokenRecipient
   ) external {
-    allowanceClaimor = new AllowanceClaimor(_safe, _token, _tokenOwner, _tokenRecipient);
+    allowanceClaimor = new AllowanceClaimor(address(0), _safe, _token, _tokenOwner, _tokenRecipient);
 
     // it should set the correct values
     assertEq(allowanceClaimor.SAFE(), _safe);

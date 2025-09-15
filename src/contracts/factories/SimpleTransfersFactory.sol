@@ -18,7 +18,7 @@ contract SimpleTransfersFactory is ISimpleTransfersFactory, Factory {
     external
     returns (address _simpleTransfers)
   {
-    _simpleTransfers = address(new SimpleTransfers(_transferActions));
+    _simpleTransfers = address(new SimpleTransfers(address(this), _transferActions));
 
     _children[_simpleTransfers] = true;
   }
@@ -30,7 +30,7 @@ contract SimpleTransfersFactory is ISimpleTransfersFactory, Factory {
   {
     ISimpleTransfers.TransferAction[] memory _transferActions = new ISimpleTransfers.TransferAction[](1);
     _transferActions[0] = _transferAction;
-    _simpleTransfers = address(new SimpleTransfers(_transferActions));
+    _simpleTransfers = address(new SimpleTransfers(address(this), _transferActions));
 
     _children[_simpleTransfers] = true;
   }

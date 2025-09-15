@@ -5,7 +5,9 @@ import {IOwnerManager} from '@safe-smart-account/interfaces/IOwnerManager.sol';
 import {Test} from 'forge-std/Test.sol';
 import {CappedTokenTransfersHub} from 'src/contracts/action-hubs/CappedTokenTransfersHub.sol';
 import {ISafeManageable} from 'src/interfaces/ISafeManageable.sol';
+
 import {ICappedTokenTransfersHub} from 'src/interfaces/action-hubs/ICappedTokenTransfersHub.sol';
+import {IActionsBuilder} from 'src/interfaces/actions-builders/IActionsBuilder.sol';
 
 contract UnitCappedTokenTransfersHub is Test {
   uint256 public constant EPOCH_LENGTH = 7 days;
@@ -24,13 +26,12 @@ contract UnitCappedTokenTransfersHub is Test {
     caps.push(200);
     caps.push(100);
 
-    cappedTokenTransfersHub = new CappedTokenTransfersHub(safe, recipient, tokens, caps, EPOCH_LENGTH);
+    cappedTokenTransfersHub = new CappedTokenTransfersHub(address(0), safe, recipient, tokens, caps, EPOCH_LENGTH);
   }
 
   function test_ConstructorWhenCalled(address _safe, address _recipient, uint256 _epochLength) external {
     _epochLength = bound(_epochLength, 1, type(uint256).max);
-
-    cappedTokenTransfersHub = new CappedTokenTransfersHub(_safe, _recipient, tokens, caps, _epochLength);
+    cappedTokenTransfersHub = new CappedTokenTransfersHub(address(0), _safe, _recipient, tokens, caps, _epochLength);
 
     // it sets the safe
     assertEq(address(cappedTokenTransfersHub.SAFE()), _safe);
@@ -72,13 +73,13 @@ contract UnitCappedTokenTransfersHub is Test {
 
     // it reverts
     vm.expectRevert(abi.encodeWithSelector(ICappedTokenTransfersHub.TokenAlreadyRegisteredInHub.selector, _token));
-    new CappedTokenTransfersHub(safe, recipient, tokens, caps, EPOCH_LENGTH);
+    new CappedTokenTransfersHub(address(0), safe, recipient, tokens, caps, EPOCH_LENGTH);
   }
 
   function test_ConstructorWhenTheEpochLengthIsZero() external {
     // it reverts
     vm.expectRevert(ICappedTokenTransfersHub.EpochLengthCannotBeZero.selector);
-    new CappedTokenTransfersHub(safe, recipient, tokens, caps, 0);
+    new CappedTokenTransfersHub(address(0), safe, recipient, tokens, caps, 0);
   }
 
   modifier whenCalledByTheSafeOwner() {
@@ -86,7 +87,7 @@ contract UnitCappedTokenTransfersHub is Test {
     _;
   }
 
-  function test_CreateNewActionBuilderWhenTheTokenIsNotRegisteredInTheHub(
+  function test_CreateNewActionsBuilderWhenTheTokenIsNotRegisteredInTheHub(
     address _token,
     uint256 _amount
   ) external whenCalledByTheSafeOwner {
@@ -95,22 +96,25 @@ contract UnitCappedTokenTransfersHub is Test {
 
     // it reverts
     vm.expectRevert(ICappedTokenTransfersHub.TokenNotRegisteredInHub.selector);
-    cappedTokenTransfersHub.createNewActionBuilder(_token, _amount);
+    cappedTokenTransfersHub.createNewActionsBuilder(_token, _amount);
   }
 
-  function test_CreateNewActionBuilderWhenTheTokenIsRegisteredInTheHub() external whenCalledByTheSafeOwner {
-    // it creates a new CappedTokenTransfers action builder
-    address actionBuilder =
-      cappedTokenTransfersHub.createNewActionBuilder(tokens[0], cappedTokenTransfersHub.cap(tokens[0]));
-    assertNotEq(actionBuilder, address(0));
+  function test_CreateNewActionsBuilderWhenTheTokenIsRegisteredInTheHub() external whenCalledByTheSafeOwner {
+    // it creates a new CappedTokenTransfers actions builder
+    address _actionsBuilder =
+      cappedTokenTransfersHub.createNewActionsBuilder(tokens[0], cappedTokenTransfersHub.cap(tokens[0]));
+    assertNotEq(_actionsBuilder, address(0));
+
+    // it sets the hub address in the child contract
+    assertEq(IActionsBuilder(_actionsBuilder).PARENT(), address(cappedTokenTransfersHub));
   }
 
-  function test_CreateNewActionBuilderWhenNotCalledByTheSafeOwner() external {
+  function test_CreateNewActionsBuilderWhenNotCalledByTheSafeOwner() external {
     vm.mockCall(address(safe), abi.encodeWithSelector(IOwnerManager.isOwner.selector), abi.encode(false));
 
     // It reverts
     vm.expectRevert(ISafeManageable.NotSafeOwner.selector);
-    cappedTokenTransfersHub.createNewActionBuilder(tokens[0], 150);
+    cappedTokenTransfersHub.createNewActionsBuilder(tokens[0], 100);
   }
 
   modifier whenCalledByTheSafe() {

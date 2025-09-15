@@ -7,11 +7,11 @@ import {ICanonGuard} from 'src/interfaces/ICanonGuard.sol';
 interface IApprover {
   /**
    * @notice Emitted when a transaction is approved
-   * @param _actionBuilder The address of the action builder
+   * @param _actionsBuilder The address of the actions builder
    * @param _safeNonce The nonce of the Safe transaction
    * @param _txHash The hash of the transaction
    */
-  event TxApproved(address _actionBuilder, uint256 _safeNonce, bytes32 _txHash);
+  event TxApproved(address _actionsBuilder, uint256 _safeNonce, bytes32 _txHash);
 
   /**
    * @notice Emitted when the sender is not the EOA itself
@@ -19,11 +19,11 @@ interface IApprover {
   error InvalidSender();
 
   /**
-   * @notice Approves a transaction with the given action builder and safe nonce
-   * @param _actionBuilder The address of the action builder
+   * @notice Approves a transaction with the given actions builder and safe nonce
+   * @param _actionsBuilder The address of the actions builder
    * @param _safeNonce The nonce of the Safe transaction
    */
-  function approveTx(address _actionBuilder, uint256 _safeNonce) external;
+  function approveTx(address _actionsBuilder, uint256 _safeNonce) external;
 
   /**
    * @notice Returns the address of the CanonGuard contract

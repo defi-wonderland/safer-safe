@@ -14,7 +14,7 @@ contract OPxActionFactory is IOPxActionFactory, Factory {
 
   /// @inheritdoc IOPxActionFactory
   function createOPxAction(address _opx, address _safe) external returns (address _opxAction) {
-    _opxAction = address(new OPxAction(_opx, _safe));
+    _opxAction = address(new OPxAction(address(this), _opx, _safe));
 
     _children[_opxAction] = true;
   }

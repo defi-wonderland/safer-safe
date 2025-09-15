@@ -1,13 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.29;
 
-import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
-
 /**
  * @title ICappedTokenTransfers
  * @notice Interface for the CappedTokenTransfers contract
  */
-interface ICappedTokenTransfers is IActionsBuilder {
+interface ICappedTokenTransfers {
   // ~~~ STORAGE METHODS ~~~
 
   /**

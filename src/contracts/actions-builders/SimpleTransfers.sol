@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.29;
 
-import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
+import {ActionsBuilder} from 'contracts/actions-builders/ActionsBuilder.sol';
 import {ISimpleTransfers} from 'interfaces/actions-builders/ISimpleTransfers.sol';
 
 import {IERC20} from 'forge-std/interfaces/IERC20.sol';
@@ -10,7 +10,7 @@ import {IERC20} from 'forge-std/interfaces/IERC20.sol';
  * @title SimpleTransfers
  * @notice Contract that builds actions from token transfer actions
  */
-contract SimpleTransfers is ISimpleTransfers {
+contract SimpleTransfers is ISimpleTransfers, ActionsBuilder {
   // ~~~ STORAGE ~~~
 
   /// @notice The array of actions
@@ -20,9 +20,10 @@ contract SimpleTransfers is ISimpleTransfers {
 
   /**
    * @notice Constructor that sets up the array of actions
+   * @param _parent The parent that deployed the actions builder
    * @param _transferActions The array of transfer actions
    */
-  constructor(TransferAction[] memory _transferActions) {
+  constructor(address _parent, TransferAction[] memory _transferActions) ActionsBuilder(_parent) {
     uint256 _transferActionsLength = _transferActions.length;
     TransferAction memory _transferAction;
     Action memory _action;
@@ -43,8 +44,8 @@ contract SimpleTransfers is ISimpleTransfers {
 
   // ~~~ ACTIONS METHODS ~~~
 
-  /// @inheritdoc IActionsBuilder
-  function getActions() external view returns (Action[] memory) {
+  /// @inheritdoc ActionsBuilder
+  function getActions() external view override returns (Action[] memory) {
     return _actions;
   }
 }

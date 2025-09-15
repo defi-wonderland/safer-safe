@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.29;
 
+import {ActionsBuilder} from 'contracts/actions-builders/ActionsBuilder.sol';
 import {IERC20} from 'forge-std/interfaces/IERC20.sol';
-import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 import {IEverclearTokenStake} from 'interfaces/actions-builders/IEverclearTokenStake.sol';
 import {IGateway} from 'interfaces/external/IGateway.sol';
 import {ISpokeBridge} from 'interfaces/external/ISpokeBridge.sol';
@@ -14,7 +14,7 @@ import {IxERC20Lockbox} from 'interfaces/external/IxERC20Lockbox.sol';
  * @title EverclearTokenStake
  * @notice Contract that increases the stake of CLEAR
  */
-contract EverclearTokenStake is IEverclearTokenStake {
+contract EverclearTokenStake is IEverclearTokenStake, ActionsBuilder {
   // ~~~ STORAGE ~~~
 
   /// @inheritdoc IEverclearTokenStake
@@ -45,6 +45,7 @@ contract EverclearTokenStake is IEverclearTokenStake {
 
   /**
    * @notice Constructor that sets up the variables
+   * @param _parent The parent that deployed the actions builder
    * @param _vestingEscrow The vesting escrow contract address
    * @param _vestingWallet The vesting wallet contract address
    * @param _spokeBridge The spoke bridge contract address
@@ -55,6 +56,7 @@ contract EverclearTokenStake is IEverclearTokenStake {
    * @param _lockTime The lock time
    */
   constructor(
+    address _parent,
     address _vestingEscrow,
     address _vestingWallet,
     address _spokeBridge,
@@ -63,7 +65,7 @@ contract EverclearTokenStake is IEverclearTokenStake {
     address _clear,
     address _safe,
     uint256 _lockTime
-  ) {
+  ) ActionsBuilder(_parent) {
     VESTING_ESCROW = IVestingEscrow(_vestingEscrow);
     VESTING_WALLET = IVestingWallet(_vestingWallet);
     SPOKE_BRIDGE = ISpokeBridge(_spokeBridge);
@@ -76,8 +78,8 @@ contract EverclearTokenStake is IEverclearTokenStake {
 
   // ~~~ ACTIONS METHODS ~~~
 
-  /// @inheritdoc IActionsBuilder
-  function getActions() external view returns (Action[] memory _actions) {
+  /// @inheritdoc ActionsBuilder
+  function getActions() external view override returns (Action[] memory _actions) {
     _actions = new Action[](6);
 
     // NOTE: since this is a view function and does not update state, we need to calculate

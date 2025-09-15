@@ -32,9 +32,11 @@ import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
  */
 contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
   // ~~~ STORAGE ~~~
-
   /// @inheritdoc ICanonGuard
   uint256 public constant MIN_EXPIRY_TIME = 1 days;
+
+  /// @inheritdoc ICanonGuard
+  address public immutable PARENT;
 
   /// @inheritdoc ICanonGuard
   address public immutable MULTI_SEND_CALL_ONLY;
@@ -61,6 +63,7 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
 
   /**
    * @notice Constructor that sets up the Safe, MultiSendCallOnly, execution delays and default expiry delay
+   * @param _parent The parent that deployed the CanonGuard contract
    * @param _safe The Gnosis Safe contract address
    * @param _multiSendCallOnly The MultiSendCallOnly contract address
    * @param _shortTxExecutionDelay The short transaction execution delay (in seconds)
@@ -71,6 +74,7 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
    * @param _emergencyCaller The emergency caller address
    */
   constructor(
+    address _parent,
     address _safe,
     address _multiSendCallOnly,
     uint256 _shortTxExecutionDelay,
@@ -86,8 +90,8 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
     if (_txExpiryDelay > type(uint128).max) revert TxExpiryDelayCannotBeGreaterThanMax();
     if (_longTxExecutionDelay > type(uint128).max) revert LongDelayCannotBeGreaterThanMax();
 
+    PARENT = _parent;
     MULTI_SEND_CALL_ONLY = _multiSendCallOnly;
-
     SHORT_TX_EXECUTION_DELAY = _shortTxExecutionDelay;
     LONG_TX_EXECUTION_DELAY = _longTxExecutionDelay;
     TX_EXPIRY_DELAY = _txExpiryDelay;

@@ -18,7 +18,7 @@ contract SimpleActionsFactory is ISimpleActionsFactory, Factory {
     external
     returns (address _simpleActions)
   {
-    _simpleActions = address(new SimpleActions(_smplActions));
+    _simpleActions = address(new SimpleActions(address(this), _smplActions));
 
     _children[_simpleActions] = true;
   }
@@ -30,7 +30,7 @@ contract SimpleActionsFactory is ISimpleActionsFactory, Factory {
   {
     ISimpleActions.SimpleAction[] memory _simpleActionsArray = new ISimpleActions.SimpleAction[](1);
     _simpleActionsArray[0] = _simpleAction;
-    _simpleActions = address(new SimpleActions(_simpleActionsArray));
+    _simpleActions = address(new SimpleActions(address(this), _simpleActionsArray));
 
     _children[_simpleActions] = true;
   }

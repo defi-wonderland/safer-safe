@@ -2,6 +2,7 @@
 pragma solidity 0.8.29;
 
 import {Test} from 'forge-std/Test.sol';
+import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 import {EverclearTokenStakeFactory} from 'src/contracts/factories/EverclearTokenStakeFactory.sol';
 import {IEverclearTokenStake} from 'src/interfaces/actions-builders/IEverclearTokenStake.sol';
 
@@ -30,7 +31,17 @@ contract UnitEverclearTokenStakeFactorycreateEverclearTokenStake is Test {
     auxEverclearTokenStake = IEverclearTokenStake(
       deployCode(
         'EverclearTokenStake',
-        abi.encode(_vestingEscrow, _vestingWallet, _spokeBridge, _clearLockbox, _next, _clear, _safe, _lockTime)
+        abi.encode(
+          address(everclearTokenStakeFactory),
+          _vestingEscrow,
+          _vestingWallet,
+          _spokeBridge,
+          _clearLockbox,
+          _next,
+          _clear,
+          _safe,
+          _lockTime
+        )
       )
     );
     // it should deploy a EverclearTokenStake
@@ -45,6 +56,9 @@ contract UnitEverclearTokenStakeFactorycreateEverclearTokenStake is Test {
     assertEq(address(IEverclearTokenStake(_everclearTokenStake).CLEAR()), _clear);
     assertEq(address(IEverclearTokenStake(_everclearTokenStake).SAFE()), _safe);
     assertEq(IEverclearTokenStake(_everclearTokenStake).LOCK_TIME(), _lockTime);
+
+    // it should set the parent address in the child contract
+    assertEq(IActionsBuilder(_everclearTokenStake).PARENT(), address(everclearTokenStakeFactory));
 
     // it should store the contract as a factory children
     assertTrue(everclearTokenStakeFactory.isChild(_everclearTokenStake));

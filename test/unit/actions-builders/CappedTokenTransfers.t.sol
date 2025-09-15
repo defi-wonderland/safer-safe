@@ -21,11 +21,11 @@ contract UnitCappedTokenTransfers is Test {
     recipient = makeAddr('recipient');
     hub = makeAddr('hub');
 
-    cappedTokenTransfers = new CappedTokenTransfers(token, amount, recipient, hub);
+    cappedTokenTransfers = new CappedTokenTransfers(address(0), token, amount, recipient, hub);
   }
 
   function test_ConstructorWhenCalled(address _token, uint256 _amount, address _recipient, address _actionHub) external {
-    cappedTokenTransfers = new CappedTokenTransfers(_token, _amount, _recipient, _actionHub);
+    cappedTokenTransfers = new CappedTokenTransfers(address(0), _token, _amount, _recipient, _actionHub);
 
     // it sets the token
     assertEq(cappedTokenTransfers.TOKEN(), _token);

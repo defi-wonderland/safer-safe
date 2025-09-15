@@ -1,17 +1,16 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.29;
 
+import {ActionsBuilder} from 'contracts/actions-builders/ActionsBuilder.sol';
 import {IERC20} from 'forge-std/interfaces/IERC20.sol';
-
 import {ICappedTokenTransfersHub} from 'interfaces/action-hubs/ICappedTokenTransfersHub.sol';
-import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 import {ICappedTokenTransfers} from 'interfaces/actions-builders/ICappedTokenTransfers.sol';
 
 /**
  * @title CappedTokenTransfers
  * @notice Contract that builds actions from capped token transfers
  */
-contract CappedTokenTransfers is ICappedTokenTransfers {
+contract CappedTokenTransfers is ICappedTokenTransfers, ActionsBuilder {
   // ~~~ STORAGE ~~~
 
   /// @inheritdoc ICappedTokenTransfers
@@ -30,12 +29,19 @@ contract CappedTokenTransfers is ICappedTokenTransfers {
 
   /**
    * @notice Constructor that sets up the token, amount and recipient
+   * @param _parent The parent that deployed the actions builder
    * @param _token The token contract address
    * @param _amount The amount of tokens to transfer
    * @param _recipient The recipient of the tokens
    * @param _actionHub The hub of the action
    */
-  constructor(address _token, uint256 _amount, address _recipient, address _actionHub) {
+  constructor(
+    address _parent,
+    address _token,
+    uint256 _amount,
+    address _recipient,
+    address _actionHub
+  ) ActionsBuilder(_parent) {
     TOKEN = _token;
     AMOUNT = _amount;
     RECIPIENT = _recipient;
@@ -44,8 +50,8 @@ contract CappedTokenTransfers is ICappedTokenTransfers {
 
   // ~~~ ACTIONS METHODS ~~~
 
-  /// @inheritdoc IActionsBuilder
-  function getActions() external view returns (Action[] memory _actions) {
+  /// @inheritdoc ActionsBuilder
+  function getActions() external view override returns (Action[] memory _actions) {
     _actions = new Action[](2);
 
     // First action: update state

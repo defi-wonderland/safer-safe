@@ -27,4 +27,10 @@ interface IActionsBuilder {
    * @return _actions The array of actions
    */
   function getActions() external view returns (Action[] memory _actions);
+
+  /**
+   * @notice Gets the parent address
+   * @return _parent The parent address
+   */
+  function PARENT() external view returns (address _parent);
 }

@@ -1,11 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.29;
 
+import {ActionsBuilder} from 'contracts/actions-builders/ActionsBuilder.sol';
 import {IEmergencyModeHook} from 'interfaces/IEmergencyModeHook.sol';
-import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 import {ISetEmergencyTriggerAction} from 'interfaces/actions-builders/ISetEmergencyTriggerAction.sol';
 
-contract SetEmergencyTriggerAction is ISetEmergencyTriggerAction {
+contract SetEmergencyTriggerAction is ISetEmergencyTriggerAction, ActionsBuilder {
   /// @inheritdoc ISetEmergencyTriggerAction
   address public immutable CANON_GUARD;
 
@@ -14,18 +14,19 @@ contract SetEmergencyTriggerAction is ISetEmergencyTriggerAction {
 
   /**
    * @notice Constructor that sets up the SetEmergencyTriggerAction contract
+   * @param _parent The parent that deployed the actions builder
    * @param _canonGuard The canon guard contract address that implements IEmergencyModeHook
    * @param _emergencyTrigger The emergency trigger address
    */
-  constructor(address _canonGuard, address _emergencyTrigger) {
+  constructor(address _parent, address _canonGuard, address _emergencyTrigger) ActionsBuilder(_parent) {
     CANON_GUARD = _canonGuard;
     EMERGENCY_TRIGGER = _emergencyTrigger;
   }
 
   // ~~~ ACTIONS METHODS ~~~
 
-  /// @inheritdoc IActionsBuilder
-  function getActions() external view returns (Action[] memory _actions) {
+  /// @inheritdoc ActionsBuilder
+  function getActions() external view override returns (Action[] memory _actions) {
     _actions = new Action[](1);
     _actions[0] = Action({
       target: CANON_GUARD,

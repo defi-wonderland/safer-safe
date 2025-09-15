@@ -1,13 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.29;
 
-import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
-
 /**
  * @title IDisapproveAction
  * @notice Interface for the DisapproveAction contract
  */
-interface IDisapproveAction is IActionsBuilder {
+interface IDisapproveAction {
   // ~~~ STORAGE METHODS ~~~
 
   /**

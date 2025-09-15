@@ -3,6 +3,7 @@ pragma solidity 0.8.29;
 
 import {ChangeSafeGuardActionFactory} from 'contracts/factories/ChangeSafeGuardActionFactory.sol';
 import {Test} from 'forge-std/Test.sol';
+import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 import {IChangeSafeGuardAction} from 'interfaces/actions-builders/IChangeSafeGuardAction.sol';
 
 contract UnitChangeSafeGuardActionFactorycreateChangeSafeGuardAction is Test {
@@ -19,8 +20,9 @@ contract UnitChangeSafeGuardActionFactorycreateChangeSafeGuardAction is Test {
 
     address _changeSafeGuardActionContract = changeSafeGuardActionFactory.createChangeSafeGuardAction(_safe, _safeGuard);
 
-    auxChangeSafeGuardAction =
-      IChangeSafeGuardAction(deployCode('ChangeSafeGuardAction', abi.encode(_safe, _safeGuard)));
+    auxChangeSafeGuardAction = IChangeSafeGuardAction(
+      deployCode('ChangeSafeGuardAction', abi.encode(address(changeSafeGuardActionFactory), _safe, _safeGuard))
+    );
 
     // it should deploy a ChangeSafeGuardAction contract
     assertEq(address(auxChangeSafeGuardAction).code, _changeSafeGuardActionContract.code);
@@ -29,6 +31,9 @@ contract UnitChangeSafeGuardActionFactorycreateChangeSafeGuardAction is Test {
     IChangeSafeGuardAction _changeSafeGuardAction = IChangeSafeGuardAction(_changeSafeGuardActionContract);
     assertEq(_changeSafeGuardAction.SAFE(), _safe);
     assertEq(_changeSafeGuardAction.SAFE_GUARD(), _safeGuard);
+
+    // it should set the parent address in the child contract
+    assertEq(IActionsBuilder(_changeSafeGuardActionContract).PARENT(), address(changeSafeGuardActionFactory));
 
     // it should store the contract as a factory children
     assertTrue(changeSafeGuardActionFactory.isChild(_changeSafeGuardActionContract));

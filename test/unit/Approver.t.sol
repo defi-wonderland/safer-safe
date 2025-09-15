@@ -36,14 +36,14 @@ contract UnitApprover is Test {
   }
 
   function test_ApproveTxWhenCalledByTheItself(
-    address _actionBuilder,
+    address _actionsBuilder,
     uint256 _safeNonce,
     bytes32 _safeTxHash
   ) external {
     // it gets the safe tx hash
     _mockAndExpect(
       canonGuard,
-      abi.encodeWithSignature('getSafeTransactionHash(address,uint256)', _actionBuilder, _safeNonce),
+      abi.encodeWithSignature('getSafeTransactionHash(address,uint256)', _actionsBuilder, _safeNonce),
       abi.encode(_safeTxHash)
     );
 
@@ -52,16 +52,16 @@ contract UnitApprover is Test {
 
     // it emits the tx approved event
     vm.expectEmit();
-    emit IApprover.TxApproved(_actionBuilder, _safeNonce, _safeTxHash);
+    emit IApprover.TxApproved(_actionsBuilder, _safeNonce, _safeTxHash);
 
     vm.prank(address(approver));
-    approver.approveTx(_actionBuilder, _safeNonce);
+    approver.approveTx(_actionsBuilder, _safeNonce);
   }
 
-  function test_ApproveTxWhenCalledByANon_itself(address _actionBuilder, uint256 _safeNonce) external {
+  function test_ApproveTxWhenCalledByANon_itself(address _actionsBuilder, uint256 _safeNonce) external {
     // it reverts with InvalidSender
     vm.expectRevert(abi.encodeWithSelector(IApprover.InvalidSender.selector));
-    approver.approveTx(_actionBuilder, _safeNonce);
+    approver.approveTx(_actionsBuilder, _safeNonce);
   }
 
   function _mockAndExpect(address _target, bytes memory _call, bytes memory _returnData) internal {
