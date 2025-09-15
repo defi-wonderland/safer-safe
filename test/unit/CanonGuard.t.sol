@@ -334,8 +334,8 @@ contract UnitCanonGuard is Test {
     assertEq(_expiresAt, block.timestamp + LONG_TX_EXECUTION_DELAY + TX_EXPIRY_DELAY);
   }
 
-  function test_QueueTransactionWhenAddressIsNotAnActionsBuilder() external whenCallerIsSafeOwner {
-    address _actionHub = address(new ActionHubForTest(address(0)));
+  function test_QueueTransactionWhenAddressIsNotAnActionsBuilder(address _parent) external whenCallerIsSafeOwner {
+    address _actionHub = address(new ActionHubForTest(_parent));
 
     // it reverts
     vm.expectRevert(ICanonGuard.NotAnActionsBuilder.selector);
