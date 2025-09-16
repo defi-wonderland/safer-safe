@@ -90,12 +90,16 @@ contract UnitDeployCanonGuardFactories is Constants, Test {
     assertEq(address(opxActionFactory).code, type(OPxActionFactory).runtimeCode);
   }
 
-  function test_RevertWhen_DeployingToANonSupportedChain(uint64 _chainId) external {
+  function test_WhenDeployingToOtherChains(uint64 _chainId) external {
     vm.assume(_chainId != ETHEREUM_MAINNET_CHAIN_ID && _chainId != OPTIMISM_MAINNET_CHAIN_ID);
     vm.chainId(_chainId);
-    // it should revert
-    vm.expectRevert(abi.encodeWithSelector(DeployCanonGuardFactories.UnsupportedChainId.selector, _chainId));
+
     deployCanonGuardFactories.deployCanonGuardFactories();
+
+    _loadDeployedFactories();
+
+    // it should deploy the common factories
+    _assertCommonFactories();
   }
 
   function _assertCommonFactories() private view {

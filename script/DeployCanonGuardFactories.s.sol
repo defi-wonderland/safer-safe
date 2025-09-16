@@ -77,19 +77,17 @@ contract DeployCanonGuardFactories is Constants, Script {
   function deployCanonGuardFactories() public {
     vm.startBroadcast();
 
+    _deployAllChainsFactories();
+
     if (block.chainid == ETHEREUM_MAINNET_CHAIN_ID) {
-      _deployAllChainsFactories();
       _deployEthereumFactories();
-      _deployAllChainsActions();
       _deployEthereumActions();
     } else if (block.chainid == OPTIMISM_MAINNET_CHAIN_ID) {
-      _deployAllChainsFactories();
       _deployOptimismFactories();
-      _deployAllChainsActions();
       _deployOptimismActions();
-    } else {
-      revert UnsupportedChainId();
     }
+
+    _deployAllChainsActions();
 
     vm.stopBroadcast();
   }

@@ -5,6 +5,6 @@ UnitDeployCanonGuardFactories
 ├── when deploying to optimism mainnet
 │   ├── it should deploy the common factories
 │   └── it should deploy the optimism factories
-└── when deploying to a non supported chain
-    └── it should revert
-
+└── when deploying to other chains
+    ├── it should deploy the common factories
+    └── it should deploy the factories for the chain
