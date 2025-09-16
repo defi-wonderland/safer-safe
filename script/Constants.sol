@@ -28,6 +28,9 @@ abstract contract Constants {
   // TODO: Replace with the correct address
   address public constant EMERGENCY_TRIGGER = address(1);
   address public constant EMERGENCY_CALLER = address(1);
+
+  uint256 public constant ETHEREUM_MAINNET_CHAIN_ID = 1;
+  uint256 public constant OPTIMISM_MAINNET_CHAIN_ID = 10;
 }
 
 abstract contract EthereumConstants is Constants {
