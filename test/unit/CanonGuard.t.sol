@@ -255,65 +255,6 @@ contract UnitCanonGuard is Test {
     canonGuard.approveActionsBuilderOrHub(_actionsBuilder, _approvalDuration);
   }
 
-  modifier whenEmergencyModeIsActive() {
-    vm.prank(canonGuard.emergencyTrigger());
-    canonGuard.setEmergencyMode();
-    _;
-  }
-
-  function test_ExecuteNoActionTransactionWhenTheCallerIsTheEmergencyCaller(bytes32 _safeTxHash)
-    external
-    whenEmergencyModeIsActive
-  {
-    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.nonce.selector), abi.encode(1));
-    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.getTransactionHash.selector), abi.encode(_safeTxHash));
-    _mockAndExpect(SAFE, abi.encodeWithSelector(IOwnerManager.getOwners.selector), abi.encode(new address[](0)));
-
-    // it executes transaction
-    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.execTransaction.selector), abi.encode(true));
-
-    // it emits NoActionTransactionExecuted event
-    vm.expectEmit();
-    emit ICanonGuard.NoActionTransactionExecuted(_safeTxHash, new address[](0));
-
-    vm.prank(canonGuard.emergencyCaller());
-    canonGuard.executeNoActionTransaction();
-  }
-
-  function test_ExecuteNoActionTransactionWhenTheCallerIsNotTheEmergencyCaller(address _caller)
-    external
-    whenEmergencyModeIsActive
-  {
-    _assumeFuzzable(_caller);
-    vm.assume(_caller != canonGuard.emergencyTrigger());
-
-    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.nonce.selector), abi.encode(1));
-    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.getTransactionHash.selector), abi.encode(bytes32(0)));
-    _mockAndExpect(SAFE, abi.encodeWithSelector(IOwnerManager.getOwners.selector), abi.encode(new address[](0)));
-
-    // it reverts with Unauthorized
-    vm.expectRevert(
-      abi.encodeWithSelector(IEmergencyModeHook.Unauthorized.selector, _caller, canonGuard.emergencyCaller())
-    );
-    vm.prank(_caller);
-    canonGuard.executeNoActionTransaction();
-  }
-
-  function test_ExecuteNoActionTransactionWhenEmergencyModeIsNotActive(bytes32 _safeTxHash) external {
-    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.nonce.selector), abi.encode(1));
-    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.getTransactionHash.selector), abi.encode(_safeTxHash));
-    _mockAndExpect(SAFE, abi.encodeWithSelector(IOwnerManager.getOwners.selector), abi.encode(new address[](0)));
-
-    // it executes transaction
-    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.execTransaction.selector), abi.encode(true));
-
-    // it emits NoActionTransactionExecuted event
-    vm.expectEmit();
-    emit ICanonGuard.NoActionTransactionExecuted(_safeTxHash, new address[](0));
-
-    canonGuard.executeNoActionTransaction();
-  }
-
   modifier whenCallerIsSafeOwner() {
     _mockAndExpect(SAFE, abi.encodeWithSelector(IOwnerManager.isOwner.selector), abi.encode(true));
     _;
@@ -709,6 +650,65 @@ contract UnitCanonGuard is Test {
     assertEq(__actionsData, bytes(''));
     assertEq(_executableAt, 0);
     assertEq(_expiresAt, 0);
+  }
+
+  modifier whenEmergencyModeIsActive() {
+    vm.prank(canonGuard.emergencyTrigger());
+    canonGuard.setEmergencyMode();
+    _;
+  }
+
+  function test_ExecuteNoActionTransactionWhenTheCallerIsTheEmergencyCaller(bytes32 _safeTxHash)
+    external
+    whenEmergencyModeIsActive
+  {
+    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.nonce.selector), abi.encode(1));
+    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.getTransactionHash.selector), abi.encode(_safeTxHash));
+    _mockAndExpect(SAFE, abi.encodeWithSelector(IOwnerManager.getOwners.selector), abi.encode(new address[](0)));
+
+    // it executes transaction
+    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.execTransaction.selector), abi.encode(true));
+
+    // it emits NoActionTransactionExecuted event
+    vm.expectEmit();
+    emit ICanonGuard.NoActionTransactionExecuted(_safeTxHash, new address[](0));
+
+    vm.prank(canonGuard.emergencyCaller());
+    canonGuard.executeNoActionTransaction();
+  }
+
+  function test_ExecuteNoActionTransactionWhenTheCallerIsNotTheEmergencyCaller(address _caller)
+    external
+    whenEmergencyModeIsActive
+  {
+    _assumeFuzzable(_caller);
+    vm.assume(_caller != canonGuard.emergencyTrigger());
+
+    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.nonce.selector), abi.encode(1));
+    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.getTransactionHash.selector), abi.encode(bytes32(0)));
+    _mockAndExpect(SAFE, abi.encodeWithSelector(IOwnerManager.getOwners.selector), abi.encode(new address[](0)));
+
+    // it reverts with Unauthorized
+    vm.expectRevert(
+      abi.encodeWithSelector(IEmergencyModeHook.Unauthorized.selector, _caller, canonGuard.emergencyCaller())
+    );
+    vm.prank(_caller);
+    canonGuard.executeNoActionTransaction();
+  }
+
+  function test_ExecuteNoActionTransactionWhenEmergencyModeIsNotActive(bytes32 _safeTxHash) external {
+    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.nonce.selector), abi.encode(1));
+    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.getTransactionHash.selector), abi.encode(_safeTxHash));
+    _mockAndExpect(SAFE, abi.encodeWithSelector(IOwnerManager.getOwners.selector), abi.encode(new address[](0)));
+
+    // it executes transaction
+    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.execTransaction.selector), abi.encode(true));
+
+    // it emits NoActionTransactionExecuted event
+    vm.expectEmit();
+    emit ICanonGuard.NoActionTransactionExecuted(_safeTxHash, new address[](0));
+
+    canonGuard.executeNoActionTransaction();
   }
 
   modifier whenTransactionExists() {
