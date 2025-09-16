@@ -163,13 +163,13 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
 
   /// @inheritdoc ICanonGuard
   function executeNoActionTransaction() external {
-    bytes32 _safeTxHash = _getSafeTransactionHash(bytes(''), SAFE.nonce());
+    bytes32 _safeTxHash = _getSafeTransactionHash(_buildMultiSendData(new IActionsBuilder.Action[](0)), SAFE.nonce());
     address[] memory _signers = _getApprovedHashSigners(_safeTxHash);
     _sortSigners(_signers);
     bytes memory _signatures = _buildApprovedHashSignatures(_signers);
 
     _onBeforeExecution();
-    _execSafeTransaction(bytes(''), _signatures);
+    _execSafeTransaction(_buildMultiSendData(new IActionsBuilder.Action[](0)), _signatures);
 
     emit NoActionTransactionExecuted(_safeTxHash, _signers);
   }
@@ -218,7 +218,7 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
       _safeTxHash = _getSafeTransactionHash(_multiSendData, _safeNonce);
     } else {
       // If the actions builder is the zero address, it means we want to execute an empty transaction
-      _safeTxHash = _getSafeTransactionHash(bytes(''), _safeNonce);
+      _safeTxHash = _getSafeTransactionHash(_buildMultiSendData(new IActionsBuilder.Action[](0)), _safeNonce);
     }
 
     _approvedHashSigners = _getApprovedHashSigners(_safeTxHash);
@@ -245,7 +245,7 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
 
   /// @inheritdoc ICanonGuard
   function getSafeEmptyTransactionHash(uint256 _safeNonce) public view returns (bytes32 _safeTxHash) {
-    _safeTxHash = _getSafeTransactionHash(bytes(''), _safeNonce);
+    _safeTxHash = _getSafeTransactionHash(_buildMultiSendData(new IActionsBuilder.Action[](0)), _safeNonce);
   }
 
   // ~~~ INTERNAL METHODS ~~~

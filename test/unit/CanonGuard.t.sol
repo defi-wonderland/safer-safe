@@ -5,6 +5,7 @@ import {CanonGuardForTest} from './mocks/CanonGuardForTest.sol';
 import {IOwnerManager} from '@safe-smart-account/interfaces/IOwnerManager.sol';
 import {ISafe} from '@safe-smart-account/interfaces/ISafe.sol';
 import {Enum} from '@safe-smart-account/libraries/Enum.sol';
+import {MultiSendCallOnly} from '@safe-smart-account/libraries/MultiSendCallOnly.sol';
 import {ICanonGuard} from 'contracts/CanonGuard.sol';
 import {IEmergencyModeHook} from 'contracts/EmergencyModeHook.sol';
 import {ISafeManageable} from 'contracts/SafeManageable.sol';
@@ -976,7 +977,7 @@ contract UnitCanonGuard is Test {
         ISafe.getTransactionHash.selector,
         canonGuard.MULTI_SEND_CALL_ONLY(),
         0,
-        bytes(''),
+        abi.encodeWithSelector(MultiSendCallOnly.multiSend.selector, bytes('')),
         Enum.Operation.DelegateCall,
         0,
         0,

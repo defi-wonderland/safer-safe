@@ -184,7 +184,8 @@ interface ICanonGuard is ISafeManageable {
   function executeTransaction(address _actionsBuilder) external payable;
 
   /**
-   * @notice Executes an empty transaction, in order to override the safe nonce
+   * @notice Executes an empty transaction, in order to use the safe nonce.
+   * @notice This will nullify the signatures for that specific safe nonce.
    * @dev Can be called by anyone if not in emergency mode
    */
   function executeNoActionTransaction() external;
