@@ -121,7 +121,7 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
     bool _actionIsPreApproved = _isPreApproved(_actionHub);
     _queueTransaction(_actionsBuilder, _actionIsPreApproved);
 
-    emit TransactionQueued(_actionHub, _actionsBuilder, _actionIsPreApproved);
+    emit TransactionQueued(_actionHub, msg.sender, _actionsBuilder, _actionIsPreApproved);
   }
 
   /// @inheritdoc ICanonGuard
@@ -136,7 +136,7 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
     bool _actionIsPreApproved = _isPreApproved(_actionsBuilder);
     _queueTransaction(_actionsBuilder, _actionIsPreApproved);
 
-    emit TransactionQueued(address(0), _actionsBuilder, _actionIsPreApproved);
+    emit TransactionQueued(address(0), msg.sender, _actionsBuilder, _actionIsPreApproved);
   }
 
   /// @inheritdoc ICanonGuard
@@ -159,6 +159,25 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
 
     _onBeforeExecution();
     _executeTransaction(_actionsBuilder, _safeTxHash, _signers, _multiSendData);
+  }
+
+  /// @inheritdoc ICanonGuard
+  function cancelEnqueuedTransaction(address _actionsBuilder) external {
+    TransactionInfo memory _txInfo = queuedTransactions[_actionsBuilder];
+    if (_txInfo.expiresAt == 0) revert NoTransactionQueued();
+    if (msg.sender != _txInfo.proposer) revert CallerMustBeTransactionProposer();
+
+    IActionsBuilder.Action[] memory _actions = abi.decode(_txInfo.actionsData, (IActionsBuilder.Action[]));
+
+    bytes memory _multiSendData = _buildMultiSendData(_actions);
+    bytes32 _safeTxHash = _getSafeTransactionHash(_multiSendData, SAFE.nonce());
+    address[] memory _signers = _getApprovedHashSigners(_safeTxHash);
+
+    if (_signers.length > 0) revert TransactionWithSignaturesCannotBeCancelled();
+
+    delete queuedTransactions[_actionsBuilder];
+
+    emit EnqueuedTransactionCancelled(_actionsBuilder, msg.sender, _safeTxHash);
   }
 
   // ~~~ GETTER METHODS ~~~
@@ -275,6 +294,7 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
 
     // Store the transaction information
     queuedTransactions[_actionsBuilder] = TransactionInfo({
+      proposer: msg.sender,
       actionsData: abi.encode(_actions),
       executableAt: block.timestamp + _txExecutionDelay,
       expiresAt: block.timestamp + _txExecutionDelay + TX_EXPIRY_DELAY

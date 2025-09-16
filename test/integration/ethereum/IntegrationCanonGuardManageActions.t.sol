@@ -393,4 +393,27 @@ contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
     // Assert that the emergency caller was set
     assertEq(IEmergencyModeHook(address(canonGuard)).emergencyCaller(), newEmergencyCaller);
   }
+
+  function test_CancelEnqueuedTransaction() public {
+    // Queue the transaction
+    vm.prank(_safeOwners[0]);
+    canonGuard.queueTransaction(address(addOwnerSimpleActions));
+    (address _proposer, bytes memory _actionsData, uint256 _executableAt, uint256 _expiresAt) =
+      canonGuard.queuedTransactions(address(addOwnerSimpleActions));
+    assertEq(_proposer, _safeOwners[0]);
+    assertGt(_actionsData.length, 0);
+    assertEq(_executableAt, block.timestamp + LONG_TX_EXECUTION_DELAY);
+    assertEq(_expiresAt, block.timestamp + LONG_TX_EXECUTION_DELAY + TX_EXPIRY_DELAY);
+
+    // Cancel the transaction
+    vm.prank(_safeOwners[0]);
+    canonGuard.cancelEnqueuedTransaction(address(addOwnerSimpleActions));
+
+    (_proposer, _actionsData, _executableAt, _expiresAt) = canonGuard.queuedTransactions(address(addOwnerSimpleActions));
+
+    assertEq(_proposer, address(0));
+    assertEq(_actionsData, bytes(''));
+    assertEq(_executableAt, 0);
+    assertEq(_expiresAt, 0);
+  }
 }
