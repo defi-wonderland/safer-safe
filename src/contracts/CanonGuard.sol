@@ -152,6 +152,8 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
 
     _onBeforeExecution();
     _execSafeTransaction(bytes(''), _signatures);
+
+    emit NoActionTransactionExecuted(_safeTxHash, _signers);
   }
 
   // ~~~ GETTER METHODS ~~~

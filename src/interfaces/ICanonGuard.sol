@@ -51,6 +51,13 @@ interface ICanonGuard is ISafeManageable {
   event TransactionExecuted(address indexed _actionsBuilder, bytes32 indexed _safeTxHash, address[] _signers);
 
   /**
+   * @notice Emitted when an empty transaction is executed
+   * @param _safeTxHash The hash of the Safe transaction
+   * @param _signers The array of signer addresses
+   */
+  event NoActionTransactionExecuted(bytes32 indexed _safeTxHash, address[] _signers);
+
+  /**
    * @notice Thrown when no transaction is queued for the actions builder
    */
   error NoTransactionQueued();

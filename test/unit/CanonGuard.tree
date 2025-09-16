@@ -87,14 +87,12 @@ UnitCanonGuard::executeNoActionTransaction
 ├── when emergency mode is active
 │   ├── when the caller is the emergency caller
 │   │   ├── it executes transaction
-│   │   ├── it deletes transaction from queue
-│   │   └── it emits TransactionExecuted event
+│   │   └── it emits NoActionTransactionExecuted event
 │   └── when the caller is not the emergency caller
-│       └── it reverts with NotEmergencyCaller
+│       └── it reverts with Unauthorized
 └── when emergency mode is not active
     ├── it executes transaction
-    ├── it deletes transaction from queue
-    └── it emits TransactionExecuted event
+    └── it emits NoActionTransactionExecuted event
 
 UnitCanonGuard::getSafeTransactionHash
 ├── when transaction exists

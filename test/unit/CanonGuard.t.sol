@@ -4,7 +4,9 @@ pragma solidity 0.8.29;
 import {CanonGuardForTest} from './mocks/CanonGuardForTest.sol';
 import {IOwnerManager} from '@safe-smart-account/interfaces/IOwnerManager.sol';
 import {ISafe} from '@safe-smart-account/interfaces/ISafe.sol';
+import {Enum} from '@safe-smart-account/libraries/Enum.sol';
 import {ICanonGuard} from 'contracts/CanonGuard.sol';
+import {IEmergencyModeHook} from 'contracts/EmergencyModeHook.sol';
 import {ISafeManageable} from 'contracts/SafeManageable.sol';
 import {Test} from 'forge-std/Test.sol';
 import {IActionHub} from 'interfaces/action-hubs/IActionHub.sol';
@@ -254,26 +256,62 @@ contract UnitCanonGuard is Test {
   }
 
   modifier whenEmergencyModeIsActive() {
+    vm.prank(canonGuard.emergencyTrigger());
+    canonGuard.setEmergencyMode();
     _;
   }
 
-  function test_ExecuteNoActionTransactionWhenTheCallerIsTheEmergencyCaller() external whenEmergencyModeIsActive {
+  function test_ExecuteNoActionTransactionWhenTheCallerIsTheEmergencyCaller(bytes32 _safeTxHash)
+    external
+    whenEmergencyModeIsActive
+  {
+    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.nonce.selector), abi.encode(1));
+    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.getTransactionHash.selector), abi.encode(_safeTxHash));
+    _mockAndExpect(SAFE, abi.encodeWithSelector(IOwnerManager.getOwners.selector), abi.encode(new address[](0)));
+
     // it executes transaction
-    // it deletes transaction from queue
-    // it emits TransactionExecuted event
-    vm.skip(true);
+    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.execTransaction.selector), abi.encode(true));
+
+    // it emits NoActionTransactionExecuted event
+    vm.expectEmit();
+    emit ICanonGuard.NoActionTransactionExecuted(_safeTxHash, new address[](0));
+
+    vm.prank(canonGuard.emergencyCaller());
+    canonGuard.executeNoActionTransaction();
   }
 
-  function test_ExecuteNoActionTransactionWhenTheCallerIsNotTheEmergencyCaller() external whenEmergencyModeIsActive {
-    // it reverts with NotEmergencyCaller
-    vm.skip(true);
+  function test_ExecuteNoActionTransactionWhenTheCallerIsNotTheEmergencyCaller(address _caller)
+    external
+    whenEmergencyModeIsActive
+  {
+    _assumeFuzzable(_caller);
+    vm.assume(_caller != canonGuard.emergencyTrigger());
+
+    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.nonce.selector), abi.encode(1));
+    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.getTransactionHash.selector), abi.encode(bytes32(0)));
+    _mockAndExpect(SAFE, abi.encodeWithSelector(IOwnerManager.getOwners.selector), abi.encode(new address[](0)));
+
+    // it reverts with Unauthorized
+    vm.expectRevert(
+      abi.encodeWithSelector(IEmergencyModeHook.Unauthorized.selector, _caller, canonGuard.emergencyCaller())
+    );
+    vm.prank(_caller);
+    canonGuard.executeNoActionTransaction();
   }
 
-  function test_ExecuteNoActionTransactionWhenEmergencyModeIsNotActive() external {
+  function test_ExecuteNoActionTransactionWhenEmergencyModeIsNotActive(bytes32 _safeTxHash) external {
+    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.nonce.selector), abi.encode(1));
+    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.getTransactionHash.selector), abi.encode(_safeTxHash));
+    _mockAndExpect(SAFE, abi.encodeWithSelector(IOwnerManager.getOwners.selector), abi.encode(new address[](0)));
+
     // it executes transaction
-    // it deletes transaction from queue
-    // it emits TransactionExecuted event
-    vm.skip(true);
+    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.execTransaction.selector), abi.encode(true));
+
+    // it emits NoActionTransactionExecuted event
+    vm.expectEmit();
+    emit ICanonGuard.NoActionTransactionExecuted(_safeTxHash, new address[](0));
+
+    canonGuard.executeNoActionTransaction();
   }
 
   modifier whenCallerIsSafeOwner() {
@@ -730,9 +768,28 @@ contract UnitCanonGuard is Test {
     canonGuard.getSafeTransactionHash(_actionsBuilder);
   }
 
-  function test_GetSafeEmptyTransactionHashReturnsCorrectHash() external {
+  function test_GetSafeEmptyTransactionHashReturnsCorrectHash(uint256 _safeNonce, bytes32 _expectedHash) external {
+    _mockAndExpect(
+      SAFE,
+      abi.encodeWithSelector(
+        ISafe.getTransactionHash.selector,
+        canonGuard.MULTI_SEND_CALL_ONLY(),
+        0,
+        bytes(''),
+        Enum.Operation.DelegateCall,
+        0,
+        0,
+        0,
+        address(0),
+        address(0),
+        _safeNonce
+      ),
+      abi.encode(_expectedHash)
+    );
+
     // it returns correct hash
-    vm.skip(true);
+    bytes32 _safeTxHash = canonGuard.getSafeEmptyTransactionHash(_safeNonce);
+    assertEq(_safeTxHash, _expectedHash);
   }
 
   function test_GetApprovedHashSignersWhenTheAddressIsTheZeroAddress(
