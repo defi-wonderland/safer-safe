@@ -656,9 +656,9 @@ contract UnitCanonGuard is Test {
     ICanonGuard.TransactionInfo memory _txInfo
   ) external whenApprovedTransactionIsValid {
     vm.store(address(canonGuard), bytes32(uint256(4)), bytes32(uint256(1))); // sets _isSimulation to true
-
     _txInfo.expiresAt = bound(_txInfo.expiresAt, block.timestamp + 1, type(uint256).max);
     _txInfo.executableAt = bound(_txInfo.executableAt, block.timestamp - 1, block.timestamp);
+
     IActionsBuilder.Action[] memory _actions = new IActionsBuilder.Action[](1);
     _actions[0] = _action;
     bytes memory _actionsData = abi.encode(_actions);
