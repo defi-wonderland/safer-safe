@@ -1,0 +1,10 @@
+UnitEverclearTokenConversion::constructor
+└── when called
+    └── it sets the clear lockbox address
+    └── it sets the NEXT address
+    └── it sets the SAFE address
+
+UnitEverclearTokenConversion::getActions
+└── when called
+    └── it returns an action to approve the NEXT amount to be converted
+    └── it returns an action to deposit the NEXT amount to be converted

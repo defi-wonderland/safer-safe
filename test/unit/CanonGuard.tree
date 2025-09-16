@@ -33,14 +33,18 @@ UnitCanonGuard::queueTransaction
 ├── when caller is safe owner
 │   ├── when queueing pre approved action
 │   │   ├── it sets transaction info
+│   │   ├── it sets the proposer
 │   │   ├── it sets executable time at block timestamp plus short delay
 │   │   ├── it sets expiry time at executable time plus expiry delay
 │   │   └── it emits TransactionQueued event
 │   └── when queueing not approved action
 │       ├── it sets transaction info
+│       ├── it sets the proposer
 │       ├── it sets executable time at block timestamp plus long delay
 │       ├── it sets expiry time at executable time plus expiry delay
 │       └── it emits TransactionQueued event
+├── when address does not respond to IS_BUILDER
+│   └── it reverts with NotAnActionsBuilder
 ├── when transaction is already queued but expired
 │   └── it should queue the transaction
 ├── when caller is not safe owner
@@ -55,11 +59,13 @@ UnitCanonGuard::queueHubTransaction
 ├── when caller is safe owner
 │   ├── when queueing pre approved action
 │   │   ├── it sets transaction info
+│   │   ├── it sets the proposer
 │   │   ├── it sets executable at to block timestamp plus short delay
 │   │   ├── it sets expiry time
 │   │   └── it emits TransactionQueued event
 │   └── when queueing not approved action
 │       ├── it sets transaction info
+│       ├── it sets the proposer
 │       ├── it sets executable at to block timestamp plus long delay
 │       ├── it sets expiry time
 │       └── it emits TransactionQueued event
@@ -79,9 +85,26 @@ UnitCanonGuard::executeTransaction
 ├── when transaction is not queued
 │   └── it reverts with TransactionNotQueued
 └── when approved transaction is valid
-    ├── it executes transaction
+    ├── when in simulation mode
+    │   ├── it executes transaction with CanonGuard as signer
+    │   ├── it deletes transaction from queue
+    │   └── it emits TransactionExecuted event
+    └── when not in simulation mode
+        ├── it executes transaction
+        ├── it deletes transaction from queue
+        └── it emits TransactionExecuted event
+
+
+UnitCanonGuard::cancelEnqueuedTransaction
+├── when transaction is not queued
+│   └── it reverts with NoTransactionQueued
+├── when caller is not the proposer
+│   └── it reverts with CallerMustBeTransactionProposer
+├── when transaction has approved hash signers
+│   └── it reverts with TransactionWithSignaturesCannotBeCancelled
+└── when transaction can be cancelled
     ├── it deletes transaction from queue
-    └── it emits TransactionExecuted event
+    └── it emits EnqueuedTransactionCancelled event
 
 UnitCanonGuard::executeNoActionTransaction
 ├── when emergency mode is active

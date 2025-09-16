@@ -12,11 +12,13 @@ interface ICanonGuard is ISafeManageable {
 
   /**
    * @notice Information about a transaction
+   * @param proposer The address of the proposer of the transaction
    * @param actionsData The encoded actions data
    * @param executableAt The timestamp from which the transaction can be executed
    * @param expiresAt The timestamp from which the transaction expires
    */
   struct TransactionInfo {
+    address proposer;
     bytes actionsData;
     uint256 executableAt;
     uint256 expiresAt;
@@ -37,16 +39,19 @@ interface ICanonGuard is ISafeManageable {
   /**
    * @notice Emitted when a transaction is queued
    * @param _actionHub The actionHub contract address (0 if no actionHub was used)
+   * @param _proposer The address of the proposer of the transaction
    * @param _actionsBuilder The actions builder contract address
    * @param _txIsPreApproved Whether the transaction is pre-approved
    */
-  event TransactionQueued(address indexed _actionHub, address indexed _actionsBuilder, bool _txIsPreApproved);
+  event TransactionQueued(
+    address indexed _actionHub, address indexed _proposer, address indexed _actionsBuilder, bool _txIsPreApproved
+  );
 
   /**
    * @notice Emitted when a transaction is executed
    * @param _actionsBuilder The actions builder contract address
    * @param _safeTxHash The hash of the Safe transaction
-   * @param _signers The array of signer addresses
+   * @param _signers The array of sorted signer addresses.
    */
   event TransactionExecuted(address indexed _actionsBuilder, bytes32 indexed _safeTxHash, address[] _signers);
 
@@ -56,6 +61,16 @@ interface ICanonGuard is ISafeManageable {
    * @param _signers The array of signer addresses
    */
   event NoActionTransactionExecuted(bytes32 indexed _safeTxHash, address[] _signers);
+
+  /**
+   * @notice Emitted when a enqueued transaction is cancelled
+   * @param _actionsBuilder The actions builder contract address
+   * @param _proposer The address of the proposer of the transaction
+   * @param _safeTxHash The hash of the Safe transaction
+   */
+  event EnqueuedTransactionCancelled(
+    address indexed _actionsBuilder, address indexed _proposer, bytes32 indexed _safeTxHash
+  );
 
   /**
    * @notice Thrown when no transaction is queued for the actions builder
@@ -118,6 +133,21 @@ interface ICanonGuard is ISafeManageable {
    */
   error LongDelayCannotBeGreaterThanMax();
 
+  /**
+   * @notice Thrown when queueing a transaction that is not an ActionsBuilder
+   */
+  error NotAnActionsBuilder();
+
+  /**
+   * @notice Thrown when the caller is not the proposer of the transaction being cancelled
+   */
+  error CallerMustBeTransactionProposer();
+
+  /**
+   * @notice Thrown when attempting to cancel a transaction with approved hash signers
+   */
+  error TransactionWithSignaturesCannotBeCancelled();
+
   // ~~~ ADMIN METHODS ~~~
 
   /**
@@ -141,7 +171,7 @@ interface ICanonGuard is ISafeManageable {
   /**
    * @notice Queues a transaction from an actions builder for execution after a short delay if approved, or after a long delay if not approved
    * @dev Can only be called by the Safe owners
-   * @param _actionsBuilder The actions builder contract address to queue
+   * @param _actionsBuilder The actions builder contract address to queue. Reverts if it is not an ActionsBuilder.
    */
   function queueTransaction(address _actionsBuilder) external;
 
@@ -158,6 +188,14 @@ interface ICanonGuard is ISafeManageable {
    * @dev Can be called by anyone if not in emergency mode
    */
   function executeNoActionTransaction() external;
+
+  /**
+   * @notice Cancels an enqueued transaction
+   * @notice Can only be called by the proposer of the transaction
+   * @notice The transaction must not have any approved hash signers
+   * @param _actionsBuilder The actions builder contract address
+   */
+  function cancelEnqueuedTransaction(address _actionsBuilder) external;
 
   // ~~~ STORAGE METHODS ~~~
 
@@ -212,6 +250,7 @@ interface ICanonGuard is ISafeManageable {
 
   /**
    * @notice Gets the transaction info for an actions builder
+   * @return _proposer The address of the proposer of the transaction
    * @param _actionsBuilder The actions builder contract address
    * @return _actionsData The encoded actions data
    * @return _executableAt The timestamp from which the transaction can be executed
@@ -220,7 +259,7 @@ interface ICanonGuard is ISafeManageable {
   function queuedTransactions(address _actionsBuilder)
     external
     view
-    returns (bytes memory _actionsData, uint256 _executableAt, uint256 _expiresAt);
+    returns (address _proposer, bytes memory _actionsData, uint256 _executableAt, uint256 _expiresAt);
 
   // ~~~ GETTER METHODS ~~~
 

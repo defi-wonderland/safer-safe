@@ -59,6 +59,10 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
   /// @inheritdoc ICanonGuard
   mapping(address _actionsBuilder => TransactionInfo _txInfo) public queuedTransactions;
 
+  /// @notice Whether the contract is in simulation mode. This can be used in simulation tools like Tenderly
+  /// to bypass the signature threshold check while executing transactions.
+  bool internal _isSimulation;
+
   // ~~~ CONSTRUCTOR ~~~
 
   /**
@@ -117,15 +121,22 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
     bool _actionIsPreApproved = _isPreApproved(_actionHub);
     _queueTransaction(_actionsBuilder, _actionIsPreApproved);
 
-    emit TransactionQueued(_actionHub, _actionsBuilder, _actionIsPreApproved);
+    emit TransactionQueued(_actionHub, msg.sender, _actionsBuilder, _actionIsPreApproved);
   }
 
   /// @inheritdoc ICanonGuard
   function queueTransaction(address _actionsBuilder) external isSafeOwner {
+    // It is expected that IS_BUILDER will revert if it is not an IActionsBuilder
+    // If it is an IActionsBuilder then it would always return true so we don't need to check the returned value
+    try IActionsBuilder(_actionsBuilder).IS_BUILDER() {}
+    catch {
+      revert NotAnActionsBuilder();
+    }
+
     bool _actionIsPreApproved = _isPreApproved(_actionsBuilder);
     _queueTransaction(_actionsBuilder, _actionIsPreApproved);
 
-    emit TransactionQueued(address(0), _actionsBuilder, _actionIsPreApproved);
+    emit TransactionQueued(address(0), msg.sender, _actionsBuilder, _actionIsPreApproved);
   }
 
   /// @inheritdoc ICanonGuard
@@ -137,7 +148,14 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
 
     bytes memory _multiSendData = _buildMultiSendData(_actions);
     bytes32 _safeTxHash = _getSafeTransactionHash(_multiSendData, SAFE.nonce());
-    address[] memory _signers = _getApprovedHashSigners(_safeTxHash);
+    address[] memory _signers;
+    if (!_isSimulation) {
+      _signers = _getApprovedHashSigners(_safeTxHash);
+    } else {
+      // To run in simulation mode first the CanonGuard needs to be added as an owner and the threshold set to 1
+      _signers = new address[](1);
+      _signers[0] = address(this);
+    }
 
     _onBeforeExecution();
     _executeTransaction(_actionsBuilder, _safeTxHash, _signers, _multiSendData);
@@ -147,13 +165,32 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
   function executeNoActionTransaction() external {
     bytes32 _safeTxHash = _getSafeTransactionHash(bytes(''), SAFE.nonce());
     address[] memory _signers = _getApprovedHashSigners(_safeTxHash);
-    address[] memory _sortedSigners = _sortSigners(_signers);
-    bytes memory _signatures = _buildApprovedHashSignatures(_sortedSigners);
+    _sortSigners(_signers);
+    bytes memory _signatures = _buildApprovedHashSignatures(_signers);
 
     _onBeforeExecution();
     _execSafeTransaction(bytes(''), _signatures);
 
     emit NoActionTransactionExecuted(_safeTxHash, _signers);
+  }
+
+  /// @inheritdoc ICanonGuard
+  function cancelEnqueuedTransaction(address _actionsBuilder) external {
+    TransactionInfo memory _txInfo = queuedTransactions[_actionsBuilder];
+    if (_txInfo.expiresAt == 0) revert NoTransactionQueued();
+    if (msg.sender != _txInfo.proposer) revert CallerMustBeTransactionProposer();
+
+    IActionsBuilder.Action[] memory _actions = abi.decode(_txInfo.actionsData, (IActionsBuilder.Action[]));
+
+    bytes memory _multiSendData = _buildMultiSendData(_actions);
+    bytes32 _safeTxHash = _getSafeTransactionHash(_multiSendData, SAFE.nonce());
+    address[] memory _signers = _getApprovedHashSigners(_safeTxHash);
+
+    if (_signers.length > 0) revert TransactionWithSignaturesCannotBeCancelled();
+
+    delete queuedTransactions[_actionsBuilder];
+
+    emit EnqueuedTransactionCancelled(_actionsBuilder, msg.sender, _safeTxHash);
   }
 
   // ~~~ GETTER METHODS ~~~
@@ -234,8 +271,9 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
     // Remove the transaction from the queue
     delete queuedTransactions[_actionsBuilder];
 
-    address[] memory _sortedSigners = _sortSigners(_signers);
-    bytes memory _signatures = _buildApprovedHashSignatures(_sortedSigners);
+    // Sort the _signers array
+    _sortSigners(_signers);
+    bytes memory _signatures = _buildApprovedHashSignatures(_signers);
     _execSafeTransaction(_multiSendData, _signatures);
 
     // NOTE: event emitted to log successful execution
@@ -283,6 +321,7 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
 
     // Store the transaction information
     queuedTransactions[_actionsBuilder] = TransactionInfo({
+      proposer: msg.sender,
       actionsData: abi.encode(_actions),
       executableAt: block.timestamp + _txExecutionDelay,
       expiresAt: block.timestamp + _txExecutionDelay + TX_EXPIRY_DELAY
@@ -449,9 +488,8 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
    * @notice Internal function to sort signer addresses
    * @dev Uses bubble sort to sort addresses numerically
    * @param _signers The array of signer addresses to sort
-   * @return _sortedSigners The sorted array of signer addresses
    */
-  function _sortSigners(address[] memory _signers) internal pure returns (address[] memory _sortedSigners) {
+  function _sortSigners(address[] memory _signers) internal pure {
     uint256 _signersLength = _signers.length;
     address _temp;
     for (uint256 _i; _i < _signersLength; ++_i) {
@@ -465,7 +503,5 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
         }
       }
     }
-
-    _sortedSigners = _signers;
   }
 }

@@ -60,7 +60,5 @@ contract CappedTokenTransfers is ICappedTokenTransfers, ActionsBuilder {
 
     // Second action: transfer
     _actions[1] = Action({target: TOKEN, data: abi.encodeCall(IERC20.transfer, (RECIPIENT, AMOUNT)), value: 0});
-
-    return _actions;
   }
 }

@@ -1,0 +1,20 @@
+UnitEverclearTokenStake::constructor
+└── when called
+    └── it sets the vesting escrow address
+    └── it sets the vesting wallet address
+    └── it sets the spoke bridge address
+    └── it sets the clear lockbox address
+    └── it sets the NEXT address
+    └── it sets the CLEAR address
+    └── it sets the SAFE address
+    └── it sets the lock time
+
+UnitEverclearTokenStake::getActions
+└── when called
+    └── it calculates the amount to be released
+    └── it returns an action to claim
+    └── it returns an action to release
+    └── it returns an action to approve the NEXT amount to be released
+    └── it returns an action to deposit the amount to be released
+    └── it returns an action to approve CLEAR the amount to be released
+    └── it returns an action to increase the lock position

@@ -1,12 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.29;
 
-import {ApproveActionFactory} from 'contracts/factories/ApproveActionFactory.sol';
-import {ChangeSafeGuardActionFactory} from 'contracts/factories/ChangeSafeGuardActionFactory.sol';
-import {DisapproveActionFactory} from 'contracts/factories/DisapproveActionFactory.sol';
-import {SetEmergencyCallerActionFactory} from 'contracts/factories/SetEmergencyCallerActionFactory.sol';
-import {SetEmergencyTriggerActionFactory} from 'contracts/factories/SetEmergencyTriggerActionFactory.sol';
-import {UnsetEmergencyModeActionFactory} from 'contracts/factories/UnsetEmergencyModeActionFactory.sol';
 import {IEmergencyModeHook} from 'interfaces/IEmergencyModeHook.sol';
 import {IApproveAction} from 'interfaces/actions-builders/IApproveAction.sol';
 import {IChangeSafeGuardAction} from 'interfaces/actions-builders/IChangeSafeGuardAction.sol';
@@ -15,32 +9,18 @@ import {ISetEmergencyCallerAction} from 'interfaces/actions-builders/ISetEmergen
 import {ISetEmergencyTriggerAction} from 'interfaces/actions-builders/ISetEmergencyTriggerAction.sol';
 import {ISimpleActions} from 'interfaces/actions-builders/ISimpleActions.sol';
 import {IUnsetEmergencyModeAction} from 'interfaces/actions-builders/IUnsetEmergencyModeAction.sol';
-import {IApproveActionFactory} from 'interfaces/factories/IApproveActionFactory.sol';
-import {IChangeSafeGuardActionFactory} from 'interfaces/factories/IChangeSafeGuardActionFactory.sol';
-import {IDisapproveActionFactory} from 'interfaces/factories/IDisapproveActionFactory.sol';
-import {ISetEmergencyCallerActionFactory} from 'interfaces/factories/ISetEmergencyCallerActionFactory.sol';
-import {ISetEmergencyTriggerActionFactory} from 'interfaces/factories/ISetEmergencyTriggerActionFactory.sol';
-import {IUnsetEmergencyModeActionFactory} from 'interfaces/factories/IUnsetEmergencyModeActionFactory.sol';
 import {IntegrationEthereumBase} from 'test/integration/ethereum/IntegrationEthereumBase.sol';
 
 contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
-  IApproveActionFactory public approveActionFactory;
   IApproveAction public approveAction;
 
-  IDisapproveActionFactory public disapproveActionFactory;
   IDisapproveAction public disapproveAction;
 
-  IChangeSafeGuardActionFactory public changeSafeGuardActionFactory;
   IChangeSafeGuardAction public changeSafeGuardAction;
   IChangeSafeGuardAction public disableSafeGuardAction;
 
   ISimpleActions public addOwnerSimpleActions;
   ISimpleActions public removeOwnerSimpleActions;
-
-  // Emergency action factories
-  ISetEmergencyCallerActionFactory public setEmergencyCallerActionFactory;
-  ISetEmergencyTriggerActionFactory public setEmergencyTriggerActionFactory;
-  IUnsetEmergencyModeActionFactory public unsetEmergencyModeActionFactory;
 
   // Emergency actions
   ISetEmergencyCallerAction public setEmergencyCallerAction;
@@ -68,15 +48,9 @@ contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
     newEmergencyTrigger = makeAddr('newEmergencyTrigger');
 
     // Deploy the ApproveAction contract
-    approveActionFactory = new ApproveActionFactory();
     approveAction = IApproveAction(
       approveActionFactory.createApproveAction(address(canonGuard), address(actionsBuilder), APPROVAL_DURATION)
     );
-
-    // Deploy emergency action factories
-    setEmergencyCallerActionFactory = new SetEmergencyCallerActionFactory();
-    setEmergencyTriggerActionFactory = new SetEmergencyTriggerActionFactory();
-    unsetEmergencyModeActionFactory = new UnsetEmergencyModeActionFactory();
 
     // Deploy emergency actions
     setEmergencyCallerAction = ISetEmergencyCallerAction(
@@ -89,12 +63,10 @@ contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
       IUnsetEmergencyModeAction(unsetEmergencyModeActionFactory.createUnsetEmergencyModeAction(address(canonGuard)));
 
     // Deploy the DisapproveAction contract
-    disapproveActionFactory = new DisapproveActionFactory();
     disapproveAction =
       IDisapproveAction(disapproveActionFactory.createDisapproveAction(address(canonGuard), address(actionsBuilder)));
 
     // Deploy the ChangeSafeGuardAction contract
-    changeSafeGuardActionFactory = new ChangeSafeGuardActionFactory();
     changeSafeGuardAction = IChangeSafeGuardAction(
       changeSafeGuardActionFactory.createChangeSafeGuardAction(address(SAFE_PROXY), newSafeGuard)
     );
@@ -367,5 +339,53 @@ contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
     // Assert if the owner is removed
     assertEq(SAFE_PROXY.isOwner(ownerToRemove), false);
     assertEq(SAFE_PROXY.getThreshold(), _safeThreshold - 1);
+  }
+
+  function test_ExecuteTransactionInSimulationMode() public {
+    // Queue the transaction
+    vm.prank(_safeOwners[0]);
+    canonGuard.queueTransaction(address(setEmergencyCallerAction));
+
+    // Wait for the timelock period
+    vm.warp(block.timestamp + LONG_TX_EXECUTION_DELAY);
+
+    // Adds canon guard as the new owner and sets the threshold to 1
+    vm.prank(address(SAFE_PROXY));
+    SAFE_PROXY.addOwnerWithThreshold(address(canonGuard), 1);
+
+    assertEq(SAFE_PROXY.getThreshold(), 1);
+    assertEq(SAFE_PROXY.isOwner(address(canonGuard)), true);
+
+    // sets _isSimulation to true
+    vm.store(address(canonGuard), bytes32(uint256(4)), bytes32(uint256(1)));
+
+    // Execute the transaction
+    canonGuard.executeTransaction(address(setEmergencyCallerAction));
+
+    // Assert that the emergency caller was set
+    assertEq(IEmergencyModeHook(address(canonGuard)).emergencyCaller(), newEmergencyCaller);
+  }
+
+  function test_CancelEnqueuedTransaction() public {
+    // Queue the transaction
+    vm.prank(_safeOwners[0]);
+    canonGuard.queueTransaction(address(addOwnerSimpleActions));
+    (address _proposer, bytes memory _actionsData, uint256 _executableAt, uint256 _expiresAt) =
+      canonGuard.queuedTransactions(address(addOwnerSimpleActions));
+    assertEq(_proposer, _safeOwners[0]);
+    assertGt(_actionsData.length, 0);
+    assertEq(_executableAt, block.timestamp + LONG_TX_EXECUTION_DELAY);
+    assertEq(_expiresAt, block.timestamp + LONG_TX_EXECUTION_DELAY + TX_EXPIRY_DELAY);
+
+    // Cancel the transaction
+    vm.prank(_safeOwners[0]);
+    canonGuard.cancelEnqueuedTransaction(address(addOwnerSimpleActions));
+
+    (_proposer, _actionsData, _executableAt, _expiresAt) = canonGuard.queuedTransactions(address(addOwnerSimpleActions));
+
+    assertEq(_proposer, address(0));
+    assertEq(_actionsData, bytes(''));
+    assertEq(_executableAt, 0);
+    assertEq(_expiresAt, 0);
   }
 }
