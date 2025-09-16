@@ -59,6 +59,10 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
   /// @inheritdoc ICanonGuard
   mapping(address _actionsBuilder => TransactionInfo _txInfo) public queuedTransactions;
 
+  /// @notice Whether the contract is in simulation mode. This can be used in simulation tools like Tenderly
+  /// to bypass the signature threshold check while executing transactions.
+  bool internal _isSimulation;
+
   // ~~~ CONSTRUCTOR ~~~
 
   /**
@@ -144,7 +148,14 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
 
     bytes memory _multiSendData = _buildMultiSendData(_actions);
     bytes32 _safeTxHash = _getSafeTransactionHash(_multiSendData, SAFE.nonce());
-    address[] memory _signers = _getApprovedHashSigners(_safeTxHash);
+    address[] memory _signers;
+    if (!_isSimulation) {
+      _signers = _getApprovedHashSigners(_safeTxHash);
+    } else {
+      // To run in simulation mode first the CanonGuard needs to be added as an owner and the threshold set to 1
+      _signers = new address[](1);
+      _signers[0] = address(this);
+    }
 
     _onBeforeExecution();
     _executeTransaction(_actionsBuilder, _safeTxHash, _signers, _multiSendData);

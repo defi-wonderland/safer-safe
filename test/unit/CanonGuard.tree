@@ -85,9 +85,14 @@ UnitCanonGuard::executeTransaction
 ├── when transaction is not queued
 │   └── it reverts with TransactionNotQueued
 └── when approved transaction is valid
-    ├── it executes transaction
-    ├── it deletes transaction from queue
-    └── it emits TransactionExecuted event
+    ├── when in simulation mode
+    │   ├── it executes transaction with CanonGuard as signer
+    │   ├── it deletes transaction from queue
+    │   └── it emits TransactionExecuted event
+    └── when not in simulation mode
+        ├── it executes transaction
+        ├── it deletes transaction from queue
+        └── it emits TransactionExecuted event
 
 
 UnitCanonGuard::cancelEnqueuedTransaction
