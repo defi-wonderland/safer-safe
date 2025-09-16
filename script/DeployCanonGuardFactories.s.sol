@@ -3,6 +3,20 @@ pragma solidity 0.8.29;
 
 import {Script} from 'forge-std/Script.sol';
 
+import {CappedTokenTransfersHub} from 'contracts/action-hubs/CappedTokenTransfersHub.sol';
+import {AllowanceClaimor} from 'contracts/actions-builders/AllowanceClaimor.sol';
+import {ApproveAction} from 'contracts/actions-builders/ApproveAction.sol';
+import {CappedTokenTransfers} from 'contracts/actions-builders/CappedTokenTransfers.sol';
+import {ChangeSafeGuardAction} from 'contracts/actions-builders/ChangeSafeGuardAction.sol';
+import {DisapproveAction} from 'contracts/actions-builders/DisapproveAction.sol';
+import {EverclearTokenConversion} from 'contracts/actions-builders/EverclearTokenConversion.sol';
+import {EverclearTokenStake} from 'contracts/actions-builders/EverclearTokenStake.sol';
+import {OPxAction} from 'contracts/actions-builders/OPxAction.sol';
+import {SetEmergencyCallerAction} from 'contracts/actions-builders/SetEmergencyCallerAction.sol';
+import {SetEmergencyTriggerAction} from 'contracts/actions-builders/SetEmergencyTriggerAction.sol';
+import {SimpleActions} from 'contracts/actions-builders/SimpleActions.sol';
+import {SimpleTransfers} from 'contracts/actions-builders/SimpleTransfers.sol';
+import {UnsetEmergencyModeAction} from 'contracts/actions-builders/UnsetEmergencyModeAction.sol';
 import {AllowanceClaimorFactory} from 'contracts/factories/AllowanceClaimorFactory.sol';
 import {ApproveActionFactory} from 'contracts/factories/ApproveActionFactory.sol';
 import {CanonGuardFactory} from 'contracts/factories/CanonGuardFactory.sol';
@@ -53,15 +67,26 @@ contract DeployCanonGuardFactories is Constants, Script {
   ISimpleTransfersFactory public simpleTransfersFactory;
   IUnsetEmergencyModeActionFactory public unsetEmergencyModeActionFactory;
 
+  // ~~~ DUMMY CONSTANTS ~~~
+  address public constant DUMMY_ADDRESS = address(0);
+  uint256 public constant DUMMY_APPROVAL_DURATION = 0;
+  uint256 public constant DUMMY_AMOUNT = 0;
+  uint256 public constant DUMMY_LOCK_TIME = 0;
+  uint256 public constant DUMMY_EPOCH_LENGTH = 1;
+
   function deployCanonGuardFactories() public {
     vm.startBroadcast();
 
     if (block.chainid == ETHEREUM_MAINNET_CHAIN_ID) {
       _deployAllChainsFactories();
       _deployEthereumFactories();
+      _deployAllChainsActions();
+      _deployEthereumActions();
     } else if (block.chainid == OPTIMISM_MAINNET_CHAIN_ID) {
       _deployAllChainsFactories();
       _deployOptimismFactories();
+      _deployAllChainsActions();
+      _deployOptimismActions();
     } else {
       revert UnsupportedChainId();
     }
@@ -92,5 +117,40 @@ contract DeployCanonGuardFactories is Constants, Script {
 
   function _deployOptimismFactories() internal {
     opxActionFactory = new OPxActionFactory();
+  }
+
+  function _deployAllChainsActions() internal {
+    new AllowanceClaimor(DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS);
+    new ApproveAction(DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_APPROVAL_DURATION);
+    new CappedTokenTransfers(DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_AMOUNT, DUMMY_ADDRESS, DUMMY_ADDRESS);
+    new ChangeSafeGuardAction(DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS);
+    new DisapproveAction(DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS);
+    new SetEmergencyCallerAction(DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS);
+    new SetEmergencyTriggerAction(DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS);
+    new SimpleActions(DUMMY_ADDRESS, new SimpleActions.SimpleAction[](0));
+    new SimpleTransfers(DUMMY_ADDRESS, new SimpleTransfers.TransferAction[](0));
+    new UnsetEmergencyModeAction(DUMMY_ADDRESS, DUMMY_ADDRESS);
+    new CappedTokenTransfersHub(
+      DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS, new address[](0), new uint256[](0), DUMMY_EPOCH_LENGTH
+    );
+  }
+
+  function _deployEthereumActions() internal {
+    new EverclearTokenConversion(DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS);
+    new EverclearTokenStake(
+      DUMMY_ADDRESS,
+      DUMMY_ADDRESS,
+      DUMMY_ADDRESS,
+      DUMMY_ADDRESS,
+      DUMMY_ADDRESS,
+      DUMMY_ADDRESS,
+      DUMMY_ADDRESS,
+      DUMMY_ADDRESS,
+      DUMMY_LOCK_TIME
+    );
+  }
+
+  function _deployOptimismActions() internal {
+    new OPxAction(DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS);
   }
 }

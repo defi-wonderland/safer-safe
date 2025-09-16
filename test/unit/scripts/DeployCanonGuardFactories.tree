@@ -2,9 +2,13 @@ UnitDeployCanonGuardFactories
 ├── when deploying to ethereum mainnet
 │   ├── it should deploy the common factories
 │   └── it should deploy the ethereum factories
+│   └── it should deploy the common actions
+│   └── it should deploy the ethereum actions
 ├── when deploying to optimism mainnet
 │   ├── it should deploy the common factories
 │   └── it should deploy the optimism factories
+│   └── it should deploy the common actions
+│   └── it should deploy the optimism actions
 └── when deploying to a non supported chain
     └── it should revert
 
