@@ -56,6 +56,13 @@ interface ICanonGuard is ISafeManageable {
   event TransactionExecuted(address indexed _actionsBuilder, bytes32 indexed _safeTxHash, address[] _signers);
 
   /**
+   * @notice Emitted when an empty transaction is executed
+   * @param _safeTxHash The hash of the Safe transaction
+   * @param _signers The array of signer addresses
+   */
+  event NoActionTransactionExecuted(bytes32 indexed _safeTxHash, address[] _signers);
+
+  /**
    * @notice Emitted when a enqueued transaction is cancelled
    * @param _actionsBuilder The actions builder contract address
    * @param _proposer The address of the proposer of the transaction
@@ -177,6 +184,13 @@ interface ICanonGuard is ISafeManageable {
   function executeTransaction(address _actionsBuilder) external payable;
 
   /**
+   * @notice Executes an empty transaction, in order to use the safe nonce.
+   * @notice This will nullify the signatures for that specific safe nonce.
+   * @dev Can be called by anyone if not in emergency mode
+   */
+  function executeNoActionTransaction() external;
+
+  /**
    * @notice Cancels an enqueued transaction
    * @notice Can only be called by the proposer of the transaction
    * @notice The transaction must not have any approved hash signers
@@ -269,8 +283,15 @@ interface ICanonGuard is ISafeManageable {
   ) external view returns (bytes32 _safeTxHash);
 
   /**
+   * @notice Gets the Safe empty transaction hash
+   * @param _safeNonce The Safe nonce to use for the hash calculation
+   * @return _safeTxHash The Safe empty transaction hash
+   */
+  function getSafeEmptyTransactionHash(uint256 _safeNonce) external view returns (bytes32 _safeTxHash);
+
+  /**
    * @notice Gets the list of signers who have approved a Safe transaction hash for an actions builder with a specific Safe nonce
-   * @param _actionsBuilder The actions builder contract address
+   * @param _actionsBuilder The actions builder contract address. Or the zero address if you want to execute an empty transaction
    * @param _safeNonce The Safe nonce to use for the hash calculation
    * @return _approvedHashSigners The array of approved hash signer addresses
    */

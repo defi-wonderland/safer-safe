@@ -162,6 +162,19 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
   }
 
   /// @inheritdoc ICanonGuard
+  function executeNoActionTransaction() external {
+    bytes32 _safeTxHash = _getSafeTransactionHash(_buildMultiSendData(new IActionsBuilder.Action[](0)), SAFE.nonce());
+    address[] memory _signers = _getApprovedHashSigners(_safeTxHash);
+    _sortSigners(_signers);
+    bytes memory _signatures = _buildApprovedHashSignatures(_signers);
+
+    _onBeforeExecution();
+    _execSafeTransaction(_buildMultiSendData(new IActionsBuilder.Action[](0)), _signatures);
+
+    emit NoActionTransactionExecuted(_safeTxHash, _signers);
+  }
+
+  /// @inheritdoc ICanonGuard
   function cancelEnqueuedTransaction(address _actionsBuilder) external {
     TransactionInfo memory _txInfo = queuedTransactions[_actionsBuilder];
     if (_txInfo.expiresAt == 0) revert NoTransactionQueued();
@@ -192,13 +205,22 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
     address _actionsBuilder,
     uint256 _safeNonce
   ) external view returns (address[] memory _approvedHashSigners) {
-    TransactionInfo memory _txInfo = queuedTransactions[_actionsBuilder];
-    if (_txInfo.expiresAt == 0) revert NoTransactionQueued();
+    bytes32 _safeTxHash;
 
-    IActionsBuilder.Action[] memory _actions = abi.decode(_txInfo.actionsData, (IActionsBuilder.Action[]));
+    if (_actionsBuilder != address(0)) {
+      // If the actions builder is not the zero address, we need to get the transaction hash from the queued transactions
+      TransactionInfo memory _txInfo = queuedTransactions[_actionsBuilder];
+      if (_txInfo.expiresAt == 0) revert NoTransactionQueued();
 
-    bytes memory _multiSendData = _buildMultiSendData(_actions);
-    bytes32 _safeTxHash = _getSafeTransactionHash(_multiSendData, _safeNonce);
+      IActionsBuilder.Action[] memory _actions = abi.decode(_txInfo.actionsData, (IActionsBuilder.Action[]));
+
+      bytes memory _multiSendData = _buildMultiSendData(_actions);
+      _safeTxHash = _getSafeTransactionHash(_multiSendData, _safeNonce);
+    } else {
+      // If the actions builder is the zero address, it means we want to execute an empty transaction
+      _safeTxHash = _getSafeTransactionHash(_buildMultiSendData(new IActionsBuilder.Action[](0)), _safeNonce);
+    }
+
     _approvedHashSigners = _getApprovedHashSigners(_safeTxHash);
   }
 
@@ -219,6 +241,11 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
 
     bytes memory _multiSendData = _buildMultiSendData(_actions);
     _safeTxHash = _getSafeTransactionHash(_multiSendData, _safeNonce);
+  }
+
+  /// @inheritdoc ICanonGuard
+  function getSafeEmptyTransactionHash(uint256 _safeNonce) public view returns (bytes32 _safeTxHash) {
+    _safeTxHash = _getSafeTransactionHash(_buildMultiSendData(new IActionsBuilder.Action[](0)), _safeNonce);
   }
 
   // ~~~ INTERNAL METHODS ~~~

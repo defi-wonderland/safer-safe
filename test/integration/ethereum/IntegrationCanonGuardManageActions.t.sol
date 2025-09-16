@@ -388,4 +388,42 @@ contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
     assertEq(_executableAt, 0);
     assertEq(_expiresAt, 0);
   }
+
+  function test_ExecuteNoActionTransaction() public {
+    // Get the safe nonce
+    uint256 _safeNonce = canonGuard.getSafeNonce();
+
+    // Queue a random transaction
+    vm.prank(_safeOwners[0]);
+    canonGuard.queueTransaction(address(addOwnerSimpleActions));
+
+    // Approve the Safe transaction hash
+    bytes32 _safeTxHash = canonGuard.getSafeTransactionHash(address(addOwnerSimpleActions));
+    for (uint256 _i; _i < _safeThreshold; ++_i) {
+      vm.startPrank(_safeOwners[_i]);
+      SAFE_PROXY.approveHash(_safeTxHash);
+    }
+    vm.stopPrank();
+
+    // Approve the Safe empty transaction hash
+    bytes32 _safeEmptyTxHash = canonGuard.getSafeEmptyTransactionHash(_safeNonce);
+    for (uint256 _i; _i < _safeThreshold; ++_i) {
+      vm.startPrank(_safeOwners[_i]);
+      SAFE_PROXY.approveHash(_safeEmptyTxHash);
+    }
+    vm.stopPrank();
+
+    // Execute empty transaction in order to use the safe nonce
+    canonGuard.executeNoActionTransaction();
+
+    // Nonce increased
+    assertEq(canonGuard.getSafeNonce(), _safeNonce + 1);
+
+    // Wait for the timelock period
+    vm.warp(block.timestamp + LONG_TX_EXECUTION_DELAY);
+
+    // The first tx is no longer valid
+    vm.expectRevert('GS020');
+    canonGuard.executeTransaction(address(addOwnerSimpleActions));
+  }
 }

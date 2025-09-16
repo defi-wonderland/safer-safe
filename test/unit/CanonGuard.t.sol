@@ -4,7 +4,10 @@ pragma solidity 0.8.29;
 import {CanonGuardForTest} from './mocks/CanonGuardForTest.sol';
 import {IOwnerManager} from '@safe-smart-account/interfaces/IOwnerManager.sol';
 import {ISafe} from '@safe-smart-account/interfaces/ISafe.sol';
+import {Enum} from '@safe-smart-account/libraries/Enum.sol';
+import {MultiSendCallOnly} from '@safe-smart-account/libraries/MultiSendCallOnly.sol';
 import {ICanonGuard} from 'contracts/CanonGuard.sol';
+import {IEmergencyModeHook} from 'contracts/EmergencyModeHook.sol';
 import {ISafeManageable} from 'contracts/SafeManageable.sol';
 import {CappedTokenTransfersHub} from 'contracts/action-hubs/CappedTokenTransfersHub.sol';
 import {Test} from 'forge-std/Test.sol';
@@ -851,6 +854,65 @@ contract UnitCanonGuard is Test {
     assertEq(_expiresAt, 0);
   }
 
+  modifier whenEmergencyModeIsActive() {
+    vm.prank(canonGuard.emergencyTrigger());
+    canonGuard.setEmergencyMode();
+    _;
+  }
+
+  function test_ExecuteNoActionTransactionWhenTheCallerIsTheEmergencyCaller(bytes32 _safeTxHash)
+    external
+    whenEmergencyModeIsActive
+  {
+    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.nonce.selector), abi.encode(1));
+    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.getTransactionHash.selector), abi.encode(_safeTxHash));
+    _mockAndExpect(SAFE, abi.encodeWithSelector(IOwnerManager.getOwners.selector), abi.encode(new address[](0)));
+
+    // it executes transaction
+    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.execTransaction.selector), abi.encode(true));
+
+    // it emits NoActionTransactionExecuted event
+    vm.expectEmit();
+    emit ICanonGuard.NoActionTransactionExecuted(_safeTxHash, new address[](0));
+
+    vm.prank(canonGuard.emergencyCaller());
+    canonGuard.executeNoActionTransaction();
+  }
+
+  function test_ExecuteNoActionTransactionWhenTheCallerIsNotTheEmergencyCaller(address _caller)
+    external
+    whenEmergencyModeIsActive
+  {
+    _assumeFuzzable(_caller);
+    vm.assume(_caller != canonGuard.emergencyTrigger());
+
+    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.nonce.selector), abi.encode(1));
+    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.getTransactionHash.selector), abi.encode(bytes32(0)));
+    _mockAndExpect(SAFE, abi.encodeWithSelector(IOwnerManager.getOwners.selector), abi.encode(new address[](0)));
+
+    // it reverts with Unauthorized
+    vm.expectRevert(
+      abi.encodeWithSelector(IEmergencyModeHook.Unauthorized.selector, _caller, canonGuard.emergencyCaller())
+    );
+    vm.prank(_caller);
+    canonGuard.executeNoActionTransaction();
+  }
+
+  function test_ExecuteNoActionTransactionWhenEmergencyModeIsNotActive(bytes32 _safeTxHash) external {
+    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.nonce.selector), abi.encode(1));
+    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.getTransactionHash.selector), abi.encode(_safeTxHash));
+    _mockAndExpect(SAFE, abi.encodeWithSelector(IOwnerManager.getOwners.selector), abi.encode(new address[](0)));
+
+    // it executes transaction
+    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.execTransaction.selector), abi.encode(true));
+
+    // it emits NoActionTransactionExecuted event
+    vm.expectEmit();
+    emit ICanonGuard.NoActionTransactionExecuted(_safeTxHash, new address[](0));
+
+    canonGuard.executeNoActionTransaction();
+  }
+
   modifier whenTransactionExists() {
     _;
   }
@@ -908,6 +970,53 @@ contract UnitCanonGuard is Test {
     canonGuard.getSafeTransactionHash(_actionsBuilder);
   }
 
+  function test_GetSafeEmptyTransactionHashReturnsCorrectHash(uint256 _safeNonce, bytes32 _expectedHash) external {
+    _mockAndExpect(
+      SAFE,
+      abi.encodeWithSelector(
+        ISafe.getTransactionHash.selector,
+        canonGuard.MULTI_SEND_CALL_ONLY(),
+        0,
+        abi.encodeWithSelector(MultiSendCallOnly.multiSend.selector, bytes('')),
+        Enum.Operation.DelegateCall,
+        0,
+        0,
+        0,
+        address(0),
+        address(0),
+        _safeNonce
+      ),
+      abi.encode(_expectedHash)
+    );
+
+    // it returns correct hash
+    bytes32 _safeTxHash = canonGuard.getSafeEmptyTransactionHash(_safeNonce);
+    assertEq(_safeTxHash, _expectedHash);
+  }
+
+  function test_GetApprovedHashSignersWhenTheAddressIsTheZeroAddress(
+    address _signer1,
+    address _signer2,
+    uint256 _safeNonce
+  ) external {
+    address[] memory _signers = new address[](2);
+    _signers[0] = _signer1;
+    _signers[1] = _signer2;
+    _mockApprovedHashesForSigners(_signers, 1);
+
+    _mockAndExpect(SAFE, abi.encodeWithSelector(IOwnerManager.getOwners.selector), abi.encode(_signers));
+    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.getTransactionHash.selector), abi.encode(bytes32(0)));
+
+    // it returns approved signers for empty transaction
+    address[] memory _approvedSigners = canonGuard.getApprovedHashSigners(address(0), _safeNonce);
+    assertEq(_approvedSigners, _signers);
+  }
+
+  modifier whenTheAddressIsNotTheZeroAddress(address _actionsBuilder) {
+    vm.assume(_actionsBuilder != address(0));
+    _;
+  }
+
   function test_GetApprovedHashSignersWhenTransactionExists(
     address _signer1,
     address _signer2,
@@ -915,7 +1024,7 @@ contract UnitCanonGuard is Test {
     IActionsBuilder.Action memory _action,
     ICanonGuard.TransactionInfo memory _txInfo,
     uint256 _safeNonce
-  ) external {
+  ) external whenTheAddressIsNotTheZeroAddress(_actionsBuilder) {
     // Ensure expiresAt is not 0 to avoid NoTransactionQueued error
     _txInfo.expiresAt = bound(_txInfo.expiresAt, 1, type(uint256).max);
 
@@ -937,7 +1046,10 @@ contract UnitCanonGuard is Test {
     assertEq(_approvedSigners, _signers);
   }
 
-  function test_GetApprovedHashSignersWhenTransactionDoesNotExist(address _actionsBuilder, uint256 _nonce) external {
+  function test_GetApprovedHashSignersWhenTransactionDoesNotExist(
+    address _actionsBuilder,
+    uint256 _nonce
+  ) external whenTheAddressIsNotTheZeroAddress(_actionsBuilder) {
     _assumeFuzzable(_actionsBuilder);
 
     // it reverts with NoTransactionQueued
