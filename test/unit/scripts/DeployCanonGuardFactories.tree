@@ -1,7 +1,10 @@
 UnitDeployCanonGuardFactories
-└── when run
-    ├── it should deploy the CanonGuardFactory contract with correct args
-    ├── it should deploy the AllowanceClaimorFactory contract
-    ├── it should deploy the CappedTokenTransfersFactory contract
-    ├── it should deploy the SimpleActionsFactory contract
-    └── it should deploy the SimpleTransfersFactory contract
+├── when deploying to ethereum mainnet
+│   ├── it should deploy the common factories
+│   └── it should deploy the ethereum factories
+├── when deploying to optimism mainnet
+│   ├── it should deploy the common factories
+│   └── it should deploy the optimism factories
+└── when deploying to a non supported chain
+    └── it should revert
+
