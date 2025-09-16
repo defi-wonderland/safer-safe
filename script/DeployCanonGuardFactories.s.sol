@@ -3,6 +3,20 @@ pragma solidity 0.8.29;
 
 import {Script} from 'forge-std/Script.sol';
 
+import {CappedTokenTransfersHub} from 'contracts/action-hubs/CappedTokenTransfersHub.sol';
+import {AllowanceClaimor} from 'contracts/actions-builders/AllowanceClaimor.sol';
+import {ApproveAction} from 'contracts/actions-builders/ApproveAction.sol';
+import {CappedTokenTransfers} from 'contracts/actions-builders/CappedTokenTransfers.sol';
+import {ChangeSafeGuardAction} from 'contracts/actions-builders/ChangeSafeGuardAction.sol';
+import {DisapproveAction} from 'contracts/actions-builders/DisapproveAction.sol';
+import {EverclearTokenConversion} from 'contracts/actions-builders/EverclearTokenConversion.sol';
+import {EverclearTokenStake} from 'contracts/actions-builders/EverclearTokenStake.sol';
+import {OPxAction} from 'contracts/actions-builders/OPxAction.sol';
+import {SetEmergencyCallerAction} from 'contracts/actions-builders/SetEmergencyCallerAction.sol';
+import {SetEmergencyTriggerAction} from 'contracts/actions-builders/SetEmergencyTriggerAction.sol';
+import {SimpleActions} from 'contracts/actions-builders/SimpleActions.sol';
+import {SimpleTransfers} from 'contracts/actions-builders/SimpleTransfers.sol';
+import {UnsetEmergencyModeAction} from 'contracts/actions-builders/UnsetEmergencyModeAction.sol';
 import {AllowanceClaimorFactory} from 'contracts/factories/AllowanceClaimorFactory.sol';
 import {ApproveActionFactory} from 'contracts/factories/ApproveActionFactory.sol';
 import {CanonGuardFactory} from 'contracts/factories/CanonGuardFactory.sol';
@@ -17,6 +31,7 @@ import {SetEmergencyTriggerActionFactory} from 'contracts/factories/SetEmergency
 import {SimpleActionsFactory} from 'contracts/factories/SimpleActionsFactory.sol';
 import {SimpleTransfersFactory} from 'contracts/factories/SimpleTransfersFactory.sol';
 import {UnsetEmergencyModeActionFactory} from 'contracts/factories/UnsetEmergencyModeActionFactory.sol';
+import {ICanonGuard} from 'interfaces/ICanonGuard.sol';
 import {IAllowanceClaimorFactory} from 'interfaces/factories/IAllowanceClaimorFactory.sol';
 import {IApproveActionFactory} from 'interfaces/factories/IApproveActionFactory.sol';
 import {ICanonGuardFactory} from 'interfaces/factories/ICanonGuardFactory.sol';
@@ -32,7 +47,15 @@ import {ISimpleActionsFactory} from 'interfaces/factories/ISimpleActionsFactory.
 import {ISimpleTransfersFactory} from 'interfaces/factories/ISimpleTransfersFactory.sol';
 import {IUnsetEmergencyModeActionFactory} from 'interfaces/factories/IUnsetEmergencyModeActionFactory.sol';
 import {Constants} from 'script/Constants.sol';
+import {Approver} from 'src/contracts/Approver.sol';
+import {CanonGuard} from 'src/contracts/CanonGuard.sol';
 
+/**
+ * @title DeployCanonGuardFactories
+ * @notice Script that deploys the Factories and Contracts
+ * @notice Contracts are manually deployed so they get verified. This would automatically verify any contract created
+ * by the factories.
+ */
 contract DeployCanonGuardFactories is Constants, Script {
   // ~~~ ERRORS ~~~
   error UnsupportedChainId();
@@ -53,15 +76,26 @@ contract DeployCanonGuardFactories is Constants, Script {
   ISimpleTransfersFactory public simpleTransfersFactory;
   IUnsetEmergencyModeActionFactory public unsetEmergencyModeActionFactory;
 
+  // ~~~ DUMMY CONSTANTS ~~~
+  address public constant DUMMY_ADDRESS = address(1);
+  uint256 public constant DUMMY_APPROVAL_DURATION = 0;
+  uint256 public constant DUMMY_AMOUNT = 0;
+  uint256 public constant DUMMY_LOCK_TIME = 0;
+  uint256 public constant DUMMY_EPOCH_LENGTH = 1;
+  uint256 public constant DUMMY_DELAY = 2 days;
+
   function deployCanonGuardFactories() public {
     vm.startBroadcast();
 
     _deployAllChainsFactories();
+    _deployAllChainsContracts();
 
     if (block.chainid == ETHEREUM_MAINNET_CHAIN_ID) {
       _deployEthereumFactories();
+      _deployEthereumContracts();
     } else if (block.chainid == OPTIMISM_MAINNET_CHAIN_ID) {
       _deployOptimismFactories();
+      _deployOptimismContracts();
     }
 
     vm.stopBroadcast();
@@ -90,5 +124,52 @@ contract DeployCanonGuardFactories is Constants, Script {
 
   function _deployOptimismFactories() internal {
     opxActionFactory = new OPxActionFactory();
+  }
+
+  function _deployAllChainsContracts() internal {
+    new AllowanceClaimor(DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS);
+    new ApproveAction(DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_APPROVAL_DURATION);
+    new CappedTokenTransfers(DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_AMOUNT, DUMMY_ADDRESS, DUMMY_ADDRESS);
+    new ChangeSafeGuardAction(DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS);
+    new DisapproveAction(DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS);
+    new SetEmergencyCallerAction(DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS);
+    new SetEmergencyTriggerAction(DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS);
+    new SimpleActions(DUMMY_ADDRESS, new SimpleActions.SimpleAction[](0));
+    new SimpleTransfers(DUMMY_ADDRESS, new SimpleTransfers.TransferAction[](0));
+    new UnsetEmergencyModeAction(DUMMY_ADDRESS, DUMMY_ADDRESS);
+    new CappedTokenTransfersHub(
+      DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS, new address[](0), new uint256[](0), DUMMY_EPOCH_LENGTH
+    );
+    ICanonGuard _canonGuard = new CanonGuard(
+      DUMMY_ADDRESS,
+      DUMMY_ADDRESS,
+      DUMMY_ADDRESS,
+      DUMMY_DELAY,
+      DUMMY_DELAY * 2,
+      DUMMY_DELAY,
+      DUMMY_DELAY,
+      DUMMY_ADDRESS,
+      DUMMY_ADDRESS
+    );
+    new Approver(address(_canonGuard));
+  }
+
+  function _deployEthereumContracts() internal {
+    new EverclearTokenConversion(DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS);
+    new EverclearTokenStake(
+      DUMMY_ADDRESS,
+      DUMMY_ADDRESS,
+      DUMMY_ADDRESS,
+      DUMMY_ADDRESS,
+      DUMMY_ADDRESS,
+      DUMMY_ADDRESS,
+      DUMMY_ADDRESS,
+      DUMMY_ADDRESS,
+      DUMMY_LOCK_TIME
+    );
+  }
+
+  function _deployOptimismContracts() internal {
+    new OPxAction(DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS);
   }
 }
