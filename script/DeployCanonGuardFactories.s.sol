@@ -84,6 +84,9 @@ contract DeployCanonGuardFactories is Constants, Script {
   uint256 public constant DUMMY_EPOCH_LENGTH = 1;
   uint256 public constant DUMMY_DELAY = 2 days;
 
+  /**
+   * @notice Deploys the CanonGuard factories and contracts
+   */
   function deployCanonGuardFactories() public {
     vm.startBroadcast();
 
@@ -101,6 +104,9 @@ contract DeployCanonGuardFactories is Constants, Script {
     vm.stopBroadcast();
   }
 
+  /**
+   * @notice Deploys the factories for all chains
+   */
   function _deployAllChainsFactories() internal {
     // Needs to be first to match the value CANON_GUARD_FACTORY in Constants
     canonGuardFactory = new CanonGuardFactory(address(MULTI_SEND_CALL_ONLY));
@@ -117,15 +123,24 @@ contract DeployCanonGuardFactories is Constants, Script {
     unsetEmergencyModeActionFactory = new UnsetEmergencyModeActionFactory();
   }
 
+  /**
+   * @notice Deploys the factories for Ethereum
+   */
   function _deployEthereumFactories() internal {
     everclearTokenConversionFactory = new EverclearTokenConversionFactory();
     everclearTokenStakeFactory = new EverclearTokenStakeFactory();
   }
 
+  /**
+   * @notice Deploys the factories for Optimism
+   */
   function _deployOptimismFactories() internal {
     opxActionFactory = new OPxActionFactory();
   }
 
+  /**
+   * @notice Deploys dummy contracts for all chains
+   */
   function _deployAllChainsContracts() internal {
     new AllowanceClaimor(DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS);
     new ApproveAction(DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_APPROVAL_DURATION);
@@ -154,6 +169,9 @@ contract DeployCanonGuardFactories is Constants, Script {
     new Approver(address(_canonGuard));
   }
 
+  /**
+   * @notice Deploys dummy contracts for Ethereum
+   */
   function _deployEthereumContracts() internal {
     new EverclearTokenConversion(DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS);
     new EverclearTokenStake(
@@ -169,6 +187,9 @@ contract DeployCanonGuardFactories is Constants, Script {
     );
   }
 
+  /**
+   * @notice Deploys dummy contracts for Optimism
+   */
   function _deployOptimismContracts() internal {
     new OPxAction(DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS);
   }

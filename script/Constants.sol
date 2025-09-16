@@ -9,6 +9,10 @@ import {SafeProxyFactory} from '@safe-smart-account/proxies/SafeProxyFactory.sol
 
 import {IERC20} from 'forge-std/interfaces/IERC20.sol';
 
+/**
+ * @title Constants
+ * @notice Constants used by the deploy scripts
+ */
 abstract contract Constants {
   // Safe Deployments (https://github.com/safe-global/safe-deployments/tree/main/src/assets/v1.4.1)
   ISafe public constant SAFE = ISafe(0x41675C099F32341bf84BFc5382aF534df5C7461a);

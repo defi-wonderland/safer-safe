@@ -7,10 +7,17 @@ import {ICanonGuard} from 'interfaces/ICanonGuard.sol';
 
 import {Constants} from 'script/Constants.sol';
 
+/**
+ * @title DeployCanonGuard
+ * @notice Script that deploys the CanonGuard contract based on the constants in Constants.sol
+ */
 contract DeployCanonGuard is Constants, Script {
   // ~~~ CANON GUARD ~~~
   ICanonGuard public canonGuard;
 
+  /**
+   * @notice Deploys the CanonGuard contract
+   */
   function deployCanonGuard() public {
     vm.startBroadcast();
 
