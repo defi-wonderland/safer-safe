@@ -15,13 +15,10 @@ contract DeployCanonGuard is Constants, Script {
   // ~~~ CANON GUARD ~~~
   ICanonGuard public canonGuard;
 
-  /**
-   * @notice Deploys the CanonGuard contract
-   */
+  /// @notice Deploys the CanonGuard contract
   function deployCanonGuard() public {
     vm.startBroadcast();
 
-    // Deploy the CanonGuard contract
     canonGuard = ICanonGuard(
       CANON_GUARD_FACTORY.createCanonGuard(
         address(SAFE_PROXY),

@@ -7,7 +7,8 @@ import {IAllowanceClaimor} from 'interfaces/actions-builders/IAllowanceClaimor.s
 
 /**
  * @title AllowanceClaimor
- * @notice Contract that builds actions from token allowances
+ * @notice Contract that builds an action to send tokens from the token owner to the token recipient
+ * @notice The amount to transfer is the max between the SAFE allowance of the token owner and the balance of the token owner
  */
 contract AllowanceClaimor is IAllowanceClaimor, ActionsBuilder {
   // ~~~ STORAGE ~~~
@@ -29,8 +30,8 @@ contract AllowanceClaimor is IAllowanceClaimor, ActionsBuilder {
   /**
    * @notice Constructor that sets up the Safe, token, token owner and token recipient
    * @param _parent The parent that deployed the actions builder
-   * @param _safe The Gnosis Safe contract address
-   * @param _token The token contract address
+   * @param _safe The Safe contract address
+   * @param _token The token contract address to be transferred
    * @param _tokenOwner The token owner address
    * @param _tokenRecipient The token recipient address
    */

@@ -5,6 +5,10 @@ import {ActionsBuilder} from 'contracts/actions-builders/ActionsBuilder.sol';
 import {IEmergencyModeHook} from 'interfaces/IEmergencyModeHook.sol';
 import {IUnsetEmergencyModeAction} from 'interfaces/actions-builders/IUnsetEmergencyModeAction.sol';
 
+/**
+ * @title UnsetEmergencyModeAction
+ * @notice Contract that builds an action to unset the emergency mode
+ */
 contract UnsetEmergencyModeAction is IUnsetEmergencyModeAction, ActionsBuilder {
   /// @inheritdoc IUnsetEmergencyModeAction
   address public immutable CANON_GUARD;

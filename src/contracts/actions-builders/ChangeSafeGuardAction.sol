@@ -5,6 +5,11 @@ import {IGuardManager} from '@safe-smart-account/interfaces/IGuardManager.sol';
 import {ActionsBuilder} from 'contracts/actions-builders/ActionsBuilder.sol';
 import {IChangeSafeGuardAction} from 'interfaces/actions-builders/IChangeSafeGuardAction.sol';
 
+/**
+ * @title ChangeSafeGuardAction
+ * @notice Contract that builds an action to change the Safe guard
+ * @dev Builds an action that calls SAFE with IGuardManager.setGuard and the new safe guard contract address
+ */
 contract ChangeSafeGuardAction is IChangeSafeGuardAction, ActionsBuilder {
   /// @inheritdoc IChangeSafeGuardAction
   address public immutable SAFE;

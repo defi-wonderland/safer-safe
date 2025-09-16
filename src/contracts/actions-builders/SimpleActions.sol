@@ -6,18 +6,20 @@ import {ISimpleActions} from 'interfaces/actions-builders/ISimpleActions.sol';
 
 /**
  * @title SimpleActions
- * @notice Contract that builds actions from simple actions
+ * @notice Contract that builds actions to perform simple transactions
+ * @notice Each SimpleAction has a target, calldata and value
  */
 contract SimpleActions is ISimpleActions, ActionsBuilder {
   // ~~~ STORAGE ~~~
 
-  /// @notice The array of actions
+  /// @notice The array of actions containing the simple actions to be executed
   Action[] internal _actions;
 
   // ~~~ CONSTRUCTOR ~~~
 
   /**
-   * @notice Constructor that sets up the array of actions
+   * @notice Constructor that sets up the array of actions containing the simple actions
+   * @notice Each SimpleAction is converted into an Action to perform a simple transaction
    * @param _parent The parent that deployed the actions builder
    * @param _simpleActions The array of simple actions
    */
