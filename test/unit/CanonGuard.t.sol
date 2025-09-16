@@ -649,8 +649,12 @@ contract UnitCanonGuard is Test {
     address _caller,
     address _actionsBuilder,
     IActionsBuilder.Action calldata _action,
-    ICanonGuard.TransactionInfo memory _txInfo
+    ICanonGuard.TransactionInfo memory _txInfo,
+    address _signer1,
+    address _signer2
   ) external {
+    vm.assume(_signer1 > _signer2);
+    vm.assume(_signer2 != address(0));
     _txInfo.expiresAt = bound(_txInfo.expiresAt, block.timestamp + 1, type(uint256).max);
     _txInfo.executableAt = bound(_txInfo.executableAt, block.timestamp - 1, block.timestamp);
     IActionsBuilder.Action[] memory _actions = new IActionsBuilder.Action[](1);
@@ -659,7 +663,11 @@ contract UnitCanonGuard is Test {
 
     _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.nonce.selector), abi.encode(1));
     _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.getTransactionHash.selector), abi.encode(bytes32(0)));
-    _mockAndExpect(SAFE, abi.encodeWithSelector(IOwnerManager.getOwners.selector), abi.encode(new address[](0)));
+    address[] memory _signers = new address[](2);
+    _signers[0] = _signer1;
+    _signers[1] = _signer2;
+    _mockAndExpect(SAFE, abi.encodeWithSelector(IOwnerManager.getOwners.selector), abi.encode(_signers));
+    _mockApprovedHashesForSigners(_signers, 1);
 
     // it executes transaction
     _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.execTransaction.selector), abi.encode(true));
@@ -671,9 +679,13 @@ contract UnitCanonGuard is Test {
       _txInfo.expiresAt // expiresAt
     );
 
+    address[] memory _sortedSigners = new address[](2);
+    _sortedSigners[0] = _signer2;
+    _sortedSigners[1] = _signer1;
+
     // it emits TransactionExecuted event
     vm.expectEmit(address(canonGuard));
-    emit ICanonGuard.TransactionExecuted(_actionsBuilder, bytes32(0), new address[](0));
+    emit ICanonGuard.TransactionExecuted(_actionsBuilder, bytes32(0), _sortedSigners);
 
     vm.prank(_caller);
     canonGuard.executeTransaction(_actionsBuilder);
