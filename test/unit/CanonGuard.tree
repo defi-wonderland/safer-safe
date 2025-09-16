@@ -83,6 +83,18 @@ UnitCanonGuard::executeTransaction
     ├── it deletes transaction from queue
     └── it emits TransactionExecuted event
 
+UnitCanonGuard::executeNoActionTransaction
+├── when emergency mode is active
+│   ├── when the caller is the emergency caller
+│   │   ├── it executes transaction
+│   │   ├── it deletes transaction from queue
+│   │   └── it emits TransactionExecuted event
+│   └── when the caller is not the emergency caller
+│       └── it reverts with NotEmergencyCaller
+└── when emergency mode is not active
+    ├── it executes transaction
+    ├── it deletes transaction from queue
+    └── it emits TransactionExecuted event
 
 UnitCanonGuard::getSafeTransactionHash
 ├── when transaction exists
@@ -92,11 +104,17 @@ UnitCanonGuard::getSafeTransactionHash
 └── when transaction does not exist
     └── it reverts with NoTransactionQueued
 
+UnitCanonGuard::getSafeEmptyTransactionHash
+└── it returns correct hash
+
 UnitCanonGuard::getApprovedHashSigners
-├── when transaction exists
-│   └── it returns approved signers
-└── when transaction does not exist
-    └── it reverts with NoTransactionQueued
+├── when the address is the zero address
+│   └── it returns approved signers for empty transaction
+└── when the address is not the zero address
+    ├── when transaction exists
+    │   └── it returns approved signers
+    └── when transaction does not exist
+        └── it reverts with NoTransactionQueued
 
 UnitCanonGuard::getSafeNonce
 └── it returns correct nonce

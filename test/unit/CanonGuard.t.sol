@@ -253,6 +253,29 @@ contract UnitCanonGuard is Test {
     canonGuard.approveActionsBuilderOrHub(_actionsBuilder, _approvalDuration);
   }
 
+  modifier whenEmergencyModeIsActive() {
+    _;
+  }
+
+  function test_ExecuteNoActionTransactionWhenTheCallerIsTheEmergencyCaller() external whenEmergencyModeIsActive {
+    // it executes transaction
+    // it deletes transaction from queue
+    // it emits TransactionExecuted event
+    vm.skip(true);
+  }
+
+  function test_ExecuteNoActionTransactionWhenTheCallerIsNotTheEmergencyCaller() external whenEmergencyModeIsActive {
+    // it reverts with NotEmergencyCaller
+    vm.skip(true);
+  }
+
+  function test_ExecuteNoActionTransactionWhenEmergencyModeIsNotActive() external {
+    // it executes transaction
+    // it deletes transaction from queue
+    // it emits TransactionExecuted event
+    vm.skip(true);
+  }
+
   modifier whenCallerIsSafeOwner() {
     _mockAndExpect(SAFE, abi.encodeWithSelector(IOwnerManager.isOwner.selector), abi.encode(true));
     _;
@@ -707,6 +730,34 @@ contract UnitCanonGuard is Test {
     canonGuard.getSafeTransactionHash(_actionsBuilder);
   }
 
+  function test_GetSafeEmptyTransactionHashReturnsCorrectHash() external {
+    // it returns correct hash
+    vm.skip(true);
+  }
+
+  function test_GetApprovedHashSignersWhenTheAddressIsTheZeroAddress(
+    address _signer1,
+    address _signer2,
+    uint256 _safeNonce
+  ) external {
+    address[] memory _signers = new address[](2);
+    _signers[0] = _signer1;
+    _signers[1] = _signer2;
+    _mockApprovedHashesForSigners(_signers, 1);
+
+    _mockAndExpect(SAFE, abi.encodeWithSelector(IOwnerManager.getOwners.selector), abi.encode(_signers));
+    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.getTransactionHash.selector), abi.encode(bytes32(0)));
+
+    // it returns approved signers for empty transaction
+    address[] memory _approvedSigners = canonGuard.getApprovedHashSigners(address(0), _safeNonce);
+    assertEq(_approvedSigners, _signers);
+  }
+
+  modifier whenTheAddressIsNotTheZeroAddress(address _actionsBuilder) {
+    vm.assume(_actionsBuilder != address(0));
+    _;
+  }
+
   function test_GetApprovedHashSignersWhenTransactionExists(
     address _signer1,
     address _signer2,
@@ -714,7 +765,7 @@ contract UnitCanonGuard is Test {
     IActionsBuilder.Action memory _action,
     ICanonGuard.TransactionInfo memory _txInfo,
     uint256 _safeNonce
-  ) external {
+  ) external whenTheAddressIsNotTheZeroAddress(_actionsBuilder) {
     // Ensure expiresAt is not 0 to avoid NoTransactionQueued error
     _txInfo.expiresAt = bound(_txInfo.expiresAt, 1, type(uint256).max);
 
@@ -736,7 +787,10 @@ contract UnitCanonGuard is Test {
     assertEq(_approvedSigners, _signers);
   }
 
-  function test_GetApprovedHashSignersWhenTransactionDoesNotExist(address _actionsBuilder, uint256 _nonce) external {
+  function test_GetApprovedHashSignersWhenTransactionDoesNotExist(
+    address _actionsBuilder,
+    uint256 _nonce
+  ) external whenTheAddressIsNotTheZeroAddress(_actionsBuilder) {
     _assumeFuzzable(_actionsBuilder);
 
     // it reverts with NoTransactionQueued

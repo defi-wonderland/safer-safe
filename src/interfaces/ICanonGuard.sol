@@ -244,7 +244,7 @@ interface ICanonGuard is ISafeManageable {
 
   /**
    * @notice Gets the list of signers who have approved a Safe transaction hash for an actions builder with a specific Safe nonce
-   * @param _actionsBuilder The actions builder contract address
+   * @param _actionsBuilder The actions builder contract address. Or the zero address if you want to execute an empty transaction
    * @param _safeNonce The Safe nonce to use for the hash calculation
    * @return _approvedHashSigners The array of approved hash signer addresses
    */
@@ -252,16 +252,6 @@ interface ICanonGuard is ISafeManageable {
     address _actionsBuilder,
     uint256 _safeNonce
   ) external view returns (address[] memory _approvedHashSigners);
-
-  /**
-   * @notice Gets the list of signers who have approved a Safe empty transaction hash
-   * @param _safeNonce The Safe nonce to use for the hash calculation
-   * @return _approvedHashSigners The array of approved hash signer addresses
-   */
-  function getApprovedHashSignersForEmptyTransaction(uint256 _safeNonce)
-    external
-    view
-    returns (address[] memory _approvedHashSigners);
 
   /**
    * @notice Gets the Safe nonce
