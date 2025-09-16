@@ -407,6 +407,7 @@ contract UnitCanonGuard is Test {
     address _actionsBuilder,
     uint256 _expiry
   ) external givenCallerIsSafeOwner(_caller) {
+    _assumeFuzzable(_actionsBuilder);
     _expiry = bound(_expiry, block.timestamp + 1, block.timestamp + TX_EXPIRY_DELAY);
 
     _mockAndExpect(
@@ -418,6 +419,7 @@ contract UnitCanonGuard is Test {
     );
 
     // it reverts with TransactionAlreadyQueued
+    vm.prank(_caller);
     vm.expectRevert(abi.encodeWithSelector(ICanonGuard.TransactionAlreadyQueued.selector, _actionsBuilder));
     canonGuard.queueTransaction(_actionsBuilder);
   }
