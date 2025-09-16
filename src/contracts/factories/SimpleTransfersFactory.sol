@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.29;
+pragma solidity 0.8.30;
 
 import {SimpleTransfers} from 'contracts/actions-builders/SimpleTransfers.sol';
 import {Factory} from 'contracts/factories/Factory.sol';

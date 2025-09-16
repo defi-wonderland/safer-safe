@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.29;
+pragma solidity 0.8.30;
 
 import {IGuardManager} from '@safe-smart-account/interfaces/IGuardManager.sol';
 import {ActionsBuilder} from 'contracts/actions-builders/ActionsBuilder.sol';
