@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.29;
+pragma solidity 0.8.30;
 
 import {OnlyCanonGuardForTest} from './mocks/OnlyCanonGuardForTest.sol';
 import {Enum} from '@safe-smart-account/libraries/Enum.sol';

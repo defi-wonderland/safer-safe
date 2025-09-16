@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.29;
+pragma solidity 0.8.30;
 
 import {AllowanceClaimorFactory} from 'contracts/factories/AllowanceClaimorFactory.sol';
 import {ApproveActionFactory} from 'contracts/factories/ApproveActionFactory.sol';

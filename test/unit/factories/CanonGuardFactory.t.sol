@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.29;
+pragma solidity 0.8.30;
 
 import {Test} from 'forge-std/Test.sol';
 import {CanonGuardFactory} from 'src/contracts/factories/CanonGuardFactory.sol';

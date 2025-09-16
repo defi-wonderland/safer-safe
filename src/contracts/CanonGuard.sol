@@ -15,7 +15,7 @@ https://wonderland.xyz
 
 */
 
-pragma solidity 0.8.29;
+pragma solidity 0.8.30;
 
 import {Enum} from '@safe-smart-account/libraries/Enum.sol';
 import {MultiSendCallOnly} from '@safe-smart-account/libraries/MultiSendCallOnly.sol';

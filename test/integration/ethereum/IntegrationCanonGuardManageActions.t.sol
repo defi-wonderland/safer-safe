@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.29;
+pragma solidity 0.8.30;
 
 import {IEmergencyModeHook} from 'interfaces/IEmergencyModeHook.sol';
 import {IApproveAction} from 'interfaces/actions-builders/IApproveAction.sol';

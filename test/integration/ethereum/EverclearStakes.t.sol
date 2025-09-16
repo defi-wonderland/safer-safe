@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.29;
+pragma solidity 0.8.30;
 
 import {EverclearTokenStake} from 'src/contracts/actions-builders/EverclearTokenStake.sol';
 import {IEverclearTokenStake} from 'src/interfaces/actions-builders/IEverclearTokenStake.sol';

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.29;
+pragma solidity 0.8.30;
 
 import {OPxAction} from 'src/contracts/actions-builders/OPxAction.sol';
 import {ISimpleActions} from 'src/interfaces/actions-builders/ISimpleActions.sol';

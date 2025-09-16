@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.29;
+pragma solidity 0.8.30;
 
 import {IActionHub} from 'interfaces/action-hubs/IActionHub.sol';
 import {CREATE3} from 'solady/utils/CREATE3.sol';
