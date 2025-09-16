@@ -30,13 +30,18 @@ contract CanonGuardForTest is CanonGuard {
 
   // Mock functions to directly manipulate storage
   function mockTransaction(
+    address _proposer,
     address _actionsBuilder,
     bytes memory _actionsData,
     uint256 _executableAt,
     uint256 _expiresAt
   ) external {
-    queuedTransactions[_actionsBuilder] =
-      ICanonGuard.TransactionInfo({actionsData: _actionsData, executableAt: _executableAt, expiresAt: _expiresAt});
+    queuedTransactions[_actionsBuilder] = ICanonGuard.TransactionInfo({
+      proposer: _proposer,
+      actionsData: _actionsData,
+      executableAt: _executableAt,
+      expiresAt: _expiresAt
+    });
   }
 
   function mockApprovalExpiry(address _actionsBuilder, uint256 _expiry) external {
