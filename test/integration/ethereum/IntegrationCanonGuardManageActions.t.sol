@@ -341,6 +341,31 @@ contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
     assertEq(SAFE_PROXY.getThreshold(), _safeThreshold - 1);
   }
 
+  function test_ExecuteTransactionInSimulationMode() public {
+    // Queue the transaction
+    vm.prank(_safeOwners[0]);
+    canonGuard.queueTransaction(address(setEmergencyCallerAction));
+
+    // Wait for the timelock period
+    vm.warp(block.timestamp + LONG_TX_EXECUTION_DELAY);
+
+    // Adds canon guard as the new owner and sets the threshold to 1
+    vm.prank(address(SAFE_PROXY));
+    SAFE_PROXY.addOwnerWithThreshold(address(canonGuard), 1);
+
+    assertEq(SAFE_PROXY.getThreshold(), 1);
+    assertEq(SAFE_PROXY.isOwner(address(canonGuard)), true);
+
+    // sets _isSimulation to true
+    vm.store(address(canonGuard), bytes32(uint256(4)), bytes32(uint256(1)));
+
+    // Execute the transaction
+    canonGuard.executeTransaction(address(setEmergencyCallerAction));
+
+    // Assert that the emergency caller was set
+    assertEq(IEmergencyModeHook(address(canonGuard)).emergencyCaller(), newEmergencyCaller);
+  }
+
   function test_CancelEnqueuedTransaction() public {
     // Queue the transaction
     vm.prank(_safeOwners[0]);

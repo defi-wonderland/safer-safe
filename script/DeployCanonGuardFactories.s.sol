@@ -31,6 +31,7 @@ import {SetEmergencyTriggerActionFactory} from 'contracts/factories/SetEmergency
 import {SimpleActionsFactory} from 'contracts/factories/SimpleActionsFactory.sol';
 import {SimpleTransfersFactory} from 'contracts/factories/SimpleTransfersFactory.sol';
 import {UnsetEmergencyModeActionFactory} from 'contracts/factories/UnsetEmergencyModeActionFactory.sol';
+import {ICanonGuard} from 'interfaces/ICanonGuard.sol';
 import {IAllowanceClaimorFactory} from 'interfaces/factories/IAllowanceClaimorFactory.sol';
 import {IApproveActionFactory} from 'interfaces/factories/IApproveActionFactory.sol';
 import {ICanonGuardFactory} from 'interfaces/factories/ICanonGuardFactory.sol';
@@ -46,7 +47,15 @@ import {ISimpleActionsFactory} from 'interfaces/factories/ISimpleActionsFactory.
 import {ISimpleTransfersFactory} from 'interfaces/factories/ISimpleTransfersFactory.sol';
 import {IUnsetEmergencyModeActionFactory} from 'interfaces/factories/IUnsetEmergencyModeActionFactory.sol';
 import {Constants} from 'script/Constants.sol';
+import {Approver} from 'src/contracts/Approver.sol';
+import {CanonGuard} from 'src/contracts/CanonGuard.sol';
 
+/**
+ * @title DeployCanonGuardFactories
+ * @notice Script that deploys the Factories and Contracts
+ * @notice Contracts are manually deployed so they get verified. This would automatically verify any contract created
+ * by the factories.
+ */
 contract DeployCanonGuardFactories is Constants, Script {
   // ~~~ ERRORS ~~~
   error UnsupportedChainId();
@@ -68,24 +77,25 @@ contract DeployCanonGuardFactories is Constants, Script {
   IUnsetEmergencyModeActionFactory public unsetEmergencyModeActionFactory;
 
   // ~~~ DUMMY CONSTANTS ~~~
-  address public constant DUMMY_ADDRESS = address(0);
+  address public constant DUMMY_ADDRESS = address(1);
   uint256 public constant DUMMY_APPROVAL_DURATION = 0;
   uint256 public constant DUMMY_AMOUNT = 0;
   uint256 public constant DUMMY_LOCK_TIME = 0;
   uint256 public constant DUMMY_EPOCH_LENGTH = 1;
+  uint256 public constant DUMMY_DELAY = 2 days;
 
   function deployCanonGuardFactories() public {
     vm.startBroadcast();
 
     _deployAllChainsFactories();
-    _deployAllChainsActions();
+    _deployAllChainsContracts();
 
     if (block.chainid == ETHEREUM_MAINNET_CHAIN_ID) {
       _deployEthereumFactories();
-      _deployEthereumActions();
+      _deployEthereumContracts();
     } else if (block.chainid == OPTIMISM_MAINNET_CHAIN_ID) {
       _deployOptimismFactories();
-      _deployOptimismActions();
+      _deployOptimismContracts();
     }
 
     vm.stopBroadcast();
@@ -116,7 +126,7 @@ contract DeployCanonGuardFactories is Constants, Script {
     opxActionFactory = new OPxActionFactory();
   }
 
-  function _deployAllChainsActions() internal {
+  function _deployAllChainsContracts() internal {
     new AllowanceClaimor(DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS);
     new ApproveAction(DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_APPROVAL_DURATION);
     new CappedTokenTransfers(DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_AMOUNT, DUMMY_ADDRESS, DUMMY_ADDRESS);
@@ -130,9 +140,21 @@ contract DeployCanonGuardFactories is Constants, Script {
     new CappedTokenTransfersHub(
       DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS, new address[](0), new uint256[](0), DUMMY_EPOCH_LENGTH
     );
+    ICanonGuard _canonGuard = new CanonGuard(
+      DUMMY_ADDRESS,
+      DUMMY_ADDRESS,
+      DUMMY_ADDRESS,
+      DUMMY_DELAY,
+      DUMMY_DELAY * 2,
+      DUMMY_DELAY,
+      DUMMY_DELAY,
+      DUMMY_ADDRESS,
+      DUMMY_ADDRESS
+    );
+    new Approver(address(_canonGuard));
   }
 
-  function _deployEthereumActions() internal {
+  function _deployEthereumContracts() internal {
     new EverclearTokenConversion(DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS);
     new EverclearTokenStake(
       DUMMY_ADDRESS,
@@ -147,7 +169,7 @@ contract DeployCanonGuardFactories is Constants, Script {
     );
   }
 
-  function _deployOptimismActions() internal {
+  function _deployOptimismContracts() internal {
     new OPxAction(DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS);
   }
 }
