@@ -12,7 +12,11 @@ import {IxERC20Lockbox} from 'interfaces/external/IxERC20Lockbox.sol';
 
 /**
  * @title EverclearTokenStake
- * @notice Contract that increases the stake of CLEAR
+ * @notice Builds actions to increase CLEAR stake using vested NEXT.
+ * @dev Sequence:
+ *  1) Claim and release NEXT from vesting.
+ *  2) Approve and deposit NEXT into the CLEAR lockbox.
+ *  3) Approve CLEAR and increase the lock position for SAFE via the bridge.
  */
 contract EverclearTokenStake is IEverclearTokenStake, ActionsBuilder {
   // ~~~ STORAGE ~~~
@@ -44,16 +48,16 @@ contract EverclearTokenStake is IEverclearTokenStake, ActionsBuilder {
   // ~~~ CONSTRUCTOR ~~~
 
   /**
-   * @notice Constructor that sets up the variables
+   * @notice Sets the required contracts and lock time for the staking flow.
    * @param _parent The parent that deployed the actions builder
-   * @param _vestingEscrow The vesting escrow contract address
-   * @param _vestingWallet The vesting wallet contract address
-   * @param _spokeBridge The spoke bridge contract address
-   * @param _clearLockbox The clear lockbox contract address
+   * @param _vestingEscrow Vesting escrow used by the vesting wallet.
+   * @param _vestingWallet Vesting wallet that holds NEXT.
+   * @param _spokeBridge Bridge used to increase the lock position.
+   * @param _clearLockbox Lockbox that mints CLEAR from deposited NEXT.
    * @param _next The NEXT contract address
    * @param _clear The CLEAR contract address
    * @param _safe The SAFE contract address
-   * @param _lockTime The lock time
+   * @param _lockTime Lock extension duration in seconds.
    */
   constructor(
     address _parent,

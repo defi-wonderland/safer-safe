@@ -11,8 +11,8 @@ abstract contract ActionsBuilder is IActionsBuilder {
   address public immutable PARENT;
 
   /**
-   * @notice Constructor that sets up the parent
-   * @param _parent The parent address
+   * @notice Constructor that sets up the parent.
+   * @param _parent The parent address. Parent could be a factory or an action hub.
    */
   constructor(address _parent) {
     PARENT = _parent;
