@@ -33,7 +33,7 @@ import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
   // ~~~ STORAGE ~~~
   /// @inheritdoc ICanonGuard
-  uint256 public constant MIN_EXPIRY_TIME = 1 days;
+  uint256 public constant MIN_EXPIRY_TIME = 1 hours;
 
   /// @inheritdoc ICanonGuard
   address public immutable PARENT;
