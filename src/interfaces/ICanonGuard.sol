@@ -192,8 +192,8 @@ interface ICanonGuard is ISafeManageable {
 
   /**
    * @notice Cancels an enqueued transaction
-   * @notice Can only be called by the proposer of the transaction
-   * @notice The transaction must not have any approved hash signers
+   * @dev Can only be called by the proposer of the transaction
+   * @dev The transaction must not have any approved hash signers
    * @param _actionsBuilder The actions builder contract address
    */
   function cancelEnqueuedTransaction(address _actionsBuilder) external;
