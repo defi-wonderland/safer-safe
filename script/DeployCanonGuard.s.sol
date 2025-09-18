@@ -173,7 +173,7 @@ contract DeployCanonGuard is Constants, Script {
       DUMMY_ADDRESS
     );
     new Approver(address(_canonGuard));
-    new SetGuardAction();
+    setGuardAction = new SetGuardAction();
   }
 
   function _deployEthereumContracts() internal {

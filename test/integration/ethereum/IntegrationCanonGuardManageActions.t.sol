@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
+import {SetGuardAction} from 'contracts/actions-builders/SetGuardAction.sol';
 import {IEmergencyModeHook} from 'interfaces/IEmergencyModeHook.sol';
 import {IApproveAction} from 'interfaces/actions-builders/IApproveAction.sol';
 import {IChangeSafeGuardAction} from 'interfaces/actions-builders/IChangeSafeGuardAction.sol';
@@ -425,5 +426,35 @@ contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
     // The first tx is no longer valid
     vm.expectRevert('GS020');
     canonGuard.executeTransaction(address(addOwnerSimpleActions));
+  }
+
+  function test_SetGuardAction() public {
+    // Remove the current guard
+    vm.prank(address(SAFE_PROXY));
+    SAFE_PROXY.setGuard(address(0));
+
+    // Queue the transaction
+    vm.prank(_safeOwners[0]);
+    canonGuard.queueTransaction(address(setGuardAction));
+
+    // Wait for the timelock period
+    vm.warp(block.timestamp + LONG_TX_EXECUTION_DELAY);
+
+    // Get the Safe transaction hash
+    bytes32 _safeTxHash = canonGuard.getSafeTransactionHash(address(setGuardAction));
+
+    // Approve the Safe transaction hash
+    for (uint256 _i; _i < _safeThreshold; ++_i) {
+      vm.startPrank(_safeOwners[_i]);
+      SAFE_PROXY.approveHash(_safeTxHash);
+    }
+    vm.stopPrank();
+
+    // Execute the transaction
+    canonGuard.executeTransaction(address(setGuardAction));
+
+    // Assert that the guard has been set to the canon guard
+    bytes32 _guardSlot = vm.load(address(SAFE_PROXY), keccak256('guard_manager.guard.address'));
+    assertEq(address(uint160(uint256(_guardSlot))), address(canonGuard));
   }
 }
