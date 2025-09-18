@@ -197,12 +197,13 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
 
   /// @inheritdoc ICanonGuard
   function executeNoActionTransaction() external {
+    _onBeforeExecution();
+
     bytes32 _safeTxHash = _getSafeTransactionHash(_buildMultiSendData(new IActionsBuilder.Action[](0)), SAFE.nonce());
     address[] memory _signers = _getApprovedHashSigners(_safeTxHash);
     _sortSigners(_signers);
     bytes memory _signatures = _buildApprovedHashSignatures(_signers);
 
-    _onBeforeExecution();
     _execSafeTransaction(_buildMultiSendData(new IActionsBuilder.Action[](0)), _signatures);
 
     emit NoActionTransactionExecuted(_safeTxHash, _signers);

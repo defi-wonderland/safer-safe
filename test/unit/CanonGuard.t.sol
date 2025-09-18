@@ -615,13 +615,12 @@ contract UnitCanonGuard is Test {
   function test_ExecuteTransactionWhenInEmergencyModeAndTheCallerIsNotTheEmergencyCaller(
     address _caller,
     address _actionsBuilder
-  ) external {
-    vm.prank(EMERGENCY_TRIGGER);
-    canonGuard.setEmergencyMode();
+  ) external whenEmergencyModeIsActive {
+    vm.assume(_caller != EMERGENCY_CALLER);
 
     // it reverts with Unauthorized
-    vm.expectRevert(abi.encodeWithSelector(IEmergencyModeHook.Unauthorized.selector, _caller, EMERGENCY_CALLER));
     vm.prank(_caller);
+    vm.expectRevert(abi.encodeWithSelector(IEmergencyModeHook.Unauthorized.selector, _caller, EMERGENCY_CALLER));
     canonGuard.executeTransaction(_actionsBuilder);
   }
 
@@ -812,13 +811,12 @@ contract UnitCanonGuard is Test {
   function test_ExecuteTransactionsWhenInEmergencyModeAndTheCallerIsNotTheEmergencyCaller(
     address _caller,
     address[] memory _actionsBuilders
-  ) external {
-    vm.prank(EMERGENCY_TRIGGER);
-    canonGuard.setEmergencyMode();
+  ) external whenEmergencyModeIsActive {
+    vm.assume(_caller != EMERGENCY_CALLER);
 
     // it reverts with Unauthorized
-    vm.expectRevert(abi.encodeWithSelector(IEmergencyModeHook.Unauthorized.selector, _caller, EMERGENCY_CALLER));
     vm.prank(_caller);
+    vm.expectRevert(abi.encodeWithSelector(IEmergencyModeHook.Unauthorized.selector, _caller, EMERGENCY_CALLER));
     canonGuard.executeTransactions(_actionsBuilders);
   }
 
@@ -1174,18 +1172,11 @@ contract UnitCanonGuard is Test {
     external
     whenEmergencyModeIsActive
   {
-    _assumeFuzzable(_caller);
-    vm.assume(_caller != canonGuard.emergencyTrigger());
-
-    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.nonce.selector), abi.encode(1));
-    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.getTransactionHash.selector), abi.encode(bytes32(0)));
-    _mockAndExpect(SAFE, abi.encodeWithSelector(IOwnerManager.getOwners.selector), abi.encode(new address[](0)));
+    vm.assume(_caller != EMERGENCY_CALLER);
 
     // it reverts with Unauthorized
-    vm.expectRevert(
-      abi.encodeWithSelector(IEmergencyModeHook.Unauthorized.selector, _caller, canonGuard.emergencyCaller())
-    );
     vm.prank(_caller);
+    vm.expectRevert(abi.encodeWithSelector(IEmergencyModeHook.Unauthorized.selector, _caller, EMERGENCY_CALLER));
     canonGuard.executeNoActionTransaction();
   }
 
