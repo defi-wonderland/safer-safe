@@ -2,8 +2,11 @@
 pragma solidity 0.8.30;
 
 import {CanonGuard, ICanonGuard} from 'contracts/CanonGuard.sol';
+import {EnumerableSetLib} from 'solady/utils/EnumerableSetLib.sol';
 
 contract CanonGuardForTest is CanonGuard {
+  using EnumerableSetLib for EnumerableSetLib.AddressSet;
+
   constructor(
     address _parent,
     address _safe,
@@ -36,7 +39,8 @@ contract CanonGuardForTest is CanonGuard {
     uint256 _executableAt,
     uint256 _expiresAt
   ) external {
-    queuedTransactions[_actionsBuilder] = ICanonGuard.TransactionInfo({
+    __queuedActionBuilders.add(_actionsBuilder);
+    transactionsInfo[_actionsBuilder] = ICanonGuard.TransactionInfo({
       proposer: _proposer,
       actionsData: _actionsData,
       executableAt: _executableAt,

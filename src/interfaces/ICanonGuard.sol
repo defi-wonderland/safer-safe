@@ -250,14 +250,14 @@ interface ICanonGuard is ISafeManageable {
   function approvalExpiries(address _actionsBuilder) external view returns (uint256 _approvalExpiresAt);
 
   /**
-   * @notice Gets the transaction info for an actions builder
+   * @notice Gets the transaction info for queued actions builders
    * @return _proposer The address of the proposer of the transaction
    * @param _actionsBuilder The actions builder contract address
    * @return _actionsData The encoded actions data
    * @return _executableAt The timestamp from which the transaction can be executed
    * @return _expiresAt The timestamp from which the transaction expires
    */
-  function queuedTransactions(address _actionsBuilder)
+  function transactionsInfo(address _actionsBuilder)
     external
     view
     returns (address _proposer, bytes memory _actionsData, uint256 _executableAt, uint256 _expiresAt);
@@ -305,4 +305,10 @@ interface ICanonGuard is ISafeManageable {
    * @return _safeNonce The Safe nonce
    */
   function getSafeNonce() external view returns (uint256 _safeNonce);
+
+  /**
+   * @notice Gets the list of action builders in the queue
+   * @return _queuedActionBuilders The array of action builders in the queue
+   */
+  function getQueuedActionBuilders() external view returns (address[] memory _queuedActionBuilders);
 }

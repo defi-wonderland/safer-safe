@@ -33,12 +33,14 @@ UnitCanonGuard::queueTransaction
 ├── when caller is safe owner
 │   ├── when queueing pre approved action
 │   │   ├── it sets transaction info
+│   │   ├── it adds the action builder to the queue
 │   │   ├── it sets the proposer
 │   │   ├── it sets executable time at block timestamp plus short delay
 │   │   ├── it sets expiry time at executable time plus expiry delay
 │   │   └── it emits TransactionQueued event
 │   └── when queueing not approved action
 │       ├── it sets transaction info
+│       ├── it adds the action builder to the queue
 │       ├── it sets the proposer
 │       ├── it sets executable time at block timestamp plus long delay
 │       ├── it sets expiry time at executable time plus expiry delay
@@ -46,7 +48,8 @@ UnitCanonGuard::queueTransaction
 ├── when address does not respond to IS_BUILDER
 │   └── it reverts with NotAnActionsBuilder
 ├── when transaction is already queued but expired
-│   └── it should queue the transaction
+│   ├── it sets transaction info
+│   └── it does not re add the action builder to the queue
 ├── when caller is not safe owner
 │   └── it reverts with NotSafeOwner
 └── when transaction is already queued and not expired
@@ -59,18 +62,21 @@ UnitCanonGuard::queueHubTransaction
 ├── when caller is safe owner
 │   ├── when queueing pre approved action
 │   │   ├── it sets transaction info
+│   │   ├── it adds the action builder to the queue
 │   │   ├── it sets the proposer
 │   │   ├── it sets executable at to block timestamp plus short delay
 │   │   ├── it sets expiry time
 │   │   └── it emits TransactionQueued event
 │   └── when queueing not approved action
 │       ├── it sets transaction info
+│       ├── it adds the action builder to the queue
 │       ├── it sets the proposer
 │       ├── it sets executable at to block timestamp plus long delay
 │       ├── it sets expiry time
 │       └── it emits TransactionQueued event
 ├── when transaction is already queued but expired
-│   └── it should queue the transaction
+│   ├── it sets transaction info
+│   └── it does not re add the action builder to the queue
 ├── when caller is not safe owner
 │   └── it reverts with NotSafeOwner
 └── when transaction is already queued and not expired
@@ -104,6 +110,7 @@ UnitCanonGuard::cancelEnqueuedTransaction
 │   └── it reverts with TransactionWithSignaturesCannotBeCancelled
 └── when transaction can be cancelled
     ├── it deletes transaction from queue
+    ├── it deletes transaction from mapping
     └── it emits EnqueuedTransactionCancelled event
 
 UnitCanonGuard::executeNoActionTransaction
@@ -139,3 +146,9 @@ UnitCanonGuard::getApprovedHashSigners
 
 UnitCanonGuard::getSafeNonce
 └── it returns correct nonce
+
+UnitCanonGuard::getQueuedActionBuilders
+├── when there are action builders in the queue
+│   └── it returns the action builders in the queue
+└── when there are no action builders in the queue
+    └── it returns an empty array

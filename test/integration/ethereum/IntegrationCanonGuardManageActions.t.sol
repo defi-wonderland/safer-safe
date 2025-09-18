@@ -2,6 +2,7 @@
 pragma solidity 0.8.30;
 
 import {IEmergencyModeHook} from 'interfaces/IEmergencyModeHook.sol';
+import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 import {IApproveAction} from 'interfaces/actions-builders/IApproveAction.sol';
 import {IChangeSafeGuardAction} from 'interfaces/actions-builders/IChangeSafeGuardAction.sol';
 import {IDisapproveAction} from 'interfaces/actions-builders/IDisapproveAction.sol';
@@ -371,7 +372,7 @@ contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
     vm.prank(_safeOwners[0]);
     canonGuard.queueTransaction(address(addOwnerSimpleActions));
     (address _proposer, bytes memory _actionsData, uint256 _executableAt, uint256 _expiresAt) =
-      canonGuard.queuedTransactions(address(addOwnerSimpleActions));
+      canonGuard.transactionsInfo(address(addOwnerSimpleActions));
     assertEq(_proposer, _safeOwners[0]);
     assertGt(_actionsData.length, 0);
     assertEq(_executableAt, block.timestamp + LONG_TX_EXECUTION_DELAY);
@@ -381,7 +382,7 @@ contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
     vm.prank(_safeOwners[0]);
     canonGuard.cancelEnqueuedTransaction(address(addOwnerSimpleActions));
 
-    (_proposer, _actionsData, _executableAt, _expiresAt) = canonGuard.queuedTransactions(address(addOwnerSimpleActions));
+    (_proposer, _actionsData, _executableAt, _expiresAt) = canonGuard.transactionsInfo(address(addOwnerSimpleActions));
 
     assertEq(_proposer, address(0));
     assertEq(_actionsData, bytes(''));
@@ -425,5 +426,48 @@ contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
     // The first tx is no longer valid
     vm.expectRevert('GS020');
     canonGuard.executeTransaction(address(addOwnerSimpleActions));
+  }
+
+  function test_GetQueuedActionBuildersInfo() public {
+    // Queue the transaction
+    vm.prank(_safeOwners[0]);
+    canonGuard.queueTransaction(address(setEmergencyCallerAction));
+
+    uint256 _originalBlockTimestamp = block.timestamp;
+
+    approveAction = IApproveAction(
+      approveActionFactory.createApproveAction(
+        address(canonGuard), address(setEmergencyCallerAction), APPROVAL_DURATION
+      )
+    );
+
+    vm.prank(_safeOwners[0]);
+    canonGuard.queueTransaction(address(approveAction));
+    vm.warp(block.timestamp + LONG_TX_EXECUTION_DELAY);
+    bytes32 _safeTxHash = canonGuard.getSafeTransactionHash(address(approveAction));
+    for (uint256 _i; _i < _safeThreshold; ++_i) {
+      vm.startPrank(_safeOwners[_i]);
+      SAFE_PROXY.approveHash(_safeTxHash);
+    }
+    vm.stopPrank();
+    canonGuard.executeTransaction(address(approveAction));
+
+    // Get the queued action builders info
+    address[] memory _queuedActionBuilders = canonGuard.getQueuedActionBuilders();
+    assertEq(_queuedActionBuilders.length, 1);
+    assertEq(_queuedActionBuilders[0], address(setEmergencyCallerAction));
+
+    (address _proposer, bytes memory _actionsData, uint256 _executableAt, uint256 _expiresAt) =
+      canonGuard.transactionsInfo(address(setEmergencyCallerAction));
+    IActionsBuilder.Action[] memory _decodedActionsData = abi.decode(_actionsData, (IActionsBuilder.Action[]));
+    assertEq(_proposer, _safeOwners[0]);
+    assertEq(_decodedActionsData[0].target, address(canonGuard));
+    assertEq(_decodedActionsData[0].data, abi.encodeCall(IEmergencyModeHook.setEmergencyCaller, newEmergencyCaller));
+    assertEq(_decodedActionsData[0].value, 0);
+    assertEq(_executableAt, _originalBlockTimestamp + LONG_TX_EXECUTION_DELAY);
+    assertEq(_expiresAt, _executableAt + TX_EXPIRY_DELAY);
+
+    uint256 _approvalExpiresAt = canonGuard.approvalExpiries(address(setEmergencyCallerAction));
+    assertEq(_approvalExpiresAt, block.timestamp + APPROVAL_DURATION);
   }
 }
