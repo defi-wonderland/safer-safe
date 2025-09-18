@@ -146,7 +146,7 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
   }
 
   /// @inheritdoc ICanonGuard
-  function executeTransaction(address _actionsBuilder) public payable {
+  function executeTransaction(address _actionsBuilder) external payable {
     _onBeforeExecution();
 
     TransactionInfo memory _txInfo = transactionsInfo[_actionsBuilder];
