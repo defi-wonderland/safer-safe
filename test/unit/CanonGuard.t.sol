@@ -725,13 +725,16 @@ contract UnitCanonGuard is Test {
     vm.prank(_caller);
     canonGuard.executeTransaction(_actionsBuilder);
 
-    // it deletes transaction from queue
+    // it deletes transaction from mapping
     (address _proposer, bytes memory __actionsData, uint256 _executableAt, uint256 _expiresAt) =
       canonGuard.transactionsInfo(_actionsBuilder);
     assertEq(__actionsData, bytes(''));
     assertEq(_executableAt, 0);
     assertEq(_proposer, address(0));
     assertEq(_expiresAt, 0);
+
+    // it deletes transaction from queue
+    assertEq(canonGuard.getQueuedActionBuilders().length, 0);
   }
 
   function test_ExecuteTransactionWhenNotInSimulationMode(
@@ -781,13 +784,16 @@ contract UnitCanonGuard is Test {
     vm.prank(_caller);
     canonGuard.executeTransaction(_actionsBuilder);
 
-    // it deletes transaction from queue
+    // it deletes transaction from mapping
     (address _proposer, bytes memory __actionsData, uint256 _executableAt, uint256 _expiresAt) =
       canonGuard.transactionsInfo(_actionsBuilder);
     assertEq(__actionsData, bytes(''));
     assertEq(_executableAt, 0);
     assertEq(_proposer, address(0));
     assertEq(_expiresAt, 0);
+
+    // it deletes transaction from queue
+    assertEq(canonGuard.getQueuedActionBuilders().length, 0);
   }
 
   function test_CancelEnqueuedTransactionWhenTransactionIsNotQueued(address _actionsBuilder) external {
@@ -951,6 +957,7 @@ contract UnitCanonGuard is Test {
     uint256 _safeNonce,
     bytes32 _expectedHash
   ) external {
+    _assumeFuzzable(_actionsBuilder);
     // Ensure expiresAt is not 0 to avoid NoTransactionQueued error
     _txInfo.expiresAt = bound(_txInfo.expiresAt, 1, type(uint256).max);
 
@@ -973,6 +980,7 @@ contract UnitCanonGuard is Test {
     uint256 _safeNonce,
     bytes32 _expectedHash
   ) external {
+    _assumeFuzzable(_actionsBuilder);
     // Ensure expiresAt is not 0 to avoid NoTransactionQueued error
     _txInfo.expiresAt = bound(_txInfo.expiresAt, 1, type(uint256).max);
 
