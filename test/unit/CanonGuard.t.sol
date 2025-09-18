@@ -738,13 +738,16 @@ contract UnitCanonGuard is Test {
     vm.prank(_caller);
     canonGuard.executeTransaction(_actionsBuilder);
 
-    // it deletes transaction from queue
+    // it deletes transaction from mapping
     (address _proposer, bytes memory __actionsData, uint256 _executableAt, uint256 _expiresAt) =
       canonGuard.transactionsInfo(_actionsBuilder);
     assertEq(__actionsData, bytes(''));
     assertEq(_executableAt, 0);
     assertEq(_proposer, address(0));
     assertEq(_expiresAt, 0);
+
+    // it deletes transaction from queue
+    assertEq(canonGuard.getQueuedActionBuilders().length, 0);
   }
 
   function test_ExecuteTransactionWhenNotInSimulationMode(
@@ -794,13 +797,16 @@ contract UnitCanonGuard is Test {
     vm.prank(_caller);
     canonGuard.executeTransaction(_actionsBuilder);
 
-    // it deletes transaction from queue
+    // it deletes transaction from mapping
     (address _proposer, bytes memory __actionsData, uint256 _executableAt, uint256 _expiresAt) =
       canonGuard.transactionsInfo(_actionsBuilder);
     assertEq(__actionsData, bytes(''));
     assertEq(_executableAt, 0);
     assertEq(_proposer, address(0));
     assertEq(_expiresAt, 0);
+
+    // it deletes transaction from queue
+    assertEq(canonGuard.getQueuedActionBuilders().length, 0);
   }
 
   function test_ExecuteTransactionsWhenInEmergencyModeAndTheCallerIsNotTheEmergencyCaller(

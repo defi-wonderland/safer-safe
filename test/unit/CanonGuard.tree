@@ -95,10 +95,12 @@ UnitCanonGuard::executeTransaction
 └── when approved transaction is valid
     ├── when in simulation mode
     │   ├── it executes transaction with CanonGuard as signer
+    │   ├── it deletes transaction from mapping
     │   ├── it deletes transaction from queue
     │   └── it emits TransactionExecuted event
     └── when not in simulation mode
         ├── it executes transaction
+        ├── it deletes transaction from mapping
         ├── it deletes transaction from queue
         └── it emits TransactionExecuted event
 
