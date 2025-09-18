@@ -66,7 +66,7 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
   /// to bypass the signature threshold check while executing transactions.
   bool internal _isSimulation;
 
-  /// @notice The action builders in the queue
+  /// @notice The action builders queue
   EnumerableSetLib.AddressSet internal __queuedActionBuilders;
 
   // ~~~ CONSTRUCTOR ~~~
@@ -238,6 +238,11 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
   }
 
   /// @inheritdoc ICanonGuard
+  function getQueuedActionBuilders() external view returns (address[] memory _queuedActionBuilders) {
+    _queuedActionBuilders = __queuedActionBuilders.values();
+  }
+
+  /// @inheritdoc ICanonGuard
   function getSafeTransactionHash(
     address _actionsBuilder,
     uint256 _safeNonce
@@ -254,11 +259,6 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
   /// @inheritdoc ICanonGuard
   function getSafeEmptyTransactionHash(uint256 _safeNonce) public view returns (bytes32 _safeTxHash) {
     _safeTxHash = _getSafeTransactionHash(_buildMultiSendData(new IActionsBuilder.Action[](0)), _safeNonce);
-  }
-
-  /// @inheritdoc ICanonGuard
-  function getQueuedActionBuilders() external view returns (address[] memory _queuedActionBuilders) {
-    _queuedActionBuilders = __queuedActionBuilders.values();
   }
 
   // ~~~ INTERNAL METHODS ~~~

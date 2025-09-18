@@ -250,7 +250,7 @@ interface ICanonGuard is ISafeManageable {
   function approvalExpiries(address _actionsBuilder) external view returns (uint256 _approvalExpiresAt);
 
   /**
-   * @notice Gets the transaction info for queued actions builders
+   * @notice Gets the transaction info for an queued actions builder
    * @return _proposer The address of the proposer of the transaction
    * @param _actionsBuilder The actions builder contract address
    * @return _actionsData The encoded actions data
@@ -308,6 +308,7 @@ interface ICanonGuard is ISafeManageable {
 
   /**
    * @notice Gets the list of action builders in the queue
+   * @dev The actions builders are not sorted
    * @return _queuedActionBuilders The array of action builders in the queue
    */
   function getQueuedActionBuilders() external view returns (address[] memory _queuedActionBuilders);
