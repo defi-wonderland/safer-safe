@@ -470,4 +470,63 @@ contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
     uint256 _approvalExpiresAt = canonGuard.approvalExpiries(address(setEmergencyCallerAction));
     assertEq(_approvalExpiresAt, block.timestamp + APPROVAL_DURATION);
   }
+
+  function test_ExecuteTransactions() public {
+    deal(address(WETH), address(SAFE_PROXY), 1 ether);
+    deal(address(USDC), address(SAFE_PROXY), 1 ether);
+    address _recipient = makeAddr('recipient');
+    address _wethTransferSimpleAction = simpleActionsFactory.createSimpleAction(
+      ISimpleActions.SimpleAction({
+        target: address(WETH),
+        signature: 'transfer(address,uint256)',
+        data: abi.encode(_recipient, 1 ether),
+        value: 0
+      })
+    );
+
+    address _usdcTransferSimpleAction = simpleActionsFactory.createSimpleAction(
+      ISimpleActions.SimpleAction({
+        target: address(USDC),
+        signature: 'transfer(address,uint256)',
+        data: abi.encode(_recipient, 1 ether),
+        value: 0
+      })
+    );
+
+    // Queue the transactions
+    vm.prank(_safeOwners[0]);
+    canonGuard.queueTransaction(address(_wethTransferSimpleAction));
+    vm.prank(_safeOwners[0]);
+    canonGuard.queueTransaction(address(_usdcTransferSimpleAction));
+
+    uint256 _safeNonce = canonGuard.getSafeNonce();
+
+    vm.warp(block.timestamp + LONG_TX_EXECUTION_DELAY);
+    bytes32 _safeTxHashA = canonGuard.getSafeTransactionHash(address(_wethTransferSimpleAction), _safeNonce);
+    bytes32 _safeTxHashB = canonGuard.getSafeTransactionHash(address(_usdcTransferSimpleAction), _safeNonce + 1);
+    for (uint256 _i; _i < _safeThreshold; ++_i) {
+      vm.startPrank(_safeOwners[_i]);
+      SAFE_PROXY.approveHash(_safeTxHashA);
+      SAFE_PROXY.approveHash(_safeTxHashB);
+      vm.stopPrank();
+    }
+
+    // Execute the transactions in the wrong order
+    address[] memory _actionsBuilders = new address[](2);
+    _actionsBuilders[0] = address(_usdcTransferSimpleAction);
+    _actionsBuilders[1] = address(_wethTransferSimpleAction);
+    vm.expectRevert('GS020');
+    canonGuard.executeTransactions(_actionsBuilders);
+
+    // Execute the transactions in the correct order
+    _actionsBuilders[0] = address(_wethTransferSimpleAction);
+    _actionsBuilders[1] = address(_usdcTransferSimpleAction);
+    canonGuard.executeTransactions(_actionsBuilders);
+
+    // Assert that the transactions were executed
+    assertEq(WETH.balanceOf(address(SAFE_PROXY)), 0);
+    assertEq(USDC.balanceOf(address(SAFE_PROXY)), 0);
+    assertEq(WETH.balanceOf(_recipient), 1 ether);
+    assertEq(USDC.balanceOf(_recipient), 1 ether);
+  }
 }

@@ -184,6 +184,15 @@ interface ICanonGuard is ISafeManageable {
   function executeTransaction(address _actionsBuilder) external payable;
 
   /**
+   * @notice Executes multiple queued transactions using the approved hash signers
+   * @dev Can be called by anyone
+   * @dev The transactions must have passed their execution delay period, but not their expiry delay period
+   * @dev Each transaction must have been approved using consecutive SAFE nonces.
+   * @param _actionsBuilders The array of actions builder contract addresses of the transactions to execute
+   */
+  function executeTransactions(address[] memory _actionsBuilders) external payable;
+
+  /**
    * @notice Executes an empty transaction, in order to use the safe nonce.
    * @notice This will nullify the signatures for that specific safe nonce.
    * @dev Can be called by anyone if not in emergency mode

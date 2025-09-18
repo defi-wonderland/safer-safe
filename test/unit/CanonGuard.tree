@@ -84,6 +84,8 @@ UnitCanonGuard::queueHubTransaction
 
 
 UnitCanonGuard::executeTransaction
+├── when in emergency mode and the caller is not the emergency caller
+│   └── it reverts with Unauthorized
 ├── when transaction is expired
 │   └── it reverts with TransactionExpired
 ├── when approved transaction is not yet executable
@@ -99,6 +101,28 @@ UnitCanonGuard::executeTransaction
         ├── it executes transaction
         ├── it deletes transaction from queue
         └── it emits TransactionExecuted event
+
+UnitCanonGuard::executeTransactions
+├── when in emergency mode and the caller is not the emergency caller
+│   └── it reverts with Unauthorized
+├── when at least one transaction is expired
+│   └── it reverts with TransactionExpired
+├── when at least one approved transaction is not yet executable
+│   └── it reverts with TransactionNotYetExecutable
+├── when at least one transaction is not queued
+│   └── it reverts with TransactionNotQueued
+└── when all transactions are valid
+    ├── when in simulation mode
+    │   ├── it executes transactions with CanonGuard as signer
+    │   ├── it delete transactions from mapping
+    │   ├── it deletes transactions from queue
+    │   └── it emits TransactionExecuted event
+    └── when not in simulation mode
+        ├── it executes transactions
+        ├── it deletes transactions from mapping
+        ├── it deletes transactions from queue
+        └── it emits TransactionExecuted event
+
 
 
 UnitCanonGuard::cancelEnqueuedTransaction

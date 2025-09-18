@@ -146,7 +146,9 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
   }
 
   /// @inheritdoc ICanonGuard
-  function executeTransaction(address _actionsBuilder) external payable {
+  function executeTransaction(address _actionsBuilder) public payable {
+    _onBeforeExecution();
+
     TransactionInfo memory _txInfo = transactionsInfo[_actionsBuilder];
     if (_txInfo.expiresAt == 0) revert NoTransactionQueued();
 
@@ -163,8 +165,34 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
       _signers[0] = address(this);
     }
 
-    _onBeforeExecution();
     _executeTransaction(_actionsBuilder, _safeTxHash, _signers, _multiSendData);
+  }
+
+  /// @inheritdoc ICanonGuard
+  function executeTransactions(address[] memory _actionsBuilders) external payable {
+    _onBeforeExecution();
+
+    uint256 _safeNonce = SAFE.nonce();
+
+    for (uint256 _i; _i < _actionsBuilders.length; ++_i) {
+      TransactionInfo memory _txInfo = transactionsInfo[_actionsBuilders[_i]];
+      if (_txInfo.expiresAt == 0) revert NoTransactionQueued();
+
+      IActionsBuilder.Action[] memory _actions = abi.decode(_txInfo.actionsData, (IActionsBuilder.Action[]));
+
+      bytes memory _multiSendData = _buildMultiSendData(_actions);
+      bytes32 _safeTxHash = _getSafeTransactionHash(_multiSendData, _safeNonce + _i);
+      address[] memory _signers;
+      if (!_isSimulation) {
+        _signers = _getApprovedHashSigners(_safeTxHash);
+      } else {
+        // To run in simulation mode first the CanonGuard needs to be added as an owner and the threshold set to 1
+        _signers = new address[](1);
+        _signers[0] = address(this);
+      }
+
+      _executeTransaction(_actionsBuilders[_i], _safeTxHash, _signers, _multiSendData);
+    }
   }
 
   /// @inheritdoc ICanonGuard
