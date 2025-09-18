@@ -118,15 +118,15 @@ UnitCanonGuard::executeNoActionTransaction
     └── it emits NoActionTransactionExecuted event
 
 UnitCanonGuard::getSafeTransactionHash
-├── when transaction exists
-│   ├── it returns correct hash
-│   └── when getting hash with nonce
-│       └── it returns correct hash
-└── when transaction does not exist
-    └── it reverts with NoTransactionQueued
-
-UnitCanonGuard::getSafeEmptyTransactionHash
-└── it returns correct hash
+├── when the address is the zero address
+│   └── it returns correct hash
+└── when the address is not the zero address
+    ├── when transaction exists
+    │   ├── it returns correct hash
+    │   └── when getting hash with nonce
+    │       └── it returns correct hash
+    └── when transaction does not exist
+        └── it reverts with NoTransactionQueued
 
 UnitCanonGuard::getApprovedHashSigners
 ├── when the address is the zero address

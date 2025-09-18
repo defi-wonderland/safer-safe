@@ -283,13 +283,6 @@ interface ICanonGuard is ISafeManageable {
   ) external view returns (bytes32 _safeTxHash);
 
   /**
-   * @notice Gets the Safe empty transaction hash
-   * @param _safeNonce The Safe nonce to use for the hash calculation
-   * @return _safeTxHash The Safe empty transaction hash
-   */
-  function getSafeEmptyTransactionHash(uint256 _safeNonce) external view returns (bytes32 _safeTxHash);
-
-  /**
    * @notice Gets the list of signers who have approved a Safe transaction hash for an actions builder with a specific Safe nonce
    * @param _actionsBuilder The actions builder contract address. Or the zero address if you want to execute an empty transaction
    * @param _safeNonce The Safe nonce to use for the hash calculation
