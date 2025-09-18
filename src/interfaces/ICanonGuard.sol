@@ -265,14 +265,14 @@ interface ICanonGuard is ISafeManageable {
   // ~~~ GETTER METHODS ~~~
 
   /**
-   * @notice Gets the Safe transaction hash for an actions builder
+   * @notice Gets the Safe transaction hash for an actions builder. If the actions builder is the zero address, it will return the hash of an empty transaction.
    * @param _actionsBuilder The actions builder contract address
    * @return _safeTxHash The Safe transaction hash
    */
   function getSafeTransactionHash(address _actionsBuilder) external view returns (bytes32 _safeTxHash);
 
   /**
-   * @notice Gets the Safe transaction hash for an actions builder with a specific Safe nonce
+   * @notice Gets the Safe transaction hash for an actions builder with a specific Safe nonce. If the actions builder is the zero address, it will return the hash of an empty transaction.
    * @param _actionsBuilder The actions builder contract address
    * @param _safeNonce The Safe nonce to use for the hash calculation
    * @return _safeTxHash The Safe transaction hash
