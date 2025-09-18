@@ -92,13 +92,13 @@ cast wallet import $OPTIMISM_DEPLOYER_NAME --interactive
 ### Ethereum
 
 ```bash
-yarn deploy:ethereum
+yarn deploy:ethereum:canon-guard
 ```
 
 ### Optimism
 
 ```bash
-yarn deploy:optimism
+yarn deploy:optimism:canon-guard
 ```
 
 The deployments are stored in ./broadcast
