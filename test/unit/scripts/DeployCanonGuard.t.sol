@@ -31,24 +31,6 @@ contract UnitDeployCanonGuard is DeployCanonGuard, Test {
 
     // Deploy the CanonGuardFactory contract
     _auxCanonGuardFactory = ICanonGuardFactory(deployCode('CanonGuardFactory', abi.encode(MULTI_SEND_CALL_ONLY)));
-
-    // Deploy the CanonGuard contract
-    _auxCanonGuard = ICanonGuard(
-      deployCode(
-        'CanonGuard',
-        abi.encode(
-          address(canonGuardFactory),
-          SAFE_PROXY,
-          MULTI_SEND_CALL_ONLY,
-          SHORT_TX_EXECUTION_DELAY,
-          LONG_TX_EXECUTION_DELAY,
-          TX_EXPIRY_DELAY,
-          MAX_APPROVAL_DURATION,
-          EMERGENCY_TRIGGER,
-          EMERGENCY_CALLER
-        )
-      )
-    );
   }
 
   function test_WhenDeployingToEthereumMainnet() external {
@@ -85,8 +67,26 @@ contract UnitDeployCanonGuard is DeployCanonGuard, Test {
     // it should deploy the common factories
     _assertCommonFactories();
 
+    // Deploy the CanonGuard contract
+    _auxCanonGuard = ICanonGuard(
+      deployCode(
+        'CanonGuard',
+        abi.encode(
+          address(canonGuardFactory),
+          SAFE_PROXY,
+          MULTI_SEND_CALL_ONLY,
+          SHORT_TX_EXECUTION_DELAY,
+          LONG_TX_EXECUTION_DELAY,
+          TX_EXPIRY_DELAY,
+          MAX_APPROVAL_DURATION,
+          EMERGENCY_TRIGGER,
+          EMERGENCY_CALLER
+        )
+      )
+    );
+
     // it should deploy the CanonGuard contract with correct args
-    // assertEq(address(canonGuard).code, address(_auxCanonGuard).code);
+    assertEq(address(canonGuard).code, address(_auxCanonGuard).code);
     assertEq(address(canonGuard.SAFE()), address(SAFE_PROXY));
     assertEq(canonGuard.MULTI_SEND_CALL_ONLY(), address(MULTI_SEND_CALL_ONLY));
     assertEq(canonGuard.SHORT_TX_EXECUTION_DELAY(), SHORT_TX_EXECUTION_DELAY);
