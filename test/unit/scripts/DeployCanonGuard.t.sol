@@ -17,43 +17,11 @@ import {SimpleActionsFactory} from 'contracts/factories/SimpleActionsFactory.sol
 import {SimpleTransfersFactory} from 'contracts/factories/SimpleTransfersFactory.sol';
 import {UnsetEmergencyModeActionFactory} from 'contracts/factories/UnsetEmergencyModeActionFactory.sol';
 import {Test} from 'forge-std/Test.sol';
-import {IAllowanceClaimorFactory} from 'interfaces/factories/IAllowanceClaimorFactory.sol';
-import {IApproveActionFactory} from 'interfaces/factories/IApproveActionFactory.sol';
-import {ICanonGuardFactory} from 'interfaces/factories/ICanonGuardFactory.sol';
-import {ICappedTokenTransfersHubFactory} from 'interfaces/factories/ICappedTokenTransfersHubFactory.sol';
-import {IChangeSafeGuardActionFactory} from 'interfaces/factories/IChangeSafeGuardActionFactory.sol';
-import {IDisapproveActionFactory} from 'interfaces/factories/IDisapproveActionFactory.sol';
-import {IEverclearTokenConversionFactory} from 'interfaces/factories/IEverclearTokenConversionFactory.sol';
-import {IEverclearTokenStakeFactory} from 'interfaces/factories/IEverclearTokenStakeFactory.sol';
-import {IOPxActionFactory} from 'interfaces/factories/IOPxActionFactory.sol';
-import {ISetEmergencyCallerActionFactory} from 'interfaces/factories/ISetEmergencyCallerActionFactory.sol';
-import {ISetEmergencyTriggerActionFactory} from 'interfaces/factories/ISetEmergencyTriggerActionFactory.sol';
-import {ISimpleActionsFactory} from 'interfaces/factories/ISimpleActionsFactory.sol';
-import {ISimpleTransfersFactory} from 'interfaces/factories/ISimpleTransfersFactory.sol';
-import {IUnsetEmergencyModeActionFactory} from 'interfaces/factories/IUnsetEmergencyModeActionFactory.sol';
-// import {Constants} from 'script/Constants.sol';
-
 import {ICanonGuard} from 'interfaces/ICanonGuard.sol';
+import {ICanonGuardFactory} from 'interfaces/factories/ICanonGuardFactory.sol';
 import {DeployCanonGuard} from 'script/DeployCanonGuard.s.sol';
 
 contract UnitDeployCanonGuard is DeployCanonGuard, Test {
-  // IAllowanceClaimorFactory public allowanceClaimorFactory;
-  // IApproveActionFactory public approveActionFactory;
-  // ICanonGuardFactory public canonGuardFactory;
-  // ICappedTokenTransfersHubFactory public cappedTokenTransfersHubFactory;
-  // IChangeSafeGuardActionFactory public changeSafeGuardActionFactory;
-  // IDisapproveActionFactory public disapproveActionFactory;
-  // IEverclearTokenConversionFactory public everclearTokenConversionFactory;
-  // IEverclearTokenStakeFactory public everclearTokenStakeFactory;
-  // IOPxActionFactory public opxActionFactory;
-  // ISetEmergencyCallerActionFactory public setEmergencyCallerActionFactory;
-  // ISetEmergencyTriggerActionFactory public setEmergencyTriggerActionFactory;
-  // ISimpleActionsFactory public simpleActionsFactory;
-  // ISimpleTransfersFactory public simpleTransfersFactory;
-  // IUnsetEmergencyModeActionFactory public unsetEmergencyModeActionFactory;
-
-  // DeployCanonGuard public deployCanonGuard;
-
   ICanonGuardFactory internal _auxCanonGuardFactory;
   ICanonGuard internal _auxCanonGuard;
 
@@ -88,8 +56,6 @@ contract UnitDeployCanonGuard is DeployCanonGuard, Test {
 
     run();
 
-    _loadDeployedFactories();
-
     // it should deploy the common factories
     _assertCommonFactories();
 
@@ -102,8 +68,6 @@ contract UnitDeployCanonGuard is DeployCanonGuard, Test {
     vm.chainId(OPTIMISM_MAINNET_CHAIN_ID);
 
     run();
-
-    _loadDeployedFactories();
 
     // it should deploy the common factories
     _assertCommonFactories();
@@ -144,22 +108,5 @@ contract UnitDeployCanonGuard is DeployCanonGuard, Test {
     assertEq(address(simpleActionsFactory).code, type(SimpleActionsFactory).runtimeCode);
     assertEq(address(simpleTransfersFactory).code, type(SimpleTransfersFactory).runtimeCode);
     assertEq(address(unsetEmergencyModeActionFactory).code, type(UnsetEmergencyModeActionFactory).runtimeCode);
-  }
-
-  function _loadDeployedFactories() private {
-    // allowanceClaimorFactory = deployCanonGuard.allowanceClaimorFactory();
-    // approveActionFactory = deployCanonGuard.approveActionFactory();
-    // canonGuardFactory = deployCanonGuard.canonGuardFactory();
-    // cappedTokenTransfersHubFactory = deployCanonGuard.cappedTokenTransfersHubFactory();
-    // changeSafeGuardActionFactory = deployCanonGuard.changeSafeGuardActionFactory();
-    // disapproveActionFactory = deployCanonGuard.disapproveActionFactory();
-    // everclearTokenConversionFactory = deployCanonGuard.everclearTokenConversionFactory();
-    // everclearTokenStakeFactory = deployCanonGuard.everclearTokenStakeFactory();
-    // opxActionFactory = deployCanonGuard.opxActionFactory();
-    // setEmergencyCallerActionFactory = deployCanonGuard.setEmergencyCallerActionFactory();
-    // setEmergencyTriggerActionFactory = deployCanonGuard.setEmergencyTriggerActionFactory();
-    // simpleActionsFactory = deployCanonGuard.simpleActionsFactory();
-    // simpleTransfersFactory = deployCanonGuard.simpleTransfersFactory();
-    // unsetEmergencyModeActionFactory = deployCanonGuard.unsetEmergencyModeActionFactory();
   }
 }

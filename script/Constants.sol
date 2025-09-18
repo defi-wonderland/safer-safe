@@ -1,12 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import {ICanonGuardFactory} from 'interfaces/factories/ICanonGuardFactory.sol';
-
 import {ISafe} from '@safe-smart-account/interfaces/ISafe.sol';
 import {MultiSendCallOnly} from '@safe-smart-account/libraries/MultiSendCallOnly.sol';
 import {SafeProxyFactory} from '@safe-smart-account/proxies/SafeProxyFactory.sol';
-
 import {IERC20} from 'forge-std/interfaces/IERC20.sol';
 
 abstract contract Constants {
