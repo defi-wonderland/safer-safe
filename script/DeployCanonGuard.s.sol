@@ -48,6 +48,7 @@ import {IUnsetEmergencyModeActionFactory} from 'interfaces/factories/IUnsetEmerg
 import {Constants} from 'script/Constants.sol';
 import {Approver} from 'src/contracts/Approver.sol';
 import {CanonGuard} from 'src/contracts/CanonGuard.sol';
+import {SetGuardAction} from 'src/contracts/actions-builders/SetGuardAction.sol';
 
 /**
  * @title DeployCanonGuard
@@ -77,6 +78,9 @@ contract DeployCanonGuard is Constants, Script {
   ISimpleActionsFactory public simpleActionsFactory;
   ISimpleTransfersFactory public simpleTransfersFactory;
   IUnsetEmergencyModeActionFactory public unsetEmergencyModeActionFactory;
+
+  // ~~~ ACTIONS BUILDERS ~~~
+  SetGuardAction public setGuardAction;
 
   // ~~~ DUMMY CONSTANTS ~~~
   address public constant DUMMY_ADDRESS = address(1);
@@ -169,6 +173,7 @@ contract DeployCanonGuard is Constants, Script {
       DUMMY_ADDRESS
     );
     new Approver(address(_canonGuard));
+    new SetGuardAction();
   }
 
   function _deployEthereumContracts() internal {
