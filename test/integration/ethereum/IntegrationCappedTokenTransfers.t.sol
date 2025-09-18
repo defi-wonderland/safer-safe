@@ -56,7 +56,7 @@ contract IntegrationCappedTokenTransfers is IntegrationEthereumBase {
 
     // Queue the transaction
     vm.prank(_safeOwners[0]);
-    canonGuard.queueHubTransaction(address(_cappedTokenTransfersHub), _actionsBuilder);
+    canonGuard.queueTransaction(_actionsBuilder);
 
     // Wait for the timelock period
     vm.warp(block.timestamp + SHORT_TX_EXECUTION_DELAY);
@@ -92,7 +92,7 @@ contract IntegrationCappedTokenTransfers is IntegrationEthereumBase {
 
     // Queue the transaction
     vm.prank(_safeOwners[0]);
-    canonGuard.queueHubTransaction(address(_cappedTokenTransfersHub), _actionsBuilder);
+    canonGuard.queueTransaction(_actionsBuilder);
 
     // Wait for the timelock period
     vm.warp(block.timestamp + SHORT_TX_EXECUTION_DELAY);

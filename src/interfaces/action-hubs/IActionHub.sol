@@ -26,4 +26,10 @@ interface IActionHub {
    * @return _parent The parent address
    */
   function PARENT() external view returns (address _parent);
+
+  /**
+   * @notice Gets if the contract is an ActionHub
+   * @return _isHub True if the contract is an IActionHub, false otherwise
+   */
+  function hub() external pure returns (bool _isHub);
 }

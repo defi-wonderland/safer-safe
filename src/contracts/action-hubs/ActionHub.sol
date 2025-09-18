@@ -26,6 +26,11 @@ abstract contract ActionHub is IActionHub {
     _exists = _isChild(_actionsBuilder);
   }
 
+  /// @inheritdoc IActionHub
+  function hub() external pure returns (bool _isHub) {
+    _isHub = true;
+  }
+
   /**
    * @notice Creates a new actions builder
    * @param _initCode The init code of the new actions builder

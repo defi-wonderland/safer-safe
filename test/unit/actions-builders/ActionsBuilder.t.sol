@@ -16,9 +16,4 @@ contract UnitActionsBuilder is Test {
     // it sets the parent
     assertEq(actionsBuilder.PARENT(), parent);
   }
-
-  function test_IS_BUILDERReturnsTrue() external view {
-    // it returns true
-    assertTrue(actionsBuilder.IS_BUILDER());
-  }
 }

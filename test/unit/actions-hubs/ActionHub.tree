@@ -13,3 +13,6 @@ UnitActionHub::_createNewActionsBuilder
     ├── it creates a new actions builder
     ├── it marks the actions builder as a child
     └── it emits a NewActionsBuilderCreated event
+
+UnitActionHub::hub
+└── it returns true
