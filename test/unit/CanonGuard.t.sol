@@ -917,7 +917,7 @@ contract UnitCanonGuard is Test {
     whenEmergencyModeIsActive
   {
     _assumeFuzzable(_caller);
-    vm.assume(_caller != canonGuard.emergencyTrigger());
+    vm.assume(_caller != canonGuard.emergencyCaller());
 
     _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.nonce.selector), abi.encode(1));
     _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.getTransactionHash.selector), abi.encode(bytes32(0)));
