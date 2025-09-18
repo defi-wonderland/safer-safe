@@ -19,7 +19,7 @@ contract UnitCanonGuard is Test {
 
   uint256 public constant SHORT_TX_EXECUTION_DELAY = 1 hours;
   uint256 public constant LONG_TX_EXECUTION_DELAY = 7 days;
-  uint256 public constant TX_EXPIRY_DELAY = 1 days;
+  uint256 public constant TX_EXPIRY_DELAY = 1 hours;
   uint256 public constant ACTIONS_BUILDER_APPROVAL_DURATION = 7 days;
   uint256 public constant MAX_APPROVAL_DURATION = 4 * 365 days;
   address public immutable SAFE = makeAddr('SAFE');
