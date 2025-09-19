@@ -267,36 +267,6 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
   // ~~~ INTERNAL METHODS ~~~
 
   /**
-   * @notice Internal function to prepare a transaction to be executed
-   * @dev If isSmulation is enabled, the signers array will be set to this contract address.
-   * @param _actionsBuilder The actions builder address of the transaction to prepare
-   * @param _safeNonce The Safe nonce to use for the hash calculation. For multiple transactions, the nonce should
-   * be incremented by 1 for each transaction.
-   * @return _safeTxHash The Safe transaction hash
-   * @return _signers The array of signer addresses. The array is not sorted in this function.
-   * @return _multiSendData The encoded MultiSend data used to execute the transaction in Safe.
-   */
-  function _prepareTransaction(
-    address _actionsBuilder,
-    uint256 _safeNonce
-  ) internal view returns (bytes32 _safeTxHash, address[] memory _signers, bytes memory _multiSendData) {
-    TransactionInfo memory _txInfo = transactionsInfo[_actionsBuilder];
-    if (_txInfo.expiresAt == 0) revert NoTransactionQueued();
-
-    IActionsBuilder.Action[] memory _actions = abi.decode(_txInfo.actionsData, (IActionsBuilder.Action[]));
-
-    _multiSendData = _buildMultiSendData(_actions);
-    _safeTxHash = _getSafeTransactionHash(_multiSendData, _safeNonce);
-    if (!_isSimulation) {
-      _signers = _getApprovedHashSigners(_safeTxHash);
-    } else {
-      // To run in simulation mode first the CanonGuard needs to be added as an owner and the threshold set to 1
-      _signers = new address[](1);
-      _signers[0] = address(this);
-    }
-  }
-
-  /**
    * @notice Internal function to execute a transaction
    * @dev Checks if the transaction is executable and builds the necessary data
    * @param _actionsBuilder The actions builder address of the transaction to execute
@@ -378,6 +348,36 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
   }
 
   // ~~~ INTERNAL VIEW METHODS ~~~
+
+  /**
+   * @notice Internal function to prepare a transaction to be executed
+   * @dev If isSmulation is enabled, the signers array will be set to this contract address.
+   * @param _actionsBuilder The actions builder address of the transaction to prepare
+   * @param _safeNonce The Safe nonce to use for the hash calculation. For multiple transactions, the nonce should
+   * be incremented by 1 for each transaction.
+   * @return _safeTxHash The Safe transaction hash
+   * @return _signers The array of signer addresses. The array is not sorted in this function.
+   * @return _multiSendData The encoded MultiSend data used to execute the transaction in Safe.
+   */
+  function _prepareTransaction(
+    address _actionsBuilder,
+    uint256 _safeNonce
+  ) internal view returns (bytes32 _safeTxHash, address[] memory _signers, bytes memory _multiSendData) {
+    TransactionInfo memory _txInfo = transactionsInfo[_actionsBuilder];
+    if (_txInfo.expiresAt == 0) revert NoTransactionQueued();
+
+    IActionsBuilder.Action[] memory _actions = abi.decode(_txInfo.actionsData, (IActionsBuilder.Action[]));
+
+    _multiSendData = _buildMultiSendData(_actions);
+    _safeTxHash = _getSafeTransactionHash(_multiSendData, _safeNonce);
+    if (!_isSimulation) {
+      _signers = _getApprovedHashSigners(_safeTxHash);
+    } else {
+      // To run in simulation mode first the CanonGuard needs to be added as an owner and the threshold set to 1
+      _signers = new address[](1);
+      _signers[0] = address(this);
+    }
+  }
 
   /**
    * @notice Internal function to check if the actions builder (or actionHub) is pre-approved
