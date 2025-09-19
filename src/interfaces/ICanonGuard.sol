@@ -160,14 +160,6 @@ interface ICanonGuard is ISafeManageable {
 
   // ~~~ TRANSACTION METHODS ~~~
 
-  // /**
-  //  * @notice Verifies if the actions builder is a child of the actionHub, queues a transaction from an actions builder, for execution after a short delay if approved, or after a long delay if not approved
-  //  * @dev Can only be called by the Safe owners
-  //  * @param _actionHub The actionHub contract address
-  //  * @param _actionsBuilder The actions builder contract address to queue
-  //  */
-  // function queueHubTransaction(address _actionHub, address _actionsBuilder) external;
-
   /**
    * @notice Queues a transaction from an actions builder for execution after a short delay if approved, or after a long delay if not approved
    * @dev Can only be called by the Safe owners
