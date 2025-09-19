@@ -56,6 +56,7 @@ import {SetGuardAction} from 'src/contracts/actions-builders/SetGuardAction.sol'
  * @notice Contracts are manually deployed so they get verified. This would automatically verify any contract created
  * by the factories.
  */
+// solhint-disable max-states-count
 contract DeployCanonGuard is Constants, Script {
   // ~~~ ERRORS ~~~
   error UnsupportedChainId();
