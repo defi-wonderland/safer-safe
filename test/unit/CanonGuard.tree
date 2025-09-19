@@ -6,10 +6,6 @@ UnitCanonGuard::constructor
 │   ├── it sets long execution delay
 │   ├── it sets the parent
 │   └── it set transaction expiry delay
-├── when the transaction expiry delay is less than the minimum expiry time
-│   └── it reverts
-├── when the maximum approval duration is less than the minimum expiry time
-│   └── it reverts
 ├── when the short execution delay is greater than the long execution delay
 │   └── it reverts
 ├── when tx expiry delay is greater than max
