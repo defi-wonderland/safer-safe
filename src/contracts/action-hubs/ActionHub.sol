@@ -22,8 +22,8 @@ abstract contract ActionHub is IActionHub {
   }
 
   /// @inheritdoc IActionHub
-  function isChild(address _actionsBuilder) external view returns (bool _exists) {
-    _exists = _isChild(_actionsBuilder);
+  function isHubChild(address _actionsBuilder) external view returns (bool _exists) {
+    _exists = _isHubChild(_actionsBuilder);
   }
 
   /**
@@ -46,7 +46,7 @@ abstract contract ActionHub is IActionHub {
    * @param _child The address of the actions builder to check
    * @return _exists True if the actions builder is a child of the actionHub, false otherwise
    */
-  function _isChild(address _child) internal view returns (bool _exists) {
+  function _isHubChild(address _child) internal view returns (bool _exists) {
     _exists = _actionsBuilders[_child];
   }
 }

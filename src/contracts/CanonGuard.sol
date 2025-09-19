@@ -122,27 +122,26 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
   // ~~~ TRANSACTION METHODS ~~~
 
   /// @inheritdoc ICanonGuard
-  function queueHubTransaction(address _actionHub, address _actionsBuilder) external isSafeOwner {
-    if (!IActionHub(_actionHub).isChild(_actionsBuilder)) revert InvalidHubOrActionsBuilder();
-    bool _actionIsPreApproved = _isPreApproved(_actionHub);
-    _queueTransaction(_actionsBuilder, _actionIsPreApproved);
-
-    emit TransactionQueued(_actionHub, msg.sender, _actionsBuilder, _actionIsPreApproved);
-  }
-
-  /// @inheritdoc ICanonGuard
   function queueTransaction(address _actionsBuilder) external isSafeOwner {
-    // It is expected that IS_BUILDER will revert if it is not an IActionsBuilder
-    // If it is an IActionsBuilder then it would always return true so we don't need to check the returned value
-    try IActionsBuilder(_actionsBuilder).IS_BUILDER() {}
-    catch {
-      revert NotAnActionsBuilder();
+    address _parent = IActionHub(_actionsBuilder).PARENT();
+    bool _actionIsPreApproved;
+    bool _parentIsHub;
+    // Checks if parent is address(0) or an EOA
+    if (_parent.code.length == 0) {
+      _actionIsPreApproved = _isPreApproved(_actionsBuilder);
+    } else {
+      try IActionHub(_parent).isHubChild(_actionsBuilder) returns (bool _isChild) {
+        if (!_isChild) revert InvalidActionBuilderHubParent();
+        _parentIsHub = true;
+        _actionIsPreApproved = _isPreApproved(_parent);
+      } catch {
+        _actionIsPreApproved = _isPreApproved(_actionsBuilder);
+      }
     }
 
-    bool _actionIsPreApproved = _isPreApproved(_actionsBuilder);
     _queueTransaction(_actionsBuilder, _actionIsPreApproved);
 
-    emit TransactionQueued(address(0), msg.sender, _actionsBuilder, _actionIsPreApproved);
+    emit TransactionQueued(_parentIsHub ? _parent : address(0), msg.sender, _actionsBuilder, _actionIsPreApproved);
   }
 
   /// @inheritdoc ICanonGuard

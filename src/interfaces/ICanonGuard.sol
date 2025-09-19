@@ -94,9 +94,9 @@ interface ICanonGuard is ISafeManageable {
   error TransactionAlreadyQueued(address _actionsBuilder);
 
   /**
-   * @notice Thrown when an invalid actionHub or actions builder is provided
+   * @notice Thrown when queuing an action builder that has an invalid ActionHub parent
    */
-  error InvalidHubOrActionsBuilder();
+  error InvalidActionBuilderHubParent();
 
   /**
    * @notice Thrown when an invalid approval duration is provided
@@ -159,14 +159,6 @@ interface ICanonGuard is ISafeManageable {
   function approveActionsBuilderOrHub(address _actionsBuilder, uint256 _approvalDuration) external;
 
   // ~~~ TRANSACTION METHODS ~~~
-
-  /**
-   * @notice Verifies if the actions builder is a child of the actionHub, queues a transaction from an actions builder, for execution after a short delay if approved, or after a long delay if not approved
-   * @dev Can only be called by the Safe owners
-   * @param _actionHub The actionHub contract address
-   * @param _actionsBuilder The actions builder contract address to queue
-   */
-  function queueHubTransaction(address _actionHub, address _actionsBuilder) external;
 
   /**
    * @notice Queues a transaction from an actions builder for execution after a short delay if approved, or after a long delay if not approved

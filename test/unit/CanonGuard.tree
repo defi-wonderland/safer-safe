@@ -31,55 +31,73 @@ UnitCanonGuard::approveActionsBuilderOrHub
 
 UnitCanonGuard::queueTransaction
 ├── when caller is safe owner
-│   ├── when queueing pre approved action
-│   │   ├── it sets transaction info
-│   │   ├── it adds the action builder to the queue
-│   │   ├── it sets the proposer
-│   │   ├── it sets executable time at block timestamp plus short delay
-│   │   ├── it sets expiry time at executable time plus expiry delay
-│   │   └── it emits TransactionQueued event
-│   └── when queueing not approved action
-│       ├── it sets transaction info
-│       ├── it adds the action builder to the queue
-│       ├── it sets the proposer
-│       ├── it sets executable time at block timestamp plus long delay
-│       ├── it sets expiry time at executable time plus expiry delay
-│       └── it emits TransactionQueued event
-├── when address does not respond to IS_BUILDER
-│   └── it reverts with NotAnActionsBuilder
-├── when transaction is already queued but expired
-│   ├── it sets transaction info
-│   └── it does not re add the action builder to the queue
-├── when caller is not safe owner
-│   └── it reverts with NotSafeOwner
-└── when transaction is already queued and not expired
-    └── it reverts with TransactionAlreadyQueued
-
-UnitCanonGuard::queueHubTransaction
-├── when hub is not a child
-│   └── it reverts with InvalidHubOrActionsBuilder
-├── when caller is safe owner
-│   ├── when queueing pre approved action
-│   │   ├── it sets transaction info
-│   │   ├── it adds the action builder to the queue
-│   │   ├── it sets the proposer
-│   │   ├── it sets executable at to block timestamp plus short delay
-│   │   ├── it sets expiry time
-│   │   └── it emits TransactionQueued event
-│   └── when queueing not approved action
-│       ├── it sets transaction info
-│       ├── it adds the action builder to the queue
-│       ├── it sets the proposer
-│       ├── it sets executable at to block timestamp plus long delay
-│       ├── it sets expiry time
-│       └── it emits TransactionQueued event
-├── when transaction is already queued but expired
-│   ├── it sets transaction info
-│   └── it does not re add the action builder to the queue
-├── when caller is not safe owner
-│   └── it reverts with NotSafeOwner
-└── when transaction is already queued and not expired
-    └── it reverts with TransactionAlreadyQueued
+│   ├── when it has no parent
+│   │   ├── when no parent action builder is pre approved
+│   │   │   ├── it sets transaction info
+│   │   │   ├── it adds the action builder to the queue
+│   │   │   ├── it sets the proposer
+│   │   │   ├── it sets executable time at block timestamp plus short delay
+│   │   │   ├── it sets expiry time at executable time plus expiry delay
+│   │   │   └── it emits TransactionQueued event
+│   │   ├── when no parent action builder is not pre approved
+│   │   │   ├── it sets transaction info
+│   │   │   ├── it adds the action builder to the queue
+│   │   │   ├── it sets the proposer
+│   │   │   ├── it sets executable time at block timestamp plus long delay
+│   │   │   ├── it sets expiry time at executable time plus expiry delay
+│   │   │   └── it emits TransactionQueued event
+│   │   ├── when no parent transaction is already queued but expired
+│   │   │   ├── it sets transaction info
+│   │   │   └── it does not re add the action builder to the queue
+│   │   └── when no parent transaction is already queued and not expired
+│   │       ├── it reverts with TransactionAlreadyQueued
+│   │       └── it does not re add the action builder to the queue
+│   ├── when parent is not a hub
+│   │   ├── when transaction is already queued but expired
+│   │   │   ├── it sets transaction info
+│   │   │   └── it does not re add the action builder to the queue
+│   │   ├── when transaction is already queued and not expired
+│   │   │   └── it reverts with TransactionAlreadyQueued
+│   │   ├── when action builder is pre approved
+│   │   │   ├── it sets transaction info
+│   │   │   ├── it adds the action builder to the queue
+│   │   │   ├── it sets the proposer
+│   │   │   ├── it sets executable time at block timestamp plus short delay
+│   │   │   ├── it sets expiry time at executable time plus expiry delay
+│   │   │   └── it emits TransactionQueued event
+│   │   └── when action builder is not pre approved
+│   │       ├── it sets transaction info
+│   │       ├── it adds the action builder to the queue
+│   │       ├── it sets the proposer
+│   │       ├── it sets executable time at block timestamp plus long delay
+│   │       ├── it sets expiry time at executable time plus expiry delay
+│   │       └── it emits TransactionQueued event
+│   └── when parent is a hub
+│       ├── when hub transaction is already queued but expired
+│       │   ├── it sets transaction info
+│       │   └── it does not re add the action builder to the queue
+│       ├── when hub transaction is already queued and not expired
+│       │   ├── it reverts with TransactionAlreadyQueued
+│       │   └── it does not re add the action builder to the queue
+│       ├── when action builder is not a child of the hub
+│       │   └── it reverts with InvalidActionBuilderHubParent
+│       └── when action builder is a child of the hub
+│           ├── when action hub is pre approved
+│           │   ├── it sets transaction info
+│           │   ├── it adds the action builder to the queue
+│           │   ├── it sets the proposer
+│           │   ├── it sets executable time at block timestamp plus short delay
+│           │   ├── it sets expiry time at executable time plus expiry delay
+│           │   └── it emits TransactionQueued event
+│           └── when action hub is not pre approved
+│               ├── it sets transaction info
+│               ├── it adds the action builder to the queue
+│               ├── it sets the proposer
+│               ├── it sets executable time at block timestamp plus long delay
+│               ├── it sets expiry time at executable time plus expiry delay
+│               └── it emits TransactionQueued event
+└── when caller is not safe owner
+    └── it reverts with NotSafeOwner
 
 UnitCanonGuard::executeTransaction
 ├── when in emergency mode and the caller is not the emergency caller
