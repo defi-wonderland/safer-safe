@@ -25,12 +25,15 @@ import {SafeManageable} from 'contracts/SafeManageable.sol';
 import {ICanonGuard} from 'interfaces/ICanonGuard.sol';
 import {IActionHub} from 'interfaces/action-hubs/IActionHub.sol';
 import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
+import {EnumerableSetLib} from 'solady/utils/EnumerableSetLib.sol';
 
 /**
  * @title CanonGuard
  * @notice Contract that allows for the execution of transactions on a Safe
  */
 contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
+  using EnumerableSetLib for EnumerableSetLib.AddressSet;
+
   // ~~~ STORAGE ~~~
   /// @inheritdoc ICanonGuard
   uint256 public constant MIN_EXPIRY_TIME = 1 hours;
@@ -57,11 +60,14 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
   mapping(address _actionsBuilder => uint256 _approvalExpiresAt) public approvalExpiries;
 
   /// @inheritdoc ICanonGuard
-  mapping(address _actionsBuilder => TransactionInfo _txInfo) public queuedTransactions;
+  mapping(address _actionsBuilder => TransactionInfo _txInfo) public transactionsInfo;
 
   /// @notice Whether the contract is in simulation mode. This can be used in simulation tools like Tenderly
   /// to bypass the signature threshold check while executing transactions.
   bool internal _isSimulation;
+
+  /// @notice The action builders queue
+  EnumerableSetLib.AddressSet internal __queuedActionBuilders;
 
   // ~~~ CONSTRUCTOR ~~~
 
@@ -141,7 +147,7 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
 
   /// @inheritdoc ICanonGuard
   function executeTransaction(address _actionsBuilder) external payable {
-    TransactionInfo memory _txInfo = queuedTransactions[_actionsBuilder];
+    TransactionInfo memory _txInfo = transactionsInfo[_actionsBuilder];
     if (_txInfo.expiresAt == 0) revert NoTransactionQueued();
 
     IActionsBuilder.Action[] memory _actions = abi.decode(_txInfo.actionsData, (IActionsBuilder.Action[]));
@@ -176,7 +182,7 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
 
   /// @inheritdoc ICanonGuard
   function cancelEnqueuedTransaction(address _actionsBuilder) external {
-    TransactionInfo memory _txInfo = queuedTransactions[_actionsBuilder];
+    TransactionInfo memory _txInfo = transactionsInfo[_actionsBuilder];
     if (_txInfo.expiresAt == 0) revert NoTransactionQueued();
     if (msg.sender != _txInfo.proposer) revert CallerMustBeTransactionProposer();
 
@@ -188,7 +194,9 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
 
     if (_signers.length > 0) revert TransactionWithSignaturesCannotBeCancelled();
 
-    delete queuedTransactions[_actionsBuilder];
+    // Remove the transaction from the queue and mapping
+    delete transactionsInfo[_actionsBuilder];
+    __queuedActionBuilders.remove(_actionsBuilder);
 
     emit EnqueuedTransactionCancelled(_actionsBuilder, msg.sender, _safeTxHash);
   }
@@ -209,7 +217,7 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
 
     if (_actionsBuilder != address(0)) {
       // If the actions builder is not the zero address, we need to get the transaction hash from the queued transactions
-      TransactionInfo memory _txInfo = queuedTransactions[_actionsBuilder];
+      TransactionInfo memory _txInfo = transactionsInfo[_actionsBuilder];
       if (_txInfo.expiresAt == 0) revert NoTransactionQueued();
 
       IActionsBuilder.Action[] memory _actions = abi.decode(_txInfo.actionsData, (IActionsBuilder.Action[]));
@@ -230,12 +238,17 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
   }
 
   /// @inheritdoc ICanonGuard
+  function getQueuedActionBuilders() external view returns (address[] memory _queuedActionBuilders) {
+    _queuedActionBuilders = __queuedActionBuilders.values();
+  }
+
+  /// @inheritdoc ICanonGuard
   function getSafeTransactionHash(
     address _actionsBuilder,
     uint256 _safeNonce
   ) public view returns (bytes32 _safeTxHash) {
     if (_actionsBuilder != address(0)) {
-      TransactionInfo memory _txInfo = queuedTransactions[_actionsBuilder];
+      TransactionInfo memory _txInfo = transactionsInfo[_actionsBuilder];
       if (_txInfo.expiresAt == 0) revert NoTransactionQueued();
 
       IActionsBuilder.Action[] memory _actions = abi.decode(_txInfo.actionsData, (IActionsBuilder.Action[]));
@@ -263,12 +276,13 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
     address[] memory _signers,
     bytes memory _multiSendData
   ) internal {
-    TransactionInfo memory _txInfo = queuedTransactions[_actionsBuilder];
+    TransactionInfo memory _txInfo = transactionsInfo[_actionsBuilder];
     if (_txInfo.executableAt > block.timestamp) revert TransactionNotYetExecutable();
     if (_txInfo.expiresAt <= block.timestamp) revert TransactionExpired();
 
-    // Remove the transaction from the queue
-    delete queuedTransactions[_actionsBuilder];
+    // Remove the transaction from the queue and mapping
+    delete transactionsInfo[_actionsBuilder];
+    __queuedActionBuilders.remove(_actionsBuilder);
 
     // Sort the _signers array
     _sortSigners(_signers);
@@ -310,16 +324,18 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
     uint256 _txExecutionDelay = _actionIsPreApproved ? SHORT_TX_EXECUTION_DELAY : LONG_TX_EXECUTION_DELAY;
 
     // Revert if the transaction is already queued and not expired
-    TransactionInfo memory _queuedTransactionInfo = queuedTransactions[_actionsBuilder];
-    if (_queuedTransactionInfo.expiresAt > block.timestamp) {
-      revert TransactionAlreadyQueued(_actionsBuilder);
+    if (!__queuedActionBuilders.add(_actionsBuilder)) {
+      TransactionInfo memory _queuedTransactionInfo = transactionsInfo[_actionsBuilder];
+      if (_queuedTransactionInfo.expiresAt > block.timestamp) {
+        revert TransactionAlreadyQueued(_actionsBuilder);
+      }
     }
 
     // Fetch actions from the builder
     IActionsBuilder.Action[] memory _actions = IActionsBuilder(_actionsBuilder).getActions();
 
     // Store the transaction information
-    queuedTransactions[_actionsBuilder] = TransactionInfo({
+    transactionsInfo[_actionsBuilder] = TransactionInfo({
       proposer: msg.sender,
       actionsData: abi.encode(_actions),
       executableAt: block.timestamp + _txExecutionDelay,
