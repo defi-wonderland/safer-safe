@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import {SetGuardAction} from 'contracts/actions-builders/SetGuardAction.sol';
 import {IEmergencyModeHook} from 'interfaces/IEmergencyModeHook.sol';
 import {IApproveAction} from 'interfaces/actions-builders/IApproveAction.sol';
 import {IChangeSafeGuardAction} from 'interfaces/actions-builders/IChangeSafeGuardAction.sol';
