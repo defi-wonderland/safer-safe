@@ -55,7 +55,6 @@ UnitCanonGuard::queueTransaction
 └── when transaction is already queued and not expired
     └── it reverts with TransactionAlreadyQueued
 
-
 UnitCanonGuard::queueHubTransaction
 ├── when hub is not a child
 │   └── it reverts with InvalidHubOrActionsBuilder
@@ -81,7 +80,6 @@ UnitCanonGuard::queueHubTransaction
 │   └── it reverts with NotSafeOwner
 └── when transaction is already queued and not expired
     └── it reverts with TransactionAlreadyQueued
-
 
 UnitCanonGuard::executeTransaction
 ├── when in emergency mode and the caller is not the emergency caller

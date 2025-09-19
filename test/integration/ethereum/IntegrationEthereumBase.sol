@@ -4,11 +4,10 @@ pragma solidity 0.8.30;
 import {Test} from 'forge-std/Test.sol';
 
 import {DeployCanonGuard} from 'script/DeployCanonGuard.s.sol';
-import {DeployCanonGuardFactories} from 'script/DeployCanonGuardFactories.s.sol';
 
 import {EthereumConstants} from 'script/Constants.sol';
 
-abstract contract IntegrationEthereumBase is DeployCanonGuardFactories, DeployCanonGuard, EthereumConstants, Test {
+abstract contract IntegrationEthereumBase is DeployCanonGuard, EthereumConstants, Test {
   uint256 internal constant _ETHEREUM_FORK_BLOCK = 22_000_000;
 
   address[] internal _safeOwners;
@@ -40,11 +39,8 @@ abstract contract IntegrationEthereumBase is DeployCanonGuardFactories, DeployCa
     deal(address(EIGEN), address(SAFE_PROXY), _safeBalance);
     deal(address(KP3R), address(SAFE_PROXY), _safeBalance);
 
-    // Deploy the CanonGuard factory contracts
-    deployCanonGuardFactories();
-
     // Deploy the CanonGuard contract
-    deployCanonGuard();
+    run();
 
     // Set the CanonGuard as the Safe guard
     vm.prank(address(SAFE_PROXY));
