@@ -5,10 +5,6 @@ import {Test} from 'forge-std/Test.sol';
 import {ActionsBuilderForTest} from 'test/unit/mocks/ActionsBuilderForTest.sol';
 
 contract UnitActionsBuilderconstructor is Test {
-  function test_WhenCalledByAChildContract() external {
-    // it sets the parent
-  }
-
   ActionsBuilderForTest public actionsBuilder;
   address public parent = makeAddr('parent');
 
@@ -16,7 +12,7 @@ contract UnitActionsBuilderconstructor is Test {
     actionsBuilder = new ActionsBuilderForTest(parent);
   }
 
-  function test_ConstructorWhenCalledByAChildContract() external view {
+  function test_WhenCalledByAChildContract() external view {
     // it sets the parent
     assertEq(actionsBuilder.PARENT(), parent);
   }

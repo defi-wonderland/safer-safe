@@ -126,7 +126,7 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
     address _parent = IActionHub(_actionsBuilder).PARENT();
     bool _actionIsPreApproved;
     bool _parentIsHub;
-    if (_parent == address(0)) {
+    if (_parent.code.length == 0) {
       _actionIsPreApproved = _isPreApproved(_actionsBuilder);
     } else {
       try IActionHub(_parent).hub() returns (bool) {

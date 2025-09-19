@@ -11,8 +11,6 @@ import {IEmergencyModeHook} from 'contracts/EmergencyModeHook.sol';
 import {ISafeManageable} from 'contracts/SafeManageable.sol';
 import {Test} from 'forge-std/Test.sol';
 import {IActionHub} from 'interfaces/action-hubs/IActionHub.sol';
-
-import {IActionHub} from 'interfaces/action-hubs/IActionHub.sol';
 import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 
 contract UnitCanonGuard is Test {
@@ -259,52 +257,136 @@ contract UnitCanonGuard is Test {
     _;
   }
 
-  modifier whenItHasNoParent() {
+  modifier whenItHasNoParent(address _actionsBuilder) {
+    _mockAndExpect(address(_actionsBuilder), abi.encodeWithSelector(IActionHub.PARENT.selector), abi.encode(address(0)));
     _;
   }
 
-  function test_QueueTransactionWhenNoParentActionBuilderIsPreApproved()
-    external
-    whenCallerIsSafeOwner
-    whenItHasNoParent
-  {
-    // it sets transaction info
-    // it adds the action builder to the queue
+  function test_QueueTransactionWhenNoParentActionBuilderIsPreApproved(
+    address _caller,
+    address _actionsBuilder
+  ) external whenCallerIsSafeOwner whenItHasNoParent(_actionsBuilder) givenActionsBuilderIsApproved(_actionsBuilder) {
+    _mockAndExpect(
+      address(_actionsBuilder),
+      abi.encodeWithSelector(IActionsBuilder.getActions.selector),
+      abi.encode(new IActionsBuilder.Action[](0))
+    );
+
+    // it emits TransactionQueued event
+    vm.expectEmit(address(canonGuard));
+    emit ICanonGuard.TransactionQueued(address(0), _caller, _actionsBuilder, true);
+
+    vm.prank(_caller);
+    canonGuard.queueTransaction(_actionsBuilder);
+
+    // Verify transaction info using the new interface
+    (address _proposer, bytes memory _actionsData, uint256 _executableAt, uint256 _expiresAt) =
+      canonGuard.transactionsInfo(_actionsBuilder);
+
     // it sets the proposer
+    assertEq(_proposer, _caller);
+    // it sets transaction info
+    assertEq(_actionsData, abi.encode(new IActionsBuilder.Action[](0)));
+    // it adds the action builder to the queue
+    assertEq(canonGuard.getQueuedActionBuilders().length, 1);
+    assertEq(canonGuard.getQueuedActionBuilders()[0], _actionsBuilder);
     // it sets executable time at block timestamp plus short delay
+    assertEq(_executableAt, block.timestamp + SHORT_TX_EXECUTION_DELAY);
     // it sets expiry time at executable time plus expiry delay
-    // it emits TransactionQueued event
+    assertEq(_expiresAt, block.timestamp + SHORT_TX_EXECUTION_DELAY + TX_EXPIRY_DELAY);
   }
 
-  function test_QueueTransactionWhenNoParentActionBuilderIsNotPreApproved()
-    external
-    whenCallerIsSafeOwner
-    whenItHasNoParent
-  {
-    // it sets transaction info
-    // it adds the action builder to the queue
+  function test_QueueTransactionWhenNoParentActionBuilderIsNotPreApproved(
+    address _caller,
+    address _target,
+    uint256 _value,
+    address _actionsBuilder,
+    bytes memory _data
+  ) external whenCallerIsSafeOwner whenItHasNoParent(_actionsBuilder) {
+    _assumeFuzzable(_actionsBuilder);
+
+    IActionsBuilder.Action[] memory _actions = new IActionsBuilder.Action[](1);
+    _actions[0] = IActionsBuilder.Action({target: _target, value: _value, data: _data});
+
+    _mockAndExpect(
+      address(_actionsBuilder), abi.encodeWithSelector(IActionsBuilder.getActions.selector), abi.encode(_actions)
+    );
+
+    // it emits TransactionQueued event
+    vm.expectEmit(address(canonGuard));
+    emit ICanonGuard.TransactionQueued(address(0), _caller, _actionsBuilder, false);
+
+    vm.prank(_caller);
+    canonGuard.queueTransaction(_actionsBuilder);
+
+    // Verify transaction info using the new interface
+    (address _proposer, bytes memory _actionsData, uint256 _executableAt, uint256 _expiresAt) =
+      canonGuard.transactionsInfo(_actionsBuilder);
+
     // it sets the proposer
-    // it sets executable time at block timestamp plus long delay
-    // it sets expiry time at executable time plus expiry delay
-    // it emits TransactionQueued event
-  }
-
-  function test_QueueTransactionWhenNoParentTransactionIsAlreadyQueuedButExpired()
-    external
-    whenCallerIsSafeOwner
-    whenItHasNoParent
-  {
+    assertEq(_proposer, _caller);
     // it sets transaction info
-    // it does not re add the action builder to the queue
+    assertEq(_actionsData, abi.encode(_actions));
+    // it adds the action builder to the queue
+    assertEq(canonGuard.getQueuedActionBuilders().length, 1);
+    assertEq(canonGuard.getQueuedActionBuilders()[0], _actionsBuilder);
+    // it sets executable time at block timestamp plus long delay
+    assertEq(_executableAt, block.timestamp + LONG_TX_EXECUTION_DELAY);
+    // it sets expiry time at executable time plus expiry delay
+    assertEq(_expiresAt, block.timestamp + LONG_TX_EXECUTION_DELAY + TX_EXPIRY_DELAY);
   }
 
-  function test_QueueTransactionWhenNoParentTransactionIsAlreadyQueuedAndNotExpired()
-    external
-    whenCallerIsSafeOwner
-    whenItHasNoParent
-  {
-    // it reverts with TransactionAlreadyQueued
+  function test_QueueTransactionWhenNoParentTransactionIsAlreadyQueuedButExpired(
+    address _caller,
+    address _target,
+    uint256 _value,
+    address _actionsBuilder,
+    bytes memory _data
+  ) external whenCallerIsSafeOwner whenItHasNoParent(_actionsBuilder) {
+    _assumeFuzzable(_actionsBuilder);
+    IActionsBuilder.Action[] memory _actions = new IActionsBuilder.Action[](1);
+    _actions[0] = IActionsBuilder.Action({target: _target, value: _value, data: _data});
+
+    _mockAndExpect(
+      address(_actionsBuilder), abi.encodeWithSelector(IActionsBuilder.getActions.selector), abi.encode(_actions)
+    );
+
+    vm.prank(_caller);
+    canonGuard.queueTransaction(_actionsBuilder);
+
+    // Move time forward past expiry
+    vm.warp(block.timestamp + LONG_TX_EXECUTION_DELAY + TX_EXPIRY_DELAY + 1);
+
+    vm.prank(_caller);
+    canonGuard.queueTransaction(_actionsBuilder);
+
+    // Verify transaction info using the new interface
+    (,,, uint256 _expiresAt) = canonGuard.transactionsInfo(_actionsBuilder);
+
+    // it sets transaction info
+    assertEq(_expiresAt, block.timestamp + LONG_TX_EXECUTION_DELAY + TX_EXPIRY_DELAY);
+
     // it does not re add the action builder to the queue
+    assertEq(canonGuard.getQueuedActionBuilders().length, 1);
+    assertEq(canonGuard.getQueuedActionBuilders()[0], _actionsBuilder);
+  }
+
+  function test_QueueTransactionWhenNoParentTransactionIsAlreadyQueuedAndNotExpired(
+    address _caller,
+    address _actionsBuilder,
+    uint256 _expiry
+  ) external whenCallerIsSafeOwner whenItHasNoParent(_actionsBuilder) {
+    _assumeFuzzable(_actionsBuilder);
+    _expiry = bound(_expiry, block.timestamp + 1, block.timestamp + TX_EXPIRY_DELAY);
+
+    canonGuard.mockTransaction(
+      _caller, _actionsBuilder, abi.encode(new IActionsBuilder.Action[](0)), block.timestamp, _expiry
+    );
+
+    // it reverts with TransactionAlreadyQueued
+    vm.prank(_caller);
+    vm.expectRevert(abi.encodeWithSelector(ICanonGuard.TransactionAlreadyQueued.selector, _actionsBuilder));
+    canonGuard.queueTransaction(_actionsBuilder);
   }
 
   modifier whenParentIsNotAHub(address _actionsBuilder, address _parent) {

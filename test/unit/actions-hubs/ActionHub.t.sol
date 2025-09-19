@@ -59,7 +59,8 @@ contract UnitActionHub is Test {
     assertTrue(actionHub.isChild(_actionsBuilder));
   }
 
-  function test_HubReturnsTrue() external {
+  function test_HubReturnsTrue() external view {
     // it returns true
+    assertTrue(actionHub.hub());
   }
 }
