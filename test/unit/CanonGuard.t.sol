@@ -946,6 +946,38 @@ contract UnitCanonGuard is Test {
     canonGuard.executeNoActionTransaction();
   }
 
+  function test_GetSafeTransactionHashWhenTheAddressIsTheZeroAddress(
+    uint256 _safeNonce,
+    bytes32 _expectedHash
+  ) external {
+    // it returns correct hash
+    _mockAndExpect(
+      SAFE,
+      abi.encodeWithSelector(
+        ISafe.getTransactionHash.selector,
+        canonGuard.MULTI_SEND_CALL_ONLY(),
+        0,
+        abi.encodeWithSelector(MultiSendCallOnly.multiSend.selector, bytes('')),
+        Enum.Operation.DelegateCall,
+        0,
+        0,
+        0,
+        address(0),
+        address(0),
+        _safeNonce
+      ),
+      abi.encode(_expectedHash)
+    );
+
+    // it returns correct hash
+    bytes32 _safeTxHash = canonGuard.getSafeTransactionHash(address(0), _safeNonce);
+    assertEq(_safeTxHash, _expectedHash);
+  }
+
+  modifier whenTheAddressIsNotTheZeroAddress(address _actionsBuilder) {
+    _;
+  }
+
   modifier whenTransactionExists() {
     _;
   }
@@ -956,7 +988,7 @@ contract UnitCanonGuard is Test {
     ICanonGuard.TransactionInfo memory _txInfo,
     uint256 _safeNonce,
     bytes32 _expectedHash
-  ) external {
+  ) external whenTransactionExists {
     _assumeFuzzable(_actionsBuilder);
     // Ensure expiresAt is not 0 to avoid NoTransactionQueued error
     _txInfo.expiresAt = bound(_txInfo.expiresAt, 1, type(uint256).max);
@@ -979,7 +1011,7 @@ contract UnitCanonGuard is Test {
     ICanonGuard.TransactionInfo memory _txInfo,
     uint256 _safeNonce,
     bytes32 _expectedHash
-  ) external {
+  ) external whenTransactionExists {
     _assumeFuzzable(_actionsBuilder);
     // Ensure expiresAt is not 0 to avoid NoTransactionQueued error
     _txInfo.expiresAt = bound(_txInfo.expiresAt, 1, type(uint256).max);
@@ -1005,30 +1037,6 @@ contract UnitCanonGuard is Test {
     canonGuard.getSafeTransactionHash(_actionsBuilder);
   }
 
-  function test_GetSafeEmptyTransactionHashReturnsCorrectHash(uint256 _safeNonce, bytes32 _expectedHash) external {
-    _mockAndExpect(
-      SAFE,
-      abi.encodeWithSelector(
-        ISafe.getTransactionHash.selector,
-        canonGuard.MULTI_SEND_CALL_ONLY(),
-        0,
-        abi.encodeWithSelector(MultiSendCallOnly.multiSend.selector, bytes('')),
-        Enum.Operation.DelegateCall,
-        0,
-        0,
-        0,
-        address(0),
-        address(0),
-        _safeNonce
-      ),
-      abi.encode(_expectedHash)
-    );
-
-    // it returns correct hash
-    bytes32 _safeTxHash = canonGuard.getSafeEmptyTransactionHash(_safeNonce);
-    assertEq(_safeTxHash, _expectedHash);
-  }
-
   function test_GetApprovedHashSignersWhenTheAddressIsTheZeroAddress(
     address _signer1,
     address _signer2,
@@ -1047,11 +1055,6 @@ contract UnitCanonGuard is Test {
     assertEq(_approvedSigners, _signers);
   }
 
-  modifier whenTheAddressIsNotTheZeroAddress(address _actionsBuilder) {
-    vm.assume(_actionsBuilder != address(0));
-    _;
-  }
-
   function test_GetApprovedHashSignersWhenTransactionExists(
     address _signer1,
     address _signer2,
@@ -1059,7 +1062,7 @@ contract UnitCanonGuard is Test {
     IActionsBuilder.Action memory _action,
     ICanonGuard.TransactionInfo memory _txInfo,
     uint256 _safeNonce
-  ) external whenTheAddressIsNotTheZeroAddress(_actionsBuilder) {
+  ) external {
     _assumeFuzzable(_actionsBuilder);
     // Ensure expiresAt is not 0 to avoid NoTransactionQueued error
     _txInfo.expiresAt = bound(_txInfo.expiresAt, 1, type(uint256).max);
@@ -1082,10 +1085,7 @@ contract UnitCanonGuard is Test {
     assertEq(_approvedSigners, _signers);
   }
 
-  function test_GetApprovedHashSignersWhenTransactionDoesNotExist(
-    address _actionsBuilder,
-    uint256 _nonce
-  ) external whenTheAddressIsNotTheZeroAddress(_actionsBuilder) {
+  function test_GetApprovedHashSignersWhenTransactionDoesNotExist(address _actionsBuilder, uint256 _nonce) external {
     _assumeFuzzable(_actionsBuilder);
 
     // it reverts with NoTransactionQueued
