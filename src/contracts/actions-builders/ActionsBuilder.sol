@@ -5,9 +5,6 @@ import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 
 abstract contract ActionsBuilder is IActionsBuilder {
   /// @inheritdoc IActionsBuilder
-  bool public constant IS_BUILDER = true;
-
-  /// @inheritdoc IActionsBuilder
   address public immutable PARENT;
 
   /**

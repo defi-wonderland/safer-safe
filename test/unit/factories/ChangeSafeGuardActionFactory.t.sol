@@ -18,10 +18,10 @@ contract UnitChangeSafeGuardActionFactorycreateChangeSafeGuardAction is Test {
     vm.assume(_safe != address(0));
     vm.assume(_safeGuard != address(0));
 
-    address _changeSafeGuardActionContract = changeSafeGuardActionFactory.createChangeSafeGuardAction(_safe, _safeGuard);
+    address _changeSafeGuardActionContract = changeSafeGuardActionFactory.createChangeSafeGuardAction(_safeGuard);
 
     auxChangeSafeGuardAction = IChangeSafeGuardAction(
-      deployCode('ChangeSafeGuardAction', abi.encode(address(changeSafeGuardActionFactory), _safe, _safeGuard))
+      deployCode('ChangeSafeGuardAction', abi.encode(address(changeSafeGuardActionFactory), _safeGuard))
     );
 
     // it should deploy a ChangeSafeGuardAction contract
@@ -29,7 +29,6 @@ contract UnitChangeSafeGuardActionFactorycreateChangeSafeGuardAction is Test {
 
     // it should match the parameters sent to the constructor
     IChangeSafeGuardAction _changeSafeGuardAction = IChangeSafeGuardAction(_changeSafeGuardActionContract);
-    assertEq(_changeSafeGuardAction.SAFE(), _safe);
     assertEq(_changeSafeGuardAction.SAFE_GUARD(), _safeGuard);
 
     // it should set the parent address in the child contract

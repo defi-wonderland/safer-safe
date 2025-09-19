@@ -13,6 +13,9 @@ contract CanonGuardFactory is ICanonGuardFactory, Factory {
   // ~~~ STORAGE ~~~
 
   /// @inheritdoc ICanonGuardFactory
+  uint256 public constant MIN_EXPIRY_TIME = 1 hours;
+
+  /// @inheritdoc ICanonGuardFactory
   address public immutable MULTI_SEND_CALL_ONLY;
 
   // ~~~ CONSTRUCTOR ~~~
@@ -37,6 +40,9 @@ contract CanonGuardFactory is ICanonGuardFactory, Factory {
     address _emergencyTrigger,
     address _emergencyCaller
   ) external returns (address _canonGuard) {
+    if (_txExpiryDelay < MIN_EXPIRY_TIME) revert TxExpiryDelayCannotBeLessThanMin();
+    if (_maxApprovalDuration < MIN_EXPIRY_TIME) revert MaxApprovalDurationCannotBeLessThanMin();
+
     _canonGuard = address(
       new CanonGuard(
         address(this),

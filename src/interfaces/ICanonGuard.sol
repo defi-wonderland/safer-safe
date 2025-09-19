@@ -94,24 +94,14 @@ interface ICanonGuard is ISafeManageable {
   error TransactionAlreadyQueued(address _actionsBuilder);
 
   /**
-   * @notice Thrown when an invalid actionHub or actions builder is provided
+   * @notice Thrown when queuing an action builder that has an invalid ActionHub parent
    */
-  error InvalidHubOrActionsBuilder();
+  error InvalidActionBuilderHubParent();
 
   /**
    * @notice Thrown when an invalid approval duration is provided
    */
   error InvalidApprovalDuration();
-
-  /**
-   * @notice Thrown when the transaction expiry delay is less than the minimum expiry time
-   */
-  error TxExpiryDelayCannotBeLessThanMin();
-
-  /**
-   * @notice Thrown when the maximum approval duration is less than the minimum expiry time
-   */
-  error MaxApprovalDurationCannotBeLessThanMin();
 
   /**
    * @notice Thrown when the delay configuration is invalid
@@ -161,14 +151,6 @@ interface ICanonGuard is ISafeManageable {
   // ~~~ TRANSACTION METHODS ~~~
 
   /**
-   * @notice Verifies if the actions builder is a child of the actionHub, queues a transaction from an actions builder, for execution after a short delay if approved, or after a long delay if not approved
-   * @dev Can only be called by the Safe owners
-   * @param _actionHub The actionHub contract address
-   * @param _actionsBuilder The actions builder contract address to queue
-   */
-  function queueHubTransaction(address _actionHub, address _actionsBuilder) external;
-
-  /**
    * @notice Queues a transaction from an actions builder for execution after a short delay if approved, or after a long delay if not approved
    * @dev Can only be called by the Safe owners
    * @param _actionsBuilder The actions builder contract address to queue. Reverts if it is not an ActionsBuilder.
@@ -182,6 +164,15 @@ interface ICanonGuard is ISafeManageable {
    * @param _actionsBuilder The actions builder contract address of the transaction to execute
    */
   function executeTransaction(address _actionsBuilder) external payable;
+
+  /**
+   * @notice Executes multiple queued transactions using the approved hash signers
+   * @dev Can be called by anyone
+   * @dev The transactions must have passed their execution delay period, but not their expiry delay period
+   * @dev Each transaction must have been approved using consecutive SAFE nonces.
+   * @param _actionsBuilders The array of actions builder contract addresses of the transactions to execute
+   */
+  function executeTransactions(address[] memory _actionsBuilders) external payable;
 
   /**
    * @notice Executes an empty transaction, in order to use the safe nonce.
@@ -205,12 +196,6 @@ interface ICanonGuard is ISafeManageable {
    * @return _parent The parent address. Returns address(0) if it was not deployed by a factory
    */
   function PARENT() external view returns (address _parent);
-
-  /**
-   * @notice Gets the minimum expiry time
-   * @return _minExpiryTime The minimum expiry time (in seconds)
-   */
-  function MIN_EXPIRY_TIME() external view returns (uint256 _minExpiryTime);
 
   /**
    * @notice Gets the MultiSendCallOnly contract
@@ -250,14 +235,14 @@ interface ICanonGuard is ISafeManageable {
   function approvalExpiries(address _actionsBuilder) external view returns (uint256 _approvalExpiresAt);
 
   /**
-   * @notice Gets the transaction info for an actions builder
+   * @notice Gets the transaction info for an queued actions builder
    * @return _proposer The address of the proposer of the transaction
    * @param _actionsBuilder The actions builder contract address
    * @return _actionsData The encoded actions data
    * @return _executableAt The timestamp from which the transaction can be executed
    * @return _expiresAt The timestamp from which the transaction expires
    */
-  function queuedTransactions(address _actionsBuilder)
+  function transactionsInfo(address _actionsBuilder)
     external
     view
     returns (address _proposer, bytes memory _actionsData, uint256 _executableAt, uint256 _expiresAt);
@@ -265,14 +250,14 @@ interface ICanonGuard is ISafeManageable {
   // ~~~ GETTER METHODS ~~~
 
   /**
-   * @notice Gets the Safe transaction hash for an actions builder
+   * @notice Gets the Safe transaction hash for an actions builder. If the actions builder is the zero address, it will return the hash of an empty transaction.
    * @param _actionsBuilder The actions builder contract address
    * @return _safeTxHash The Safe transaction hash
    */
   function getSafeTransactionHash(address _actionsBuilder) external view returns (bytes32 _safeTxHash);
 
   /**
-   * @notice Gets the Safe transaction hash for an actions builder with a specific Safe nonce
+   * @notice Gets the Safe transaction hash for an actions builder with a specific Safe nonce. If the actions builder is the zero address, it will return the hash of an empty transaction.
    * @param _actionsBuilder The actions builder contract address
    * @param _safeNonce The Safe nonce to use for the hash calculation
    * @return _safeTxHash The Safe transaction hash
@@ -281,13 +266,6 @@ interface ICanonGuard is ISafeManageable {
     address _actionsBuilder,
     uint256 _safeNonce
   ) external view returns (bytes32 _safeTxHash);
-
-  /**
-   * @notice Gets the Safe empty transaction hash
-   * @param _safeNonce The Safe nonce to use for the hash calculation
-   * @return _safeTxHash The Safe empty transaction hash
-   */
-  function getSafeEmptyTransactionHash(uint256 _safeNonce) external view returns (bytes32 _safeTxHash);
 
   /**
    * @notice Gets the list of signers who have approved a Safe transaction hash for an actions builder with a specific Safe nonce
@@ -305,4 +283,11 @@ interface ICanonGuard is ISafeManageable {
    * @return _safeNonce The Safe nonce
    */
   function getSafeNonce() external view returns (uint256 _safeNonce);
+
+  /**
+   * @notice Gets the list of action builders in the queue
+   * @dev The actions builders are not sorted
+   * @return _queuedActionBuilders The array of action builders in the queue
+   */
+  function getQueuedActionBuilders() external view returns (address[] memory _queuedActionBuilders);
 }

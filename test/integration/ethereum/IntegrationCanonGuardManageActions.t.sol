@@ -2,6 +2,7 @@
 pragma solidity 0.8.30;
 
 import {IEmergencyModeHook} from 'interfaces/IEmergencyModeHook.sol';
+import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 import {IApproveAction} from 'interfaces/actions-builders/IApproveAction.sol';
 import {IChangeSafeGuardAction} from 'interfaces/actions-builders/IChangeSafeGuardAction.sol';
 import {IDisapproveAction} from 'interfaces/actions-builders/IDisapproveAction.sol';
@@ -67,13 +68,12 @@ contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
       IDisapproveAction(disapproveActionFactory.createDisapproveAction(address(canonGuard), address(actionsBuilder)));
 
     // Deploy the ChangeSafeGuardAction contract
-    changeSafeGuardAction = IChangeSafeGuardAction(
-      changeSafeGuardActionFactory.createChangeSafeGuardAction(address(SAFE_PROXY), newSafeGuard)
-    );
+    changeSafeGuardAction =
+      IChangeSafeGuardAction(changeSafeGuardActionFactory.createChangeSafeGuardAction(newSafeGuard));
 
     // Deploy the ChangeSafeGuardAction contract to disable the safe guard
     disableSafeGuardAction =
-      IChangeSafeGuardAction(changeSafeGuardActionFactory.createChangeSafeGuardAction(address(SAFE_PROXY), address(0)));
+      IChangeSafeGuardAction(changeSafeGuardActionFactory.createChangeSafeGuardAction(address(0)));
 
     // Deploy the SimpleActions contract to add an owner
     ISimpleActions.SimpleAction memory _addOwnerSimpleAction = ISimpleActions.SimpleAction({
@@ -371,7 +371,7 @@ contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
     vm.prank(_safeOwners[0]);
     canonGuard.queueTransaction(address(addOwnerSimpleActions));
     (address _proposer, bytes memory _actionsData, uint256 _executableAt, uint256 _expiresAt) =
-      canonGuard.queuedTransactions(address(addOwnerSimpleActions));
+      canonGuard.transactionsInfo(address(addOwnerSimpleActions));
     assertEq(_proposer, _safeOwners[0]);
     assertGt(_actionsData.length, 0);
     assertEq(_executableAt, block.timestamp + LONG_TX_EXECUTION_DELAY);
@@ -381,7 +381,7 @@ contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
     vm.prank(_safeOwners[0]);
     canonGuard.cancelEnqueuedTransaction(address(addOwnerSimpleActions));
 
-    (_proposer, _actionsData, _executableAt, _expiresAt) = canonGuard.queuedTransactions(address(addOwnerSimpleActions));
+    (_proposer, _actionsData, _executableAt, _expiresAt) = canonGuard.transactionsInfo(address(addOwnerSimpleActions));
 
     assertEq(_proposer, address(0));
     assertEq(_actionsData, bytes(''));
@@ -406,7 +406,7 @@ contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
     vm.stopPrank();
 
     // Approve the Safe empty transaction hash
-    bytes32 _safeEmptyTxHash = canonGuard.getSafeEmptyTransactionHash(_safeNonce);
+    bytes32 _safeEmptyTxHash = canonGuard.getSafeTransactionHash(address(0), _safeNonce);
     for (uint256 _i; _i < _safeThreshold; ++_i) {
       vm.startPrank(_safeOwners[_i]);
       SAFE_PROXY.approveHash(_safeEmptyTxHash);
@@ -425,5 +425,107 @@ contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
     // The first tx is no longer valid
     vm.expectRevert('GS020');
     canonGuard.executeTransaction(address(addOwnerSimpleActions));
+  }
+
+  function test_GetQueuedActionBuildersInfo() public {
+    // Queue the transaction
+    vm.prank(_safeOwners[0]);
+    canonGuard.queueTransaction(address(setEmergencyCallerAction));
+
+    uint256 _originalBlockTimestamp = block.timestamp;
+
+    approveAction = IApproveAction(
+      approveActionFactory.createApproveAction(
+        address(canonGuard), address(setEmergencyCallerAction), APPROVAL_DURATION
+      )
+    );
+
+    vm.prank(_safeOwners[0]);
+    canonGuard.queueTransaction(address(approveAction));
+    vm.warp(block.timestamp + LONG_TX_EXECUTION_DELAY);
+    bytes32 _safeTxHash = canonGuard.getSafeTransactionHash(address(approveAction));
+    for (uint256 _i; _i < _safeThreshold; ++_i) {
+      vm.startPrank(_safeOwners[_i]);
+      SAFE_PROXY.approveHash(_safeTxHash);
+    }
+    vm.stopPrank();
+    canonGuard.executeTransaction(address(approveAction));
+
+    // Get the queued action builders info
+    address[] memory _queuedActionBuilders = canonGuard.getQueuedActionBuilders();
+    assertEq(_queuedActionBuilders.length, 1);
+    assertEq(_queuedActionBuilders[0], address(setEmergencyCallerAction));
+
+    (address _proposer, bytes memory _actionsData, uint256 _executableAt, uint256 _expiresAt) =
+      canonGuard.transactionsInfo(address(setEmergencyCallerAction));
+    IActionsBuilder.Action[] memory _decodedActionsData = abi.decode(_actionsData, (IActionsBuilder.Action[]));
+    assertEq(_proposer, _safeOwners[0]);
+    assertEq(_decodedActionsData[0].target, address(canonGuard));
+    assertEq(_decodedActionsData[0].data, abi.encodeCall(IEmergencyModeHook.setEmergencyCaller, newEmergencyCaller));
+    assertEq(_decodedActionsData[0].value, 0);
+    assertEq(_executableAt, _originalBlockTimestamp + LONG_TX_EXECUTION_DELAY);
+    assertEq(_expiresAt, _executableAt + TX_EXPIRY_DELAY);
+
+    uint256 _approvalExpiresAt = canonGuard.approvalExpiries(address(setEmergencyCallerAction));
+    assertEq(_approvalExpiresAt, block.timestamp + APPROVAL_DURATION);
+  }
+
+  function test_ExecuteTransactions() public {
+    deal(address(WETH), address(SAFE_PROXY), 1 ether);
+    deal(address(USDC), address(SAFE_PROXY), 1 ether);
+    address _recipient = makeAddr('recipient');
+    address _wethTransferSimpleAction = simpleActionsFactory.createSimpleAction(
+      ISimpleActions.SimpleAction({
+        target: address(WETH),
+        signature: 'transfer(address,uint256)',
+        data: abi.encode(_recipient, 1 ether),
+        value: 0
+      })
+    );
+
+    address _usdcTransferSimpleAction = simpleActionsFactory.createSimpleAction(
+      ISimpleActions.SimpleAction({
+        target: address(USDC),
+        signature: 'transfer(address,uint256)',
+        data: abi.encode(_recipient, 1 ether),
+        value: 0
+      })
+    );
+
+    // Queue the transactions
+    vm.prank(_safeOwners[0]);
+    canonGuard.queueTransaction(address(_wethTransferSimpleAction));
+    vm.prank(_safeOwners[0]);
+    canonGuard.queueTransaction(address(_usdcTransferSimpleAction));
+
+    uint256 _safeNonce = canonGuard.getSafeNonce();
+
+    vm.warp(block.timestamp + LONG_TX_EXECUTION_DELAY);
+    bytes32 _safeTxHashA = canonGuard.getSafeTransactionHash(address(_wethTransferSimpleAction), _safeNonce);
+    bytes32 _safeTxHashB = canonGuard.getSafeTransactionHash(address(_usdcTransferSimpleAction), _safeNonce + 1);
+    for (uint256 _i; _i < _safeThreshold; ++_i) {
+      vm.startPrank(_safeOwners[_i]);
+      SAFE_PROXY.approveHash(_safeTxHashA);
+      SAFE_PROXY.approveHash(_safeTxHashB);
+      vm.stopPrank();
+    }
+
+    // Execute the transactions in the wrong order
+    address[] memory _actionsBuilders = new address[](2);
+    _actionsBuilders[0] = address(_usdcTransferSimpleAction);
+    _actionsBuilders[1] = address(_wethTransferSimpleAction);
+    vm.expectRevert('GS020');
+    canonGuard.executeTransactions(_actionsBuilders);
+
+    // Execute the transactions in the correct order
+    _actionsBuilders[0] = address(_wethTransferSimpleAction);
+    _actionsBuilders[1] = address(_usdcTransferSimpleAction);
+    canonGuard.executeTransactions(_actionsBuilders);
+
+    // Assert that the transactions were executed
+    assertEq(WETH.balanceOf(address(SAFE_PROXY)), 0);
+    assertEq(USDC.balanceOf(address(SAFE_PROXY)), 0);
+    assertEq(WETH.balanceOf(_recipient), 1 ether);
+    assertEq(USDC.balanceOf(_recipient), 1 ether);
   }
 }
