@@ -8,11 +8,11 @@ import {ISimpleActions} from 'interfaces/actions-builders/ISimpleActions.sol';
 
 import {ISafe} from '@safe-smart-account/interfaces/ISafe.sol';
 
-import {DeployCanonGuardFactories} from 'script/DeployCanonGuardFactories.s.sol';
+import {DeployCanonGuard} from 'script/DeployCanonGuard.s.sol';
 
 import {EthereumConstants} from 'script/Constants.sol';
 
-contract IntegrationBasicTest is DeployCanonGuardFactories, EthereumConstants, Test {
+contract IntegrationBasicTest is DeployCanonGuard, EthereumConstants, Test {
   uint256 internal constant _ETHEREUM_FORK_BLOCK = 18_920_905;
 
   // ~~~ SAFE ~~~
@@ -50,8 +50,8 @@ contract IntegrationBasicTest is DeployCanonGuardFactories, EthereumConstants, T
       paymentReceiver: payable(address(0))
     });
 
-    // Deploy the CanonGuard factory contracts
-    deployCanonGuardFactories();
+    // Deploy the CanonGuard contract
+    run();
 
     // Deploy the CanonGuard contract
     _canonGuard = ICanonGuard(

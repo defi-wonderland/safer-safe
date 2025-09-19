@@ -707,6 +707,7 @@ contract UnitCanonGuard is Test {
 
   function test_ExecuteTransactionWhenTransactionIsNotQueued(address _actionsBuilder) external {
     _assumeFuzzable(_actionsBuilder);
+    _mockAndExpect(address(SAFE), abi.encodeWithSelector(ISafe.nonce.selector), abi.encode(1));
 
     // it reverts with TransactionNotQueued
     vm.expectRevert(ICanonGuard.NoTransactionQueued.selector);

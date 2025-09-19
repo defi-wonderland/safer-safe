@@ -4,11 +4,10 @@ pragma solidity 0.8.30;
 import {Test} from 'forge-std/Test.sol';
 
 import {DeployCanonGuard} from 'script/DeployCanonGuard.s.sol';
-import {DeployCanonGuardFactories} from 'script/DeployCanonGuardFactories.s.sol';
 
 import {OptimismConstants} from 'script/Constants.sol';
 
-abstract contract IntegrationOptimismBase is DeployCanonGuardFactories, DeployCanonGuard, OptimismConstants, Test {
+abstract contract IntegrationOptimismBase is DeployCanonGuard, OptimismConstants, Test {
   uint256 internal constant _OPTIMISM_FORK_BLOCK = 122_000_000;
 
   address[] internal _safeOwners;
@@ -31,11 +30,8 @@ abstract contract IntegrationOptimismBase is DeployCanonGuardFactories, DeployCa
     deal(address(KITE), address(SAFE_PROXY), _safeBalance);
     deal(address(WLD), address(SAFE_PROXY), _safeBalance);
 
-    // Deploy the CanonGuard factory contracts
-    deployCanonGuardFactories();
-
     // Deploy the CanonGuard contract
-    deployCanonGuard();
+    run();
 
     // Set the CanonGuard as the Safe guard
     vm.prank(address(SAFE_PROXY));
