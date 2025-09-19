@@ -528,4 +528,34 @@ contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
     assertEq(WETH.balanceOf(_recipient), 1 ether);
     assertEq(USDC.balanceOf(_recipient), 1 ether);
   }
+
+  function test_SetGuardAction() public {
+    // Remove the current guard
+    vm.prank(address(SAFE_PROXY));
+    SAFE_PROXY.setGuard(address(0));
+
+    // Queue the transaction
+    vm.prank(_safeOwners[0]);
+    canonGuard.queueTransaction(address(setGuardAction));
+
+    // Wait for the timelock period
+    vm.warp(block.timestamp + LONG_TX_EXECUTION_DELAY);
+
+    // Get the Safe transaction hash
+    bytes32 _safeTxHash = canonGuard.getSafeTransactionHash(address(setGuardAction));
+
+    // Approve the Safe transaction hash
+    for (uint256 _i; _i < _safeThreshold; ++_i) {
+      vm.startPrank(_safeOwners[_i]);
+      SAFE_PROXY.approveHash(_safeTxHash);
+    }
+    vm.stopPrank();
+
+    // Execute the transaction
+    canonGuard.executeTransaction(address(setGuardAction));
+
+    // Assert that the guard has been set to the canon guard
+    bytes32 _guardSlot = vm.load(address(SAFE_PROXY), keccak256('guard_manager.guard.address'));
+    assertEq(address(uint160(uint256(_guardSlot))), address(canonGuard));
+  }
 }

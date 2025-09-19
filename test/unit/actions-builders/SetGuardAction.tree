@@ -1,0 +1,7 @@
+UnitSetGuardAction::constructor
+└── when called
+    └── it sets the parent to address(0)
+
+UnitSetGuardAction::getActions
+└── when called
+    └── it returns an action to set the guard to the caller
