@@ -104,16 +104,6 @@ interface ICanonGuard is ISafeManageable {
   error InvalidApprovalDuration();
 
   /**
-   * @notice Thrown when the transaction expiry delay is less than the minimum expiry time
-   */
-  error TxExpiryDelayCannotBeLessThanMin();
-
-  /**
-   * @notice Thrown when the maximum approval duration is less than the minimum expiry time
-   */
-  error MaxApprovalDurationCannotBeLessThanMin();
-
-  /**
    * @notice Thrown when the delay configuration is invalid
    */
   error InvalidDelayConfiguration();
@@ -206,12 +196,6 @@ interface ICanonGuard is ISafeManageable {
    * @return _parent The parent address. Returns address(0) if it was not deployed by a factory
    */
   function PARENT() external view returns (address _parent);
-
-  /**
-   * @notice Gets the minimum expiry time
-   * @return _minExpiryTime The minimum expiry time (in seconds)
-   */
-  function MIN_EXPIRY_TIME() external view returns (uint256 _minExpiryTime);
 
   /**
    * @notice Gets the MultiSendCallOnly contract

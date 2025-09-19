@@ -3,8 +3,12 @@ UnitCanonGuardFactory::constructor
     └── it should store the multi send call only address
 
 UnitCanonGuardFactory::createCanonGuard
-└── when called
-    ├── it should deploy a new CanonGuard
-    └── it should match the parameters sent to the constructor
-    ├── it should set the parent address in the child contract
-    └── it should store the contract as a factory children
+├── when called with valid parameters
+│   ├── it should deploy a new CanonGuard
+│   ├── it should match the parameters sent to the constructor
+│   ├── it should set the parent address in the child contract
+│   └── it should store the contract as a factory children
+├── when the transaction expiry delay is less than the minimum expiry time
+│   └── it reverts
+└── when the maximum approval duration is less than the minimum expiry time
+    └── it reverts

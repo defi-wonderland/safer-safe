@@ -36,9 +36,6 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
 
   // ~~~ STORAGE ~~~
   /// @inheritdoc ICanonGuard
-  uint256 public constant MIN_EXPIRY_TIME = 1 hours;
-
-  /// @inheritdoc ICanonGuard
   address public immutable PARENT;
 
   /// @inheritdoc ICanonGuard
@@ -94,8 +91,6 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
     address _emergencyTrigger,
     address _emergencyCaller
   ) SafeManageable(_safe) EmergencyModeHook(_emergencyTrigger, _emergencyCaller) {
-    if (_txExpiryDelay < MIN_EXPIRY_TIME) revert TxExpiryDelayCannotBeLessThanMin();
-    if (_maxApprovalDuration < MIN_EXPIRY_TIME) revert MaxApprovalDurationCannotBeLessThanMin();
     if (_shortTxExecutionDelay > _longTxExecutionDelay) revert ShortDelayCannotBeGreaterThanLongDelay();
     if (_txExpiryDelay > type(uint128).max) revert TxExpiryDelayCannotBeGreaterThanMax();
     if (_longTxExecutionDelay > type(uint128).max) revert LongDelayCannotBeGreaterThanMax();
