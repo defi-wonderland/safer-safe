@@ -16,6 +16,11 @@ contract UnitSetGuardAction is Test {
     setGuardAction = new SetGuardAction();
   }
 
+  function _mockAndExpect(address _target, bytes memory _call, bytes memory _returnData) internal {
+    vm.mockCall(_target, _call, _returnData);
+    vm.expectCall(_target, _call);
+  }
+
   function test_ConstructorWhenCalled() external view {
     // it sets the parent to address(0)
     assertEq(setGuardAction.PARENT(), address(0));
@@ -23,7 +28,7 @@ contract UnitSetGuardAction is Test {
 
   function test_GetActionsWhenCalled() external {
     // Mock the canon guard to return the safe address
-    vm.mockCall(mockCanonGuard, abi.encodeCall(ISafeManageable.SAFE, ()), abi.encode(mockSafe));
+    _mockAndExpect(mockCanonGuard, abi.encodeCall(ISafeManageable.SAFE, ()), abi.encode(mockSafe));
 
     // Call getActions from the mock canon guard context
     vm.prank(mockCanonGuard);
