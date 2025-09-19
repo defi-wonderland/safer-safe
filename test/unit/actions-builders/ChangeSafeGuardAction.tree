@@ -1,0 +1,7 @@
+UnitChangeSafeGuardAction::constructor
+└── when called
+    └── it sets the safe guard address
+
+UnitChangeSafeGuardAction::getActions
+└── when called
+    └── it returns an action to change the safe guard
