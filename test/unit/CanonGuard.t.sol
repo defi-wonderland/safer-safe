@@ -612,6 +612,18 @@ contract UnitCanonGuard is Test {
     canonGuard.queueHubTransaction(_actionHub, _actionsBuilder);
   }
 
+  function test_ExecuteTransactionWhenInEmergencyModeAndTheCallerIsNotTheEmergencyCaller(
+    address _caller,
+    address _actionsBuilder
+  ) external whenEmergencyModeIsActive {
+    vm.assume(_caller != EMERGENCY_CALLER);
+
+    // it reverts with Unauthorized
+    vm.prank(_caller);
+    vm.expectRevert(abi.encodeWithSelector(IEmergencyModeHook.Unauthorized.selector, _caller, EMERGENCY_CALLER));
+    canonGuard.executeTransaction(_actionsBuilder);
+  }
+
   function test_ExecuteTransactionWhenTransactionIsExpired(
     address _caller,
     address _actionsBuilder,
@@ -676,6 +688,7 @@ contract UnitCanonGuard is Test {
 
   function test_ExecuteTransactionWhenTransactionIsNotQueued(address _actionsBuilder) external {
     _assumeFuzzable(_actionsBuilder);
+    _mockAndExpect(address(SAFE), abi.encodeWithSelector(ISafe.nonce.selector), abi.encode(1));
 
     // it reverts with TransactionNotQueued
     vm.expectRevert(ICanonGuard.NoTransactionQueued.selector);
@@ -793,6 +806,250 @@ contract UnitCanonGuard is Test {
     assertEq(_expiresAt, 0);
 
     // it deletes transaction from queue
+    assertEq(canonGuard.getQueuedActionBuilders().length, 0);
+  }
+
+  function test_ExecuteTransactionsWhenInEmergencyModeAndTheCallerIsNotTheEmergencyCaller(
+    address _caller,
+    address[] memory _actionsBuilders
+  ) external whenEmergencyModeIsActive {
+    vm.assume(_caller != EMERGENCY_CALLER);
+
+    // it reverts with Unauthorized
+    vm.prank(_caller);
+    vm.expectRevert(abi.encodeWithSelector(IEmergencyModeHook.Unauthorized.selector, _caller, EMERGENCY_CALLER));
+    canonGuard.executeTransactions(_actionsBuilders);
+  }
+
+  function test_ExecuteTransactionsWhenAtLeastOneTransactionIsExpired(
+    address _caller,
+    IActionsBuilder.Action calldata _action,
+    ICanonGuard.TransactionInfo[] memory _txsInfo
+  ) external {
+    vm.assume(_txsInfo.length > 2);
+    _txsInfo[0].expiresAt = bound(_txsInfo[0].expiresAt, 5, type(uint64).max);
+    _txsInfo[0].executableAt = bound(_txsInfo[0].executableAt, 0, block.timestamp);
+    _txsInfo[1].expiresAt = bound(_txsInfo[1].expiresAt, 1, _txsInfo[0].expiresAt - 2);
+    _txsInfo[1].executableAt = bound(_txsInfo[1].executableAt, 0, block.timestamp);
+    IActionsBuilder.Action[] memory _actions = new IActionsBuilder.Action[](1);
+    _actions[0] = _action;
+    bytes memory _actionsData = abi.encode(_actions);
+    address[] memory _actionsBuilders = new address[](_txsInfo.length);
+
+    // Mock SAFE contract calls
+    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.nonce.selector), abi.encode(1));
+    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.getTransactionHash.selector), abi.encode(bytes32(0)));
+    _mockAndExpect(SAFE, abi.encodeWithSelector(IOwnerManager.getOwners.selector), abi.encode(new address[](0)));
+
+    // tx 0 executes
+    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.execTransaction.selector), abi.encode(true));
+    for (uint256 _i; _i < _actionsBuilders.length; ++_i) {
+      _actionsBuilders[_i] = makeAddr(string(abi.encodePacked(_i)));
+      canonGuard.mockTransaction(
+        _txsInfo[_i].proposer, _actionsBuilders[_i], _actionsData, _txsInfo[_i].executableAt, _txsInfo[_i].expiresAt
+      );
+    }
+
+    // Move time forward to expire tx with index 1
+    vm.warp(_txsInfo[1].expiresAt + 1);
+
+    // it reverts with TransactionExpired
+    vm.expectRevert(ICanonGuard.TransactionExpired.selector);
+    vm.prank(_caller);
+    canonGuard.executeTransactions(_actionsBuilders);
+  }
+
+  function test_ExecuteTransactionsWhenAtLeastOneApprovedTransactionIsNotYetExecutable(
+    address _caller,
+    IActionsBuilder.Action calldata _action,
+    ICanonGuard.TransactionInfo[] memory _txsInfo
+  ) external {
+    vm.assume(_txsInfo.length > 2);
+    _txsInfo[0].expiresAt = bound(_txsInfo[0].expiresAt, block.timestamp + 1, type(uint256).max);
+    _txsInfo[0].executableAt = bound(_txsInfo[0].executableAt, 0, block.timestamp);
+
+    // tx with index 1 is not yet executable
+    _txsInfo[1].expiresAt = bound(_txsInfo[1].expiresAt, block.timestamp + 1, type(uint256).max);
+    _txsInfo[1].executableAt = bound(_txsInfo[1].executableAt, block.timestamp + 1, type(uint256).max);
+    IActionsBuilder.Action[] memory _actions = new IActionsBuilder.Action[](1);
+    _actions[0] = _action;
+    bytes memory _actionsData = abi.encode(_actions);
+    address[] memory _actionsBuilders = new address[](_txsInfo.length);
+
+    // Mock SAFE contract calls
+    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.nonce.selector), abi.encode(1));
+    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.getTransactionHash.selector), abi.encode(bytes32(0)));
+    _mockAndExpect(SAFE, abi.encodeWithSelector(IOwnerManager.getOwners.selector), abi.encode(new address[](0)));
+
+    // tx 0 executes
+    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.execTransaction.selector), abi.encode(true));
+    for (uint256 _i; _i < _actionsBuilders.length; ++_i) {
+      _actionsBuilders[_i] = makeAddr(string(abi.encodePacked(_i)));
+      canonGuard.mockTransaction(
+        _txsInfo[_i].proposer, _actionsBuilders[_i], _actionsData, _txsInfo[_i].executableAt, _txsInfo[_i].expiresAt
+      );
+    }
+
+    // it reverts with TransactionNotYetExecutable
+    vm.expectRevert(ICanonGuard.TransactionNotYetExecutable.selector);
+    vm.prank(_caller);
+    canonGuard.executeTransactions(_actionsBuilders);
+  }
+
+  function test_ExecuteTransactionsWhenAtLeastOneTransactionIsNotQueued(
+    address _caller,
+    IActionsBuilder.Action calldata _action,
+    ICanonGuard.TransactionInfo[] memory _txsInfo
+  ) external {
+    vm.assume(_txsInfo.length > 2);
+    _txsInfo[0].expiresAt = bound(_txsInfo[0].expiresAt, block.timestamp + 1, type(uint256).max);
+    _txsInfo[0].executableAt = bound(_txsInfo[0].executableAt, 0, block.timestamp);
+
+    IActionsBuilder.Action[] memory _actions = new IActionsBuilder.Action[](1);
+    _actions[0] = _action;
+    bytes memory _actionsData = abi.encode(_actions);
+    address[] memory _actionsBuilders = new address[](_txsInfo.length);
+
+    // Mock SAFE contract calls
+    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.nonce.selector), abi.encode(1));
+    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.getTransactionHash.selector), abi.encode(bytes32(0)));
+    _mockAndExpect(SAFE, abi.encodeWithSelector(IOwnerManager.getOwners.selector), abi.encode(new address[](0)));
+
+    // tx 0 executes
+    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.execTransaction.selector), abi.encode(true));
+    for (uint256 _i; _i < _actionsBuilders.length; ++_i) {
+      // Don't add tx 1 to the queue
+      if (_i != 1) {
+        _actionsBuilders[_i] = makeAddr(string(abi.encodePacked(_i)));
+        canonGuard.mockTransaction(
+          _txsInfo[_i].proposer, _actionsBuilders[_i], _actionsData, _txsInfo[_i].executableAt, _txsInfo[_i].expiresAt
+        );
+      }
+    }
+
+    // it reverts with NoTransactionQueued
+    vm.expectRevert(ICanonGuard.NoTransactionQueued.selector);
+    vm.prank(_caller);
+    canonGuard.executeTransactions(_actionsBuilders);
+  }
+
+  modifier whenAllTransactionsAreValid() {
+    _;
+  }
+
+  function test_ExecuteTransactionsWhenInSimulationMode(
+    address _caller,
+    IActionsBuilder.Action calldata _action,
+    ICanonGuard.TransactionInfo[] memory _txsInfo
+  ) external whenAllTransactionsAreValid {
+    vm.assume(_txsInfo.length > 1);
+    vm.store(address(canonGuard), bytes32(uint256(4)), bytes32(uint256(1))); // sets _isSimulation to true
+
+    IActionsBuilder.Action[] memory _actions = new IActionsBuilder.Action[](1);
+    _actions[0] = _action;
+    bytes memory _actionsData = abi.encode(_actions);
+    address[] memory _actionsBuilders = new address[](_txsInfo.length);
+
+    // Mock SAFE contract calls
+    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.nonce.selector), abi.encode(1));
+    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.getTransactionHash.selector), abi.encode(bytes32(0)));
+    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.execTransaction.selector), abi.encode(true));
+
+    for (uint256 _i; _i < _actionsBuilders.length; ++_i) {
+      _txsInfo[_i].expiresAt = bound(_txsInfo[_i].expiresAt, block.timestamp + 1, type(uint256).max);
+      _txsInfo[_i].executableAt = bound(_txsInfo[_i].executableAt, 0, block.timestamp);
+      _actionsBuilders[_i] = makeAddr(string(abi.encodePacked(_i)));
+      canonGuard.mockTransaction(
+        _txsInfo[_i].proposer, _actionsBuilders[_i], _actionsData, _txsInfo[_i].executableAt, _txsInfo[_i].expiresAt
+      );
+    }
+
+    address[] memory _signers = new address[](1);
+    _signers[0] = address(canonGuard);
+
+    // it emits TransactionExecuted event
+    for (uint256 _i; _i < _actionsBuilders.length; ++_i) {
+      vm.expectEmit(address(canonGuard));
+      emit ICanonGuard.TransactionExecuted(_actionsBuilders[_i], bytes32(0), _signers);
+    }
+
+    // it executes transactions with CanonGuard as signer
+    vm.prank(_caller);
+    canonGuard.executeTransactions(_actionsBuilders);
+
+    for (uint256 _i; _i < _actionsBuilders.length; ++_i) {
+      // it deletes transactions from mapping
+      (address _proposer, bytes memory __actionsData, uint256 _executableAt, uint256 _expiresAt) =
+        canonGuard.transactionsInfo(_actionsBuilders[_i]);
+      assertEq(__actionsData, bytes(''));
+      assertEq(_executableAt, 0);
+      assertEq(_proposer, address(0));
+      assertEq(_expiresAt, 0);
+    }
+    // it deletes transactions from queue
+    assertEq(canonGuard.getQueuedActionBuilders().length, 0);
+  }
+
+  function test_ExecuteTransactionsWhenNotInSimulationMode(
+    address _caller,
+    IActionsBuilder.Action calldata _action,
+    ICanonGuard.TransactionInfo[] memory _txsInfo,
+    address _signer1,
+    address _signer2
+  ) external whenAllTransactionsAreValid {
+    vm.assume(_signer1 > _signer2);
+    vm.assume(_signer2 != address(0));
+    vm.assume(_txsInfo.length > 1);
+
+    IActionsBuilder.Action[] memory _actions = new IActionsBuilder.Action[](1);
+    _actions[0] = _action;
+    bytes memory _actionsData = abi.encode(_actions);
+    address[] memory _actionsBuilders = new address[](_txsInfo.length);
+
+    // Mock SAFE contract calls
+    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.nonce.selector), abi.encode(1));
+    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.getTransactionHash.selector), abi.encode(bytes32(0)));
+    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.execTransaction.selector), abi.encode(true));
+
+    address[] memory _signers = new address[](2);
+    _signers[0] = _signer1;
+    _signers[1] = _signer2;
+    _mockAndExpect(SAFE, abi.encodeWithSelector(IOwnerManager.getOwners.selector), abi.encode(_signers));
+    _mockApprovedHashesForSigners(_signers, 1);
+
+    for (uint256 _i; _i < _actionsBuilders.length; ++_i) {
+      _txsInfo[_i].expiresAt = bound(_txsInfo[_i].expiresAt, block.timestamp + 1, type(uint256).max);
+      _txsInfo[_i].executableAt = bound(_txsInfo[_i].executableAt, 0, block.timestamp);
+      _actionsBuilders[_i] = makeAddr(string(abi.encodePacked(_i)));
+      canonGuard.mockTransaction(
+        _txsInfo[_i].proposer, _actionsBuilders[_i], _actionsData, _txsInfo[_i].executableAt, _txsInfo[_i].expiresAt
+      );
+    }
+
+    address[] memory _sortedSigners = new address[](2);
+    _sortedSigners[0] = _signer2;
+    _sortedSigners[1] = _signer1;
+
+    // it emits TransactionExecuted event
+    for (uint256 _i; _i < _actionsBuilders.length; ++_i) {
+      vm.expectEmit(address(canonGuard));
+      emit ICanonGuard.TransactionExecuted(_actionsBuilders[_i], bytes32(0), _sortedSigners);
+    }
+
+    // it executes transactions with CanonGuard as signer
+    vm.prank(_caller);
+    canonGuard.executeTransactions(_actionsBuilders);
+
+    for (uint256 _i; _i < _actionsBuilders.length; ++_i) {
+      // it deletes transactions from mapping
+      (address _proposer, bytes memory __actionsData, uint256 _executableAt, uint256 _expiresAt) =
+        canonGuard.transactionsInfo(_actionsBuilders[_i]);
+      assertEq(__actionsData, bytes(''));
+      assertEq(_executableAt, 0);
+      assertEq(_proposer, address(0));
+      assertEq(_expiresAt, 0);
+    }
+    // it deletes transactions from queue
     assertEq(canonGuard.getQueuedActionBuilders().length, 0);
   }
 
@@ -916,18 +1173,11 @@ contract UnitCanonGuard is Test {
     external
     whenEmergencyModeIsActive
   {
-    _assumeFuzzable(_caller);
-    vm.assume(_caller != canonGuard.emergencyCaller());
-
-    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.nonce.selector), abi.encode(1));
-    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.getTransactionHash.selector), abi.encode(bytes32(0)));
-    _mockAndExpect(SAFE, abi.encodeWithSelector(IOwnerManager.getOwners.selector), abi.encode(new address[](0)));
+    vm.assume(_caller != EMERGENCY_CALLER);
 
     // it reverts with Unauthorized
-    vm.expectRevert(
-      abi.encodeWithSelector(IEmergencyModeHook.Unauthorized.selector, _caller, canonGuard.emergencyCaller())
-    );
     vm.prank(_caller);
+    vm.expectRevert(abi.encodeWithSelector(IEmergencyModeHook.Unauthorized.selector, _caller, EMERGENCY_CALLER));
     canonGuard.executeNoActionTransaction();
   }
 
