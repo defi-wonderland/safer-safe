@@ -58,4 +58,8 @@ contract UnitActionHub is Test {
     // it marks the actions builder as a child
     assertTrue(actionHub.isChild(_actionsBuilder));
   }
+
+  function test_HubReturnsTrue() external {
+    // it returns true
+  }
 }

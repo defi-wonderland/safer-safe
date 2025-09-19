@@ -259,6 +259,54 @@ contract UnitCanonGuard is Test {
     _;
   }
 
+  modifier whenItHasNoParent() {
+    _;
+  }
+
+  function test_QueueTransactionWhenNoParentActionBuilderIsPreApproved()
+    external
+    whenCallerIsSafeOwner
+    whenItHasNoParent
+  {
+    // it sets transaction info
+    // it adds the action builder to the queue
+    // it sets the proposer
+    // it sets executable time at block timestamp plus short delay
+    // it sets expiry time at executable time plus expiry delay
+    // it emits TransactionQueued event
+  }
+
+  function test_QueueTransactionWhenNoParentActionBuilderIsNotPreApproved()
+    external
+    whenCallerIsSafeOwner
+    whenItHasNoParent
+  {
+    // it sets transaction info
+    // it adds the action builder to the queue
+    // it sets the proposer
+    // it sets executable time at block timestamp plus long delay
+    // it sets expiry time at executable time plus expiry delay
+    // it emits TransactionQueued event
+  }
+
+  function test_QueueTransactionWhenNoParentTransactionIsAlreadyQueuedButExpired()
+    external
+    whenCallerIsSafeOwner
+    whenItHasNoParent
+  {
+    // it sets transaction info
+    // it does not re add the action builder to the queue
+  }
+
+  function test_QueueTransactionWhenNoParentTransactionIsAlreadyQueuedAndNotExpired()
+    external
+    whenCallerIsSafeOwner
+    whenItHasNoParent
+  {
+    // it reverts with TransactionAlreadyQueued
+    // it does not re add the action builder to the queue
+  }
+
   modifier whenParentIsNotAHub(address _actionsBuilder, address _parent) {
     _mockAndExpect(address(_actionsBuilder), abi.encodeWithSelector(IActionHub.PARENT.selector), abi.encode(_parent));
     vm.mockCallRevert(_parent, abi.encodeWithSelector(IActionHub.hub.selector), 'Does not implement hub()');
