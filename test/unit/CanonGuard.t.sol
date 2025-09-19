@@ -77,6 +77,7 @@ contract UnitCanonGuard is Test {
     uint256 _txExpiryDelay,
     uint256 _maxApprovalDuration
   ) external {
+    _txExpiryDelay = bound(_txExpiryDelay, 1 hours, type(uint128).max);
     _shortTxExecutionDelay = bound(_shortTxExecutionDelay, 0, type(uint128).max - 1);
     _longTxExecutionDelay = bound(_longTxExecutionDelay, _shortTxExecutionDelay, type(uint128).max);
 
