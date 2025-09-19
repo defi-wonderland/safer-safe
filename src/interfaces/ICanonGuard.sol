@@ -184,6 +184,15 @@ interface ICanonGuard is ISafeManageable {
   function executeTransaction(address _actionsBuilder) external payable;
 
   /**
+   * @notice Executes multiple queued transactions using the approved hash signers
+   * @dev Can be called by anyone
+   * @dev The transactions must have passed their execution delay period, but not their expiry delay period
+   * @dev Each transaction must have been approved using consecutive SAFE nonces.
+   * @param _actionsBuilders The array of actions builder contract addresses of the transactions to execute
+   */
+  function executeTransactions(address[] memory _actionsBuilders) external payable;
+
+  /**
    * @notice Executes an empty transaction, in order to use the safe nonce.
    * @notice This will nullify the signatures for that specific safe nonce.
    * @dev Can be called by anyone if not in emergency mode
@@ -250,14 +259,14 @@ interface ICanonGuard is ISafeManageable {
   function approvalExpiries(address _actionsBuilder) external view returns (uint256 _approvalExpiresAt);
 
   /**
-   * @notice Gets the transaction info for an actions builder
+   * @notice Gets the transaction info for an queued actions builder
    * @return _proposer The address of the proposer of the transaction
    * @param _actionsBuilder The actions builder contract address
    * @return _actionsData The encoded actions data
    * @return _executableAt The timestamp from which the transaction can be executed
    * @return _expiresAt The timestamp from which the transaction expires
    */
-  function queuedTransactions(address _actionsBuilder)
+  function transactionsInfo(address _actionsBuilder)
     external
     view
     returns (address _proposer, bytes memory _actionsData, uint256 _executableAt, uint256 _expiresAt);
@@ -265,14 +274,14 @@ interface ICanonGuard is ISafeManageable {
   // ~~~ GETTER METHODS ~~~
 
   /**
-   * @notice Gets the Safe transaction hash for an actions builder
+   * @notice Gets the Safe transaction hash for an actions builder. If the actions builder is the zero address, it will return the hash of an empty transaction.
    * @param _actionsBuilder The actions builder contract address
    * @return _safeTxHash The Safe transaction hash
    */
   function getSafeTransactionHash(address _actionsBuilder) external view returns (bytes32 _safeTxHash);
 
   /**
-   * @notice Gets the Safe transaction hash for an actions builder with a specific Safe nonce
+   * @notice Gets the Safe transaction hash for an actions builder with a specific Safe nonce. If the actions builder is the zero address, it will return the hash of an empty transaction.
    * @param _actionsBuilder The actions builder contract address
    * @param _safeNonce The Safe nonce to use for the hash calculation
    * @return _safeTxHash The Safe transaction hash
@@ -281,13 +290,6 @@ interface ICanonGuard is ISafeManageable {
     address _actionsBuilder,
     uint256 _safeNonce
   ) external view returns (bytes32 _safeTxHash);
-
-  /**
-   * @notice Gets the Safe empty transaction hash
-   * @param _safeNonce The Safe nonce to use for the hash calculation
-   * @return _safeTxHash The Safe empty transaction hash
-   */
-  function getSafeEmptyTransactionHash(uint256 _safeNonce) external view returns (bytes32 _safeTxHash);
 
   /**
    * @notice Gets the list of signers who have approved a Safe transaction hash for an actions builder with a specific Safe nonce
@@ -305,4 +307,11 @@ interface ICanonGuard is ISafeManageable {
    * @return _safeNonce The Safe nonce
    */
   function getSafeNonce() external view returns (uint256 _safeNonce);
+
+  /**
+   * @notice Gets the list of action builders in the queue
+   * @dev The actions builders are not sorted
+   * @return _queuedActionBuilders The array of action builders in the queue
+   */
+  function getQueuedActionBuilders() external view returns (address[] memory _queuedActionBuilders);
 }
