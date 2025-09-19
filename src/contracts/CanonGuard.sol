@@ -251,18 +251,17 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
     address _actionsBuilder,
     uint256 _safeNonce
   ) public view returns (bytes32 _safeTxHash) {
-    TransactionInfo memory _txInfo = transactionsInfo[_actionsBuilder];
-    if (_txInfo.expiresAt == 0) revert NoTransactionQueued();
+    if (_actionsBuilder != address(0)) {
+      TransactionInfo memory _txInfo = transactionsInfo[_actionsBuilder];
+      if (_txInfo.expiresAt == 0) revert NoTransactionQueued();
 
-    IActionsBuilder.Action[] memory _actions = abi.decode(_txInfo.actionsData, (IActionsBuilder.Action[]));
+      IActionsBuilder.Action[] memory _actions = abi.decode(_txInfo.actionsData, (IActionsBuilder.Action[]));
 
-    bytes memory _multiSendData = _buildMultiSendData(_actions);
-    _safeTxHash = _getSafeTransactionHash(_multiSendData, _safeNonce);
-  }
-
-  /// @inheritdoc ICanonGuard
-  function getSafeEmptyTransactionHash(uint256 _safeNonce) public view returns (bytes32 _safeTxHash) {
-    _safeTxHash = _getSafeTransactionHash(_buildMultiSendData(new IActionsBuilder.Action[](0)), _safeNonce);
+      bytes memory _multiSendData = _buildMultiSendData(_actions);
+      _safeTxHash = _getSafeTransactionHash(_multiSendData, _safeNonce);
+    } else {
+      _safeTxHash = _getSafeTransactionHash(_buildMultiSendData(new IActionsBuilder.Action[](0)), _safeNonce);
+    }
   }
 
   // ~~~ INTERNAL METHODS ~~~

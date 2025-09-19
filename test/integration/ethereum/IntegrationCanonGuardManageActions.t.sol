@@ -407,7 +407,7 @@ contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
     vm.stopPrank();
 
     // Approve the Safe empty transaction hash
-    bytes32 _safeEmptyTxHash = canonGuard.getSafeEmptyTransactionHash(_safeNonce);
+    bytes32 _safeEmptyTxHash = canonGuard.getSafeTransactionHash(address(0), _safeNonce);
     for (uint256 _i; _i < _safeThreshold; ++_i) {
       vm.startPrank(_safeOwners[_i]);
       SAFE_PROXY.approveHash(_safeEmptyTxHash);
