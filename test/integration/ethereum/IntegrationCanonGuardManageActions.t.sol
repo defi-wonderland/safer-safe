@@ -68,13 +68,12 @@ contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
       IDisapproveAction(disapproveActionFactory.createDisapproveAction(address(canonGuard), address(actionsBuilder)));
 
     // Deploy the ChangeSafeGuardAction contract
-    changeSafeGuardAction = IChangeSafeGuardAction(
-      changeSafeGuardActionFactory.createChangeSafeGuardAction(address(SAFE_PROXY), newSafeGuard)
-    );
+    changeSafeGuardAction =
+      IChangeSafeGuardAction(changeSafeGuardActionFactory.createChangeSafeGuardAction(newSafeGuard));
 
     // Deploy the ChangeSafeGuardAction contract to disable the safe guard
     disableSafeGuardAction =
-      IChangeSafeGuardAction(changeSafeGuardActionFactory.createChangeSafeGuardAction(address(SAFE_PROXY), address(0)));
+      IChangeSafeGuardAction(changeSafeGuardActionFactory.createChangeSafeGuardAction(address(0)));
 
     // Deploy the SimpleActions contract to add an owner
     ISimpleActions.SimpleAction memory _addOwnerSimpleAction = ISimpleActions.SimpleAction({
