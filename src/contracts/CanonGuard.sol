@@ -185,9 +185,11 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
 
   /// @inheritdoc ICanonGuard
   function cancelEnqueuedTransaction(address _actionsBuilder) external {
+    _onBeforeExecution();
+
     TransactionInfo memory _txInfo = transactionsInfo[_actionsBuilder];
     if (_txInfo.expiresAt == 0) revert NoTransactionQueued();
-    if (msg.sender != _txInfo.proposer) revert CallerMustBeTransactionProposer();
+    if (!emergencyMode && msg.sender != _txInfo.proposer) revert CallerMustBeTransactionProposer();
 
     IActionsBuilder.Action[] memory _actions = abi.decode(_txInfo.actionsData, (IActionsBuilder.Action[]));
 
