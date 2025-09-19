@@ -19,17 +19,11 @@ interface IActionHub {
    * @param _actionsBuilder The address of the actions builder to check
    * @return _isChild True if the actions builder is a child of the actionHub, false otherwise
    */
-  function isChild(address _actionsBuilder) external view returns (bool _isChild);
+  function isHubChild(address _actionsBuilder) external view returns (bool _isChild);
 
   /**
    * @notice Gets the parent address
    * @return _parent The parent address
    */
   function PARENT() external view returns (address _parent);
-
-  /**
-   * @notice Gets if the contract is an ActionHub
-   * @return _isHub True if the contract is an IActionHub, false otherwise
-   */
-  function hub() external pure returns (bool _isHub);
 }

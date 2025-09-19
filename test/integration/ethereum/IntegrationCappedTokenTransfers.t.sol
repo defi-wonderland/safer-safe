@@ -36,7 +36,7 @@ contract IntegrationCappedTokenTransfers is IntegrationEthereumBase {
     address _actionsBuilder = _cappedTokenTransfersHub.createNewActionsBuilder(address(WETH), 10 ether);
 
     // Check that the actions builder was created correctly
-    assertTrue(IActionHub(address(_cappedTokenTransfersHub)).isChild(_actionsBuilder));
+    assertTrue(IActionHub(address(_cappedTokenTransfersHub)).isHubChild(_actionsBuilder));
     assertEq(ICappedTokenTransfers(_actionsBuilder).TOKEN(), address(WETH));
     assertEq(ICappedTokenTransfers(_actionsBuilder).AMOUNT(), 10 ether);
     assertEq(ICappedTokenTransfers(_actionsBuilder).RECIPIENT(), _recipient);

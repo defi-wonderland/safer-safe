@@ -391,7 +391,9 @@ contract UnitCanonGuard is Test {
 
   modifier whenParentIsNotAHub(address _actionsBuilder, address _parent) {
     _mockAndExpect(address(_actionsBuilder), abi.encodeWithSelector(IActionHub.PARENT.selector), abi.encode(_parent));
-    vm.mockCallRevert(_parent, abi.encodeWithSelector(IActionHub.hub.selector), 'Does not implement hub()');
+    vm.mockCallRevert(
+      _parent, abi.encodeWithSelector(IActionHub.isHubChild.selector), 'Does not implement isHubChild()'
+    );
     _;
   }
 
@@ -533,8 +535,7 @@ contract UnitCanonGuard is Test {
 
   modifier whenParentIsAHub(address _actionsBuilder, address _actionHub) {
     _mockAndExpect(address(_actionsBuilder), abi.encodeWithSelector(IActionHub.PARENT.selector), abi.encode(_actionHub));
-    vm.mockCall(_actionHub, abi.encodeWithSelector(IActionHub.hub.selector), abi.encode(true));
-    vm.mockCall(_actionHub, abi.encodeWithSelector(IActionHub.isChild.selector, _actionsBuilder), abi.encode(true));
+    vm.mockCall(_actionHub, abi.encodeWithSelector(IActionHub.isHubChild.selector, _actionsBuilder), abi.encode(true));
     _;
   }
 
@@ -609,8 +610,7 @@ contract UnitCanonGuard is Test {
     _assumeFuzzable(_caller);
 
     _mockAndExpect(address(_actionsBuilder), abi.encodeWithSelector(IActionHub.PARENT.selector), abi.encode(_actionHub));
-    vm.mockCall(_actionHub, abi.encodeWithSelector(IActionHub.hub.selector), abi.encode(true));
-    vm.mockCall(_actionHub, abi.encodeWithSelector(IActionHub.isChild.selector, _actionsBuilder), abi.encode(false));
+    vm.mockCall(_actionHub, abi.encodeWithSelector(IActionHub.isHubChild.selector, _actionsBuilder), abi.encode(false));
 
     // it reverts with InvalidActionBuilderHubParent
     vm.prank(_caller);
@@ -619,7 +619,7 @@ contract UnitCanonGuard is Test {
   }
 
   modifier whenActionBuilderIsAChildOfTheHub(address _actionHub, address _actionsBuilder) {
-    vm.mockCall(_actionHub, abi.encodeWithSelector(IActionHub.isChild.selector, _actionsBuilder), abi.encode(true));
+    vm.mockCall(_actionHub, abi.encodeWithSelector(IActionHub.isHubChild.selector, _actionsBuilder), abi.encode(true));
     _;
   }
 
