@@ -9,7 +9,6 @@ import {IDisapproveAction} from 'interfaces/actions-builders/IDisapproveAction.s
 import {ISetEmergencyCallerAction} from 'interfaces/actions-builders/ISetEmergencyCallerAction.sol';
 import {ISetEmergencyTriggerAction} from 'interfaces/actions-builders/ISetEmergencyTriggerAction.sol';
 import {ISimpleActions} from 'interfaces/actions-builders/ISimpleActions.sol';
-import {IUnsetEmergencyModeAction} from 'interfaces/actions-builders/IUnsetEmergencyModeAction.sol';
 import {IntegrationEthereumBase} from 'test/integration/ethereum/IntegrationEthereumBase.sol';
 
 contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
@@ -26,7 +25,6 @@ contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
   // Emergency actions
   ISetEmergencyCallerAction public setEmergencyCallerAction;
   ISetEmergencyTriggerAction public setEmergencyTriggerAction;
-  IUnsetEmergencyModeAction public unsetEmergencyModeAction;
 
   address public actionsBuilder;
   address public newSafeGuard;
@@ -60,8 +58,6 @@ contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
     setEmergencyTriggerAction = ISetEmergencyTriggerAction(
       setEmergencyTriggerActionFactory.createSetEmergencyTriggerAction(address(canonGuard), newEmergencyTrigger)
     );
-    unsetEmergencyModeAction =
-      IUnsetEmergencyModeAction(unsetEmergencyModeActionFactory.createUnsetEmergencyModeAction(address(canonGuard)));
 
     // Deploy the DisapproveAction contract
     disapproveAction =

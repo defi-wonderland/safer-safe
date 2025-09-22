@@ -15,7 +15,6 @@ import {SetEmergencyCallerActionFactory} from 'contracts/factories/SetEmergencyC
 import {SetEmergencyTriggerActionFactory} from 'contracts/factories/SetEmergencyTriggerActionFactory.sol';
 import {SimpleActionsFactory} from 'contracts/factories/SimpleActionsFactory.sol';
 import {SimpleTransfersFactory} from 'contracts/factories/SimpleTransfersFactory.sol';
-import {UnsetEmergencyModeActionFactory} from 'contracts/factories/UnsetEmergencyModeActionFactory.sol';
 import {Test} from 'forge-std/Test.sol';
 import {ICanonGuard} from 'interfaces/ICanonGuard.sol';
 import {ICanonGuardFactory} from 'interfaces/factories/ICanonGuardFactory.sol';
@@ -107,6 +106,5 @@ contract UnitDeployCanonGuard is DeployCanonGuard, Test {
     assertEq(address(setEmergencyTriggerActionFactory).code, type(SetEmergencyTriggerActionFactory).runtimeCode);
     assertEq(address(simpleActionsFactory).code, type(SimpleActionsFactory).runtimeCode);
     assertEq(address(simpleTransfersFactory).code, type(SimpleTransfersFactory).runtimeCode);
-    assertEq(address(unsetEmergencyModeActionFactory).code, type(UnsetEmergencyModeActionFactory).runtimeCode);
   }
 }
