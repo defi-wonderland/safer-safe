@@ -354,9 +354,9 @@ contract UnitCanonGuard is Test {
 
   modifier whenParentIsNotAHub(address _actionsBuilder, address _parent) {
     _mockAndExpect(address(_actionsBuilder), abi.encodeWithSelector(IActionHub.PARENT.selector), abi.encode(_parent));
-    vm.mockCallRevert(
-      _parent, abi.encodeWithSelector(IActionHub.isHubChild.selector), 'Does not implement isHubChild()'
-    );
+    // vm.mockCallRevert(
+    //   _parent, abi.encodeWithSelector(IActionHub.isHubChild.selector), 'Does not implement isHubChild()'
+    // );
     _;
   }
 

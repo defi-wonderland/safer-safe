@@ -118,25 +118,28 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
 
   /// @inheritdoc ICanonGuard
   function queueTransaction(address _actionsBuilder) external isSafeOwner {
-    address _parent = IActionHub(_actionsBuilder).PARENT();
-    bool _actionIsPreApproved;
     bool _parentIsHub;
-    // Checks if parent is address(0) or an EOA
-    if (_parent.code.length == 0) {
+    bool _actionIsPreApproved;
+    // assuming it will implement PARENT(), currently all contracts implement it
+    address _hub = IActionHub(_actionsBuilder).PARENT();
+    // low level call, if data is empty, it is an EOA. If _success is false is actionBuilder without parent hub
+    (bool _success, bytes memory _data) = _hub.staticcall(abi.encodeCall(IActionHub.isHubChild, (_actionsBuilder)));
+    if (_success == false || _data.length == 0) {
+      // EOA or actionBuilder without parent hub
       _actionIsPreApproved = _isPreApproved(_actionsBuilder);
     } else {
-      try IActionHub(_parent).isHubChild(_actionsBuilder) returns (bool _isChild) {
-        if (!_isChild) revert InvalidActionBuilderHubParent();
-        _parentIsHub = true;
-        _actionIsPreApproved = _isPreApproved(_parent);
-      } catch {
-        _actionIsPreApproved = _isPreApproved(_actionsBuilder);
-      }
+      // actionBuilder with parent hub, check if child of that Hub
+      bool _isChild = abi.decode(_data, (bool));
+      // not a child of that Hub, revert
+      if (_isChild == false) revert InvalidActionBuilderHubParent();
+      // actionBuilder is a child of that Hub, check if the Hub is pre-approved
+      _parentIsHub = true;
+      _actionIsPreApproved = _isPreApproved(_hub);
     }
 
     _queueTransaction(_actionsBuilder, _actionIsPreApproved);
 
-    emit TransactionQueued(_parentIsHub ? _parent : address(0), msg.sender, _actionsBuilder, _actionIsPreApproved);
+    emit TransactionQueued(_parentIsHub ? _hub : address(0), msg.sender, _actionsBuilder, _actionIsPreApproved);
   }
 
   /// @inheritdoc ICanonGuard
