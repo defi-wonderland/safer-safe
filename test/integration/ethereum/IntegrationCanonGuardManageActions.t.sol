@@ -47,9 +47,7 @@ contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
     newEmergencyTrigger = makeAddr('newEmergencyTrigger');
 
     // Deploy the ApproveAction contract
-    approveAction = IApproveAction(
-      approveActionFactory.createApproveAction(address(canonGuard), address(actionsBuilder), APPROVAL_DURATION)
-    );
+    approveAction = IApproveAction(approveActionFactory.createApproveAction(address(actionsBuilder), APPROVAL_DURATION));
 
     // Deploy emergency actions
     setEmergencyCallerAction = ISetEmergencyCallerAction(
@@ -430,11 +428,8 @@ contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
 
     uint256 _originalBlockTimestamp = block.timestamp;
 
-    approveAction = IApproveAction(
-      approveActionFactory.createApproveAction(
-        address(canonGuard), address(setEmergencyCallerAction), APPROVAL_DURATION
-      )
-    );
+    approveAction =
+      IApproveAction(approveActionFactory.createApproveAction(address(setEmergencyCallerAction), APPROVAL_DURATION));
 
     vm.prank(_safeOwners[0]);
     canonGuard.queueTransaction(address(approveAction));
