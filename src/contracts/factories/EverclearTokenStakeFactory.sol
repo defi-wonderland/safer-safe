@@ -20,12 +20,11 @@ contract EverclearTokenStakeFactory is IEverclearTokenStakeFactory, Factory {
     address _clearLockbox,
     address _next,
     address _clear,
-    address _safe,
     uint256 _lockTime
   ) external returns (address _everclearTokenStake) {
     _everclearTokenStake = address(
       new EverclearTokenStake(
-        address(this), _vestingEscrow, _vestingWallet, _spokeBridge, _clearLockbox, _next, _clear, _safe, _lockTime
+        address(this), _vestingEscrow, _vestingWallet, _spokeBridge, _clearLockbox, _next, _clear, _lockTime
       )
     );
 

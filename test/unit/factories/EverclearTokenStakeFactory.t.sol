@@ -21,11 +21,10 @@ contract UnitEverclearTokenStakeFactorycreateEverclearTokenStake is Test {
     address _clearLockbox,
     address _next,
     address _clear,
-    address _safe,
     uint256 _lockTime
   ) external {
     address _everclearTokenStake = everclearTokenStakeFactory.createEverclearTokenStake(
-      _vestingEscrow, _vestingWallet, _spokeBridge, _clearLockbox, _next, _clear, _safe, _lockTime
+      _vestingEscrow, _vestingWallet, _spokeBridge, _clearLockbox, _next, _clear, _lockTime
     );
 
     auxEverclearTokenStake = IEverclearTokenStake(
@@ -39,7 +38,6 @@ contract UnitEverclearTokenStakeFactorycreateEverclearTokenStake is Test {
           _clearLockbox,
           _next,
           _clear,
-          _safe,
           _lockTime
         )
       )
@@ -54,7 +52,6 @@ contract UnitEverclearTokenStakeFactorycreateEverclearTokenStake is Test {
     assertEq(address(IEverclearTokenStake(_everclearTokenStake).CLEAR_LOCKBOX()), _clearLockbox);
     assertEq(address(IEverclearTokenStake(_everclearTokenStake).NEXT()), _next);
     assertEq(address(IEverclearTokenStake(_everclearTokenStake).CLEAR()), _clear);
-    assertEq(address(IEverclearTokenStake(_everclearTokenStake).SAFE()), _safe);
     assertEq(IEverclearTokenStake(_everclearTokenStake).LOCK_TIME(), _lockTime);
 
     // it should set the parent address in the child contract

@@ -5,6 +5,7 @@ import {Test} from 'forge-std/Test.sol';
 
 import {IERC20} from 'forge-std/interfaces/IERC20.sol';
 import {EverclearTokenStake} from 'src/contracts/actions-builders/EverclearTokenStake.sol';
+import {ISafeManageable} from 'src/interfaces/ISafeManageable.sol';
 import {IActionsBuilder} from 'src/interfaces/actions-builders/IActionsBuilder.sol';
 import {IGateway} from 'src/interfaces/external/IGateway.sol';
 import {ISpokeBridge} from 'src/interfaces/external/ISpokeBridge.sol';
@@ -23,12 +24,11 @@ contract UnitEverclearTokenStake is Test {
   address public clearLockbox = makeAddr('clearLockbox');
   address public next = makeAddr('NEXT');
   address public clear = makeAddr('CLEAR');
-  address public safe = makeAddr('SAFE');
   address public gateway = makeAddr('gateway');
 
   function setUp() external {
     everclearTokenStake = new EverclearTokenStake(
-      address(0), vestingEscrow, vestingWallet, spokeBridge, clearLockbox, next, clear, safe, LOCK_TIME
+      address(0), vestingEscrow, vestingWallet, spokeBridge, clearLockbox, next, clear, LOCK_TIME
     );
   }
 
@@ -45,13 +45,12 @@ contract UnitEverclearTokenStake is Test {
     assertEq(address(everclearTokenStake.NEXT()), next);
     // it sets the CLEAR address
     assertEq(address(everclearTokenStake.CLEAR()), clear);
-    // it sets the SAFE address
-    assertEq(everclearTokenStake.SAFE(), safe);
     // it sets the lock time
     assertEq(everclearTokenStake.LOCK_TIME(), LOCK_TIME);
   }
 
   function test_GetActionsWhenCalled(
+    address _safe,
     uint256 _unclaimed,
     uint256 _nextBalance,
     uint256 _vestedAmount,
@@ -81,12 +80,13 @@ contract UnitEverclearTokenStake is Test {
     uint128 _lockTime = uint128(block.timestamp + LOCK_TIME);
     _lockTime = (_lockTime / 1 weeks) * 1 weeks;
 
+    _mockAndExpect(address(this), abi.encodeWithSelector(ISafeManageable.SAFE.selector), abi.encode(_safe));
     _mockAndExpect(spokeBridge, abi.encodeWithSelector(ISpokeBridge.gateway.selector), abi.encode(gateway));
     _mockAndExpect(spokeBridge, abi.encodeWithSelector(ISpokeBridge.EVERCLEAR_ID.selector), abi.encode(_everclearId));
     _mockAndExpect(
       gateway,
       abi.encodeWithSelector(
-        IGateway.quoteMessage.selector, _everclearId, abi.encode(2, safe, _amountToBeReleased, _lockTime), GAS_LIMIT
+        IGateway.quoteMessage.selector, _everclearId, abi.encode(2, _safe, _amountToBeReleased, _lockTime), GAS_LIMIT
       ),
       abi.encode(_messageFee)
     );

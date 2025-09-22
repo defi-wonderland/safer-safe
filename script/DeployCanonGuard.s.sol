@@ -175,9 +175,8 @@ contract DeployCanonGuard is Constants, Script {
   }
 
   function _deployEthereumContracts() internal {
-    new EverclearTokenConversion(DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS);
+    new EverclearTokenConversion(DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS);
     new EverclearTokenStake(
-      DUMMY_ADDRESS,
       DUMMY_ADDRESS,
       DUMMY_ADDRESS,
       DUMMY_ADDRESS,
@@ -190,6 +189,6 @@ contract DeployCanonGuard is Constants, Script {
   }
 
   function _deployOptimismContracts() internal {
-    new OPxAction(DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS);
+    new OPxAction(DUMMY_ADDRESS, DUMMY_ADDRESS);
   }
 }
