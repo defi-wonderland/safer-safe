@@ -58,8 +58,7 @@ contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
     );
 
     // Deploy the DisapproveAction contract
-    disapproveAction =
-      IDisapproveAction(disapproveActionFactory.createDisapproveAction(address(canonGuard), address(actionsBuilder)));
+    disapproveAction = IDisapproveAction(disapproveActionFactory.createDisapproveAction(address(actionsBuilder)));
 
     // Deploy the ChangeSafeGuardAction contract
     changeSafeGuardAction =
