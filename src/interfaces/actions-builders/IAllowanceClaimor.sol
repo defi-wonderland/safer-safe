@@ -11,12 +11,6 @@ interface IAllowanceClaimor {
   // ~~~ STORAGE METHODS ~~~
 
   /**
-   * @notice Gets the Safe contract
-   * @return _safe The Gnosis Safe contract address
-   */
-  function SAFE() external view returns (address _safe);
-
-  /**
    * @notice Gets the token contract
    * @return _token The token contract address
    */
