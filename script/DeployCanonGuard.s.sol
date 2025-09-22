@@ -151,8 +151,8 @@ contract DeployCanonGuard is Constants, Script {
     new CappedTokenTransfers(DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_AMOUNT, DUMMY_ADDRESS, DUMMY_ADDRESS);
     new ChangeSafeGuardAction(DUMMY_ADDRESS, DUMMY_ADDRESS);
     new DisapproveAction(DUMMY_ADDRESS, DUMMY_ADDRESS);
-    new SetEmergencyCallerAction(DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS);
-    new SetEmergencyTriggerAction(DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS);
+    new SetEmergencyCallerAction(DUMMY_ADDRESS, DUMMY_ADDRESS);
+    new SetEmergencyTriggerAction(DUMMY_ADDRESS, DUMMY_ADDRESS);
     new SimpleActions(DUMMY_ADDRESS, new SimpleActions.SimpleAction[](0));
     new SimpleTransfers(DUMMY_ADDRESS, new SimpleTransfers.TransferAction[](0));
     new CappedTokenTransfersHub(

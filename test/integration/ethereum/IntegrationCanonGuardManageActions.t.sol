@@ -50,12 +50,10 @@ contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
     approveAction = IApproveAction(approveActionFactory.createApproveAction(address(actionsBuilder), APPROVAL_DURATION));
 
     // Deploy emergency actions
-    setEmergencyCallerAction = ISetEmergencyCallerAction(
-      setEmergencyCallerActionFactory.createSetEmergencyCallerAction(address(canonGuard), newEmergencyCaller)
-    );
-    setEmergencyTriggerAction = ISetEmergencyTriggerAction(
-      setEmergencyTriggerActionFactory.createSetEmergencyTriggerAction(address(canonGuard), newEmergencyTrigger)
-    );
+    setEmergencyCallerAction =
+      ISetEmergencyCallerAction(setEmergencyCallerActionFactory.createSetEmergencyCallerAction(newEmergencyCaller));
+    setEmergencyTriggerAction =
+      ISetEmergencyTriggerAction(setEmergencyTriggerActionFactory.createSetEmergencyTriggerAction(newEmergencyTrigger));
 
     // Deploy the DisapproveAction contract
     disapproveAction = IDisapproveAction(disapproveActionFactory.createDisapproveAction(address(actionsBuilder)));

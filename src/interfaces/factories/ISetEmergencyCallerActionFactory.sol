@@ -10,12 +10,10 @@ interface ISetEmergencyCallerActionFactory {
 
   /**
    * @notice Creates a SetEmergencyCallerAction contract
-   * @param _canonGuard The canon guard contract address
    * @param _emergencyCaller The emergency caller address
    * @return _setEmergencyCallerAction The SetEmergencyCallerAction contract address
    */
-  function createSetEmergencyCallerAction(
-    address _canonGuard,
-    address _emergencyCaller
-  ) external returns (address _setEmergencyCallerAction);
+  function createSetEmergencyCallerAction(address _emergencyCaller)
+    external
+    returns (address _setEmergencyCallerAction);
 }

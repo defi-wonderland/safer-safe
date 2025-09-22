@@ -9,12 +9,6 @@ interface ISetEmergencyTriggerAction {
   // ~~~ STORAGE METHODS ~~~
 
   /**
-   * @notice Gets the canon guard contract address
-   * @return _canonGuard The canon guard contract address
-   */
-  function CANON_GUARD() external view returns (address _canonGuard);
-
-  /**
    * @notice Gets the emergency trigger address
    * @return _emergencyTrigger The emergency trigger address
    */
