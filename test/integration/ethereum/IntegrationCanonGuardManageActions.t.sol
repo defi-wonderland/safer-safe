@@ -361,23 +361,26 @@ contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
     // Queue the transaction
     vm.prank(_safeOwners[0]);
     canonGuard.queueTransaction(address(addOwnerSimpleActions));
-    (address _proposer, bytes memory _actionsData, uint256 _executableAt, uint256 _expiresAt) =
+    (address _proposer, bytes memory _actionsData, uint256 _executableAt, uint256 _expiresAt, bool _isPreApproved) =
       canonGuard.transactionsInfo(address(addOwnerSimpleActions));
     assertEq(_proposer, _safeOwners[0]);
     assertGt(_actionsData.length, 0);
     assertEq(_executableAt, block.timestamp + LONG_TX_EXECUTION_DELAY);
     assertEq(_expiresAt, block.timestamp + LONG_TX_EXECUTION_DELAY + TX_EXPIRY_DELAY);
+    assertEq(_isPreApproved, false);
 
     // Cancel the transaction
     vm.prank(_safeOwners[0]);
     canonGuard.cancelEnqueuedTransaction(address(addOwnerSimpleActions));
 
-    (_proposer, _actionsData, _executableAt, _expiresAt) = canonGuard.transactionsInfo(address(addOwnerSimpleActions));
+    (_proposer, _actionsData, _executableAt, _expiresAt, _isPreApproved) =
+      canonGuard.transactionsInfo(address(addOwnerSimpleActions));
 
     assertEq(_proposer, address(0));
     assertEq(_actionsData, bytes(''));
     assertEq(_executableAt, 0);
     assertEq(_expiresAt, 0);
+    assertEq(_isPreApproved, false);
   }
 
   function test_ExecuteNoActionTransaction() public {
@@ -444,7 +447,7 @@ contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
     assertEq(_queuedActionBuilders.length, 1);
     assertEq(_queuedActionBuilders[0], address(setEmergencyCallerAction));
 
-    (address _proposer, bytes memory _actionsData, uint256 _executableAt, uint256 _expiresAt) =
+    (address _proposer, bytes memory _actionsData, uint256 _executableAt, uint256 _expiresAt, bool _isPreApproved) =
       canonGuard.transactionsInfo(address(setEmergencyCallerAction));
     IActionsBuilder.Action[] memory _decodedActionsData = abi.decode(_actionsData, (IActionsBuilder.Action[]));
     assertEq(_proposer, _safeOwners[0]);
@@ -453,6 +456,7 @@ contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
     assertEq(_decodedActionsData[0].value, 0);
     assertEq(_executableAt, _originalBlockTimestamp + LONG_TX_EXECUTION_DELAY);
     assertEq(_expiresAt, _executableAt + TX_EXPIRY_DELAY);
+    assertEq(_isPreApproved, false);
 
     uint256 _approvalExpiresAt = canonGuard.approvalExpiries(address(setEmergencyCallerAction));
     assertEq(_approvalExpiresAt, block.timestamp + APPROVAL_DURATION);
