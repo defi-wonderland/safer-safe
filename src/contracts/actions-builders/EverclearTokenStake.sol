@@ -3,6 +3,7 @@ pragma solidity 0.8.30;
 
 import {ActionsBuilder} from 'contracts/actions-builders/ActionsBuilder.sol';
 import {IERC20} from 'forge-std/interfaces/IERC20.sol';
+import {ICanonGuard} from 'interfaces/ICanonGuard.sol';
 import {IEverclearTokenStake} from 'interfaces/actions-builders/IEverclearTokenStake.sol';
 import {IGateway} from 'interfaces/external/IGateway.sol';
 import {ISpokeBridge} from 'interfaces/external/ISpokeBridge.sol';
@@ -36,9 +37,6 @@ contract EverclearTokenStake is IEverclearTokenStake, ActionsBuilder {
   IERC20 public immutable CLEAR;
 
   /// @inheritdoc IEverclearTokenStake
-  address public immutable SAFE;
-
-  /// @inheritdoc IEverclearTokenStake
   uint256 public immutable LOCK_TIME;
 
   // ~~~ CONSTRUCTOR ~~~
@@ -52,7 +50,6 @@ contract EverclearTokenStake is IEverclearTokenStake, ActionsBuilder {
    * @param _clearLockbox The clear lockbox contract address
    * @param _next The NEXT contract address
    * @param _clear The CLEAR contract address
-   * @param _safe The SAFE contract address
    * @param _lockTime The lock time
    */
   constructor(
@@ -63,7 +60,6 @@ contract EverclearTokenStake is IEverclearTokenStake, ActionsBuilder {
     address _clearLockbox,
     address _next,
     address _clear,
-    address _safe,
     uint256 _lockTime
   ) ActionsBuilder(_parent) {
     VESTING_ESCROW = IVestingEscrow(_vestingEscrow);
@@ -72,7 +68,6 @@ contract EverclearTokenStake is IEverclearTokenStake, ActionsBuilder {
     CLEAR_LOCKBOX = IxERC20Lockbox(_clearLockbox);
     NEXT = IERC20(_next);
     CLEAR = IERC20(_clear);
-    SAFE = _safe;
     LOCK_TIME = _lockTime;
   }
 
@@ -136,7 +131,9 @@ contract EverclearTokenStake is IEverclearTokenStake, ActionsBuilder {
 
     // NOTE: get the fee from the gateway
     uint256 _value = IGateway(SPOKE_BRIDGE.gateway()).quoteMessage(
-      SPOKE_BRIDGE.EVERCLEAR_ID(), abi.encode(2, SAFE, _amountToBeReleased, _lockTime), _gasLimit
+      SPOKE_BRIDGE.EVERCLEAR_ID(),
+      abi.encode(2, address(ICanonGuard(msg.sender).SAFE()), _amountToBeReleased, _lockTime),
+      _gasLimit
     );
 
     _actions[5] = Action({

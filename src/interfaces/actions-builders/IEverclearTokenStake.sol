@@ -49,12 +49,6 @@ interface IEverclearTokenStake {
   function CLEAR() external view returns (IERC20 _clear);
 
   /**
-   * @notice Get the SAFE contract address
-   * @return _safe The SAFE contract address
-   */
-  function SAFE() external view returns (address _safe);
-
-  /**
    * @notice Get the LOCK_TIME
    * @return _lockTime The LOCK_TIME
    */

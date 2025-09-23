@@ -14,16 +14,15 @@ contract UnitOPxActionFactorycreateOPxAction is Test {
     opxActionFactory = new OPxActionFactory();
   }
 
-  function test_WhenCalled(address _opx, address _safe) external {
-    address _opxAction = opxActionFactory.createOPxAction(_opx, _safe);
+  function test_WhenCalled(address _opx) external {
+    address _opxAction = opxActionFactory.createOPxAction(_opx);
 
     // it should deploy an OPxAction
-    auxOPxAction = IOPxAction(deployCode('OPxAction', abi.encode(address(opxActionFactory), _opx, _safe)));
+    auxOPxAction = IOPxAction(deployCode('OPxAction', abi.encode(address(opxActionFactory), _opx)));
     assertEq(address(auxOPxAction).code, _opxAction.code);
 
     // it should match the parameters sent to the constructor
     assertEq(IOPxAction(_opxAction).OPX(), _opx);
-    assertEq(IOPxAction(_opxAction).SAFE(), _safe);
 
     // it should set the parent address in the child contract
     assertEq(IActionsBuilder(_opxAction).PARENT(), address(opxActionFactory));

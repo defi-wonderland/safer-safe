@@ -14,11 +14,10 @@ contract ApproveActionFactory is IApproveActionFactory, Factory {
 
   /// @inheritdoc IApproveActionFactory
   function createApproveAction(
-    address _canonGuard,
     address _actionsBuilder,
     uint256 _approvalDuration
   ) external returns (address _approveAction) {
-    _approveAction = address(new ApproveAction(address(this), _canonGuard, _actionsBuilder, _approvalDuration));
+    _approveAction = address(new ApproveAction(address(this), _actionsBuilder, _approvalDuration));
 
     _children[_approveAction] = true;
   }

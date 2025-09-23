@@ -13,11 +13,11 @@ contract SetEmergencyTriggerActionFactory is ISetEmergencyTriggerActionFactory, 
   // ~~~ FACTORY METHODS ~~~
 
   /// @inheritdoc ISetEmergencyTriggerActionFactory
-  function createSetEmergencyTriggerAction(
-    address _canonGuard,
-    address _emergencyTrigger
-  ) external returns (address _setEmergencyTriggerAction) {
-    _setEmergencyTriggerAction = address(new SetEmergencyTriggerAction(address(this), _canonGuard, _emergencyTrigger));
+  function createSetEmergencyTriggerAction(address _emergencyTrigger)
+    external
+    returns (address _setEmergencyTriggerAction)
+  {
+    _setEmergencyTriggerAction = address(new SetEmergencyTriggerAction(address(this), _emergencyTrigger));
 
     _children[_setEmergencyTriggerAction] = true;
   }

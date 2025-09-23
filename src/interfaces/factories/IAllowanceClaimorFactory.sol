@@ -10,14 +10,12 @@ interface IAllowanceClaimorFactory {
 
   /**
    * @notice Creates an AllowanceClaimor contract
-   * @param _safe The Gnosis Safe contract address
    * @param _token The token contract address
    * @param _tokenOwner The token owner address
    * @param _tokenRecipient The token recipient address
    * @return _allowanceClaimor The AllowanceClaimor contract address
    */
   function createAllowanceClaimor(
-    address _safe,
     address _token,
     address _tokenOwner,
     address _tokenRecipient

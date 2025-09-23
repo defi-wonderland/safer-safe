@@ -1,6 +1,5 @@
 UnitDisapproveAction::constructor
 └── when called
-    └── it sets the canon guard address
     └── it sets the actions builder address
 
 UnitDisapproveAction::getActions

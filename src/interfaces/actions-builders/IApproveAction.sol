@@ -9,12 +9,6 @@ interface IApproveAction {
   // ~~~ STORAGE METHODS ~~~
 
   /**
-   * @notice Gets the safe canon guard contract
-   * @return _canonGuard The safe canon guard contract address
-   */
-  function CANON_GUARD() external view returns (address _canonGuard);
-
-  /**
    * @notice Gets the actions builder contract
    * @return _actionsBuilder The actions builder contract address
    */

@@ -14,18 +14,16 @@ contract UnitDisapproveActionFactorycreateDisapproveAction is Test {
     disapproveActionFactory = new DisapproveActionFactory();
   }
 
-  function test_WhenCalled(address _canonGuard, address _actionsBuilder) external {
-    address _disapproveAction = disapproveActionFactory.createDisapproveAction(_canonGuard, _actionsBuilder);
+  function test_WhenCalled(address _actionsBuilder) external {
+    address _disapproveAction = disapproveActionFactory.createDisapproveAction(_actionsBuilder);
 
-    auxDisapproveAction = IDisapproveAction(
-      deployCode('DisapproveAction', abi.encode(address(disapproveActionFactory), _canonGuard, _actionsBuilder))
-    );
+    auxDisapproveAction =
+      IDisapproveAction(deployCode('DisapproveAction', abi.encode(address(disapproveActionFactory), _actionsBuilder)));
 
     // it should deploy a DisapproveAction
     assertEq(address(auxDisapproveAction).code, _disapproveAction.code);
 
     // it should match the parameters sent to the constructor
-    assertEq(IDisapproveAction(_disapproveAction).CANON_GUARD(), _canonGuard);
     assertEq(IDisapproveAction(_disapproveAction).ACTIONS_BUILDER(), _actionsBuilder);
 
     // it should set the parent address in the child contract

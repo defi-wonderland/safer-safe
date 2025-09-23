@@ -1,7 +1,3 @@
-UnitUnsetEmergencyModeAction::constructor
-└── when called
-    └── it sets the canon guard address
-
 UnitUnsetEmergencyModeAction::getActions
 └── when called
     └── it returns an action to unset the emergency mode
