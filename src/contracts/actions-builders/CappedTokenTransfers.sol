@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
+import {ActionHubChild} from 'contracts/action-hubs/ActionHubChild.sol';
 import {ActionsBuilder} from 'contracts/actions-builders/ActionsBuilder.sol';
 import {IERC20} from 'forge-std/interfaces/IERC20.sol';
 import {ICappedTokenTransfersHub} from 'interfaces/action-hubs/ICappedTokenTransfersHub.sol';
@@ -10,7 +11,7 @@ import {ICappedTokenTransfers} from 'interfaces/actions-builders/ICappedTokenTra
  * @title CappedTokenTransfers
  * @notice Contract that builds actions from capped token transfers
  */
-contract CappedTokenTransfers is ICappedTokenTransfers, ActionsBuilder {
+contract CappedTokenTransfers is ICappedTokenTransfers, ActionHubChild, ActionsBuilder {
   // ~~~ STORAGE ~~~
 
   /// @inheritdoc ICappedTokenTransfers
@@ -21,9 +22,6 @@ contract CappedTokenTransfers is ICappedTokenTransfers, ActionsBuilder {
 
   /// @inheritdoc ICappedTokenTransfers
   address public immutable RECIPIENT;
-
-  /// @inheritdoc ICappedTokenTransfers
-  address public immutable HUB;
 
   // ~~~ CONSTRUCTOR ~~~
 
@@ -41,11 +39,10 @@ contract CappedTokenTransfers is ICappedTokenTransfers, ActionsBuilder {
     uint256 _amount,
     address _recipient,
     address _actionHub
-  ) ActionsBuilder(_parent) {
+  ) ActionsBuilder(_parent) ActionHubChild(_actionHub) {
     TOKEN = _token;
     AMOUNT = _amount;
     RECIPIENT = _recipient;
-    HUB = _actionHub;
   }
 
   // ~~~ ACTIONS METHODS ~~~

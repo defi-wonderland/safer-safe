@@ -2,8 +2,8 @@
 pragma solidity 0.8.30;
 
 import {CappedTokenTransfersHub} from 'src/contracts/action-hubs/CappedTokenTransfersHub.sol';
-
 import {IActionHub} from 'src/interfaces/action-hubs/IActionHub.sol';
+import {IActionHubChild} from 'src/interfaces/action-hubs/IActionHubChild.sol';
 import {ICappedTokenTransfersHub} from 'src/interfaces/action-hubs/ICappedTokenTransfersHub.sol';
 import {ICappedTokenTransfers} from 'src/interfaces/actions-builders/ICappedTokenTransfers.sol';
 import {IntegrationEthereumBase} from 'test/integration/ethereum/IntegrationEthereumBase.sol';
@@ -40,7 +40,7 @@ contract IntegrationCappedTokenTransfers is IntegrationEthereumBase {
     assertEq(ICappedTokenTransfers(_actionsBuilder).TOKEN(), address(WETH));
     assertEq(ICappedTokenTransfers(_actionsBuilder).AMOUNT(), 10 ether);
     assertEq(ICappedTokenTransfers(_actionsBuilder).RECIPIENT(), _recipient);
-    assertEq(ICappedTokenTransfers(_actionsBuilder).HUB(), address(_cappedTokenTransfersHub));
+    assertEq(IActionHubChild(_actionsBuilder).HUB(), address(_cappedTokenTransfersHub));
   }
 
   function test_TransferSuccessfully() public {

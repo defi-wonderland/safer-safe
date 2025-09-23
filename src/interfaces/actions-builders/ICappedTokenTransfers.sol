@@ -25,10 +25,4 @@ interface ICappedTokenTransfers {
    * @return _recipient The recipient of the tokens
    */
   function RECIPIENT() external view returns (address _recipient);
-
-  /**
-   * @notice Gets the actionHub contract
-   * @return _actionHub The actionHub contract address
-   */
-  function HUB() external view returns (address _actionHub);
 }

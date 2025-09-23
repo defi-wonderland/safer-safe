@@ -24,6 +24,7 @@ import {OnlyCanonGuard} from 'contracts/OnlyCanonGuard.sol';
 import {SafeManageable} from 'contracts/SafeManageable.sol';
 import {ICanonGuard} from 'interfaces/ICanonGuard.sol';
 import {IActionHub} from 'interfaces/action-hubs/IActionHub.sol';
+import {IActionHubChild} from 'interfaces/action-hubs/IActionHubChild.sol';
 import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 import {EnumerableSetLib} from 'solady/utils/EnumerableSetLib.sol';
 
@@ -118,28 +119,11 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
 
   /// @inheritdoc ICanonGuard
   function queueTransaction(address _actionsBuilder) external isSafeOwner {
-    bool _parentIsHub;
-    bool _actionIsPreApproved;
-    // assuming it will implement PARENT(), currently all contracts implement it
-    address _hub = IActionHub(_actionsBuilder).PARENT();
-    // low level call, if data is empty, it is an EOA. If _success is false is actionBuilder without parent hub
-    (bool _success, bytes memory _data) = _hub.staticcall(abi.encodeCall(IActionHub.isHubChild, (_actionsBuilder)));
-    if (_success == false || _data.length == 0) {
-      // EOA or actionBuilder without parent hub
-      _actionIsPreApproved = _isPreApproved(_actionsBuilder);
-    } else {
-      // actionBuilder with parent hub, check if child of that Hub
-      bool _isChild = abi.decode(_data, (bool));
-      // not a child of that Hub, revert
-      if (_isChild == false) revert InvalidActionBuilderHubParent();
-      // actionBuilder is a child of that Hub, check if the Hub is pre-approved
-      _parentIsHub = true;
-      _actionIsPreApproved = _isPreApproved(_hub);
-    }
+    (bool _actionIsPreApproved, address _hub) = _isPreApproved(_actionsBuilder);
 
     _queueTransaction(_actionsBuilder, _actionIsPreApproved);
 
-    emit TransactionQueued(_parentIsHub ? _hub : address(0), msg.sender, _actionsBuilder, _actionIsPreApproved);
+    emit TransactionQueued(_hub, msg.sender, _actionsBuilder, _actionIsPreApproved);
   }
 
   /// @inheritdoc ICanonGuard
@@ -381,9 +365,24 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
    * @notice Internal function to check if the actions builder (or actionHub) is pre-approved
    * @param _actionsBuilderOrActionHub The actions builder contract address (or actionHub)
    * @return _isApproved Whether the actions builder (or actionHub) is pre-approved
+   * @return _hub The address of the actionHub if the actions builder is a child of an actionHub, otherwise the zero address
    */
-  function _isPreApproved(address _actionsBuilderOrActionHub) internal view returns (bool _isApproved) {
-    _isApproved = approvalExpiries[_actionsBuilderOrActionHub] > block.timestamp;
+  function _isPreApproved(address _actionsBuilderOrActionHub) internal view returns (bool _isApproved, address _hub) {
+    // low level call, if _success is false is actionBuilder without parent hub
+    (bool _success, bytes memory _hubAsBytes) =
+      _actionsBuilderOrActionHub.staticcall(abi.encodeCall(IActionHubChild.HUB, ()));
+    _hub = _success ? abi.decode(_hubAsBytes, (address)) : address(0);
+
+    if (_hub == address(0)) {
+      // actionBuilder without parent hub
+      _isApproved = approvalExpiries[_actionsBuilderOrActionHub] > block.timestamp;
+    } else {
+      // actionBuilder with parent hub, check if child of that Hub
+      if (!IActionHub(_hub).isHubChild(_actionsBuilderOrActionHub)) revert InvalidActionBuilderHubParent();
+
+      // actionBuilder is a child of that Hub, check if the Hub is pre-approved
+      _isApproved = approvalExpiries[_hub] > block.timestamp;
+    }
   }
 
   /**
