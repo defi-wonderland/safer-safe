@@ -2,7 +2,6 @@ UnitEverclearTokenConversion::constructor
 └── when called
     └── it sets the clear lockbox address
     └── it sets the NEXT address
-    └── it sets the SAFE address
 
 UnitEverclearTokenConversion::getActions
 └── when called

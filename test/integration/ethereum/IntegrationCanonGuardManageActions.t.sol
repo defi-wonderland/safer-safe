@@ -9,7 +9,6 @@ import {IDisapproveAction} from 'interfaces/actions-builders/IDisapproveAction.s
 import {ISetEmergencyCallerAction} from 'interfaces/actions-builders/ISetEmergencyCallerAction.sol';
 import {ISetEmergencyTriggerAction} from 'interfaces/actions-builders/ISetEmergencyTriggerAction.sol';
 import {ISimpleActions} from 'interfaces/actions-builders/ISimpleActions.sol';
-import {IUnsetEmergencyModeAction} from 'interfaces/actions-builders/IUnsetEmergencyModeAction.sol';
 import {IntegrationEthereumBase} from 'test/integration/ethereum/IntegrationEthereumBase.sol';
 
 contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
@@ -26,7 +25,6 @@ contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
   // Emergency actions
   ISetEmergencyCallerAction public setEmergencyCallerAction;
   ISetEmergencyTriggerAction public setEmergencyTriggerAction;
-  IUnsetEmergencyModeAction public unsetEmergencyModeAction;
 
   address public actionsBuilder;
   address public newSafeGuard;
@@ -49,23 +47,16 @@ contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
     newEmergencyTrigger = makeAddr('newEmergencyTrigger');
 
     // Deploy the ApproveAction contract
-    approveAction = IApproveAction(
-      approveActionFactory.createApproveAction(address(canonGuard), address(actionsBuilder), APPROVAL_DURATION)
-    );
+    approveAction = IApproveAction(approveActionFactory.createApproveAction(address(actionsBuilder), APPROVAL_DURATION));
 
     // Deploy emergency actions
-    setEmergencyCallerAction = ISetEmergencyCallerAction(
-      setEmergencyCallerActionFactory.createSetEmergencyCallerAction(address(canonGuard), newEmergencyCaller)
-    );
-    setEmergencyTriggerAction = ISetEmergencyTriggerAction(
-      setEmergencyTriggerActionFactory.createSetEmergencyTriggerAction(address(canonGuard), newEmergencyTrigger)
-    );
-    unsetEmergencyModeAction =
-      IUnsetEmergencyModeAction(unsetEmergencyModeActionFactory.createUnsetEmergencyModeAction(address(canonGuard)));
+    setEmergencyCallerAction =
+      ISetEmergencyCallerAction(setEmergencyCallerActionFactory.createSetEmergencyCallerAction(newEmergencyCaller));
+    setEmergencyTriggerAction =
+      ISetEmergencyTriggerAction(setEmergencyTriggerActionFactory.createSetEmergencyTriggerAction(newEmergencyTrigger));
 
     // Deploy the DisapproveAction contract
-    disapproveAction =
-      IDisapproveAction(disapproveActionFactory.createDisapproveAction(address(canonGuard), address(actionsBuilder)));
+    disapproveAction = IDisapproveAction(disapproveActionFactory.createDisapproveAction(address(actionsBuilder)));
 
     // Deploy the ChangeSafeGuardAction contract
     changeSafeGuardAction =
@@ -370,23 +361,26 @@ contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
     // Queue the transaction
     vm.prank(_safeOwners[0]);
     canonGuard.queueTransaction(address(addOwnerSimpleActions));
-    (address _proposer, bytes memory _actionsData, uint256 _executableAt, uint256 _expiresAt) =
+    (address _proposer, bytes memory _actionsData, uint256 _executableAt, uint256 _expiresAt, bool _isPreApproved) =
       canonGuard.transactionsInfo(address(addOwnerSimpleActions));
     assertEq(_proposer, _safeOwners[0]);
     assertGt(_actionsData.length, 0);
     assertEq(_executableAt, block.timestamp + LONG_TX_EXECUTION_DELAY);
     assertEq(_expiresAt, block.timestamp + LONG_TX_EXECUTION_DELAY + TX_EXPIRY_DELAY);
+    assertEq(_isPreApproved, false);
 
     // Cancel the transaction
     vm.prank(_safeOwners[0]);
     canonGuard.cancelEnqueuedTransaction(address(addOwnerSimpleActions));
 
-    (_proposer, _actionsData, _executableAt, _expiresAt) = canonGuard.transactionsInfo(address(addOwnerSimpleActions));
+    (_proposer, _actionsData, _executableAt, _expiresAt, _isPreApproved) =
+      canonGuard.transactionsInfo(address(addOwnerSimpleActions));
 
     assertEq(_proposer, address(0));
     assertEq(_actionsData, bytes(''));
     assertEq(_executableAt, 0);
     assertEq(_expiresAt, 0);
+    assertEq(_isPreApproved, false);
   }
 
   function test_ExecuteNoActionTransaction() public {
@@ -434,11 +428,8 @@ contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
 
     uint256 _originalBlockTimestamp = block.timestamp;
 
-    approveAction = IApproveAction(
-      approveActionFactory.createApproveAction(
-        address(canonGuard), address(setEmergencyCallerAction), APPROVAL_DURATION
-      )
-    );
+    approveAction =
+      IApproveAction(approveActionFactory.createApproveAction(address(setEmergencyCallerAction), APPROVAL_DURATION));
 
     vm.prank(_safeOwners[0]);
     canonGuard.queueTransaction(address(approveAction));
@@ -456,7 +447,7 @@ contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
     assertEq(_queuedActionBuilders.length, 1);
     assertEq(_queuedActionBuilders[0], address(setEmergencyCallerAction));
 
-    (address _proposer, bytes memory _actionsData, uint256 _executableAt, uint256 _expiresAt) =
+    (address _proposer, bytes memory _actionsData, uint256 _executableAt, uint256 _expiresAt, bool _isPreApproved) =
       canonGuard.transactionsInfo(address(setEmergencyCallerAction));
     IActionsBuilder.Action[] memory _decodedActionsData = abi.decode(_actionsData, (IActionsBuilder.Action[]));
     assertEq(_proposer, _safeOwners[0]);
@@ -465,6 +456,7 @@ contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
     assertEq(_decodedActionsData[0].value, 0);
     assertEq(_executableAt, _originalBlockTimestamp + LONG_TX_EXECUTION_DELAY);
     assertEq(_expiresAt, _executableAt + TX_EXPIRY_DELAY);
+    assertEq(_isPreApproved, false);
 
     uint256 _approvalExpiresAt = canonGuard.approvalExpiries(address(setEmergencyCallerAction));
     assertEq(_approvalExpiresAt, block.timestamp + APPROVAL_DURATION);

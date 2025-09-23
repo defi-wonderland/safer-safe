@@ -4,6 +4,7 @@ UnitAllowanceClaimor::constructor
 
 UnitAllowanceClaimor::getActions
 └── when called
+    ├── it should call SAFE on the canon guard
     ├── it should call allowance on the token
     ├── it should call balanceOf on the token
     ├── when amount to claim is greater than balance

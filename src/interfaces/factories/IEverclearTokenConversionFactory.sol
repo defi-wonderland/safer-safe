@@ -12,12 +12,10 @@ interface IEverclearTokenConversionFactory {
    * @notice Creates an EverclearTokenConversion contract
    * @param _lockbox The xERC20Lockbox contract address
    * @param _next The NEXT contract address
-   * @param _safe The Gnosis Safe contract address
    * @return _everclearTokenConversion The EverclearTokenConversion contract address
    */
   function createEverclearTokenConversion(
     address _lockbox,
-    address _next,
-    address _safe
+    address _next
   ) external returns (address _everclearTokenConversion);
 }

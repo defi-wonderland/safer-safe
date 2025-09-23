@@ -22,10 +22,4 @@ interface IEverclearTokenConversion {
    * @return _next The NEXT contract address
    */
   function NEXT() external view returns (IERC20 _next);
-
-  /**
-   * @notice Gets the SAFE contract
-   * @return _safe The SAFE contract address
-   */
-  function SAFE() external view returns (address _safe);
 }

@@ -9,12 +9,6 @@ interface ISetEmergencyCallerAction {
   // ~~~ STORAGE METHODS ~~~
 
   /**
-   * @notice Gets the canon guard contract address
-   * @return _canonGuard The canon guard contract address
-   */
-  function CANON_GUARD() external view returns (address _canonGuard);
-
-  /**
    * @notice Gets the emergency caller address
    * @return _emergencyCaller The emergency caller address
    */

@@ -3,6 +3,8 @@ pragma solidity 0.8.30;
 
 import {ActionsBuilder} from 'contracts/actions-builders/ActionsBuilder.sol';
 import {IERC20} from 'forge-std/interfaces/IERC20.sol';
+
+import {ICanonGuard} from 'interfaces/ICanonGuard.sol';
 import {IAllowanceClaimor} from 'interfaces/actions-builders/IAllowanceClaimor.sol';
 
 /**
@@ -11,9 +13,6 @@ import {IAllowanceClaimor} from 'interfaces/actions-builders/IAllowanceClaimor.s
  */
 contract AllowanceClaimor is IAllowanceClaimor, ActionsBuilder {
   // ~~~ STORAGE ~~~
-
-  /// @inheritdoc IAllowanceClaimor
-  address public immutable SAFE;
 
   /// @inheritdoc IAllowanceClaimor
   IERC20 public immutable TOKEN;
@@ -29,19 +28,11 @@ contract AllowanceClaimor is IAllowanceClaimor, ActionsBuilder {
   /**
    * @notice Constructor that sets up the Safe, token, token owner and token recipient
    * @param _parent The parent that deployed the actions builder
-   * @param _safe The Gnosis Safe contract address
    * @param _token The token contract address
    * @param _tokenOwner The token owner address
    * @param _tokenRecipient The token recipient address
    */
-  constructor(
-    address _parent,
-    address _safe,
-    address _token,
-    address _tokenOwner,
-    address _tokenRecipient
-  ) ActionsBuilder(_parent) {
-    SAFE = _safe;
+  constructor(address _parent, address _token, address _tokenOwner, address _tokenRecipient) ActionsBuilder(_parent) {
     TOKEN = IERC20(_token);
     TOKEN_OWNER = _tokenOwner;
     TOKEN_RECIPIENT = _tokenRecipient;
@@ -51,7 +42,7 @@ contract AllowanceClaimor is IAllowanceClaimor, ActionsBuilder {
 
   /// @inheritdoc ActionsBuilder
   function getActions() external view override returns (Action[] memory _actions) {
-    uint256 _amountToClaim = TOKEN.allowance(TOKEN_OWNER, SAFE);
+    uint256 _amountToClaim = TOKEN.allowance(TOKEN_OWNER, address(ICanonGuard(msg.sender).SAFE()));
     uint256 _balance = TOKEN.balanceOf(TOKEN_OWNER);
     if (_amountToClaim > _balance) {
       _amountToClaim = _balance;

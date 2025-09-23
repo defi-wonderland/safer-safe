@@ -37,14 +37,16 @@ contract CanonGuardForTest is CanonGuard {
     address _actionsBuilder,
     bytes memory _actionsData,
     uint256 _executableAt,
-    uint256 _expiresAt
+    uint256 _expiresAt,
+    bool _isPreApproved
   ) external {
     __queuedActionBuilders.add(_actionsBuilder);
     transactionsInfo[_actionsBuilder] = ICanonGuard.TransactionInfo({
       proposer: _proposer,
       actionsData: _actionsData,
       executableAt: _executableAt,
-      expiresAt: _expiresAt
+      expiresAt: _expiresAt,
+      isPreApproved: _isPreApproved
     });
   }
 

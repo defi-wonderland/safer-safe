@@ -3,6 +3,7 @@ pragma solidity 0.8.30;
 
 import {ActionsBuilder} from 'contracts/actions-builders/ActionsBuilder.sol';
 import {IERC20} from 'forge-std/interfaces/IERC20.sol';
+import {ICanonGuard} from 'interfaces/ICanonGuard.sol';
 import {IEverclearTokenConversion} from 'interfaces/actions-builders/IEverclearTokenConversion.sol';
 import {IxERC20Lockbox} from 'interfaces/external/IxERC20Lockbox.sol';
 
@@ -19,9 +20,6 @@ contract EverclearTokenConversion is IEverclearTokenConversion, ActionsBuilder {
   /// @inheritdoc IEverclearTokenConversion
   IERC20 public immutable NEXT;
 
-  /// @inheritdoc IEverclearTokenConversion
-  address public immutable SAFE;
-
   // ~~~ CONSTRUCTOR ~~~
 
   /**
@@ -29,19 +27,17 @@ contract EverclearTokenConversion is IEverclearTokenConversion, ActionsBuilder {
    * @param _parent The parent that deployed the actions builder
    * @param _lockbox The xERC20Lockbox contract address
    * @param _next The NEXT contract address
-   * @param _safe The SAFE contract address
    */
-  constructor(address _parent, address _lockbox, address _next, address _safe) ActionsBuilder(_parent) {
+  constructor(address _parent, address _lockbox, address _next) ActionsBuilder(_parent) {
     CLEAR_LOCKBOX = IxERC20Lockbox(_lockbox);
     NEXT = IERC20(_next);
-    SAFE = _safe;
   }
 
   // ~~~ ACTIONS METHODS ~~~
 
   /// @inheritdoc ActionsBuilder
   function getActions() external view override returns (Action[] memory _actions) {
-    uint256 _amount = NEXT.balanceOf(SAFE);
+    uint256 _amount = NEXT.balanceOf(address(ICanonGuard(msg.sender).SAFE()));
 
     _actions = new Action[](2);
     _actions[0] =

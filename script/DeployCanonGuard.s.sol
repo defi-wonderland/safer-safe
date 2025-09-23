@@ -28,7 +28,6 @@ import {SetEmergencyCallerActionFactory} from 'contracts/factories/SetEmergencyC
 import {SetEmergencyTriggerActionFactory} from 'contracts/factories/SetEmergencyTriggerActionFactory.sol';
 import {SimpleActionsFactory} from 'contracts/factories/SimpleActionsFactory.sol';
 import {SimpleTransfersFactory} from 'contracts/factories/SimpleTransfersFactory.sol';
-import {UnsetEmergencyModeActionFactory} from 'contracts/factories/UnsetEmergencyModeActionFactory.sol';
 import {Script} from 'forge-std/Script.sol';
 import {ICanonGuard} from 'interfaces/ICanonGuard.sol';
 import {IAllowanceClaimorFactory} from 'interfaces/factories/IAllowanceClaimorFactory.sol';
@@ -44,7 +43,6 @@ import {ISetEmergencyCallerActionFactory} from 'interfaces/factories/ISetEmergen
 import {ISetEmergencyTriggerActionFactory} from 'interfaces/factories/ISetEmergencyTriggerActionFactory.sol';
 import {ISimpleActionsFactory} from 'interfaces/factories/ISimpleActionsFactory.sol';
 import {ISimpleTransfersFactory} from 'interfaces/factories/ISimpleTransfersFactory.sol';
-import {IUnsetEmergencyModeActionFactory} from 'interfaces/factories/IUnsetEmergencyModeActionFactory.sol';
 import {Constants} from 'script/Constants.sol';
 import {Approver} from 'src/contracts/Approver.sol';
 import {CanonGuard} from 'src/contracts/CanonGuard.sol';
@@ -78,10 +76,10 @@ contract DeployCanonGuard is Constants, Script {
   ISetEmergencyTriggerActionFactory public setEmergencyTriggerActionFactory;
   ISimpleActionsFactory public simpleActionsFactory;
   ISimpleTransfersFactory public simpleTransfersFactory;
-  IUnsetEmergencyModeActionFactory public unsetEmergencyModeActionFactory;
 
   // ~~~ ACTIONS BUILDERS ~~~
   SetGuardAction public setGuardAction;
+  UnsetEmergencyModeAction public unsetEmergencyModeAction;
 
   // ~~~ DUMMY CONSTANTS ~~~
   address public constant DUMMY_ADDRESS = address(1);
@@ -136,7 +134,6 @@ contract DeployCanonGuard is Constants, Script {
     setEmergencyTriggerActionFactory = new SetEmergencyTriggerActionFactory();
     simpleActionsFactory = new SimpleActionsFactory();
     simpleTransfersFactory = new SimpleTransfersFactory();
-    unsetEmergencyModeActionFactory = new UnsetEmergencyModeActionFactory();
   }
 
   function _deployEthereumFactories() internal {
@@ -149,16 +146,15 @@ contract DeployCanonGuard is Constants, Script {
   }
 
   function _deployAllChainsContracts() internal {
-    new AllowanceClaimor(DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS);
-    new ApproveAction(DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_APPROVAL_DURATION);
+    new AllowanceClaimor(DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS);
+    new ApproveAction(DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_APPROVAL_DURATION);
     new CappedTokenTransfers(DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_AMOUNT, DUMMY_ADDRESS, DUMMY_ADDRESS);
     new ChangeSafeGuardAction(DUMMY_ADDRESS, DUMMY_ADDRESS);
-    new DisapproveAction(DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS);
-    new SetEmergencyCallerAction(DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS);
-    new SetEmergencyTriggerAction(DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS);
+    new DisapproveAction(DUMMY_ADDRESS, DUMMY_ADDRESS);
+    new SetEmergencyCallerAction(DUMMY_ADDRESS, DUMMY_ADDRESS);
+    new SetEmergencyTriggerAction(DUMMY_ADDRESS, DUMMY_ADDRESS);
     new SimpleActions(DUMMY_ADDRESS, new SimpleActions.SimpleAction[](0));
     new SimpleTransfers(DUMMY_ADDRESS, new SimpleTransfers.TransferAction[](0));
-    new UnsetEmergencyModeAction(DUMMY_ADDRESS, DUMMY_ADDRESS);
     new CappedTokenTransfersHub(
       DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS, new address[](0), new uint256[](0), DUMMY_EPOCH_LENGTH
     );
@@ -175,12 +171,12 @@ contract DeployCanonGuard is Constants, Script {
     );
     new Approver(address(_canonGuard));
     setGuardAction = new SetGuardAction();
+    unsetEmergencyModeAction = new UnsetEmergencyModeAction();
   }
 
   function _deployEthereumContracts() internal {
-    new EverclearTokenConversion(DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS);
+    new EverclearTokenConversion(DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS);
     new EverclearTokenStake(
-      DUMMY_ADDRESS,
       DUMMY_ADDRESS,
       DUMMY_ADDRESS,
       DUMMY_ADDRESS,
@@ -193,6 +189,6 @@ contract DeployCanonGuard is Constants, Script {
   }
 
   function _deployOptimismContracts() internal {
-    new OPxAction(DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS);
+    new OPxAction(DUMMY_ADDRESS, DUMMY_ADDRESS);
   }
 }

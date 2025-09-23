@@ -276,7 +276,7 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
     _execSafeTransaction(_multiSendData, _signatures);
 
     // NOTE: event emitted to log successful execution
-    emit TransactionExecuted(_actionsBuilder, _safeTxHash, _signers);
+    emit TransactionExecuted(_actionsBuilder, _safeTxHash, _signers, _txInfo.isPreApproved);
   }
 
   /**
@@ -325,7 +325,8 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
       proposer: msg.sender,
       actionsData: abi.encode(_actions),
       executableAt: block.timestamp + _txExecutionDelay,
-      expiresAt: block.timestamp + _txExecutionDelay + TX_EXPIRY_DELAY
+      expiresAt: block.timestamp + _txExecutionDelay + TX_EXPIRY_DELAY,
+      isPreApproved: _actionIsPreApproved
     });
   }
 

@@ -8,16 +8,13 @@ import {IActionsBuilder} from 'src/interfaces/actions-builders/IActionsBuilder.s
 
 contract UnitSetEmergencyTriggerAction is Test {
   SetEmergencyTriggerAction public setEmergencyTriggerAction;
-  address public canonGuard = makeAddr('canonGuard');
   address public emergencyTrigger = makeAddr('emergencyTrigger');
 
   function setUp() external {
-    setEmergencyTriggerAction = new SetEmergencyTriggerAction(address(0), canonGuard, emergencyTrigger);
+    setEmergencyTriggerAction = new SetEmergencyTriggerAction(address(0), emergencyTrigger);
   }
 
   function test_ConstructorWhenCalled() external view {
-    // it sets the canon guard address
-    assertEq(setEmergencyTriggerAction.CANON_GUARD(), canonGuard);
     // it sets the emergency trigger address
     assertEq(setEmergencyTriggerAction.EMERGENCY_TRIGGER(), emergencyTrigger);
   }
@@ -25,7 +22,7 @@ contract UnitSetEmergencyTriggerAction is Test {
   function test_GetActionsWhenCalled() external view {
     // it returns an action to set the emergency trigger
     IActionsBuilder.Action[] memory actions = setEmergencyTriggerAction.getActions();
-    assertEq(actions[0].target, canonGuard);
+    assertEq(actions[0].target, address(this));
     assertEq(actions[0].data, abi.encodeCall(IEmergencyModeHook.setEmergencyTrigger, (emergencyTrigger)));
     assertEq(actions[0].value, 0);
   }

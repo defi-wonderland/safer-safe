@@ -8,16 +8,13 @@ import {IActionsBuilder} from 'src/interfaces/actions-builders/IActionsBuilder.s
 
 contract UnitDisapproveAction is Test {
   DisapproveAction public disapproveAction;
-  address public canonGuard = makeAddr('canonGuard');
   address public actionsBuilder = makeAddr('actionsBuilder');
 
   function setUp() external {
-    disapproveAction = new DisapproveAction(address(0), canonGuard, actionsBuilder);
+    disapproveAction = new DisapproveAction(address(0), actionsBuilder);
   }
 
   function test_ConstructorWhenCalled() external view {
-    // it sets the canon guard address
-    assertEq(disapproveAction.CANON_GUARD(), canonGuard);
     // it sets the actions builder address
     assertEq(disapproveAction.ACTIONS_BUILDER(), actionsBuilder);
   }
@@ -25,7 +22,7 @@ contract UnitDisapproveAction is Test {
   function test_GetActionsWhenCalled() external view {
     // it returns an action to disapprove the actions builder or action hub
     IActionsBuilder.Action[] memory actions = disapproveAction.getActions();
-    assertEq(actions[0].target, canonGuard);
+    assertEq(actions[0].target, address(this));
     assertEq(actions[0].data, abi.encodeCall(ICanonGuard.approveActionsBuilderOrHub, (actionsBuilder, 0)));
     assertEq(actions[0].value, 0);
   }

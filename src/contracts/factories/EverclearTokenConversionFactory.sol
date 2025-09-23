@@ -15,10 +15,9 @@ contract EverclearTokenConversionFactory is IEverclearTokenConversionFactory, Fa
   /// @inheritdoc IEverclearTokenConversionFactory
   function createEverclearTokenConversion(
     address _lockbox,
-    address _next,
-    address _safe
+    address _next
   ) external returns (address _everclearTokenConversion) {
-    _everclearTokenConversion = address(new EverclearTokenConversion(address(this), _lockbox, _next, _safe));
+    _everclearTokenConversion = address(new EverclearTokenConversion(address(this), _lockbox, _next));
 
     _children[_everclearTokenConversion] = true;
   }
