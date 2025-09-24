@@ -16,12 +16,14 @@ interface ICanonGuard is ISafeManageable {
    * @param actionsData The encoded actions data
    * @param executableAt The timestamp from which the transaction can be executed
    * @param expiresAt The timestamp from which the transaction expires
+   * @param isPreApproved Whether the transaction is pre-approved
    */
   struct TransactionInfo {
     address proposer;
     bytes actionsData;
     uint256 executableAt;
     uint256 expiresAt;
+    bool isPreApproved;
   }
 
   // ~~~ EVENTS ~~~
@@ -52,8 +54,11 @@ interface ICanonGuard is ISafeManageable {
    * @param _actionsBuilder The actions builder contract address
    * @param _safeTxHash The hash of the Safe transaction
    * @param _signers The array of sorted signer addresses.
+   * @param _txIsPreApproved Whether the transaction is pre-approved (short delay) or not (long delay)
    */
-  event TransactionExecuted(address indexed _actionsBuilder, bytes32 indexed _safeTxHash, address[] _signers);
+  event TransactionExecuted(
+    address indexed _actionsBuilder, bytes32 indexed _safeTxHash, address[] _signers, bool _txIsPreApproved
+  );
 
   /**
    * @notice Emitted when an empty transaction is executed
@@ -241,11 +246,18 @@ interface ICanonGuard is ISafeManageable {
    * @return _actionsData The encoded actions data
    * @return _executableAt The timestamp from which the transaction can be executed
    * @return _expiresAt The timestamp from which the transaction expires
+   * @return _isPreApproved Whether the transaction is pre-approved (short delay) or not (long delay)
    */
   function transactionsInfo(address _actionsBuilder)
     external
     view
-    returns (address _proposer, bytes memory _actionsData, uint256 _executableAt, uint256 _expiresAt);
+    returns (
+      address _proposer,
+      bytes memory _actionsData,
+      uint256 _executableAt,
+      uint256 _expiresAt,
+      bool _isPreApproved
+    );
 
   // ~~~ GETTER METHODS ~~~
 

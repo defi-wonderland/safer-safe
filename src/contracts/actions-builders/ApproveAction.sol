@@ -12,9 +12,6 @@ import {IApproveAction} from 'interfaces/actions-builders/IApproveAction.sol';
  */
 contract ApproveAction is IApproveAction, ActionsBuilder {
   /// @inheritdoc IApproveAction
-  address public immutable CANON_GUARD;
-
-  /// @inheritdoc IApproveAction
   address public immutable ACTIONS_BUILDER;
 
   /// @inheritdoc IApproveAction
@@ -23,17 +20,10 @@ contract ApproveAction is IApproveAction, ActionsBuilder {
   /**
    * @notice Constructor that sets up the ApproveAction contract
    * @param _parent The parent that deployed the actions builder
-   * @param _canonGuard The CanonGuard contract address that implements ICanonGuard
    * @param _actionsBuilder The actions builder or action hub contract address
    * @param _approvalDuration The approval duration
    */
-  constructor(
-    address _parent,
-    address _canonGuard,
-    address _actionsBuilder,
-    uint256 _approvalDuration
-  ) ActionsBuilder(_parent) {
-    CANON_GUARD = _canonGuard;
+  constructor(address _parent, address _actionsBuilder, uint256 _approvalDuration) ActionsBuilder(_parent) {
     ACTIONS_BUILDER = _actionsBuilder;
     APPROVAL_DURATION = _approvalDuration;
   }
@@ -44,7 +34,7 @@ contract ApproveAction is IApproveAction, ActionsBuilder {
   function getActions() external view override returns (Action[] memory _actions) {
     _actions = new Action[](1);
     _actions[0] = Action({
-      target: CANON_GUARD,
+      target: msg.sender,
       data: abi.encodeCall(ICanonGuard.approveActionsBuilderOrHub, (ACTIONS_BUILDER, APPROVAL_DURATION)),
       value: 0
     });

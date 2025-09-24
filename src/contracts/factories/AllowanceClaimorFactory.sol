@@ -14,12 +14,11 @@ contract AllowanceClaimorFactory is IAllowanceClaimorFactory, Factory {
 
   /// @inheritdoc IAllowanceClaimorFactory
   function createAllowanceClaimor(
-    address _safe,
     address _token,
     address _tokenOwner,
     address _tokenRecipient
   ) external returns (address _allowanceClaimor) {
-    _allowanceClaimor = address(new AllowanceClaimor(address(this), _safe, _token, _tokenOwner, _tokenRecipient));
+    _allowanceClaimor = address(new AllowanceClaimor(address(this), _token, _tokenOwner, _tokenRecipient));
 
     _children[_allowanceClaimor] = true;
   }

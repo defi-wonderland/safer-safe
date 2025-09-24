@@ -14,20 +14,17 @@ contract UnitApproveActionFactorycreateApproveAction is Test {
     approveActionFactory = new ApproveActionFactory();
   }
 
-  function test_WhenCalled(address _canonGuard, address _actionsBuilder, uint256 _approvalDuration) external {
-    address _approveAction = approveActionFactory.createApproveAction(_canonGuard, _actionsBuilder, _approvalDuration);
+  function test_WhenCalled(address _actionsBuilder, uint256 _approvalDuration) external {
+    address _approveAction = approveActionFactory.createApproveAction(_actionsBuilder, _approvalDuration);
 
     auxApproveAction = IApproveAction(
-      deployCode(
-        'ApproveAction', abi.encode(address(approveActionFactory), _canonGuard, _actionsBuilder, _approvalDuration)
-      )
+      deployCode('ApproveAction', abi.encode(address(approveActionFactory), _actionsBuilder, _approvalDuration))
     );
 
     // it should deploy an ApproveAction contract with correct args
     assertEq(address(auxApproveAction).code, _approveAction.code);
 
     // it should match the parameters sent to the constructor
-    assertEq(IApproveAction(_approveAction).CANON_GUARD(), _canonGuard);
     assertEq(IApproveAction(_approveAction).ACTIONS_BUILDER(), _actionsBuilder);
     assertEq(IApproveAction(_approveAction).APPROVAL_DURATION(), _approvalDuration);
 

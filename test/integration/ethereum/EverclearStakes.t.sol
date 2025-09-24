@@ -24,15 +24,7 @@ contract IntegrationEverclearStakes is IntegrationEthereumBase {
     // Deploy the contract
     _actionsBuilder = address(
       new EverclearTokenStake(
-        address(0),
-        _vestingEscrow,
-        _vestingWallet,
-        _spokeBridge,
-        _clearLockbox,
-        _next,
-        _clear,
-        address(SAFE_PROXY),
-        _lockTime
+        address(0), _vestingEscrow, _vestingWallet, _spokeBridge, _clearLockbox, _next, _clear, _lockTime
       )
     );
   }

@@ -13,11 +13,11 @@ contract SetEmergencyCallerActionFactory is ISetEmergencyCallerActionFactory, Fa
   // ~~~ FACTORY METHODS ~~~
 
   /// @inheritdoc ISetEmergencyCallerActionFactory
-  function createSetEmergencyCallerAction(
-    address _canonGuard,
-    address _emergencyCaller
-  ) external returns (address _setEmergencyCallerAction) {
-    _setEmergencyCallerAction = address(new SetEmergencyCallerAction(address(this), _canonGuard, _emergencyCaller));
+  function createSetEmergencyCallerAction(address _emergencyCaller)
+    external
+    returns (address _setEmergencyCallerAction)
+  {
+    _setEmergencyCallerAction = address(new SetEmergencyCallerAction(address(this), _emergencyCaller));
 
     _children[_setEmergencyCallerAction] = true;
   }

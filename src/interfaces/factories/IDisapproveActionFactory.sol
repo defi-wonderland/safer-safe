@@ -10,12 +10,8 @@ interface IDisapproveActionFactory {
 
   /**
    * @notice Creates a DisapproveAction contract
-   * @param _canonGuard The CanonGuard contract address
    * @param _actionsBuilder The actions builder contract address
    * @return _disapproveAction The DisapproveAction contract address
    */
-  function createDisapproveAction(
-    address _canonGuard,
-    address _actionsBuilder
-  ) external returns (address _disapproveAction);
+  function createDisapproveAction(address _actionsBuilder) external returns (address _disapproveAction);
 }

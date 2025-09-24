@@ -243,7 +243,7 @@ contract UnitCanonGuard is Test {
     canonGuard.queueTransaction(_actionsBuilder);
 
     // Verify transaction info using the new interface
-    (address _proposer, bytes memory _actionsData, uint256 _executableAt, uint256 _expiresAt) =
+    (address _proposer, bytes memory _actionsData, uint256 _executableAt, uint256 _expiresAt, bool _isPreApproved) =
       canonGuard.transactionsInfo(_actionsBuilder);
 
     // it sets the proposer
@@ -257,6 +257,8 @@ contract UnitCanonGuard is Test {
     assertEq(_executableAt, block.timestamp + SHORT_TX_EXECUTION_DELAY);
     // it sets expiry time at executable time plus expiry delay
     assertEq(_expiresAt, block.timestamp + SHORT_TX_EXECUTION_DELAY + TX_EXPIRY_DELAY);
+    // it sets isPreApproved to true
+    assertEq(_isPreApproved, true);
   }
 
   function test_QueueTransactionWhenNoParentActionBuilderIsNotPreApproved(
@@ -283,7 +285,7 @@ contract UnitCanonGuard is Test {
     canonGuard.queueTransaction(_actionsBuilder);
 
     // Verify transaction info using the new interface
-    (address _proposer, bytes memory _actionsData, uint256 _executableAt, uint256 _expiresAt) =
+    (address _proposer, bytes memory _actionsData, uint256 _executableAt, uint256 _expiresAt, bool _isPreApproved) =
       canonGuard.transactionsInfo(_actionsBuilder);
 
     // it sets the proposer
@@ -297,6 +299,8 @@ contract UnitCanonGuard is Test {
     assertEq(_executableAt, block.timestamp + LONG_TX_EXECUTION_DELAY);
     // it sets expiry time at executable time plus expiry delay
     assertEq(_expiresAt, block.timestamp + LONG_TX_EXECUTION_DELAY + TX_EXPIRY_DELAY);
+    // it sets isPreApproved to false
+    assertEq(_isPreApproved, false);
   }
 
   function test_QueueTransactionWhenNoParentTransactionIsAlreadyQueuedButExpired(
@@ -324,7 +328,7 @@ contract UnitCanonGuard is Test {
     canonGuard.queueTransaction(_actionsBuilder);
 
     // Verify transaction info using the new interface
-    (,,, uint256 _expiresAt) = canonGuard.transactionsInfo(_actionsBuilder);
+    (,,, uint256 _expiresAt,) = canonGuard.transactionsInfo(_actionsBuilder);
 
     // it sets transaction info
     assertEq(_expiresAt, block.timestamp + LONG_TX_EXECUTION_DELAY + TX_EXPIRY_DELAY);
@@ -343,7 +347,7 @@ contract UnitCanonGuard is Test {
     _expiry = bound(_expiry, block.timestamp + 1, block.timestamp + TX_EXPIRY_DELAY);
 
     canonGuard.mockTransaction(
-      _caller, _actionsBuilder, abi.encode(new IActionsBuilder.Action[](0)), block.timestamp, _expiry
+      _caller, _actionsBuilder, abi.encode(new IActionsBuilder.Action[](0)), block.timestamp, _expiry, false
     );
 
     // it reverts with TransactionAlreadyQueued
@@ -386,7 +390,7 @@ contract UnitCanonGuard is Test {
     canonGuard.queueTransaction(_actionsBuilder);
 
     // Verify transaction info using the new interface
-    (,,, uint256 _expiresAt) = canonGuard.transactionsInfo(_actionsBuilder);
+    (,,, uint256 _expiresAt,) = canonGuard.transactionsInfo(_actionsBuilder);
 
     // it sets transaction info
     assertEq(_expiresAt, block.timestamp + LONG_TX_EXECUTION_DELAY + TX_EXPIRY_DELAY);
@@ -406,7 +410,7 @@ contract UnitCanonGuard is Test {
     _expiry = bound(_expiry, block.timestamp + 1, block.timestamp + TX_EXPIRY_DELAY);
 
     canonGuard.mockTransaction(
-      _caller, _actionsBuilder, abi.encode(new IActionsBuilder.Action[](0)), block.timestamp, _expiry
+      _caller, _actionsBuilder, abi.encode(new IActionsBuilder.Action[](0)), block.timestamp, _expiry, false
     );
 
     // it reverts with TransactionAlreadyQueued
@@ -439,7 +443,7 @@ contract UnitCanonGuard is Test {
     canonGuard.queueTransaction(_actionsBuilder);
 
     // Verify transaction info using the new interface
-    (address _proposer, bytes memory _actionsData, uint256 _executableAt, uint256 _expiresAt) =
+    (address _proposer, bytes memory _actionsData, uint256 _executableAt, uint256 _expiresAt, bool _isPreApproved) =
       canonGuard.transactionsInfo(_actionsBuilder);
 
     // it sets the proposer
@@ -453,6 +457,8 @@ contract UnitCanonGuard is Test {
     assertEq(_executableAt, block.timestamp + SHORT_TX_EXECUTION_DELAY);
     // it sets expiry time at executable time plus expiry delay
     assertEq(_expiresAt, block.timestamp + SHORT_TX_EXECUTION_DELAY + TX_EXPIRY_DELAY);
+    // it sets isPreApproved to true
+    assertEq(_isPreApproved, true);
   }
 
   function test_QueueTransactionWhenActionBuilderIsNotPreApproved(
@@ -480,7 +486,7 @@ contract UnitCanonGuard is Test {
     canonGuard.queueTransaction(_actionsBuilder);
 
     // Verify transaction info using the new interface
-    (address _proposer, bytes memory _actionsData, uint256 _executableAt, uint256 _expiresAt) =
+    (address _proposer, bytes memory _actionsData, uint256 _executableAt, uint256 _expiresAt, bool _isPreApproved) =
       canonGuard.transactionsInfo(_actionsBuilder);
 
     // it sets the proposer
@@ -494,6 +500,8 @@ contract UnitCanonGuard is Test {
     assertEq(_executableAt, block.timestamp + LONG_TX_EXECUTION_DELAY);
     // it sets expiry time at executable time plus expiry delay
     assertEq(_expiresAt, block.timestamp + LONG_TX_EXECUTION_DELAY + TX_EXPIRY_DELAY);
+    // it sets isPreApproved to false
+    assertEq(_isPreApproved, false);
   }
 
   modifier whenParentIsAHub(address _actionsBuilder, address _actionHub) {
@@ -531,7 +539,7 @@ contract UnitCanonGuard is Test {
     canonGuard.queueTransaction(_actionsBuilder);
 
     // Verify transaction info using the new interface
-    (,,, uint256 _expiresAt) = canonGuard.transactionsInfo(_actionsBuilder);
+    (,,, uint256 _expiresAt,) = canonGuard.transactionsInfo(_actionsBuilder);
 
     // it should queue the transaction
     assertEq(_expiresAt, block.timestamp + LONG_TX_EXECUTION_DELAY + TX_EXPIRY_DELAY);
@@ -554,7 +562,7 @@ contract UnitCanonGuard is Test {
     _expiry = bound(_expiry, block.timestamp + 1, block.timestamp + TX_EXPIRY_DELAY);
 
     canonGuard.mockTransaction(
-      _caller, _actionsBuilder, abi.encode(new IActionsBuilder.Action[](0)), block.timestamp, _expiry
+      _caller, _actionsBuilder, abi.encode(new IActionsBuilder.Action[](0)), block.timestamp, _expiry, false
     );
 
     // it reverts with TransactionAlreadyQueued
@@ -614,7 +622,7 @@ contract UnitCanonGuard is Test {
     canonGuard.queueTransaction(_actionsBuilder);
 
     // Verify transaction info using the new interface
-    (address _proposer, bytes memory _actionsData, uint256 _executableAt, uint256 _expiresAt) =
+    (address _proposer, bytes memory _actionsData, uint256 _executableAt, uint256 _expiresAt, bool _isPreApproved) =
       canonGuard.transactionsInfo(_actionsBuilder);
 
     // it sets the proposer
@@ -628,6 +636,8 @@ contract UnitCanonGuard is Test {
     assertEq(_executableAt, block.timestamp + SHORT_TX_EXECUTION_DELAY);
     // it sets expiry time
     assertEq(_expiresAt, block.timestamp + SHORT_TX_EXECUTION_DELAY + TX_EXPIRY_DELAY);
+    // it sets isPreApproved to true
+    assertEq(_isPreApproved, true);
   }
 
   function test_QueueTransactionWhenActionHubIsNotPreApproved(
@@ -656,7 +666,7 @@ contract UnitCanonGuard is Test {
     canonGuard.queueTransaction(_actionsBuilder);
 
     // Verify transaction info using the new interface
-    (address _proposer, bytes memory _actionsData, uint256 _executableAt, uint256 _expiresAt) =
+    (address _proposer, bytes memory _actionsData, uint256 _executableAt, uint256 _expiresAt, bool _isPreApproved) =
       canonGuard.transactionsInfo(_actionsBuilder);
 
     // it sets the proposer
@@ -670,6 +680,8 @@ contract UnitCanonGuard is Test {
     assertEq(_executableAt, block.timestamp + LONG_TX_EXECUTION_DELAY);
     // it sets expiry time
     assertEq(_expiresAt, block.timestamp + LONG_TX_EXECUTION_DELAY + TX_EXPIRY_DELAY);
+    // it sets isPreApproved to false
+    assertEq(_isPreApproved, false);
   }
 
   function test_QueueTransactionWhenCallerIsNotSafeOwner(
@@ -713,7 +725,9 @@ contract UnitCanonGuard is Test {
     _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.getTransactionHash.selector), abi.encode(bytes32(0)));
     _mockAndExpect(SAFE, abi.encodeWithSelector(IOwnerManager.getOwners.selector), abi.encode(new address[](0)));
 
-    canonGuard.mockTransaction(_txInfo.proposer, _actionsBuilder, _actionsData, _txInfo.executableAt, _txInfo.expiresAt);
+    canonGuard.mockTransaction(
+      _txInfo.proposer, _actionsBuilder, _actionsData, _txInfo.executableAt, _txInfo.expiresAt, _txInfo.isPreApproved
+    );
 
     // Move time forward past expiry
     vm.warp(_txInfo.expiresAt + 1);
@@ -748,7 +762,8 @@ contract UnitCanonGuard is Test {
       _actionsBuilder, // actionsBuilder
       _actionsData, // actionsData
       _txInfo.executableAt, // executableAt
-      _txInfo.expiresAt // expiresAt
+      _txInfo.expiresAt, // expiresAt
+      _txInfo.isPreApproved // isPrePreApproved
     );
 
     vm.expectRevert(ICanonGuard.TransactionNotYetExecutable.selector);
@@ -795,7 +810,8 @@ contract UnitCanonGuard is Test {
       _actionsBuilder, // actionsBuilder
       _actionsData, // actionsData
       _txInfo.executableAt, // executableAt
-      _txInfo.expiresAt // expiresAt
+      _txInfo.expiresAt, // expiresAt
+      _txInfo.isPreApproved // isPreApproved
     );
 
     address[] memory _signers = new address[](1);
@@ -803,18 +819,19 @@ contract UnitCanonGuard is Test {
 
     // it emits TransactionExecuted event
     vm.expectEmit(address(canonGuard));
-    emit ICanonGuard.TransactionExecuted(_actionsBuilder, bytes32(0), _signers);
+    emit ICanonGuard.TransactionExecuted(_actionsBuilder, bytes32(0), _signers, _txInfo.isPreApproved);
 
     vm.prank(_caller);
     canonGuard.executeTransaction(_actionsBuilder);
 
     // it deletes transaction from mapping
-    (address _proposer, bytes memory __actionsData, uint256 _executableAt, uint256 _expiresAt) =
+    (address _proposer, bytes memory __actionsData, uint256 _executableAt, uint256 _expiresAt, bool _isPreApproved) =
       canonGuard.transactionsInfo(_actionsBuilder);
     assertEq(__actionsData, bytes(''));
     assertEq(_executableAt, 0);
     assertEq(_proposer, address(0));
     assertEq(_expiresAt, 0);
+    assertEq(_isPreApproved, false);
 
     // it deletes transaction from queue
     assertEq(canonGuard.getQueuedActionBuilders().length, 0);
@@ -853,7 +870,8 @@ contract UnitCanonGuard is Test {
       _actionsBuilder, // actionsBuilder
       _actionsData, // actionsData
       _txInfo.executableAt, // executableAt
-      _txInfo.expiresAt // expiresAt
+      _txInfo.expiresAt, // expiresAt
+      _txInfo.isPreApproved // isPreApproved
     );
 
     address[] memory _sortedSigners = new address[](2);
@@ -862,18 +880,19 @@ contract UnitCanonGuard is Test {
 
     // it emits TransactionExecuted event
     vm.expectEmit(address(canonGuard));
-    emit ICanonGuard.TransactionExecuted(_actionsBuilder, bytes32(0), _sortedSigners);
+    emit ICanonGuard.TransactionExecuted(_actionsBuilder, bytes32(0), _sortedSigners, _txInfo.isPreApproved);
 
     vm.prank(_caller);
     canonGuard.executeTransaction(_actionsBuilder);
 
     // it deletes transaction from mapping
-    (address _proposer, bytes memory __actionsData, uint256 _executableAt, uint256 _expiresAt) =
+    (address _proposer, bytes memory __actionsData, uint256 _executableAt, uint256 _expiresAt, bool _isPreApproved) =
       canonGuard.transactionsInfo(_actionsBuilder);
     assertEq(__actionsData, bytes(''));
     assertEq(_executableAt, 0);
     assertEq(_proposer, address(0));
     assertEq(_expiresAt, 0);
+    assertEq(_isPreApproved, false);
 
     // it deletes transaction from queue
     assertEq(canonGuard.getQueuedActionBuilders().length, 0);
@@ -916,7 +935,12 @@ contract UnitCanonGuard is Test {
     for (uint256 _i; _i < _actionsBuilders.length; ++_i) {
       _actionsBuilders[_i] = makeAddr(string(abi.encodePacked(_i)));
       canonGuard.mockTransaction(
-        _txsInfo[_i].proposer, _actionsBuilders[_i], _actionsData, _txsInfo[_i].executableAt, _txsInfo[_i].expiresAt
+        _txsInfo[_i].proposer,
+        _actionsBuilders[_i],
+        _actionsData,
+        _txsInfo[_i].executableAt,
+        _txsInfo[_i].expiresAt,
+        _txsInfo[_i].isPreApproved
       );
     }
 
@@ -956,7 +980,12 @@ contract UnitCanonGuard is Test {
     for (uint256 _i; _i < _actionsBuilders.length; ++_i) {
       _actionsBuilders[_i] = makeAddr(string(abi.encodePacked(_i)));
       canonGuard.mockTransaction(
-        _txsInfo[_i].proposer, _actionsBuilders[_i], _actionsData, _txsInfo[_i].executableAt, _txsInfo[_i].expiresAt
+        _txsInfo[_i].proposer,
+        _actionsBuilders[_i],
+        _actionsData,
+        _txsInfo[_i].executableAt,
+        _txsInfo[_i].expiresAt,
+        _txsInfo[_i].isPreApproved
       );
     }
 
@@ -992,7 +1021,12 @@ contract UnitCanonGuard is Test {
       if (_i != 1) {
         _actionsBuilders[_i] = makeAddr(string(abi.encodePacked(_i)));
         canonGuard.mockTransaction(
-          _txsInfo[_i].proposer, _actionsBuilders[_i], _actionsData, _txsInfo[_i].executableAt, _txsInfo[_i].expiresAt
+          _txsInfo[_i].proposer,
+          _actionsBuilders[_i],
+          _actionsData,
+          _txsInfo[_i].executableAt,
+          _txsInfo[_i].expiresAt,
+          _txsInfo[_i].isPreApproved
         );
       }
     }
@@ -1030,7 +1064,12 @@ contract UnitCanonGuard is Test {
       _txsInfo[_i].executableAt = bound(_txsInfo[_i].executableAt, 0, block.timestamp);
       _actionsBuilders[_i] = makeAddr(string(abi.encodePacked(_i)));
       canonGuard.mockTransaction(
-        _txsInfo[_i].proposer, _actionsBuilders[_i], _actionsData, _txsInfo[_i].executableAt, _txsInfo[_i].expiresAt
+        _txsInfo[_i].proposer,
+        _actionsBuilders[_i],
+        _actionsData,
+        _txsInfo[_i].executableAt,
+        _txsInfo[_i].expiresAt,
+        _txsInfo[_i].isPreApproved
       );
     }
 
@@ -1040,7 +1079,7 @@ contract UnitCanonGuard is Test {
     // it emits TransactionExecuted event
     for (uint256 _i; _i < _actionsBuilders.length; ++_i) {
       vm.expectEmit(address(canonGuard));
-      emit ICanonGuard.TransactionExecuted(_actionsBuilders[_i], bytes32(0), _signers);
+      emit ICanonGuard.TransactionExecuted(_actionsBuilders[_i], bytes32(0), _signers, _txsInfo[_i].isPreApproved);
     }
 
     // it executes transactions with CanonGuard as signer
@@ -1049,12 +1088,13 @@ contract UnitCanonGuard is Test {
 
     for (uint256 _i; _i < _actionsBuilders.length; ++_i) {
       // it deletes transactions from mapping
-      (address _proposer, bytes memory __actionsData, uint256 _executableAt, uint256 _expiresAt) =
+      (address _proposer, bytes memory __actionsData, uint256 _executableAt, uint256 _expiresAt, bool _isPreApproved) =
         canonGuard.transactionsInfo(_actionsBuilders[_i]);
       assertEq(__actionsData, bytes(''));
       assertEq(_executableAt, 0);
       assertEq(_proposer, address(0));
       assertEq(_expiresAt, 0);
+      assertEq(_isPreApproved, false);
     }
     // it deletes transactions from queue
     assertEq(canonGuard.getQueuedActionBuilders().length, 0);
@@ -1092,7 +1132,12 @@ contract UnitCanonGuard is Test {
       _txsInfo[_i].executableAt = bound(_txsInfo[_i].executableAt, 0, block.timestamp);
       _actionsBuilders[_i] = makeAddr(string(abi.encodePacked(_i)));
       canonGuard.mockTransaction(
-        _txsInfo[_i].proposer, _actionsBuilders[_i], _actionsData, _txsInfo[_i].executableAt, _txsInfo[_i].expiresAt
+        _txsInfo[_i].proposer,
+        _actionsBuilders[_i],
+        _actionsData,
+        _txsInfo[_i].executableAt,
+        _txsInfo[_i].expiresAt,
+        _txsInfo[_i].isPreApproved
       );
     }
 
@@ -1103,7 +1148,7 @@ contract UnitCanonGuard is Test {
     // it emits TransactionExecuted event
     for (uint256 _i; _i < _actionsBuilders.length; ++_i) {
       vm.expectEmit(address(canonGuard));
-      emit ICanonGuard.TransactionExecuted(_actionsBuilders[_i], bytes32(0), _sortedSigners);
+      emit ICanonGuard.TransactionExecuted(_actionsBuilders[_i], bytes32(0), _sortedSigners, _txsInfo[_i].isPreApproved);
     }
 
     // it executes transactions with CanonGuard as signer
@@ -1112,12 +1157,13 @@ contract UnitCanonGuard is Test {
 
     for (uint256 _i; _i < _actionsBuilders.length; ++_i) {
       // it deletes transactions from mapping
-      (address _proposer, bytes memory __actionsData, uint256 _executableAt, uint256 _expiresAt) =
+      (address _proposer, bytes memory __actionsData, uint256 _executableAt, uint256 _expiresAt, bool _isPreApproved) =
         canonGuard.transactionsInfo(_actionsBuilders[_i]);
       assertEq(__actionsData, bytes(''));
       assertEq(_executableAt, 0);
       assertEq(_proposer, address(0));
       assertEq(_expiresAt, 0);
+      assertEq(_isPreApproved, false);
     }
     // it deletes transactions from queue
     assertEq(canonGuard.getQueuedActionBuilders().length, 0);
@@ -1158,7 +1204,9 @@ contract UnitCanonGuard is Test {
     _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.getTransactionHash.selector), abi.encode(bytes32(0)));
     _mockAndExpect(SAFE, abi.encodeWithSelector(IOwnerManager.getOwners.selector), abi.encode(new address[](0)));
 
-    canonGuard.mockTransaction(_txInfo.proposer, _actionsBuilder, _actionsData, _txInfo.executableAt, _txInfo.expiresAt);
+    canonGuard.mockTransaction(
+      _txInfo.proposer, _actionsBuilder, _actionsData, _txInfo.executableAt, _txInfo.expiresAt, _txInfo.isPreApproved
+    );
 
     // it emits EnqueuedTransactionCancelled event
     vm.prank(EMERGENCY_CALLER);
@@ -1167,12 +1215,13 @@ contract UnitCanonGuard is Test {
     canonGuard.cancelEnqueuedTransaction(_actionsBuilder);
 
     // it deletes transaction from queue
-    (address _proposer, bytes memory __actionsData, uint256 _executableAt, uint256 _expiresAt) =
+    (address _proposer, bytes memory __actionsData, uint256 _executableAt, uint256 _expiresAt, bool _isPreApproved) =
       canonGuard.transactionsInfo(_actionsBuilder);
     assertEq(__actionsData, bytes(''));
     assertEq(_executableAt, 0);
     assertEq(_proposer, address(0));
     assertEq(_expiresAt, 0);
+    assertEq(_isPreApproved, false);
 
     // it deletes transaction from mapping
     assertEq(canonGuard.getQueuedActionBuilders().length, 0);
@@ -1195,7 +1244,9 @@ contract UnitCanonGuard is Test {
     _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.getTransactionHash.selector), abi.encode(bytes32(0)));
     _mockAndExpect(SAFE, abi.encodeWithSelector(IOwnerManager.getOwners.selector), abi.encode(new address[](0)));
 
-    canonGuard.mockTransaction(_txInfo.proposer, _actionsBuilder, _actionsData, _txInfo.executableAt, _txInfo.expiresAt);
+    canonGuard.mockTransaction(
+      _txInfo.proposer, _actionsBuilder, _actionsData, _txInfo.executableAt, _txInfo.expiresAt, _txInfo.isPreApproved
+    );
 
     // it emits EnqueuedTransactionCancelled event
     vm.prank(EMERGENCY_CALLER);
@@ -1204,12 +1255,13 @@ contract UnitCanonGuard is Test {
     canonGuard.cancelEnqueuedTransaction(_actionsBuilder);
 
     // it deletes transaction from queue
-    (address _proposer, bytes memory __actionsData, uint256 _executableAt, uint256 _expiresAt) =
+    (address _proposer, bytes memory __actionsData, uint256 _executableAt, uint256 _expiresAt, bool _isPreApproved) =
       canonGuard.transactionsInfo(_actionsBuilder);
     assertEq(__actionsData, bytes(''));
     assertEq(_executableAt, 0);
     assertEq(_proposer, address(0));
     assertEq(_expiresAt, 0);
+    assertEq(_isPreApproved, false);
 
     // it deletes transaction from mapping
     assertEq(canonGuard.getQueuedActionBuilders().length, 0);
@@ -1235,7 +1287,9 @@ contract UnitCanonGuard is Test {
     _actions[0] = _action;
     bytes memory _actionsData = abi.encode(_actions);
 
-    canonGuard.mockTransaction(_txInfo.proposer, _actionsBuilder, _actionsData, _txInfo.executableAt, _txInfo.expiresAt);
+    canonGuard.mockTransaction(
+      _txInfo.proposer, _actionsBuilder, _actionsData, _txInfo.executableAt, _txInfo.expiresAt, _txInfo.isPreApproved
+    );
 
     // it reverts with CallerMustBeTransactionProposer
     vm.prank(_caller);
@@ -1262,7 +1316,9 @@ contract UnitCanonGuard is Test {
     _mockAndExpect(SAFE, abi.encodeWithSelector(IOwnerManager.getOwners.selector), abi.encode(_signers));
     _mockApprovedHashesForSigners(_signers, 1);
 
-    canonGuard.mockTransaction(_txInfo.proposer, _actionsBuilder, _actionsData, _txInfo.executableAt, _txInfo.expiresAt);
+    canonGuard.mockTransaction(
+      _txInfo.proposer, _actionsBuilder, _actionsData, _txInfo.executableAt, _txInfo.expiresAt, _txInfo.isPreApproved
+    );
 
     // it reverts with TransactionWithSignaturesCannotBeCancelled
     vm.prank(_txInfo.proposer);
@@ -1286,7 +1342,9 @@ contract UnitCanonGuard is Test {
     _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.getTransactionHash.selector), abi.encode(bytes32(0)));
     _mockAndExpect(SAFE, abi.encodeWithSelector(IOwnerManager.getOwners.selector), abi.encode(new address[](0)));
 
-    canonGuard.mockTransaction(_txInfo.proposer, _actionsBuilder, _actionsData, _txInfo.executableAt, _txInfo.expiresAt);
+    canonGuard.mockTransaction(
+      _txInfo.proposer, _actionsBuilder, _actionsData, _txInfo.executableAt, _txInfo.expiresAt, _txInfo.isPreApproved
+    );
 
     // it emits EnqueuedTransactionCancelled event
     vm.prank(_txInfo.proposer);
@@ -1295,12 +1353,13 @@ contract UnitCanonGuard is Test {
     canonGuard.cancelEnqueuedTransaction(_actionsBuilder);
 
     // it deletes transaction from queue
-    (address _proposer, bytes memory __actionsData, uint256 _executableAt, uint256 _expiresAt) =
+    (address _proposer, bytes memory __actionsData, uint256 _executableAt, uint256 _expiresAt, bool _isPreApproved) =
       canonGuard.transactionsInfo(_actionsBuilder);
     assertEq(__actionsData, bytes(''));
     assertEq(_executableAt, 0);
     assertEq(_proposer, address(0));
     assertEq(_expiresAt, 0);
+    assertEq(_isPreApproved, false);
 
     // it deletes transaction from mapping
     assertEq(canonGuard.getQueuedActionBuilders().length, 0);
@@ -1402,7 +1461,9 @@ contract UnitCanonGuard is Test {
     IActionsBuilder.Action[] memory _actions = new IActionsBuilder.Action[](1);
     _actions[0] = _action;
     bytes memory _actionsData = abi.encode(_actions);
-    canonGuard.mockTransaction(_txInfo.proposer, _actionsBuilder, _actionsData, _txInfo.executableAt, _txInfo.expiresAt);
+    canonGuard.mockTransaction(
+      _txInfo.proposer, _actionsBuilder, _actionsData, _txInfo.executableAt, _txInfo.expiresAt, _txInfo.isPreApproved
+    );
 
     _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.nonce.selector), abi.encode(_safeNonce));
     _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.getTransactionHash.selector), abi.encode(_expectedHash));
@@ -1425,7 +1486,9 @@ contract UnitCanonGuard is Test {
     IActionsBuilder.Action[] memory _actions = new IActionsBuilder.Action[](1);
     _actions[0] = _action;
     bytes memory _actionsData = abi.encode(_actions);
-    canonGuard.mockTransaction(_txInfo.proposer, _actionsBuilder, _actionsData, _txInfo.executableAt, _txInfo.expiresAt);
+    canonGuard.mockTransaction(
+      _txInfo.proposer, _actionsBuilder, _actionsData, _txInfo.executableAt, _txInfo.expiresAt, _txInfo.isPreApproved
+    );
 
     _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.getTransactionHash.selector), abi.encode(_expectedHash));
 
@@ -1476,7 +1539,9 @@ contract UnitCanonGuard is Test {
     IActionsBuilder.Action[] memory _actions = new IActionsBuilder.Action[](1);
     _actions[0] = _action;
     bytes memory _actionsData = abi.encode(_actions);
-    canonGuard.mockTransaction(_txInfo.proposer, _actionsBuilder, _actionsData, _txInfo.executableAt, _txInfo.expiresAt);
+    canonGuard.mockTransaction(
+      _txInfo.proposer, _actionsBuilder, _actionsData, _txInfo.executableAt, _txInfo.expiresAt, _txInfo.isPreApproved
+    );
 
     address[] memory _signers = new address[](2);
     _signers[0] = _signer1;
@@ -1514,7 +1579,9 @@ contract UnitCanonGuard is Test {
     _assumeFuzzable(_actionsBuilder);
     _txInfo.expiresAt = bound(_txInfo.expiresAt, 1, type(uint256).max);
 
-    canonGuard.mockTransaction(_caller, _actionsBuilder, abi.encode(_actions), _txInfo.executableAt, _txInfo.expiresAt);
+    canonGuard.mockTransaction(
+      _caller, _actionsBuilder, abi.encode(_actions), _txInfo.executableAt, _txInfo.expiresAt, _txInfo.isPreApproved
+    );
 
     // it returns the action builders in the queue
     assertEq(canonGuard.getQueuedActionBuilders().length, 1);

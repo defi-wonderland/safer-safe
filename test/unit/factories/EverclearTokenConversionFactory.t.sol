@@ -14,13 +14,10 @@ contract UnitEverclearTokenConversionFactorycreateEverclearTokenConversion is Te
     everclearTokenConversionFactory = new EverclearTokenConversionFactory();
   }
 
-  function test_WhenCalled(address _lockbox, address _next, address _safe) external {
-    address _everclearTokenConversion =
-      everclearTokenConversionFactory.createEverclearTokenConversion(_lockbox, _next, _safe);
+  function test_WhenCalled(address _lockbox, address _next) external {
+    address _everclearTokenConversion = everclearTokenConversionFactory.createEverclearTokenConversion(_lockbox, _next);
     auxEverclearTokenConversion = IEverclearTokenConversion(
-      deployCode(
-        'EverclearTokenConversion', abi.encode(address(everclearTokenConversionFactory), _lockbox, _next, _safe)
-      )
+      deployCode('EverclearTokenConversion', abi.encode(address(everclearTokenConversionFactory), _lockbox, _next))
     );
 
     // it should deploy a EverclearTokenConversion
@@ -29,7 +26,6 @@ contract UnitEverclearTokenConversionFactorycreateEverclearTokenConversion is Te
     // it should match the parameters sent to the constructor
     assertEq(address(auxEverclearTokenConversion.CLEAR_LOCKBOX()), _lockbox);
     assertEq(address(auxEverclearTokenConversion.NEXT()), _next);
-    assertEq(address(auxEverclearTokenConversion.SAFE()), _safe);
 
     // it should set the parent address in the child contract
     assertEq(IActionsBuilder(_everclearTokenConversion).PARENT(), address(everclearTokenConversionFactory));

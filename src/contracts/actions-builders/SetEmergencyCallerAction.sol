@@ -13,19 +13,14 @@ import {ISetEmergencyCallerAction} from 'interfaces/actions-builders/ISetEmergen
  */
 contract SetEmergencyCallerAction is ISetEmergencyCallerAction, ActionsBuilder {
   /// @inheritdoc ISetEmergencyCallerAction
-  address public immutable CANON_GUARD;
-
-  /// @inheritdoc ISetEmergencyCallerAction
   address public immutable EMERGENCY_CALLER;
 
   /**
    * @notice Constructor that sets up the SetEmergencyCallerAction contract
    * @param _parent The parent that deployed the actions builder
-   * @param _canonGuard The canon guard contract address that implements IEmergencyModeHook
    * @param _emergencyCaller The emergency caller address. This is the address that can execute transactions in emergency mode
    */
-  constructor(address _parent, address _canonGuard, address _emergencyCaller) ActionsBuilder(_parent) {
-    CANON_GUARD = _canonGuard;
+  constructor(address _parent, address _emergencyCaller) ActionsBuilder(_parent) {
     EMERGENCY_CALLER = _emergencyCaller;
   }
 
@@ -35,7 +30,7 @@ contract SetEmergencyCallerAction is ISetEmergencyCallerAction, ActionsBuilder {
   function getActions() external view override returns (Action[] memory _actions) {
     _actions = new Action[](1);
     _actions[0] = Action({
-      target: CANON_GUARD,
+      target: msg.sender,
       data: abi.encodeCall(IEmergencyModeHook.setEmergencyCaller, (EMERGENCY_CALLER)),
       value: 0
     });
