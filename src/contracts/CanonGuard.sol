@@ -136,7 +136,7 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
 
     _queueTransaction(_actionsBuilder, _actionIsPreApproved);
 
-    emit TransactionQueued(_parentIsHub ? _parent : address(0), msg.sender, _actionsBuilder, _actionIsPreApproved);
+    emit TransactionQueued(msg.sender, _actionsBuilder, _parentIsHub ? _parent : address(0), _actionIsPreApproved);
   }
 
   /// @inheritdoc ICanonGuard

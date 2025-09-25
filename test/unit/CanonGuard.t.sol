@@ -237,7 +237,7 @@ contract UnitCanonGuard is Test {
 
     // it emits TransactionQueued event
     vm.expectEmit(address(canonGuard));
-    emit ICanonGuard.TransactionQueued(address(0), _caller, _actionsBuilder, true);
+    emit ICanonGuard.TransactionQueued(_caller, _actionsBuilder, address(0), true);
 
     vm.prank(_caller);
     canonGuard.queueTransaction(_actionsBuilder);
@@ -279,7 +279,7 @@ contract UnitCanonGuard is Test {
 
     // it emits TransactionQueued event
     vm.expectEmit(address(canonGuard));
-    emit ICanonGuard.TransactionQueued(address(0), _caller, _actionsBuilder, false);
+    emit ICanonGuard.TransactionQueued(_caller, _actionsBuilder, address(0), false);
 
     vm.prank(_caller);
     canonGuard.queueTransaction(_actionsBuilder);
@@ -437,7 +437,7 @@ contract UnitCanonGuard is Test {
 
     // it emits TransactionQueued event
     vm.expectEmit(address(canonGuard));
-    emit ICanonGuard.TransactionQueued(address(0), _caller, _actionsBuilder, true);
+    emit ICanonGuard.TransactionQueued(_caller, _actionsBuilder, address(0), true);
 
     vm.prank(_caller);
     canonGuard.queueTransaction(_actionsBuilder);
@@ -480,7 +480,7 @@ contract UnitCanonGuard is Test {
 
     // it emits TransactionQueued event
     vm.expectEmit(address(canonGuard));
-    emit ICanonGuard.TransactionQueued(address(0), _caller, _actionsBuilder, false);
+    emit ICanonGuard.TransactionQueued(_caller, _actionsBuilder, address(0), false);
 
     vm.prank(_caller);
     canonGuard.queueTransaction(_actionsBuilder);
@@ -616,7 +616,7 @@ contract UnitCanonGuard is Test {
 
     // it emits TransactionQueued event
     vm.expectEmit(address(canonGuard));
-    emit ICanonGuard.TransactionQueued(_actionHub, _caller, _actionsBuilder, true);
+    emit ICanonGuard.TransactionQueued(_caller, _actionsBuilder, _actionHub, true);
 
     vm.prank(_caller);
     canonGuard.queueTransaction(_actionsBuilder);
@@ -660,7 +660,7 @@ contract UnitCanonGuard is Test {
 
     // it emits TransactionQueued event
     vm.expectEmit(address(canonGuard));
-    emit ICanonGuard.TransactionQueued(_actionHub, _caller, _actionsBuilder, false);
+    emit ICanonGuard.TransactionQueued(_caller, _actionsBuilder, _actionHub, false);
 
     vm.prank(_caller);
     canonGuard.queueTransaction(_actionsBuilder);
