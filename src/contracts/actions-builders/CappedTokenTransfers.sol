@@ -27,11 +27,11 @@ contract CappedTokenTransfers is ICappedTokenTransfers, ActionHubChild, ActionsB
 
   /**
    * @notice Constructor that sets up the token, amount and recipient
-   * @param _parent The parent that deployed the actions builder
+   * @param _parent The parent that deployed the actions builder. This is the factory address.
    * @param _token The token contract address
    * @param _amount The amount of tokens to transfer
    * @param _recipient The recipient of the tokens
-   * @param _actionHub The parent hub of the action. In this case, it's the hub of the CappedTokenTransfersHub contract
+   * @param _actionHub The parent hub of the action. In this case, it's the CappedTokenTransfersHub contract that created this action Builder. It is the same as _parent when the action builder is correctly created by a hub.
    */
   constructor(
     address _parent,
