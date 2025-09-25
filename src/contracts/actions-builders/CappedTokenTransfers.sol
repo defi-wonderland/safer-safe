@@ -31,7 +31,7 @@ contract CappedTokenTransfers is ICappedTokenTransfers, ActionHubChild, ActionsB
    * @param _token The token contract address
    * @param _amount The amount of tokens to transfer
    * @param _recipient The recipient of the tokens
-   * @param _actionHub The hub of the action
+   * @param _actionHub The parent hub of the action. In this case, it's the hub of the CappedTokenTransfersHub contract
    */
   constructor(
     address _parent,
