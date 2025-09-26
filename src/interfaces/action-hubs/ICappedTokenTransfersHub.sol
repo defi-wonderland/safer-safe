@@ -34,14 +34,15 @@ interface ICappedTokenTransfersHub is ISafeManageable {
   error TokenAlreadyRegisteredInHub(address _token);
 
   /**
-   * @notice Updates the state. Checks if the cap is exceeded and resets the spending if we're in a new epoch.
+   * @notice Checks if the spending cap is exceeded and resets the spending if we're in a new epoch.
    * @param _token The token to update the state for
-   * @param _amount The amount of tokens to update the state for
+   * @param _amount The amount of tokens to update the state for. Reverts if the spending cap is exceeded with this amount.
    */
   function updateState(address _token, uint256 _amount) external;
 
   /**
-   * @notice Creates a new actions builder
+   * @notice Creates a new actions builder.
+   * @notice Reverts if the token is not registered in the hub.
    * @param _token The token to cap
    * @param _amount The amount of tokens to transfer
    * @return _actionsBuilder The address of the new actions builder
@@ -55,7 +56,7 @@ interface ICappedTokenTransfersHub is ISafeManageable {
   function RECIPIENT() external view returns (address _recipient);
 
   /**
-   * @notice Gets the epoch length
+   * @notice Gets the epoch length.
    * @return _epochLength The epoch length
    */
   function EPOCH_LENGTH() external view returns (uint256 _epochLength);

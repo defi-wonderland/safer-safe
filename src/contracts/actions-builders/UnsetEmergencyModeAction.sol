@@ -4,6 +4,10 @@ pragma solidity 0.8.30;
 import {ActionsBuilder} from 'contracts/actions-builders/ActionsBuilder.sol';
 import {IEmergencyModeHook} from 'interfaces/IEmergencyModeHook.sol';
 
+/**
+ * @title UnsetEmergencyModeAction
+ * @notice Contract that builds an action to unset the emergency mode
+ */
 contract UnsetEmergencyModeAction is ActionsBuilder {
   /**
    * @notice Given that the UnsetEmergencyModeAction has no parent, we set the parent to address(0)

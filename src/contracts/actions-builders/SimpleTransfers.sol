@@ -8,18 +8,19 @@ import {IERC20} from 'forge-std/interfaces/IERC20.sol';
 
 /**
  * @title SimpleTransfers
- * @notice Contract that builds actions from token transfer actions
+ * @notice Contract that builds actions to transfer ERC20 tokens
  */
 contract SimpleTransfers is ISimpleTransfers, ActionsBuilder {
   // ~~~ STORAGE ~~~
 
-  /// @notice The array of actions
+  /// @notice The array of actions containing the transfer actions to be executed
   Action[] internal _actions;
 
   // ~~~ CONSTRUCTOR ~~~
 
   /**
-   * @notice Constructor that sets up the array of actions
+   * @notice Constructor that sets up the array of actions containing the transfer actions
+   * @notice Each TransferAction is converted into an Action to transfer an amount of ERC20 tokens to a recipient
    * @param _parent The parent that deployed the actions builder
    * @param _transferActions The array of transfer actions
    */

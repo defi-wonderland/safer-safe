@@ -9,7 +9,10 @@ import {IxERC20Lockbox} from 'interfaces/external/IxERC20Lockbox.sol';
 
 /**
  * @title EverclearTokenConversion
- * @notice Contract that exchanges NEXT for CLEAR
+ * @notice Builds the sequence of actions to convert all NEXT held by SAFE into CLEAR via the xERC20 lockbox.
+ * @dev Produces two actions:
+ *  1) Approve CLEAR_LOCKBOX to spend the NEXT balance of SAFE. The amount approved is the balance of NEXT held by SAFE.
+ *  2) Call `IxERC20Lockbox.deposit(amount)` to deposit `NEXT` and mint CLEAR.
  */
 contract EverclearTokenConversion is IEverclearTokenConversion, ActionsBuilder {
   // ~~~ STORAGE ~~~
@@ -23,10 +26,10 @@ contract EverclearTokenConversion is IEverclearTokenConversion, ActionsBuilder {
   // ~~~ CONSTRUCTOR ~~~
 
   /**
-   * @notice Constructor that sets up the xERC20Lockbox and NEXT
+   * @notice Initializes the builder with the xERC20 lockbox, the NEXT token, and the SAFE whose balance will be converted.
    * @param _parent The parent that deployed the actions builder
-   * @param _lockbox The xERC20Lockbox contract address
-   * @param _next The NEXT contract address
+   * @param _lockbox The xERC20 lockbox that accepts NEXT and mints CLEAR
+   * @param _next The NEXT ERC20 token to deposit into the lockbox
    */
   constructor(address _parent, address _lockbox, address _next) ActionsBuilder(_parent) {
     CLEAR_LOCKBOX = IxERC20Lockbox(_lockbox);
