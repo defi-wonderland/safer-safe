@@ -9,7 +9,8 @@ import {IOPx} from 'interfaces/external/IOPx.sol';
 
 /**
  * @title OPxAction
- * @notice Contract that builds the actions for OPX
+ * @notice Contract that builds the action to downgrade the SAFE balance of OPx to OP.
+ * @dev Builds an action that calls IOPx.downgrade.
  */
 contract OPxAction is IOPxAction, ActionsBuilder {
   // ~~~ STORAGE ~~~
@@ -22,7 +23,7 @@ contract OPxAction is IOPxAction, ActionsBuilder {
   /**
    * @notice Constructor that sets up the OPX contract address
    * @param _parent The parent that deployed the actions builder
-   * @param _opx The OPX contract address
+   * @param _opx The OPx contract address
    */
   constructor(address _parent, address _opx) ActionsBuilder(_parent) {
     OPX = _opx;

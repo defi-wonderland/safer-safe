@@ -27,7 +27,7 @@ abstract contract ActionHub is IActionHub {
   }
 
   /**
-   * @notice Creates a new actions builder
+   * @notice Deploys a new actions builder with deterministic address. Reverts if the action builder already exists.
    * @param _initCode The init code of the new actions builder
    * @param _salt The salt used to deploy the new actions builder
    * @return _actionsBuilder The address of the new actions builder

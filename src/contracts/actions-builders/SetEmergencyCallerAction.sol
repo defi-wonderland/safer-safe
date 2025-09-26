@@ -5,6 +5,12 @@ import {ActionsBuilder} from 'contracts/actions-builders/ActionsBuilder.sol';
 import {IEmergencyModeHook} from 'interfaces/IEmergencyModeHook.sol';
 import {ISetEmergencyCallerAction} from 'interfaces/actions-builders/ISetEmergencyCallerAction.sol';
 
+/**
+ * @title SetEmergencyCallerAction
+ * @notice Contract that builds an action to set the emergency caller
+ * @notice The emergency caller is the address that can execute transactions in emergency mode
+ * @dev Builds an action that calls IEmergencyModeHook.setEmergencyCaller
+ */
 contract SetEmergencyCallerAction is ISetEmergencyCallerAction, ActionsBuilder {
   /// @inheritdoc ISetEmergencyCallerAction
   address public immutable EMERGENCY_CALLER;
@@ -12,7 +18,7 @@ contract SetEmergencyCallerAction is ISetEmergencyCallerAction, ActionsBuilder {
   /**
    * @notice Constructor that sets up the SetEmergencyCallerAction contract
    * @param _parent The parent that deployed the actions builder
-   * @param _emergencyCaller The emergency caller address
+   * @param _emergencyCaller The emergency caller address. This is the address that can execute transactions in emergency mode
    */
   constructor(address _parent, address _emergencyCaller) ActionsBuilder(_parent) {
     EMERGENCY_CALLER = _emergencyCaller;

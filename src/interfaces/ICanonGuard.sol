@@ -40,13 +40,13 @@ interface ICanonGuard is ISafeManageable {
 
   /**
    * @notice Emitted when a transaction is queued
-   * @param _actionHub The actionHub contract address (0 if no actionHub was used)
    * @param _proposer The address of the proposer of the transaction
    * @param _actionsBuilder The actions builder contract address
+   * @param _actionHub The actionHub contract address (0 if no actionHub was used)
    * @param _txIsPreApproved Whether the transaction is pre-approved
    */
   event TransactionQueued(
-    address indexed _actionHub, address indexed _proposer, address indexed _actionsBuilder, bool _txIsPreApproved
+    address indexed _proposer, address indexed _actionsBuilder, address indexed _actionHub, bool _txIsPreApproved
   );
 
   /**
@@ -188,8 +188,8 @@ interface ICanonGuard is ISafeManageable {
 
   /**
    * @notice Cancels an enqueued transaction
-   * @notice Can only be called by the proposer of the transaction
-   * @notice The transaction must not have any approved hash signers
+   * @dev Can only be called by the proposer of the transaction
+   * @dev The transaction must not have any approved hash signers
    * @param _actionsBuilder The actions builder contract address
    */
   function cancelEnqueuedTransaction(address _actionsBuilder) external;

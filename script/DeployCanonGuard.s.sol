@@ -50,7 +50,7 @@ import {SetGuardAction} from 'src/contracts/actions-builders/SetGuardAction.sol'
 
 /**
  * @title DeployCanonGuard
- * @notice Script that deploys the Factories and Contracts
+ * @notice Script that deploys the Factories and Contracts based on values in Constants.sol
  * @notice Contracts are manually deployed so they get verified. This would automatically verify any contract created
  * by the factories.
  */

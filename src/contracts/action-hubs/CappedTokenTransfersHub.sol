@@ -9,6 +9,11 @@ import {SafeManageable} from 'src/contracts/SafeManageable.sol';
 import {ActionHub} from 'src/contracts/action-hubs/ActionHub.sol';
 import {CappedTokenTransfers} from 'src/contracts/actions-builders/CappedTokenTransfers.sol';
 
+/**
+ * @title CappedTokenTransfersHub
+ * @notice Contract that creates and manages capped token transfers
+ * @dev Tracks spent amounts per token per epoch and resets when a new epoch starts.
+ */
 contract CappedTokenTransfersHub is ActionHub, ICappedTokenTransfersHub, SafeManageable {
   using EnumerableSetLib for EnumerableSetLib.AddressSet;
 
@@ -36,8 +41,8 @@ contract CappedTokenTransfersHub is ActionHub, ICappedTokenTransfersHub, SafeMan
   /**
    * @notice Constructor that sets up the actionHub
    * @param _parent The parent that deployed the actionHub
-   * @param _safe The safe to use
-   * @param _recipient The recipient of the tokens
+   * @param _safe The SAFE authorized to manage the hub.
+   * @param _recipient Address that receives transfers.
    * @param _tokens The tokens to cap
    * @param _caps The caps for the tokens
    * @param _epochLength Duration of each epoch in seconds. Epochs are counted from STARTING_TIMESTAMP and computed as
