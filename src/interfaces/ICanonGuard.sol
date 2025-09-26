@@ -46,7 +46,7 @@ interface ICanonGuard is ISafeManageable {
    * @param _txIsPreApproved Whether the transaction is pre-approved
    */
   event TransactionQueued(
-    address _proposer, address indexed _actionsBuilder, address indexed _actionHub, bool _txIsPreApproved
+    address indexed _proposer, address indexed _actionsBuilder, address indexed _actionHub, bool _txIsPreApproved
   );
 
   /**
