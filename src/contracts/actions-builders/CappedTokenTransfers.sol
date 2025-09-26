@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
+import {ActionHubChild} from 'contracts/action-hubs/ActionHubChild.sol';
 import {ActionsBuilder} from 'contracts/actions-builders/ActionsBuilder.sol';
 import {IERC20} from 'forge-std/interfaces/IERC20.sol';
 import {ICappedTokenTransfersHub} from 'interfaces/action-hubs/ICappedTokenTransfersHub.sol';
@@ -10,7 +11,7 @@ import {ICappedTokenTransfers} from 'interfaces/actions-builders/ICappedTokenTra
  * @title CappedTokenTransfers
  * @notice Contract that builds actions from capped token transfers
  */
-contract CappedTokenTransfers is ICappedTokenTransfers, ActionsBuilder {
+contract CappedTokenTransfers is ICappedTokenTransfers, ActionHubChild, ActionsBuilder {
   // ~~~ STORAGE ~~~
 
   /// @inheritdoc ICappedTokenTransfers
@@ -22,18 +23,15 @@ contract CappedTokenTransfers is ICappedTokenTransfers, ActionsBuilder {
   /// @inheritdoc ICappedTokenTransfers
   address public immutable RECIPIENT;
 
-  /// @inheritdoc ICappedTokenTransfers
-  address public immutable HUB;
-
   // ~~~ CONSTRUCTOR ~~~
 
   /**
    * @notice Constructor that sets up the token, amount and recipient
-   * @param _parent The parent that deployed the actions builder
+   * @param _parent The parent that deployed the actions builder. This is the factory address.
    * @param _token The token contract address
    * @param _amount The amount of tokens to transfer
    * @param _recipient The recipient of the tokens
-   * @param _actionHub The hub of the action
+   * @param _actionHub The parent hub of the action. In this case, it's the CappedTokenTransfersHub contract that created this action Builder. It is the same as _parent when the action builder is correctly created by a hub.
    */
   constructor(
     address _parent,
@@ -41,11 +39,10 @@ contract CappedTokenTransfers is ICappedTokenTransfers, ActionsBuilder {
     uint256 _amount,
     address _recipient,
     address _actionHub
-  ) ActionsBuilder(_parent) {
+  ) ActionsBuilder(_parent) ActionHubChild(_actionHub) {
     TOKEN = _token;
     AMOUNT = _amount;
     RECIPIENT = _recipient;
-    HUB = _actionHub;
   }
 
   // ~~~ ACTIONS METHODS ~~~

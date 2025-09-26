@@ -24,6 +24,7 @@ import {OnlyCanonGuard} from 'contracts/OnlyCanonGuard.sol';
 import {SafeManageable} from 'contracts/SafeManageable.sol';
 import {ICanonGuard} from 'interfaces/ICanonGuard.sol';
 import {IActionHub} from 'interfaces/action-hubs/IActionHub.sol';
+import {IActionHubChild} from 'interfaces/action-hubs/IActionHubChild.sol';
 import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 import {EnumerableSetLib} from 'solady/utils/EnumerableSetLib.sol';
 
@@ -118,25 +119,11 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
 
   /// @inheritdoc ICanonGuard
   function queueTransaction(address _actionsBuilder) external isSafeOwner {
-    address _parent = IActionHub(_actionsBuilder).PARENT();
-    bool _actionIsPreApproved;
-    bool _parentIsHub;
-    // Checks if parent is address(0) or an EOA
-    if (_parent.code.length == 0) {
-      _actionIsPreApproved = _isPreApproved(_actionsBuilder);
-    } else {
-      try IActionHub(_parent).isHubChild(_actionsBuilder) returns (bool _isChild) {
-        if (!_isChild) revert InvalidActionBuilderHubParent();
-        _parentIsHub = true;
-        _actionIsPreApproved = _isPreApproved(_parent);
-      } catch {
-        _actionIsPreApproved = _isPreApproved(_actionsBuilder);
-      }
-    }
+    (bool _actionIsPreApproved, address _hub) = _isPreApproved(_actionsBuilder);
 
     _queueTransaction(_actionsBuilder, _actionIsPreApproved);
 
-    emit TransactionQueued(msg.sender, _actionsBuilder, _parentIsHub ? _parent : address(0), _actionIsPreApproved);
+    emit TransactionQueued(msg.sender, _actionsBuilder, _hub, _actionIsPreApproved);
   }
 
   /// @inheritdoc ICanonGuard
@@ -379,9 +366,24 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
    * @notice Internal function to check if the actions builder (or actionHub) is pre-approved
    * @param _actionsBuilderOrActionHub The actions builder contract address (or actionHub)
    * @return _isApproved Whether the actions builder (or actionHub) is pre-approved
+   * @return _hub The address of the actionHub if the actions builder is a child of an actionHub, otherwise the zero address
    */
-  function _isPreApproved(address _actionsBuilderOrActionHub) internal view returns (bool _isApproved) {
-    _isApproved = approvalExpiries[_actionsBuilderOrActionHub] > block.timestamp;
+  function _isPreApproved(address _actionsBuilderOrActionHub) internal view returns (bool _isApproved, address _hub) {
+    // low level call, if _success is false is actionBuilder without parent hub
+    (bool _success, bytes memory _hubAsBytes) =
+      _actionsBuilderOrActionHub.staticcall(abi.encodeCall(IActionHubChild.HUB, ()));
+    _hub = _success ? abi.decode(_hubAsBytes, (address)) : address(0);
+
+    if (_hub == address(0)) {
+      // actionBuilder without parent hub
+      _isApproved = approvalExpiries[_actionsBuilderOrActionHub] > block.timestamp;
+    } else {
+      // actionBuilder with parent hub, check if child of that Hub
+      if (!IActionHub(_hub).isHubChild(_actionsBuilderOrActionHub)) revert InvalidActionBuilderHubParent();
+
+      // actionBuilder is a child of that Hub, check if the Hub is pre-approved
+      _isApproved = approvalExpiries[_hub] > block.timestamp;
+    }
   }
 
   /**

@@ -27,30 +27,7 @@ UnitCanonGuard::approveActionsBuilderOrHub
 
 UnitCanonGuard::queueTransaction
 ├── when caller is safe owner
-│   ├── when it has no parent
-│   │   ├── when no parent action builder is pre approved
-│   │   │   ├── it sets transaction info
-│   │   │   ├── it adds the action builder to the queue
-│   │   │   ├── it sets the proposer
-│   │   │   ├── it sets executable time at block timestamp plus short delay
-│   │   │   ├── it sets expiry time at executable time plus expiry delay
-│   │   │   ├── it sets isPreApproved to true
-│   │   │   └── it emits TransactionQueued event
-│   │   ├── when no parent action builder is not pre approved
-│   │   │   ├── it sets transaction info
-│   │   │   ├── it adds the action builder to the queue
-│   │   │   ├── it sets the proposer
-│   │   │   ├── it sets executable time at block timestamp plus long delay
-│   │   │   ├── it sets expiry time at executable time plus expiry delay
-│   │   │   ├── it sets isPreApproved to false
-│   │   │   └── it emits TransactionQueued event
-│   │   ├── when no parent transaction is already queued but expired
-│   │   │   ├── it sets transaction info
-│   │   │   └── it does not re add the action builder to the queue
-│   │   └── when no parent transaction is already queued and not expired
-│   │       ├── it reverts with TransactionAlreadyQueued
-│   │       └── it does not re add the action builder to the queue
-│   ├── when parent is not a hub
+│   ├── when action builder does not declare a hub
 │   │   ├── when transaction is already queued but expired
 │   │   │   ├── it sets transaction info
 │   │   │   └── it does not re add the action builder to the queue
@@ -72,7 +49,7 @@ UnitCanonGuard::queueTransaction
 │   │       ├── it sets expiry time at executable time plus expiry delay
 │   │       ├── it sets isPreApproved to false
 │   │       └── it emits TransactionQueued event
-│   └── when parent is a hub
+│   └── when action builder declares a hub
 │       ├── when hub transaction is already queued but expired
 │       │   ├── it sets transaction info
 │       │   └── it does not re add the action builder to the queue
