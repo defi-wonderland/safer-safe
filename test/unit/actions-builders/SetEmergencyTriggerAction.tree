@@ -1,0 +1,7 @@
+UnitSetEmergencyTriggerAction::constructor
+└── when called
+    └── it sets the emergency trigger address
+
+UnitSetEmergencyTriggerAction::getActions
+└── when called
+    └── it returns an action to set the emergency trigger

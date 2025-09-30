@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.29;
+pragma solidity 0.8.30;
 
 import {OPxAction} from 'src/contracts/actions-builders/OPxAction.sol';
 import {ISimpleActions} from 'src/interfaces/actions-builders/ISimpleActions.sol';
@@ -41,28 +41,28 @@ contract IntegrationWonderlandClaims is IntegrationOptimismBase {
     _simpleActions[1] = _claimWLD;
 
     _actionsBuilder = simpleActionsFactory.createSimpleActions(_simpleActions);
-    _opxAction = address(new OPxAction(_opx, address(SAFE_PROXY)));
+    _opxAction = address(new OPxAction(address(0), _opx));
   }
 
   function test_ExecuteTransaction() public {
     assertEq(KITE.balanceOf(address(SAFE_PROXY)), _safeBalance);
     assertEq(WLD.balanceOf(address(SAFE_PROXY)), _safeBalance);
 
-    // Allow the SafeEntrypoint to call the SimpleTransfers contract
+    // Allow the CanonGuard to call the SimpleTransfers contract
     uint256 _approvalDuration = 1 days;
 
     vm.prank(address(SAFE_PROXY));
-    safeEntrypoint.approveActionsBuilder(_actionsBuilder, _approvalDuration);
+    canonGuard.approveActionsBuilderOrHub(_actionsBuilder, _approvalDuration);
 
     // Queue the transaction
     vm.prank(_safeOwners[0]);
-    safeEntrypoint.queueTransaction(_actionsBuilder);
+    canonGuard.queueTransaction(_actionsBuilder);
 
     // Wait for the timelock period
     vm.warp(block.timestamp + SHORT_TX_EXECUTION_DELAY);
 
     // Get the Safe transaction hash
-    bytes32 _safeTxHash = safeEntrypoint.getSafeTransactionHash(_actionsBuilder);
+    bytes32 _safeTxHash = canonGuard.getSafeTransactionHash(_actionsBuilder);
 
     // Approve the Safe transaction hash
     for (uint256 _i; _i < _safeThreshold; ++_i) {
@@ -72,7 +72,7 @@ contract IntegrationWonderlandClaims is IntegrationOptimismBase {
     vm.stopPrank();
 
     // Execute the transaction
-    safeEntrypoint.executeTransaction(_actionsBuilder);
+    canonGuard.executeTransaction(_actionsBuilder);
 
     // Assert the token balances
     assertEq(KITE.balanceOf(address(SAFE_PROXY)), _claimableKITE + _safeBalance);
@@ -82,21 +82,21 @@ contract IntegrationWonderlandClaims is IntegrationOptimismBase {
   function test_OPxDowngrade() public {
     assertEq(OP.balanceOf(address(SAFE_PROXY)), _safeBalance);
 
-    // Allow the SafeEntrypoint to call the contract
+    // Allow the CanonGuard to call the contract
     uint256 _approvalDuration = 1 days;
 
     vm.prank(address(SAFE_PROXY));
-    safeEntrypoint.approveActionsBuilder(_opxAction, _approvalDuration);
+    canonGuard.approveActionsBuilderOrHub(_opxAction, _approvalDuration);
 
     // Queue the transaction
     vm.prank(_safeOwners[0]);
-    safeEntrypoint.queueTransaction(_opxAction);
+    canonGuard.queueTransaction(_opxAction);
 
     // Wait for the timelock period
     vm.warp(block.timestamp + SHORT_TX_EXECUTION_DELAY);
 
     // Get the Safe transaction hash
-    bytes32 _safeTxHash = safeEntrypoint.getSafeTransactionHash(_opxAction);
+    bytes32 _safeTxHash = canonGuard.getSafeTransactionHash(_opxAction);
 
     // Approve the Safe transaction hash
     for (uint256 _i; _i < _safeThreshold; ++_i) {
@@ -106,7 +106,7 @@ contract IntegrationWonderlandClaims is IntegrationOptimismBase {
     vm.stopPrank();
 
     // Execute the transaction
-    safeEntrypoint.executeTransaction(_opxAction);
+    canonGuard.executeTransaction(_opxAction);
 
     // Assert the token balances
     assertEq(OP.balanceOf(address(SAFE_PROXY)), _claimableOP + _safeBalance);

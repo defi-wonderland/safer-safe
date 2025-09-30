@@ -1,0 +1,8 @@
+UnitApproveAction::constructor
+└── when called
+    └── it sets the actions builder address
+    └── it sets the approval duration
+
+UnitApproveAction::getActions
+└── when called
+    └── it returns an action to approve the actions builder or action hub

@@ -1,25 +1,22 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.29;
-
-import {ISafeEntrypointFactory} from 'interfaces/factories/ISafeEntrypointFactory.sol';
+pragma solidity 0.8.30;
 
 import {ISafe} from '@safe-smart-account/interfaces/ISafe.sol';
 import {MultiSendCallOnly} from '@safe-smart-account/libraries/MultiSendCallOnly.sol';
 import {SafeProxyFactory} from '@safe-smart-account/proxies/SafeProxyFactory.sol';
-
 import {IERC20} from 'forge-std/interfaces/IERC20.sol';
 
+/**
+ * @title Constants
+ * @notice Constants used by the deploy scripts
+ */
 abstract contract Constants {
   // Safe Deployments (https://github.com/safe-global/safe-deployments/tree/main/src/assets/v1.4.1)
   ISafe public constant SAFE = ISafe(0x41675C099F32341bf84BFc5382aF534df5C7461a);
   SafeProxyFactory public constant SAFE_PROXY_FACTORY = SafeProxyFactory(0x4e1DCf7AD4e460CfD30791CCC4F9c8a4f820ec67);
   MultiSendCallOnly public constant MULTI_SEND_CALL_ONLY = MultiSendCallOnly(0x9641d764fc13c8B624c04430C7356C1C7C8102e2);
 
-  // Safer Safe
-  ISafeEntrypointFactory public constant SAFE_ENTRYPOINT_FACTORY =
-    ISafeEntrypointFactory(0x34A1D3fff3958843C43aD80F30b94c510645C316); // TODO: Replace with the address of the SafeEntrypointFactory contract once deployed
-
-  // Wonderland Safer Safe
+  // Wonderland Canon Guard
   ISafe public constant SAFE_PROXY = ISafe(0x74fEa3FB0eD030e9228026E7F413D66186d3D107);
   uint256 public constant SHORT_TX_EXECUTION_DELAY = 1 hours;
   uint256 public constant LONG_TX_EXECUTION_DELAY = 7 days;
@@ -28,6 +25,9 @@ abstract contract Constants {
   // TODO: Replace with the correct address
   address public constant EMERGENCY_TRIGGER = address(1);
   address public constant EMERGENCY_CALLER = address(1);
+
+  uint256 public constant ETHEREUM_MAINNET_CHAIN_ID = 1;
+  uint256 public constant OPTIMISM_MAINNET_CHAIN_ID = 10;
 }
 
 abstract contract EthereumConstants is Constants {

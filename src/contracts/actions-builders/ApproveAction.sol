@@ -1,14 +1,16 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.29;
+pragma solidity 0.8.30;
 
-import {ISafeEntrypoint} from 'interfaces/ISafeEntrypoint.sol';
-import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
+import {ActionsBuilder} from 'contracts/actions-builders/ActionsBuilder.sol';
+import {ICanonGuard} from 'interfaces/ICanonGuard.sol';
 import {IApproveAction} from 'interfaces/actions-builders/IApproveAction.sol';
 
-contract ApproveAction is IApproveAction {
-  /// @inheritdoc IApproveAction
-  address public immutable SAFE_ENTRYPOINT;
-
+/**
+ * @title ApproveAction
+ * @notice Contract that builds an action to approve the actions builder or action hub
+ * @dev Builds an action that calls ICanonGuard.approveActionsBuilderOrHub with the approval duration
+ */
+contract ApproveAction is IApproveAction, ActionsBuilder {
   /// @inheritdoc IApproveAction
   address public immutable ACTIONS_BUILDER;
 
@@ -17,24 +19,23 @@ contract ApproveAction is IApproveAction {
 
   /**
    * @notice Constructor that sets up the ApproveAction contract
-   * @param _safeEntrypoint The SafeEntrypoint contract address
-   * @param _actionsBuilder The actions builder contract address
+   * @param _parent The parent that deployed the actions builder
+   * @param _actionsBuilder The actions builder or action hub contract address
    * @param _approvalDuration The approval duration
    */
-  constructor(address _safeEntrypoint, address _actionsBuilder, uint256 _approvalDuration) {
-    SAFE_ENTRYPOINT = _safeEntrypoint;
+  constructor(address _parent, address _actionsBuilder, uint256 _approvalDuration) ActionsBuilder(_parent) {
     ACTIONS_BUILDER = _actionsBuilder;
     APPROVAL_DURATION = _approvalDuration;
   }
 
   // ~~~ ACTIONS METHODS ~~~
 
-  /// @inheritdoc IActionsBuilder
-  function getActions() external view returns (Action[] memory _actions) {
+  /// @inheritdoc ActionsBuilder
+  function getActions() external view override returns (Action[] memory _actions) {
     _actions = new Action[](1);
     _actions[0] = Action({
-      target: SAFE_ENTRYPOINT,
-      data: abi.encodeCall(ISafeEntrypoint.approveActionsBuilder, (ACTIONS_BUILDER, APPROVAL_DURATION)),
+      target: msg.sender,
+      data: abi.encodeCall(ICanonGuard.approveActionsBuilderOrHub, (ACTIONS_BUILDER, APPROVAL_DURATION)),
       value: 0
     });
   }

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.29;
+pragma solidity 0.8.30;
 
 import {EverclearTokenStake} from 'src/contracts/actions-builders/EverclearTokenStake.sol';
 import {IEverclearTokenStake} from 'src/interfaces/actions-builders/IEverclearTokenStake.sol';
@@ -24,7 +24,7 @@ contract IntegrationEverclearStakes is IntegrationEthereumBase {
     // Deploy the contract
     _actionsBuilder = address(
       new EverclearTokenStake(
-        _vestingEscrow, _vestingWallet, _spokeBridge, _clearLockbox, _next, _clear, address(SAFE_PROXY), _lockTime
+        address(0), _vestingEscrow, _vestingWallet, _spokeBridge, _clearLockbox, _next, _clear, _lockTime
       )
     );
   }
@@ -33,21 +33,21 @@ contract IntegrationEverclearStakes is IntegrationEthereumBase {
     assertEq(NEXT.balanceOf(address(SAFE_PROXY)), _safeBalance);
     assertEq(CLEAR.balanceOf(address(SAFE_PROXY)), _safeBalance);
 
-    // Allow the SafeEntrypoint to call the SimpleTransfers contract
+    // Allow the CanonGuard to call the SimpleTransfers contract
     uint256 _approvalDuration = 1 days;
 
     vm.prank(address(SAFE_PROXY));
-    safeEntrypoint.approveActionsBuilder(_actionsBuilder, _approvalDuration);
+    canonGuard.approveActionsBuilderOrHub(_actionsBuilder, _approvalDuration);
 
     // Queue the transaction
     vm.prank(_safeOwners[0]);
-    safeEntrypoint.queueTransaction(_actionsBuilder);
+    canonGuard.queueTransaction(_actionsBuilder);
 
     // Wait for the timelock period
     vm.warp(block.timestamp + SHORT_TX_EXECUTION_DELAY);
 
     // Get the Safe transaction hash
-    bytes32 _safeTxHash = safeEntrypoint.getSafeTransactionHash(_actionsBuilder);
+    bytes32 _safeTxHash = canonGuard.getSafeTransactionHash(_actionsBuilder);
 
     // Approve the Safe transaction hash
     for (uint256 _i; _i < _safeThreshold; ++_i) {
@@ -57,7 +57,7 @@ contract IntegrationEverclearStakes is IntegrationEthereumBase {
     vm.stopPrank();
 
     // Execute the transaction
-    safeEntrypoint.executeTransaction(_actionsBuilder);
+    canonGuard.executeTransaction(_actionsBuilder);
 
     // Assert the token balances
     assertEq(CLEAR.balanceOf(address(SAFE_PROXY)), _safeBalance);

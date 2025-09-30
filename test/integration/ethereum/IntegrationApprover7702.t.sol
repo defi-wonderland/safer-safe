@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.29;
+pragma solidity 0.8.30;
 
 import {ISimpleTransfers} from 'interfaces/actions-builders/ISimpleTransfers.sol';
 import {Approver} from 'src/contracts/Approver.sol';
@@ -20,7 +20,7 @@ contract IntegrationApprover7702 is IntegrationEthereumBase {
     (aliceAddress, alicePk) = makeAddrAndKey('alice');
 
     // Deploy Approver implementation
-    _approverImplementation = address(new Approver(address(safeEntrypoint)));
+    _approverImplementation = address(new Approver(address(canonGuard)));
 
     // Deploy the SimpleTransfers contract
     ISimpleTransfers.TransferAction memory _salariesTransferAction =
@@ -36,15 +36,15 @@ contract IntegrationApprover7702 is IntegrationEthereumBase {
   }
 
   function test_Approver() public {
-    // Allow the SafeEntrypoint to call the SimpleTransfers contract
+    // Allow the CanonGuard to call the SimpleTransfers contract
     uint256 _approvalDuration = 1 days;
 
     vm.prank(address(SAFE_PROXY));
-    safeEntrypoint.approveActionsBuilder(_actionsBuilder, _approvalDuration);
+    canonGuard.approveActionsBuilderOrHub(_actionsBuilder, _approvalDuration);
 
     // Queue the transaction
     vm.prank(_safeOwners[0]);
-    safeEntrypoint.queueTransaction(_actionsBuilder);
+    canonGuard.queueTransaction(_actionsBuilder);
 
     // Wait for the timelock period
     vm.warp(block.timestamp + SHORT_TX_EXECUTION_DELAY);
@@ -62,7 +62,7 @@ contract IntegrationApprover7702 is IntegrationEthereumBase {
     vm.stopPrank();
 
     // Execute the transaction
-    safeEntrypoint.executeTransaction(_actionsBuilder);
+    canonGuard.executeTransaction(_actionsBuilder);
 
     // Assert the token balances
     assertEq(USDC.balanceOf(_salariesDeposit), _safeBalance);

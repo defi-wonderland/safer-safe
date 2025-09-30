@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.29;
+pragma solidity 0.8.30;
 
 /**
  * @title IEverclearTokenStakeFactory
@@ -16,7 +16,6 @@ interface IEverclearTokenStakeFactory {
    * @param _clearLockbox The ClearLockbox contract address
    * @param _next The NEXT contract address
    * @param _clear The CLEAR contract address
-   * @param _safe The Gnosis Safe contract address
    * @param _lockTime The lock time
    * @return _everclearTokenStake The EverclearTokenStake contract address
    */
@@ -27,7 +26,6 @@ interface IEverclearTokenStakeFactory {
     address _clearLockbox,
     address _next,
     address _clear,
-    address _safe,
     uint256 _lockTime
   ) external returns (address _everclearTokenStake);
 }

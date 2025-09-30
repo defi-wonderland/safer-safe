@@ -1,20 +1,19 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.29;
+pragma solidity 0.8.30;
 
-import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
-import {IAllowanceClaimor} from 'interfaces/actions-builders/IAllowanceClaimor.sol';
-
+import {ActionsBuilder} from 'contracts/actions-builders/ActionsBuilder.sol';
 import {IERC20} from 'forge-std/interfaces/IERC20.sol';
+
+import {ICanonGuard} from 'interfaces/ICanonGuard.sol';
+import {IAllowanceClaimor} from 'interfaces/actions-builders/IAllowanceClaimor.sol';
 
 /**
  * @title AllowanceClaimor
- * @notice Contract that builds actions from token allowances
+ * @notice Contract that builds an action to send tokens from the token owner to the token recipient
+ * @notice The amount to transfer is the max between the SAFE allowance of the token owner and the balance of the token owner
  */
-contract AllowanceClaimor is IAllowanceClaimor {
+contract AllowanceClaimor is IAllowanceClaimor, ActionsBuilder {
   // ~~~ STORAGE ~~~
-
-  /// @inheritdoc IAllowanceClaimor
-  address public immutable SAFE;
 
   /// @inheritdoc IAllowanceClaimor
   IERC20 public immutable TOKEN;
@@ -29,13 +28,12 @@ contract AllowanceClaimor is IAllowanceClaimor {
 
   /**
    * @notice Constructor that sets up the Safe, token, token owner and token recipient
-   * @param _safe The Gnosis Safe contract address
-   * @param _token The token contract address
+   * @param _parent The parent that deployed the actions builder
+   * @param _token The token contract address to be transferred
    * @param _tokenOwner The token owner address
    * @param _tokenRecipient The token recipient address
    */
-  constructor(address _safe, address _token, address _tokenOwner, address _tokenRecipient) {
-    SAFE = _safe;
+  constructor(address _parent, address _token, address _tokenOwner, address _tokenRecipient) ActionsBuilder(_parent) {
     TOKEN = IERC20(_token);
     TOKEN_OWNER = _tokenOwner;
     TOKEN_RECIPIENT = _tokenRecipient;
@@ -43,9 +41,9 @@ contract AllowanceClaimor is IAllowanceClaimor {
 
   // ~~~ ACTIONS METHODS ~~~
 
-  /// @inheritdoc IActionsBuilder
-  function getActions() external view returns (Action[] memory _actions) {
-    uint256 _amountToClaim = TOKEN.allowance(TOKEN_OWNER, SAFE);
+  /// @inheritdoc ActionsBuilder
+  function getActions() external view override returns (Action[] memory _actions) {
+    uint256 _amountToClaim = TOKEN.allowance(TOKEN_OWNER, address(ICanonGuard(msg.sender).SAFE()));
     uint256 _balance = TOKEN.balanceOf(TOKEN_OWNER);
     if (_amountToClaim > _balance) {
       _amountToClaim = _balance;

@@ -1,13 +1,11 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.29;
-
-import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
+pragma solidity 0.8.30;
 
 /**
  * @title ICappedTokenTransfers
  * @notice Interface for the CappedTokenTransfers contract
  */
-interface ICappedTokenTransfers is IActionsBuilder {
+interface ICappedTokenTransfers {
   // ~~~ STORAGE METHODS ~~~
 
   /**
@@ -27,10 +25,4 @@ interface ICappedTokenTransfers is IActionsBuilder {
    * @return _recipient The recipient of the tokens
    */
   function RECIPIENT() external view returns (address _recipient);
-
-  /**
-   * @notice Gets the actionHub contract
-   * @return _actionHub The actionHub contract address
-   */
-  function HUB() external view returns (address _actionHub);
 }

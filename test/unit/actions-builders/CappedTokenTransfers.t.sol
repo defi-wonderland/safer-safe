@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.29;
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.30;
 
 import {Test} from 'forge-std/Test.sol';
 
@@ -21,11 +21,11 @@ contract UnitCappedTokenTransfers is Test {
     recipient = makeAddr('recipient');
     hub = makeAddr('hub');
 
-    cappedTokenTransfers = new CappedTokenTransfers(token, amount, recipient, hub);
+    cappedTokenTransfers = new CappedTokenTransfers(address(0), token, amount, recipient, hub);
   }
 
   function test_ConstructorWhenCalled(address _token, uint256 _amount, address _recipient, address _actionHub) external {
-    cappedTokenTransfers = new CappedTokenTransfers(_token, _amount, _recipient, _actionHub);
+    cappedTokenTransfers = new CappedTokenTransfers(address(0), _token, _amount, _recipient, _actionHub);
 
     // it sets the token
     assertEq(cappedTokenTransfers.TOKEN(), _token);
@@ -43,9 +43,7 @@ contract UnitCappedTokenTransfers is Test {
     // it returns an action to update the state
     assertEq(actions[0].target, hub);
     assertEq(actions[0].value, 0);
-    assertEq(
-      actions[0].data, abi.encodeWithSelector(ICappedTokenTransfersHub.updateState.selector, abi.encode(amount, token))
-    );
+    assertEq(actions[0].data, abi.encodeWithSelector(ICappedTokenTransfersHub.updateState.selector, token, amount));
     // it returns an action to transfer the tokens
     assertEq(actions[1].target, token);
     assertEq(actions[1].value, 0);

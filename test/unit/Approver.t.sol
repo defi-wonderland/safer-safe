@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.29;
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.30;
 
 import {ISafe} from '@safe-smart-account/interfaces/ISafe.sol';
 import {Test} from 'forge-std/Test.sol';
@@ -8,42 +8,42 @@ import {IApprover} from 'src/interfaces/IApprover.sol';
 import {ISafeManageable} from 'src/interfaces/ISafeManageable.sol';
 
 contract UnitApprover is Test {
-  address public entrypoint;
+  address public canonGuard;
   address public safe;
   Approver public approver;
 
   function setUp() external {
-    entrypoint = makeAddr('entrypoint');
+    canonGuard = makeAddr('canonGuard');
     safe = makeAddr('safe');
 
-    _mockAndExpect(entrypoint, abi.encodeWithSelector(ISafeManageable.SAFE.selector), abi.encode(ISafe(safe)));
+    _mockAndExpect(canonGuard, abi.encodeWithSelector(ISafeManageable.SAFE.selector), abi.encode(ISafe(safe)));
 
-    approver = new Approver(entrypoint);
+    approver = new Approver(canonGuard);
   }
 
-  function test_ConstructorWhenCalled(address _entrypoint, address _safe) external {
-    _assumeFuzzable(_entrypoint);
+  function test_ConstructorWhenCalled(address _canonGuard, address _safe) external {
+    _assumeFuzzable(_canonGuard);
     _assumeFuzzable(_safe);
 
-    _mockAndExpect(_entrypoint, abi.encodeWithSelector(ISafeManageable.SAFE.selector), abi.encode(ISafe(_safe)));
+    _mockAndExpect(_canonGuard, abi.encodeWithSelector(ISafeManageable.SAFE.selector), abi.encode(ISafe(_safe)));
 
-    approver = new Approver(_entrypoint);
+    approver = new Approver(_canonGuard);
 
-    // it sets the entrypoint
-    assertEq(address(approver.ENTRYPOINT()), _entrypoint);
+    // it sets the canonGuard
+    assertEq(address(approver.CANON_GUARD()), _canonGuard);
     // it sets the safe
     assertEq(address(approver.SAFE()), _safe);
   }
 
   function test_ApproveTxWhenCalledByTheItself(
-    address _actionBuilder,
+    address _actionsBuilder,
     uint256 _safeNonce,
     bytes32 _safeTxHash
   ) external {
     // it gets the safe tx hash
     _mockAndExpect(
-      entrypoint,
-      abi.encodeWithSignature('getSafeTransactionHash(address,uint256)', _actionBuilder, _safeNonce),
+      canonGuard,
+      abi.encodeWithSignature('getSafeTransactionHash(address,uint256)', _actionsBuilder, _safeNonce),
       abi.encode(_safeTxHash)
     );
 
@@ -52,16 +52,16 @@ contract UnitApprover is Test {
 
     // it emits the tx approved event
     vm.expectEmit();
-    emit IApprover.TxApproved(_actionBuilder, _safeNonce, _safeTxHash);
+    emit IApprover.TxApproved(_actionsBuilder, _safeNonce, _safeTxHash);
 
     vm.prank(address(approver));
-    approver.approveTx(_actionBuilder, _safeNonce);
+    approver.approveTx(_actionsBuilder, _safeNonce);
   }
 
-  function test_ApproveTxWhenCalledByANon_itself(address _actionBuilder, uint256 _safeNonce) external {
+  function test_ApproveTxWhenCalledByANon_itself(address _actionsBuilder, uint256 _safeNonce) external {
     // it reverts with InvalidSender
     vm.expectRevert(abi.encodeWithSelector(IApprover.InvalidSender.selector));
-    approver.approveTx(_actionBuilder, _safeNonce);
+    approver.approveTx(_actionsBuilder, _safeNonce);
   }
 
   function _mockAndExpect(address _target, bytes memory _call, bytes memory _returnData) internal {

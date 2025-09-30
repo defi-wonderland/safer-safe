@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.29;
+pragma solidity 0.8.30;
 
+import {ActionsBuilder} from 'contracts/actions-builders/ActionsBuilder.sol';
 import {IERC20} from 'forge-std/interfaces/IERC20.sol';
-import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
+import {ICanonGuard} from 'interfaces/ICanonGuard.sol';
 import {IEverclearTokenStake} from 'interfaces/actions-builders/IEverclearTokenStake.sol';
 import {IGateway} from 'interfaces/external/IGateway.sol';
 import {ISpokeBridge} from 'interfaces/external/ISpokeBridge.sol';
@@ -12,9 +13,13 @@ import {IxERC20Lockbox} from 'interfaces/external/IxERC20Lockbox.sol';
 
 /**
  * @title EverclearTokenStake
- * @notice Contract that increases the stake of CLEAR
+ * @notice Builds actions to increase CLEAR stake using vested NEXT.
+ * @dev Sequence:
+ *  1) Claim and release NEXT from vesting.
+ *  2) Approve and deposit NEXT into the CLEAR lockbox.
+ *  3) Approve CLEAR and increase the lock position for SAFE via the bridge.
  */
-contract EverclearTokenStake is IEverclearTokenStake {
+contract EverclearTokenStake is IEverclearTokenStake, ActionsBuilder {
   // ~~~ STORAGE ~~~
 
   /// @inheritdoc IEverclearTokenStake
@@ -36,48 +41,44 @@ contract EverclearTokenStake is IEverclearTokenStake {
   IERC20 public immutable CLEAR;
 
   /// @inheritdoc IEverclearTokenStake
-  address public immutable SAFE;
-
-  /// @inheritdoc IEverclearTokenStake
   uint256 public immutable LOCK_TIME;
 
   // ~~~ CONSTRUCTOR ~~~
 
   /**
-   * @notice Constructor that sets up the variables
-   * @param _vestingEscrow The vesting escrow contract address
-   * @param _vestingWallet The vesting wallet contract address
-   * @param _spokeBridge The spoke bridge contract address
-   * @param _clearLockbox The clear lockbox contract address
-   * @param _next The NEXT contract address
-   * @param _clear The CLEAR contract address
-   * @param _safe The SAFE contract address
-   * @param _lockTime The lock time
+   * @notice Sets the required contracts and lock time for the staking flow.
+   * @param _parent The parent that deployed the actions builder
+   * @param _vestingEscrow Vesting escrow used by the vesting wallet.
+   * @param _vestingWallet Vesting wallet that holds NEXT.
+   * @param _spokeBridge Bridge used to increase the lock position.
+   * @param _clearLockbox Lockbox that mints CLEAR from deposited NEXT.
+   * @param _next The NEXT contract address.
+   * @param _clear The CLEAR contract address.
+   * @param _lockTime Lock extension duration in seconds.
    */
   constructor(
+    address _parent,
     address _vestingEscrow,
     address _vestingWallet,
     address _spokeBridge,
     address _clearLockbox,
     address _next,
     address _clear,
-    address _safe,
     uint256 _lockTime
-  ) {
+  ) ActionsBuilder(_parent) {
     VESTING_ESCROW = IVestingEscrow(_vestingEscrow);
     VESTING_WALLET = IVestingWallet(_vestingWallet);
     SPOKE_BRIDGE = ISpokeBridge(_spokeBridge);
     CLEAR_LOCKBOX = IxERC20Lockbox(_clearLockbox);
     NEXT = IERC20(_next);
     CLEAR = IERC20(_clear);
-    SAFE = _safe;
     LOCK_TIME = _lockTime;
   }
 
   // ~~~ ACTIONS METHODS ~~~
 
-  /// @inheritdoc IActionsBuilder
-  function getActions() external view returns (Action[] memory _actions) {
+  /// @inheritdoc ActionsBuilder
+  function getActions() external view override returns (Action[] memory _actions) {
     _actions = new Action[](6);
 
     // NOTE: since this is a view function and does not update state, we need to calculate
@@ -134,7 +135,9 @@ contract EverclearTokenStake is IEverclearTokenStake {
 
     // NOTE: get the fee from the gateway
     uint256 _value = IGateway(SPOKE_BRIDGE.gateway()).quoteMessage(
-      SPOKE_BRIDGE.EVERCLEAR_ID(), abi.encode(2, SAFE, _amountToBeReleased, _lockTime), _gasLimit
+      SPOKE_BRIDGE.EVERCLEAR_ID(),
+      abi.encode(2, address(ICanonGuard(msg.sender).SAFE()), _amountToBeReleased, _lockTime),
+      _gasLimit
     );
 
     _actions[5] = Action({

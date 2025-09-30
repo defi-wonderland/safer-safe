@@ -1,8 +1,9 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.29;
+pragma solidity 0.8.30;
 
 import {CappedTokenTransfersHub} from 'src/contracts/action-hubs/CappedTokenTransfersHub.sol';
-
+import {IActionHub} from 'src/interfaces/action-hubs/IActionHub.sol';
+import {IActionHubChild} from 'src/interfaces/action-hubs/IActionHubChild.sol';
 import {ICappedTokenTransfersHub} from 'src/interfaces/action-hubs/ICappedTokenTransfersHub.sol';
 import {ICappedTokenTransfers} from 'src/interfaces/actions-builders/ICappedTokenTransfers.sol';
 import {IntegrationEthereumBase} from 'test/integration/ethereum/IntegrationEthereumBase.sol';
@@ -25,42 +26,43 @@ contract IntegrationCappedTokenTransfers is IntegrationEthereumBase {
     _caps[1] = 200 ether;
 
     // Deploy the CappedTokenTransfersHub
-    _cappedTokenTransfersHub = new CappedTokenTransfersHub(address(SAFE_PROXY), _recipient, _tokens, _caps, 7 days);
+    _cappedTokenTransfersHub =
+      new CappedTokenTransfersHub(address(0), address(SAFE_PROXY), _recipient, _tokens, _caps, 7 days);
   }
 
-  function test_CreateNewActionBuilder() public {
-    // Create the new action builder
+  function test_CreateNewActionsBuilder() public {
+    // Create the new actions builder
     vm.prank(_safeOwners[0]);
-    address _actionsBuilder = _cappedTokenTransfersHub.createNewActionBuilder(address(WETH), 10 ether);
+    address _actionsBuilder = _cappedTokenTransfersHub.createNewActionsBuilder(address(WETH), 10 ether);
 
-    // Check that the action builder was created correctly
-    assertTrue(_cappedTokenTransfersHub.isChild(_actionsBuilder));
+    // Check that the actions builder was created correctly
+    assertTrue(IActionHub(address(_cappedTokenTransfersHub)).isHubChild(_actionsBuilder));
     assertEq(ICappedTokenTransfers(_actionsBuilder).TOKEN(), address(WETH));
     assertEq(ICappedTokenTransfers(_actionsBuilder).AMOUNT(), 10 ether);
     assertEq(ICappedTokenTransfers(_actionsBuilder).RECIPIENT(), _recipient);
-    assertEq(ICappedTokenTransfers(_actionsBuilder).HUB(), address(_cappedTokenTransfersHub));
+    assertEq(IActionHubChild(_actionsBuilder).HUB(), address(_cappedTokenTransfersHub));
   }
 
   function test_TransferSuccessfully() public {
-    // Create the new action builder
+    // Create the new actions builder
     vm.prank(_safeOwners[0]);
-    address _actionsBuilder = _cappedTokenTransfersHub.createNewActionBuilder(address(WETH), _safeBalance);
+    address _actionsBuilder = _cappedTokenTransfersHub.createNewActionsBuilder(address(WETH), _safeBalance);
 
-    // Allow the SafeEntrypoint to call the contract
+    // Allow the CanonGuard to call the contract
     uint256 _approvalDuration = 1 days;
 
     vm.prank(address(SAFE_PROXY));
-    safeEntrypoint.approveActionsBuilder(address(_cappedTokenTransfersHub), _approvalDuration);
+    canonGuard.approveActionsBuilderOrHub(address(_cappedTokenTransfersHub), _approvalDuration);
 
     // Queue the transaction
     vm.prank(_safeOwners[0]);
-    safeEntrypoint.queueHubTransaction(address(_cappedTokenTransfersHub), _actionsBuilder);
+    canonGuard.queueTransaction(_actionsBuilder);
 
     // Wait for the timelock period
     vm.warp(block.timestamp + SHORT_TX_EXECUTION_DELAY);
 
     // Get the Safe transaction hash
-    bytes32 _safeTxHash = safeEntrypoint.getSafeTransactionHash(_actionsBuilder);
+    bytes32 _safeTxHash = canonGuard.getSafeTransactionHash(_actionsBuilder);
 
     // Approve the Safe transaction hash
     for (uint256 _i; _i < _safeThreshold; ++_i) {
@@ -70,7 +72,7 @@ contract IntegrationCappedTokenTransfers is IntegrationEthereumBase {
     vm.stopPrank();
 
     // Execute the transaction
-    safeEntrypoint.executeTransaction(_actionsBuilder);
+    canonGuard.executeTransaction(_actionsBuilder);
 
     // Assert the token balances
     assertEq(WETH.balanceOf(_recipient), _safeBalance);
@@ -78,25 +80,25 @@ contract IntegrationCappedTokenTransfers is IntegrationEthereumBase {
   }
 
   function test_TransferUnsuccessfully() public {
-    // Create the new action builder
+    // Create the new actions builder
     vm.prank(_safeOwners[0]);
-    address _actionsBuilder = _cappedTokenTransfersHub.createNewActionBuilder(address(WETH), 1000 ether);
+    address _actionsBuilder = _cappedTokenTransfersHub.createNewActionsBuilder(address(WETH), 1000 ether);
 
-    // Allow the SafeEntrypoint to call the contract
+    // Allow the CanonGuard to call the contract
     uint256 _approvalDuration = 1 days;
 
     vm.prank(address(SAFE_PROXY));
-    safeEntrypoint.approveActionsBuilder(address(_cappedTokenTransfersHub), _approvalDuration);
+    canonGuard.approveActionsBuilderOrHub(address(_cappedTokenTransfersHub), _approvalDuration);
 
     // Queue the transaction
     vm.prank(_safeOwners[0]);
-    safeEntrypoint.queueHubTransaction(address(_cappedTokenTransfersHub), _actionsBuilder);
+    canonGuard.queueTransaction(_actionsBuilder);
 
     // Wait for the timelock period
     vm.warp(block.timestamp + SHORT_TX_EXECUTION_DELAY);
 
     // Get the Safe transaction hash
-    bytes32 _safeTxHash = safeEntrypoint.getSafeTransactionHash(_actionsBuilder);
+    bytes32 _safeTxHash = canonGuard.getSafeTransactionHash(_actionsBuilder);
 
     // Approve the Safe transaction hash
     for (uint256 _i; _i < _safeThreshold; ++_i) {
@@ -107,7 +109,7 @@ contract IntegrationCappedTokenTransfers is IntegrationEthereumBase {
 
     // Execute the transaction
     vm.expectRevert('GS013'); // tx does revert with CapExceeded(), but the revert is catched by the safe
-    safeEntrypoint.executeTransaction(_actionsBuilder);
+    canonGuard.executeTransaction(_actionsBuilder);
 
     // Assert the token balances
     assertEq(WETH.balanceOf(_recipient), 0);

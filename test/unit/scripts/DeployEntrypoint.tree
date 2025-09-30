@@ -1,3 +1,0 @@
-UnitDeployEntrypoint
-└── when run
-    └── it should deploy the SafeEntrypoint contract with correct args

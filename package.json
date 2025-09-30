@@ -1,11 +1,11 @@
 {
-  "name": "safer-safe",
+  "name": "canon-guard",
   "version": "0.0.1",
-  "description": "Safer Safe",
-  "homepage": "https://github.com/defi-wonderland/safer-safe#readme",
+  "description": "Canon Guard",
+  "homepage": "https://github.com/defi-wonderland/canon-guard#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/defi-wonderland/safer-safe.git"
+    "url": "git+https://github.com/defi-wonderland/canon-guard.git"
   },
   "license": "MIT",
   "author": "Wonderland",
@@ -13,10 +13,8 @@
     "build": "forge build",
     "build:optimized": "FOUNDRY_PROFILE=optimized forge build",
     "coverage": "forge coverage --report summary --report lcov --match-path 'test/unit/*'",
-    "deploy:ethereum:entrypoint": "bash -c 'source .env && forge script DeployEntrypoint --sig 'deployEntrypoint()' --rpc-url ethereum --account $ETHEREUM_DEPLOYER_NAME --broadcast --verify --chain ethereum -vvvvv'",
-    "deploy:ethereum:safer-safe": "bash -c 'source .env && forge script DeploySaferSafe --sig 'deploySaferSafe()' --rpc-url ethereum --account $ETHEREUM_DEPLOYER_NAME --broadcast --verify --chain ethereum -vvvvv'",
-    "deploy:optimism:entrypoint": "bash -c 'source .env && forge script DeployEntrypoint --sig 'deployEntrypoint()' --rpc-url optimism --account $OPTIMISM_DEPLOYER_NAME --broadcast --verify --chain optimism -vvvvv'",
-    "deploy:optimism:safer-safe": "bash -c 'source .env && forge script DeploySaferSafe --sig 'deploySaferSafe()' --rpc-url optimism --account $OPTIMISM_DEPLOYER_NAME --broadcast --verify --chain optimism -vvvvv'",
+    "deploy:ethereum:canon-guard": "bash -c 'source .env && forge script DeployCanonGuard --rpc-url ethereum --account $ETHEREUM_DEPLOYER_NAME --broadcast --verify --chain ethereum -vvvvv'",
+    "deploy:optimism:canon-guard": "bash -c 'source .env && forge script DeployCanonGuard --rpc-url optimism --account $OPTIMISM_DEPLOYER_NAME --broadcast --verify --chain optimism -vvvvv'",
     "lint:bulloak": "find test/unit -name '*.tree' | xargs bulloak check",
     "lint:check": "forge fmt --check && yarn lint:sol",
     "lint:fix": "forge fmt && yarn lint:sol --fix && sort-package-json",
@@ -38,16 +36,16 @@
   },
   "dependencies": {
     "@safe-global/safe-contracts": "github:safe-global/safe-smart-account#b75e250",
-    "solady": "github:vectorized/solady#701406e"
+    "solady": "github:vectorized/solady#0.1.26"
   },
   "devDependencies": {
-    "@commitlint/cli": "19.3.0",
-    "@commitlint/config-conventional": "19.2.2",
-    "forge-std": "github:foundry-rs/forge-std#1.9.7",
-    "halmos-cheatcodes": "github:a16z/halmos-cheatcodes#c0d8655",
-    "husky": ">=9",
-    "lint-staged": ">=10",
+    "@commitlint/cli": "19.8.1",
+    "@commitlint/config-conventional": "19.8.1",
+    "forge-std": "github:foundry-rs/forge-std#1.10.0",
+    "halmos-cheatcodes": "github:a16z/halmos-cheatcodes#6da4e69",
+    "husky": "9.1.7",
+    "lint-staged": "16.1.6",
     "solhint-community": "4.0.1",
-    "sort-package-json": "2.10.0"
+    "sort-package-json": "3.4.0"
   }
 }

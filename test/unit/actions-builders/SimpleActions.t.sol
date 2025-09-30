@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.29;
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.30;
 
 import {Test} from 'forge-std/Test.sol';
 import {SimpleActions} from 'src/contracts/actions-builders/SimpleActions.sol';
@@ -38,7 +38,7 @@ contract UnitSimpleActionsconstructor is Test {
       );
     }
 
-    simpleActions = new SimpleActions(actions);
+    simpleActions = new SimpleActions(address(0), actions);
 
     for (uint256 _i; _i < actions.length; _i++) {
       ISimpleActions.SimpleAction memory _simpleAction = actions[_i];

@@ -1,7 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.29;
-
-import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
+pragma solidity 0.8.30;
 
 import {IERC20} from 'forge-std/interfaces/IERC20.sol';
 
@@ -9,14 +7,8 @@ import {IERC20} from 'forge-std/interfaces/IERC20.sol';
  * @title IAllowanceClaimor
  * @notice Interface for the AllowanceClaimor contract
  */
-interface IAllowanceClaimor is IActionsBuilder {
+interface IAllowanceClaimor {
   // ~~~ STORAGE METHODS ~~~
-
-  /**
-   * @notice Gets the Safe contract
-   * @return _safe The Gnosis Safe contract address
-   */
-  function SAFE() external view returns (address _safe);
 
   /**
    * @notice Gets the token contract

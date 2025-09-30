@@ -1,0 +1,5 @@
+UnitOnlyCanonGuard::checkTransaction
+├── when caller is canon guard
+│   └── it allows transaction
+└── when caller is not canon guard
+    └── it reverts with UnauthorizedSender

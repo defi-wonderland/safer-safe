@@ -1,13 +1,11 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.29;
-
-import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
+pragma solidity 0.8.30;
 
 /**
  * @title ISimpleTransfers
  * @notice Interface for the SimpleTransfers contract
  */
-interface ISimpleTransfers is IActionsBuilder {
+interface ISimpleTransfers {
   // ~~~ STRUCTS ~~~
 
   /**

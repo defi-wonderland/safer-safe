@@ -1,0 +1,7 @@
+UnitDisapproveAction::constructor
+└── when called
+    └── it sets the actions builder address
+
+UnitDisapproveAction::getActions
+└── when called
+    └── it returns an action to disapprove the actions builder or action hub

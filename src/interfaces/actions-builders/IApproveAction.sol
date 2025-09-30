@@ -1,20 +1,12 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.29;
-
-import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
+pragma solidity 0.8.30;
 
 /**
  * @title IApproveAction
  * @notice Interface for the ApproveAction contract
  */
-interface IApproveAction is IActionsBuilder {
+interface IApproveAction {
   // ~~~ STORAGE METHODS ~~~
-
-  /**
-   * @notice Gets the safe entrypoint contract
-   * @return _safeEntrypoint The safe entrypoint contract address
-   */
-  function SAFE_ENTRYPOINT() external view returns (address _safeEntrypoint);
 
   /**
    * @notice Gets the actions builder contract

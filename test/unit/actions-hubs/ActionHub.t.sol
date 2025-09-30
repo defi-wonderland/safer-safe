@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.29;
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.30;
 
 import {Test} from 'forge-std/Test.sol';
 import {IActionHub} from 'interfaces/action-hubs/IActionHub.sol';
@@ -9,45 +9,53 @@ import {ActionHubForTest} from 'test/unit/mocks/ActionHubForTest.sol';
 
 contract UnitActionHub is Test {
   ActionHubForTest public actionHub;
+  address public parent = makeAddr('parent');
 
   function setUp() public {
-    actionHub = new ActionHubForTest();
+    actionHub = new ActionHubForTest(parent);
   }
 
-  function test_IsChildWhenTheActionBuilderIsAChild(address _actionBuilder) external {
-    actionHub.forTest_set__actionBuilders(_actionBuilder, true);
+  function test_ConstructorWhenCalledByAChildContract() external view {
+    // it sets the parent
+    assertEq(actionHub.PARENT(), parent);
+  }
+
+  function test_IsHubChildWhenTheActionsBuilderIsAChild(address _actionsBuilder) external {
+    actionHub.forTest_set__actionsBuilders(_actionsBuilder, true);
 
     // it returns true
-    assertTrue(actionHub.isChild(_actionBuilder));
+    assertTrue(actionHub.isHubChild(_actionsBuilder));
   }
 
-  function test_IsChildWhenTheActionBuilderIsNotAChild(address _actionBuilder) external {
-    actionHub.forTest_set__actionBuilders(_actionBuilder, false);
+  function test_IsHubChildWhenTheActionsBuilderIsNotAChild(address _actionsBuilder) external {
+    actionHub.forTest_set__actionsBuilders(_actionsBuilder, false);
 
     // it returns false
-    assertFalse(actionHub.isChild(_actionBuilder));
+    assertFalse(actionHub.isHubChild(_actionsBuilder));
   }
 
-  function test__createNewActionBuilderWhenCalled(
+  function test__createNewActionsBuilderWhenCalled(
     bytes32 _salt,
     address _token,
     uint256 _amount,
     address _recipient
   ) external {
-    bytes memory _initCode =
-      abi.encodePacked(type(CappedTokenTransfers).creationCode, abi.encode(_token, _amount, _recipient, address(this)));
+    bytes memory _initCode = abi.encodePacked(
+      type(CappedTokenTransfers).creationCode,
+      abi.encode(address(actionHub), _token, _amount, _recipient, address(this))
+    );
 
-    address _expectedActionBuilder = CREATE3.predictDeterministicAddress(_salt, address(actionHub));
+    address _expectedActionsBuilder = CREATE3.predictDeterministicAddress(_salt, address(actionHub));
 
-    // it emits a NewActionBuilderCreated event
+    // it emits a NewActionsBuilderCreated event
     vm.expectEmit();
-    emit IActionHub.NewActionBuilderCreated(_expectedActionBuilder, _initCode, _salt);
+    emit IActionHub.NewActionsBuilderCreated(_expectedActionsBuilder, _initCode, _salt);
 
-    address _actionBuilder = actionHub.forTest_createNewActionBuilder(_initCode, _salt);
+    address _actionsBuilder = actionHub.forTest_createNewActionsBuilder(_initCode, _salt);
 
-    // it creates a new action builder
-    assertEq(_actionBuilder, _expectedActionBuilder);
-    // it marks the action builder as a child
-    assertTrue(actionHub.isChild(_actionBuilder));
+    // it creates a new actions builder
+    assertEq(_actionsBuilder, _expectedActionsBuilder);
+    // it marks the actions builder as a child
+    assertTrue(actionHub.isHubChild(_actionsBuilder));
   }
 }

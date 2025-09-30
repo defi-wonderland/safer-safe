@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: UNLICENSED
-pragma solidity 0.8.29;
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.30;
 
 import {Test} from 'forge-std/Test.sol';
 import {IERC20} from 'forge-std/interfaces/IERC20.sol';
@@ -25,7 +25,7 @@ contract UnitSimpleTransfersconstructor is Test {
       );
     }
 
-    simpleTransfers = new SimpleTransfers(transferActions);
+    simpleTransfers = new SimpleTransfers(address(0), transferActions);
 
     // it should add the transfer to the actions array with correct values
     IActionsBuilder.Action[] memory _actions = simpleTransfers.getActions();

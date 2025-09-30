@@ -1,0 +1,62 @@
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.30;
+
+import {CanonGuard} from 'contracts/CanonGuard.sol';
+import {Factory} from 'contracts/factories/Factory.sol';
+import {ICanonGuardFactory} from 'interfaces/factories/ICanonGuardFactory.sol';
+
+/**
+ * @title CanonGuardFactory
+ * @notice Contract that deploys CanonGuard contracts
+ */
+contract CanonGuardFactory is ICanonGuardFactory, Factory {
+  // ~~~ STORAGE ~~~
+
+  /// @inheritdoc ICanonGuardFactory
+  uint256 public constant MIN_EXPIRY_TIME = 1 hours;
+
+  /// @inheritdoc ICanonGuardFactory
+  address public immutable MULTI_SEND_CALL_ONLY;
+
+  // ~~~ CONSTRUCTOR ~~~
+
+  /**
+   * @notice Constructor that sets up the MultiSendCallOnly contract
+   * @param _multiSendCallOnly The MultiSendCallOnly contract address
+   */
+  constructor(address _multiSendCallOnly) {
+    MULTI_SEND_CALL_ONLY = _multiSendCallOnly;
+  }
+
+  // ~~~ FACTORY METHODS ~~~
+
+  /// @inheritdoc ICanonGuardFactory
+  function createCanonGuard(
+    address _safe,
+    uint256 _shortTxExecutionDelay,
+    uint256 _longTxExecutionDelay,
+    uint256 _txExpiryDelay,
+    uint256 _maxApprovalDuration,
+    address _emergencyTrigger,
+    address _emergencyCaller
+  ) external returns (address _canonGuard) {
+    if (_txExpiryDelay < MIN_EXPIRY_TIME) revert TxExpiryDelayCannotBeLessThanMin();
+    if (_maxApprovalDuration < MIN_EXPIRY_TIME) revert MaxApprovalDurationCannotBeLessThanMin();
+
+    _canonGuard = address(
+      new CanonGuard(
+        address(this),
+        _safe,
+        MULTI_SEND_CALL_ONLY,
+        _shortTxExecutionDelay,
+        _longTxExecutionDelay,
+        _txExpiryDelay,
+        _maxApprovalDuration,
+        _emergencyTrigger,
+        _emergencyCaller
+      )
+    );
+
+    _children[_canonGuard] = true;
+  }
+}

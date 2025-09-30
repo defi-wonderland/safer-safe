@@ -1,18 +1,18 @@
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.29;
+pragma solidity 0.8.30;
 
 import {Test} from 'forge-std/Test.sol';
 
-import {ISafeEntrypoint} from 'interfaces/ISafeEntrypoint.sol';
+import {ICanonGuard} from 'interfaces/ICanonGuard.sol';
 import {ISimpleActions} from 'interfaces/actions-builders/ISimpleActions.sol';
 
 import {ISafe} from '@safe-smart-account/interfaces/ISafe.sol';
 
-import {DeploySaferSafe} from 'script/DeploySaferSafe.s.sol';
+import {DeployCanonGuard} from 'script/DeployCanonGuard.s.sol';
 
 import {EthereumConstants} from 'script/Constants.sol';
 
-contract IntegrationBasicTest is DeploySaferSafe, EthereumConstants, Test {
+contract IntegrationBasicTest is DeployCanonGuard, EthereumConstants, Test {
   uint256 internal constant _ETHEREUM_FORK_BLOCK = 18_920_905;
 
   // ~~~ SAFE ~~~
@@ -20,8 +20,8 @@ contract IntegrationBasicTest is DeploySaferSafe, EthereumConstants, Test {
   address internal _safeOwner;
   uint256 internal _safeThreshold;
 
-  // ~~~ ENTRYPOINT ~~~
-  ISafeEntrypoint internal _safeEntrypoint;
+  // ~~~ CANON_GUARD ~~~
+  ICanonGuard internal _canonGuard;
 
   // ~~~ ACTIONS ~~~
   address internal _actionsBuilder;
@@ -50,12 +50,12 @@ contract IntegrationBasicTest is DeploySaferSafe, EthereumConstants, Test {
       paymentReceiver: payable(address(0))
     });
 
-    // Deploy the SaferSafe factory contracts
-    deploySaferSafe();
+    // Deploy the CanonGuard contract
+    run();
 
-    // Deploy the SafeEntrypoint contract
-    _safeEntrypoint = ISafeEntrypoint(
-      safeEntrypointFactory.createSafeEntrypoint(
+    // Deploy the CanonGuard contract
+    _canonGuard = ICanonGuard(
+      canonGuardFactory.createCanonGuard(
         address(_safeProxy),
         SHORT_TX_EXECUTION_DELAY,
         LONG_TX_EXECUTION_DELAY,
@@ -67,7 +67,7 @@ contract IntegrationBasicTest is DeploySaferSafe, EthereumConstants, Test {
     );
 
     vm.prank(address(_safeProxy));
-    _safeProxy.setGuard(address(_safeEntrypoint));
+    _safeProxy.setGuard(address(_canonGuard));
 
     // Deploy the SimpleActions contract
     ISimpleActions.SimpleAction memory _depositAction =
@@ -87,25 +87,25 @@ contract IntegrationBasicTest is DeploySaferSafe, EthereumConstants, Test {
   }
 
   function test_ExecuteTransaction() public {
-    // Allow the SafeEntrypoint to call the SimpleActions contract
+    // Allow the CanonGuard to call the SimpleActions contract
     uint256 _approvalDuration = 1 days;
 
     vm.prank(address(_safeProxy));
-    _safeEntrypoint.approveActionsBuilder(_actionsBuilder, _approvalDuration);
+    _canonGuard.approveActionsBuilderOrHub(_actionsBuilder, _approvalDuration);
 
     vm.startPrank(_safeOwner);
 
     // Queue the transaction
-    _safeEntrypoint.queueTransaction(_actionsBuilder);
+    _canonGuard.queueTransaction(_actionsBuilder);
 
     // Wait for the timelock period
     vm.warp(block.timestamp + SHORT_TX_EXECUTION_DELAY);
 
     // Get and approve the Safe transaction hash
-    bytes32 _safeTxHash = _safeEntrypoint.getSafeTransactionHash(_actionsBuilder);
+    bytes32 _safeTxHash = _canonGuard.getSafeTransactionHash(_actionsBuilder);
     _safeProxy.approveHash(_safeTxHash);
 
     // Execute the transaction
-    _safeEntrypoint.executeTransaction{value: 1}(_actionsBuilder);
+    _canonGuard.executeTransaction{value: 1}(_actionsBuilder);
   }
 }
