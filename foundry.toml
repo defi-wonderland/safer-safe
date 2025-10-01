@@ -30,6 +30,7 @@ timeout = 1000
 show_metrics = true
 fail_on_revert = true
 corpus_dir = 'test/invariants/fuzz/corpus'
+show_solidity = true
 
 [fuzz]
 runs = 1000

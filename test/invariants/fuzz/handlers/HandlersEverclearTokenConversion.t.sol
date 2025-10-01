@@ -9,24 +9,23 @@ abstract contract HandlersEverclearTokenConversion is BaseHandlers {
     _amount = bound(_amount, 1, 1_000_000);
 
     address actionsBuilder = everclearTokenConversionFactory.createEverclearTokenConversion(
-      TOKEN_SENDER, // lockbox
-      address(actionTarget), // next token
-      TOKEN_RECIPIENT // safe
+      address(actionTarget), // lockbox - will track call to deposit()
+      address(actionTarget) // next token - will track call to approve()
     );
 
     vm.prank(address(safe));
-    try safeEntrypoint.approveActionsBuilder(actionsBuilder, _approvalDuration) {
+    try canonGuard.approveActionsBuilderOrHub(actionsBuilder, _approvalDuration) {
       vm.prank(signers[0]);
-      safeEntrypoint.queueTransaction(actionsBuilder);
+      canonGuard.queueTransaction(actionsBuilder);
 
-      bytes32 _safeTxHash = safeEntrypoint.getSafeTransactionHash(actionsBuilder);
+      bytes32 _safeTxHash = canonGuard.getSafeTransactionHash(actionsBuilder);
 
       ghost_hashToActionsBuilder[_safeTxHash] = actionsBuilder;
       ghost_hashes.push(_safeTxHash);
       ghost_timestampOfActionQueued[_safeTxHash] = block.timestamp;
       ghost_actionsBuilderType[actionsBuilder] = ActionsBuilderType.EVERCLEAR_TOKEN_CONVERSION;
     } catch {
-      assertGt(_approvalDuration, safeEntrypoint.MAX_APPROVAL_DURATION());
+      assertGt(_approvalDuration, canonGuard.MAX_APPROVAL_DURATION());
     }
   }
 }

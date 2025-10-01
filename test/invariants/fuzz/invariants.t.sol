@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import {Setup} from './Setup.t.sol';
+import {HandlersTarget, Setup} from './Setup.t.sol';
 import {ICappedTokenTransfersHub} from 'interfaces/action-hubs/ICappedTokenTransfersHub.sol';
 
 contract Invariants is Setup {
@@ -37,4 +37,6 @@ contract Invariants is Setup {
       assertTrue(actionBuilder != address(0));
     }
   }
+
+  function test_repro() public {}
 }

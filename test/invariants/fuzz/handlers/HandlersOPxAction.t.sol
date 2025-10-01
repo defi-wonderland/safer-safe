@@ -9,23 +9,22 @@ abstract contract HandlersOPxAction is BaseHandlers {
     _amount = bound(_amount, 1, 1_000_000);
 
     address actionsBuilder = opxActionFactory.createOPxAction(
-      address(actionTarget), // opx token (actionTarget acts as OPx token)
-      address(safe) // safe
+      address(actionTarget) // opx token (actionTarget acts as OPx token)
     );
 
     vm.prank(address(safe));
-    try safeEntrypoint.approveActionsBuilder(actionsBuilder, _approvalDuration) {
+    try canonGuard.approveActionsBuilderOrHub(actionsBuilder, _approvalDuration) {
       vm.prank(signers[0]);
-      safeEntrypoint.queueTransaction(actionsBuilder);
+      canonGuard.queueTransaction(actionsBuilder);
 
-      bytes32 _safeTxHash = safeEntrypoint.getSafeTransactionHash(actionsBuilder);
+      bytes32 _safeTxHash = canonGuard.getSafeTransactionHash(actionsBuilder);
 
       ghost_hashToActionsBuilder[_safeTxHash] = actionsBuilder;
       ghost_hashes.push(_safeTxHash);
       ghost_timestampOfActionQueued[_safeTxHash] = block.timestamp;
       ghost_actionsBuilderType[actionsBuilder] = ActionsBuilderType.OPX_ACTION;
     } catch {
-      assertGt(_approvalDuration, safeEntrypoint.MAX_APPROVAL_DURATION());
+      assertGt(_approvalDuration, canonGuard.MAX_APPROVAL_DURATION());
     }
   }
 }

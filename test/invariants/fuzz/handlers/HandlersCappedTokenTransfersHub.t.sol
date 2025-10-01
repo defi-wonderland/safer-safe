@@ -9,6 +9,7 @@ abstract contract HandlersCappedTokenTransfersHub is BaseHandlers {
   // Track created hubs for testing
   mapping(address => uint256) public hubTokenCaps;
   mapping(address => address) public hubTokens; // hub -> token address
+  mapping(address token => mapping(uint256 amount => bool exists)) public actionBuilderExists;
   address[] public createdHubs;
 
   function handler_createNewActionBuilderFromHub(
@@ -20,7 +21,6 @@ abstract contract HandlersCappedTokenTransfersHub is BaseHandlers {
     _amount = bound(_amount, 1, 1_000_000);
     _capMultiplier = bound(_capMultiplier, 1, 5); // Cap will be 1x to 5x the amount
 
-    // Create a hub first with cap set higher than the amount (usually)
     address[] memory tokens = new address[](1);
     tokens[0] = address(actionTarget);
     uint256[] memory caps = new uint256[](1);
@@ -34,32 +34,13 @@ abstract contract HandlersCappedTokenTransfersHub is BaseHandlers {
       1 days // epoch length
     );
 
-    // Store the hub and its cap for later reference
-    createdHubs.push(hub);
-    hubTokenCaps[hub] = caps[0];
-    hubTokens[hub] = address(actionTarget);
-
-    // Create action builder through the hub's real createNewActionBuilder function
-    vm.prank(signers[0]); // Must be safe owner
-    try ICappedTokenTransfersHub(hub).createNewActionBuilder(address(actionTarget), _amount) returns (
-      address actionsBuilder
-    ) {
-      vm.prank(address(safe));
-      try safeEntrypoint.approveActionsBuilder(hub, _approvalDuration) {
-        // Approve the hub, not the action builder
-        vm.prank(signers[0]);
-        safeEntrypoint.queueHubTransaction(hub, actionsBuilder); // Use queueHubTransaction
-
-        bytes32 _safeTxHash = safeEntrypoint.getSafeTransactionHash(actionsBuilder);
-
-        ghost_hashToActionsBuilder[_safeTxHash] = actionsBuilder;
-        ghost_hashes.push(_safeTxHash);
-        ghost_timestampOfActionQueued[_safeTxHash] = block.timestamp;
-      } catch {
-        assertGt(_approvalDuration, safeEntrypoint.MAX_APPROVAL_DURATION());
-      }
+    vm.prank(address(safe));
+    try canonGuard.approveActionsBuilderOrHub(hub, _approvalDuration) {
+      createdHubs.push(hub);
+      hubTokenCaps[hub] = caps[0];
+      hubTokens[hub] = address(actionTarget);
     } catch {
-      // Action builder creation might fail for various reasons
+      assertGt(_approvalDuration, canonGuard.MAX_APPROVAL_DURATION());
     }
   }
 
@@ -67,34 +48,30 @@ abstract contract HandlersCappedTokenTransfersHub is BaseHandlers {
     _approvalDuration = bound(_approvalDuration, 1, 1000);
     _amount = bound(_amount, 1, 1_000_000);
 
-    // Only proceed if we have created hubs
     if (createdHubs.length == 0) return;
 
     address hub = createdHubs[_amount % createdHubs.length];
 
-    // Create CappedTokenTransfers manually that references the hub
-    address actionsBuilder = address(
-      new CappedTokenTransfers(
-        address(actionTarget), // token
-        _amount, // amount
-        address(signers[0]), // recipient
-        hub // hub
-      )
-    );
-
-    vm.prank(address(safe));
-    try safeEntrypoint.approveActionsBuilder(actionsBuilder, _approvalDuration) {
+    vm.prank(signers[0]);
+    try ICappedTokenTransfersHub(hub).createNewActionsBuilder(address(actionTarget), _amount) returns (
+      address actionsBuilder
+    ) {
       vm.prank(signers[0]);
-      safeEntrypoint.queueTransaction(actionsBuilder);
+      canonGuard.queueTransaction(actionsBuilder);
 
-      bytes32 _safeTxHash = safeEntrypoint.getSafeTransactionHash(actionsBuilder);
+      bytes32 _safeTxHash = canonGuard.getSafeTransactionHash(actionsBuilder);
 
       ghost_hashToActionsBuilder[_safeTxHash] = actionsBuilder;
       ghost_hashes.push(_safeTxHash);
       ghost_timestampOfActionQueued[_safeTxHash] = block.timestamp;
       ghost_actionsBuilderType[actionsBuilder] = ActionsBuilderType.CAPPED_TOKEN_TRANSFERS_HUB;
-    } catch {
-      assertGt(_approvalDuration, safeEntrypoint.MAX_APPROVAL_DURATION());
+      actionBuilderExists[address(actionTarget)][_amount] = true;
+    } catch (bytes memory _reason) {
+      // Another action builder for the same token + amount aldready exists (create collision)
+      assert(
+        actionBuilderExists[address(actionTarget)][_amount]
+          && bytes4(_reason) == bytes4(keccak256('DeploymentFailed()'))
+      );
     }
   }
 }

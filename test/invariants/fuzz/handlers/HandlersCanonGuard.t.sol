@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import {ActionTarget, BaseHandlers, Safe, SafeEntrypoint, SafeEntrypointFactory} from './BaseHandlers.sol';
+import {ActionTarget, BaseHandlers, CanonGuard, CanonGuardFactory, Safe} from './BaseHandlers.sol';
 
 /// Handlers for general SafeEntrypoint and Safe interactions
-abstract contract HandlersSafeEntrypoint is BaseHandlers {
+abstract contract HandlersCanonGuard is BaseHandlers {
   /// Approve an actions builder (bypass the signature check itself/prank the safe)
   function handler_approveActionsBuilder(uint256 _seed, uint256 _approvalDuration) public {
     _approvalDuration = bound(_approvalDuration, 1, 10_000);
@@ -15,10 +15,10 @@ abstract contract HandlersSafeEntrypoint is BaseHandlers {
     address _actionsBuilder = ghost_hashToActionsBuilder[_hash];
 
     vm.prank(address(safe));
-    try safeEntrypoint.approveActionsBuilder(_actionsBuilder, _approvalDuration) {
+    try canonGuard.approveActionsBuilderOrHub(_actionsBuilder, _approvalDuration) {
       ghost_approvedActionsBuilder[_actionsBuilder] = true;
     } catch {
-      assertGt(_approvalDuration, safeEntrypoint.MAX_APPROVAL_DURATION());
+      assertGt(_approvalDuration, canonGuard.MAX_APPROVAL_DURATION());
     }
   }
 
@@ -28,6 +28,7 @@ abstract contract HandlersSafeEntrypoint is BaseHandlers {
     if (ghost_hashes.length == 0) return; // avoid mod 0
     bytes32 _hash = ghost_hashes[_hashSeed % ghost_hashes.length];
 
+    vm.prank(currentSigner);
     try safe.approveHash(_hash) {
       // Hash approval is part of Safe, we don't track it here
     } catch {
@@ -36,14 +37,16 @@ abstract contract HandlersSafeEntrypoint is BaseHandlers {
   }
 
   function handler_executeTransaction(uint256 _seed) public {
-    if (ghost_hashes.length == 0) return;
-
+    if (ghost_hashes.length == 0) {
+      return;
+    }
     bytes32 _hash = ghost_hashes[_seed % ghost_hashes.length];
     address _actionsBuilder = ghost_hashToActionsBuilder[_hash];
 
-    actionTarget = new ActionTarget();
+    // Reset the action target contract
+    vm.etch(address(actionTarget), address(new ActionTarget()).code);
 
-    try safeEntrypoint.executeTransaction(_actionsBuilder) {
+    try canonGuard.executeTransaction(_actionsBuilder) {
       _assertPostCondition(_actionsBuilder);
     } catch Error(string memory _reason) {
       assertEq(_reason, 'GS020');
@@ -56,18 +59,18 @@ abstract contract HandlersSafeEntrypoint is BaseHandlers {
   /// Reconfigure the short/long delay or expiry delay
   /// As these are immutable parameters, it needs a redeployment
   function handler_changeShortTxDelay(uint256 _shortTxExecutionDelay) public {
-    _shortTxExecutionDelay = bound(_shortTxExecutionDelay, 1, safeEntrypoint.LONG_TX_EXECUTION_DELAY());
+    _shortTxExecutionDelay = bound(_shortTxExecutionDelay, 1, canonGuard.LONG_TX_EXECUTION_DELAY());
 
     // get current params
-    uint256 _longTxExecutionDelay = safeEntrypoint.LONG_TX_EXECUTION_DELAY();
-    uint256 _txExpiryDelay = safeEntrypoint.TX_EXPIRY_DELAY();
-    uint256 _maxApprovalDuration = safeEntrypoint.MAX_APPROVAL_DURATION();
-    address _emergencyTrigger = safeEntrypoint.emergencyTrigger();
-    address _emergencyCaller = safeEntrypoint.emergencyCaller();
+    uint256 _longTxExecutionDelay = canonGuard.LONG_TX_EXECUTION_DELAY();
+    uint256 _txExpiryDelay = canonGuard.TX_EXPIRY_DELAY();
+    uint256 _maxApprovalDuration = canonGuard.MAX_APPROVAL_DURATION();
+    address _emergencyTrigger = canonGuard.emergencyTrigger();
+    address _emergencyCaller = canonGuard.emergencyCaller();
 
     // redeploy with same params except new delay
-    safeEntrypoint = SafeEntrypoint(
-      safeEntrypointFactory.createSafeEntrypoint(
+    canonGuard = CanonGuard(
+      canonGuardFactory.createCanonGuard(
         address(safe),
         _shortTxExecutionDelay,
         _longTxExecutionDelay,
@@ -80,22 +83,22 @@ abstract contract HandlersSafeEntrypoint is BaseHandlers {
 
     // set the new entrypoint as guard
     vm.prank(address(safe));
-    safe.setGuard(address(safeEntrypoint));
+    safe.setGuard(address(canonGuard));
   }
 
   function handler_changeLongTxDelay(uint256 _longTxExecutionDelay) public {
-    _longTxExecutionDelay = bound(_longTxExecutionDelay, safeEntrypoint.SHORT_TX_EXECUTION_DELAY(), 3650 days);
+    _longTxExecutionDelay = bound(_longTxExecutionDelay, canonGuard.SHORT_TX_EXECUTION_DELAY(), 3650 days);
 
     // get current params
-    uint256 _shortTxExecutionDelay = safeEntrypoint.SHORT_TX_EXECUTION_DELAY();
-    uint256 _txExpiryDelay = safeEntrypoint.TX_EXPIRY_DELAY();
-    uint256 _maxApprovalDuration = safeEntrypoint.MAX_APPROVAL_DURATION();
-    address _emergencyTrigger = safeEntrypoint.emergencyTrigger();
-    address _emergencyCaller = safeEntrypoint.emergencyCaller();
+    uint256 _shortTxExecutionDelay = canonGuard.SHORT_TX_EXECUTION_DELAY();
+    uint256 _txExpiryDelay = canonGuard.TX_EXPIRY_DELAY();
+    uint256 _maxApprovalDuration = canonGuard.MAX_APPROVAL_DURATION();
+    address _emergencyTrigger = canonGuard.emergencyTrigger();
+    address _emergencyCaller = canonGuard.emergencyCaller();
 
     // redeploy with same params except new delay
-    safeEntrypoint = SafeEntrypoint(
-      safeEntrypointFactory.createSafeEntrypoint(
+    canonGuard = CanonGuard(
+      canonGuardFactory.createCanonGuard(
         address(safe),
         _shortTxExecutionDelay,
         _longTxExecutionDelay,
@@ -108,22 +111,22 @@ abstract contract HandlersSafeEntrypoint is BaseHandlers {
 
     // set the new entrypoint as guard
     vm.prank(address(safe));
-    safe.setGuard(address(safeEntrypoint));
+    safe.setGuard(address(canonGuard));
   }
 
   function handler_changeTxExpiryDelay(uint256 _txExpiryDelay) public {
-    _txExpiryDelay = bound(_txExpiryDelay, 1, 3650 days);
+    _txExpiryDelay = bound(_txExpiryDelay, canonGuardFactory.MIN_EXPIRY_TIME(), 3650 days);
 
     // get current params
-    uint256 _shortTxExecutionDelay = safeEntrypoint.SHORT_TX_EXECUTION_DELAY();
-    uint256 _longTxExecutionDelay = safeEntrypoint.LONG_TX_EXECUTION_DELAY();
-    uint256 _maxApprovalDuration = safeEntrypoint.MAX_APPROVAL_DURATION();
-    address _emergencyTrigger = safeEntrypoint.emergencyTrigger();
-    address _emergencyCaller = safeEntrypoint.emergencyCaller();
+    uint256 _shortTxExecutionDelay = canonGuard.SHORT_TX_EXECUTION_DELAY();
+    uint256 _longTxExecutionDelay = canonGuard.LONG_TX_EXECUTION_DELAY();
+    uint256 _maxApprovalDuration = canonGuard.MAX_APPROVAL_DURATION();
+    address _emergencyTrigger = canonGuard.emergencyTrigger();
+    address _emergencyCaller = canonGuard.emergencyCaller();
 
     // redeploy with same params except new delay
-    safeEntrypoint = SafeEntrypoint(
-      safeEntrypointFactory.createSafeEntrypoint(
+    canonGuard = CanonGuard(
+      canonGuardFactory.createCanonGuard(
         address(safe),
         _shortTxExecutionDelay,
         _longTxExecutionDelay,
@@ -136,22 +139,22 @@ abstract contract HandlersSafeEntrypoint is BaseHandlers {
 
     // set the new entrypoint as guard
     vm.prank(address(safe));
-    safe.setGuard(address(safeEntrypoint));
+    safe.setGuard(address(canonGuard));
   }
 
   function handler_changeMaxApprovalDuration(uint256 _maxApprovalDuration) public {
-    _maxApprovalDuration = bound(_maxApprovalDuration, 1, 365 days);
+    _maxApprovalDuration = bound(_maxApprovalDuration, canonGuardFactory.MIN_EXPIRY_TIME(), 365 days);
 
     // get current params
-    uint256 _shortTxExecutionDelay = safeEntrypoint.SHORT_TX_EXECUTION_DELAY();
-    uint256 _longTxExecutionDelay = safeEntrypoint.LONG_TX_EXECUTION_DELAY();
-    uint256 _txExpiryDelay = safeEntrypoint.TX_EXPIRY_DELAY();
-    address _emergencyTrigger = safeEntrypoint.emergencyTrigger();
-    address _emergencyCaller = safeEntrypoint.emergencyCaller();
+    uint256 _shortTxExecutionDelay = canonGuard.SHORT_TX_EXECUTION_DELAY();
+    uint256 _longTxExecutionDelay = canonGuard.LONG_TX_EXECUTION_DELAY();
+    uint256 _txExpiryDelay = canonGuard.TX_EXPIRY_DELAY();
+    address _emergencyTrigger = canonGuard.emergencyTrigger();
+    address _emergencyCaller = canonGuard.emergencyCaller();
 
     // redeploy with same params except new delay
-    safeEntrypoint = SafeEntrypoint(
-      safeEntrypointFactory.createSafeEntrypoint(
+    canonGuard = CanonGuard(
+      canonGuardFactory.createCanonGuard(
         address(safe),
         _shortTxExecutionDelay,
         _longTxExecutionDelay,
@@ -164,7 +167,7 @@ abstract contract HandlersSafeEntrypoint is BaseHandlers {
 
     // set the new entrypoint as guard
     vm.prank(address(safe));
-    safe.setGuard(address(safeEntrypoint));
+    safe.setGuard(address(canonGuard));
   }
 
   function _isTimingError(bytes memory _reason) internal pure returns (bool) {
@@ -177,12 +180,12 @@ abstract contract HandlersSafeEntrypoint is BaseHandlers {
 
   function _assertTimingError(bytes memory _reason, address _actionsBuilder) internal {
     if (bytes4(_reason) == bytes4(keccak256('TransactionNotYetExecutable()'))) {
-      (, uint256 _executableAt,) = safeEntrypoint.queuedTransactions(_actionsBuilder);
+      (,, uint256 _executableAt,,) = canonGuard.transactionsInfo(_actionsBuilder);
       assertLe(block.timestamp, _executableAt);
     }
 
     if (bytes4(_reason) == bytes4(keccak256('TransactionExpired()'))) {
-      (,, uint256 _expireAt) = safeEntrypoint.queuedTransactions(_actionsBuilder);
+      (,, uint256 _expireAt,,) = canonGuard.transactionsInfo(_actionsBuilder);
       assertGe(block.timestamp, _expireAt);
     }
   }
@@ -208,7 +211,7 @@ abstract contract HandlersSafeEntrypoint is BaseHandlers {
       assertEq(actionTarget.downgradeAmount(), 123);
     } else if (ghost_actionsBuilderType[_actionsBuilder] == ActionsBuilderType.EVERCLEAR_TOKEN_CONVERSION) {
       assertTrue(actionTarget.isApproved());
-      assertEq(actionTarget.approveSpender(), TOKEN_RECIPIENT);
+      assertEq(actionTarget.approveSpender(), address(actionTarget)); // lockbox
       assertEq(actionTarget.approveAmount(), 123);
       assertTrue(actionTarget.isERC20Deposited());
       assertEq(actionTarget.depositAmount(), 123);

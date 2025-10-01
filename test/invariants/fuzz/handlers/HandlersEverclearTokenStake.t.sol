@@ -15,15 +15,14 @@ abstract contract HandlersEverclearTokenStake is BaseHandlers {
       address(actionTarget), // clear lockbox
       address(actionTarget), // next token
       address(actionTarget), // clear token
-      address(safe), // safe
       _lockTime // lock time
     );
 
     vm.prank(address(safe));
-    try safeEntrypoint.approveActionsBuilder(actionsBuilder, _approvalDuration) {
+    try canonGuard.approveActionsBuilderOrHub(actionsBuilder, _approvalDuration) {
       vm.prank(signers[0]);
-      try safeEntrypoint.queueTransaction(actionsBuilder) {
-        bytes32 _safeTxHash = safeEntrypoint.getSafeTransactionHash(actionsBuilder);
+      try canonGuard.queueTransaction(actionsBuilder) {
+        bytes32 _safeTxHash = canonGuard.getSafeTransactionHash(actionsBuilder);
 
         ghost_hashToActionsBuilder[_safeTxHash] = actionsBuilder;
         ghost_hashes.push(_safeTxHash);
@@ -33,7 +32,7 @@ abstract contract HandlersEverclearTokenStake is BaseHandlers {
         // Queue might fail due to complex external dependencies
       }
     } catch {
-      assertGt(_approvalDuration, safeEntrypoint.MAX_APPROVAL_DURATION());
+      assertGt(_approvalDuration, canonGuard.MAX_APPROVAL_DURATION());
     }
   }
 }
