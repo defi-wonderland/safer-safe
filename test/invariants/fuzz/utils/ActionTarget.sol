@@ -118,7 +118,7 @@ contract ActionTarget is IERC20 {
   }
 
   function quoteMessage(uint32, bytes calldata, uint256) external pure returns (uint256) {
-    return QUOTE_MESSAGE_FEE;
+    return 0;
   }
 
   function gateway() external view returns (address) {

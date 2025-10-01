@@ -88,7 +88,8 @@ abstract contract BaseHandlers is Test {
   }
 
   function handler_warp(uint256 _timestamp) public {
-    _timestamp = bound(_timestamp, 1, canonGuard.LONG_TX_EXECUTION_DELAY() * 10);
+    // Allow warping up to 365 days to test epoch boundaries (hub epoch length is 1 day)
+    _timestamp = bound(_timestamp, 1, 365 days);
     vm.warp(block.timestamp + _timestamp);
   }
 }

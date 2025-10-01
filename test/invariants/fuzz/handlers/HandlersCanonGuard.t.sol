@@ -43,9 +43,13 @@ abstract contract HandlersCanonGuard is BaseHandlers {
     bytes32 _hash = ghost_hashes[_seed % ghost_hashes.length];
     address _actionsBuilder = ghost_hashToActionsBuilder[_hash];
 
+    // If in emergency mode, only emergency caller can execute
+    address caller = canonGuard.emergencyMode() ? canonGuard.emergencyCaller() : address(this);
+
     // Reset the action target contract
     vm.etch(address(actionTarget), address(new ActionTarget()).code);
 
+    vm.prank(caller);
     try canonGuard.executeTransaction(_actionsBuilder) {
       _assertPostCondition(_actionsBuilder);
     } catch Error(string memory _reason) {
@@ -232,6 +236,92 @@ abstract contract HandlersCanonGuard is BaseHandlers {
       assertTrue(actionTarget.isTransferCalled());
       assertEq(actionTarget.transferRecipient(), TOKEN_RECIPIENT);
       assertEq(actionTarget.transferAmount(), AMOUNT);
+    }
+  }
+
+  /// Handler to set emergency mode
+  function handler_setEmergencyMode() public {
+    // Only the emergency trigger can set emergency mode
+    address trigger = canonGuard.emergencyTrigger();
+    vm.prank(trigger);
+    canonGuard.setEmergencyMode();
+    assertTrue(canonGuard.emergencyMode());
+  }
+
+  /// Handler to cancel an enqueued transaction
+  function handler_cancelEnqueuedTransaction(uint256 _seed) public {
+    if (ghost_hashes.length == 0) return;
+    bytes32 _hash = ghost_hashes[_seed % ghost_hashes.length];
+    address _actionsBuilder = ghost_hashToActionsBuilder[_hash];
+
+    // Try to cancel as the proposer or in emergency mode
+    try canonGuard.cancelEnqueuedTransaction(_actionsBuilder) {
+      // Verify transaction was removed from queue
+      address[] memory queuedBuilders = canonGuard.getQueuedActionBuilders();
+      for (uint256 i = 0; i < queuedBuilders.length; i++) {
+        assertTrue(queuedBuilders[i] != _actionsBuilder);
+      }
+    } catch (bytes memory _reason) {
+      // Expected failures: not proposer, has signatures, not queued
+      bool isExpectedError = bytes4(_reason) == bytes4(keccak256('CallerMustBeTransactionProposer()'))
+        || bytes4(_reason) == bytes4(keccak256('TransactionWithSignaturesCannotBeCancelled()'))
+        || bytes4(_reason) == bytes4(keccak256('NoTransactionQueued()'))
+        || bytes4(_reason) == bytes4(keccak256('Unauthorized(address,address)'));
+      assertTrue(isExpectedError);
+    }
+  }
+
+  /// Handler to execute multiple transactions in batch
+  function handler_executeTransactions(uint256 _seed, uint256 _count) public {
+    if (ghost_hashes.length == 0) return;
+    uint256 maxCount = ghost_hashes.length > 5 ? 5 : ghost_hashes.length;
+    if (maxCount == 0) return;
+    _count = bound(_count, 1, maxCount);
+
+    address[] memory _actionsBuilders = new address[](_count);
+    for (uint256 i = 0; i < _count; i++) {
+      // Use modulo on seed to prevent overflow
+      bytes32 _hash = ghost_hashes[((_seed % ghost_hashes.length) + i) % ghost_hashes.length];
+      _actionsBuilders[i] = ghost_hashToActionsBuilder[_hash];
+    }
+
+    // If in emergency mode, only emergency caller can execute
+    address caller = canonGuard.emergencyMode() ? canonGuard.emergencyCaller() : address(this);
+
+    // Reset action target for each builder
+    for (uint256 i = 0; i < _count; i++) {
+      vm.etch(address(actionTarget), address(new ActionTarget()).code);
+    }
+
+    vm.prank(caller);
+    try canonGuard.executeTransactions(_actionsBuilders) {
+      // Verify all transactions were removed from queue
+      for (uint256 i = 0; i < _count; i++) {
+        (,, uint256 _expiresAt,,) = canonGuard.transactionsInfo(_actionsBuilders[i]);
+        assertEq(_expiresAt, 0);
+      }
+    } catch Error(string memory _reason) {
+      assertEq(_reason, 'GS020');
+    } catch (bytes memory _reason) {
+      assertTrue(_isTimingError(_reason) || bytes4(_reason) == bytes4(keccak256('Unauthorized(address,address)')));
+    }
+  }
+
+  /// Handler to execute a no-action transaction (just increment nonce)
+  function handler_executeNoActionTransaction() public {
+    uint256 _nonceBefore = safe.nonce();
+
+    // If in emergency mode, only emergency caller can execute
+    address caller = canonGuard.emergencyMode() ? canonGuard.emergencyCaller() : address(this);
+
+    vm.prank(caller);
+    try canonGuard.executeNoActionTransaction() {
+      // Verify nonce was incremented
+      assertEq(safe.nonce(), _nonceBefore + 1);
+    } catch Error(string memory _reason) {
+      assertEq(_reason, 'GS020');
+    } catch (bytes memory _reason) {
+      assertTrue(bytes4(_reason) == bytes4(keccak256('Unauthorized(address,address)')));
     }
   }
 }

@@ -39,6 +39,7 @@ abstract contract HandlersCappedTokenTransfersHub is BaseHandlers {
       createdHubs.push(hub);
       hubTokenCaps[hub] = caps[0];
       hubTokens[hub] = address(actionTarget);
+      ghost_approvedActionsBuilder[hub] = true;
     } catch {
       assertGt(_approvalDuration, canonGuard.MAX_APPROVAL_DURATION());
     }

@@ -10,7 +10,7 @@ abstract contract HandlersEverclearTokenStake is BaseHandlers {
 
     address actionsBuilder = everclearTokenStakeFactory.createEverclearTokenStake(
       address(actionTarget), // vesting escrow (actionTarget acts as all external contracts)
-      address(actionTarget), // vesting wallet
+      TOKEN_RECIPIENT, // vesting wallet
       address(actionTarget), // spoke bridge
       address(actionTarget), // clear lockbox
       address(actionTarget), // next token
