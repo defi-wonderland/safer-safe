@@ -13,13 +13,16 @@ import {OPxActionFactory} from 'contracts/factories/OPxActionFactory.sol';
 import {SimpleActionsFactory} from 'contracts/factories/SimpleActionsFactory.sol';
 import {SimpleTransfersFactory} from 'contracts/factories/SimpleTransfersFactory.sol';
 
-import {Safe, SafeEntrypoint, SafeEntrypointFactory} from '../Setup.t.sol';
 import {ActionTarget} from '../utils/ActionTarget.sol';
+
+import {Safe} from '@safe-smart-account/Safe.sol';
+import {CanonGuard} from 'contracts/CanonGuard.sol';
+import {CanonGuardFactory} from 'contracts/factories/CanonGuardFactory.sol';
 
 /// @notice Base contract for all handlers, include ghost storage and constructor
 abstract contract BaseHandlers is Test {
-  SafeEntrypoint public safeEntrypoint;
-  SafeEntrypointFactory public safeEntrypointFactory;
+  CanonGuard public canonGuard;
+  CanonGuardFactory public canonGuardFactory;
   Safe public safe;
 
   // All Actions builders factories
@@ -60,19 +63,12 @@ abstract contract BaseHandlers is Test {
 
   modifier usingSigner(uint256 _seed) {
     currentSigner = signers[_seed % signers.length];
-    vm.startPrank(currentSigner);
     _;
-    vm.stopPrank();
   }
 
-  constructor(
-    SafeEntrypoint __safeEntrypoint,
-    SafeEntrypointFactory __safeEntrypointFactory,
-    Safe __safe,
-    address[] memory __signers
-  ) {
-    safeEntrypoint = __safeEntrypoint;
-    safeEntrypointFactory = __safeEntrypointFactory;
+  constructor(CanonGuard __canonGuard, CanonGuardFactory __canonGuardFactory, Safe __safe, address[] memory __signers) {
+    canonGuard = __canonGuard;
+    canonGuardFactory = __canonGuardFactory;
     safe = __safe;
     signers = __signers;
     actionTarget = new ActionTarget();
@@ -92,7 +88,7 @@ abstract contract BaseHandlers is Test {
   }
 
   function handler_warp(uint256 _timestamp) public {
-    _timestamp = bound(_timestamp, 1, safeEntrypoint.LONG_TX_EXECUTION_DELAY() * 10);
+    _timestamp = bound(_timestamp, 1, canonGuard.LONG_TX_EXECUTION_DELAY() * 10);
     vm.warp(block.timestamp + _timestamp);
   }
 }

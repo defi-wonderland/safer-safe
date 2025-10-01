@@ -10,11 +10,12 @@ import {HandlersTarget} from './HandlersTarget.t.sol';
 
 import {ActionTarget} from './utils/ActionTarget.sol';
 import {MultiSendCallOnly} from './utils/MultiSendCallOnly.sol';
-import {SafeEntrypoint} from 'contracts/SafeEntrypoint.sol';
+import {CanonGuard} from 'contracts/CanonGuard.sol';
 
 import {AllowanceClaimorFactory} from 'contracts/factories/AllowanceClaimorFactory.sol';
+
+import {CanonGuardFactory} from 'contracts/factories/CanonGuardFactory.sol';
 import {CappedTokenTransfersHubFactory} from 'contracts/factories/CappedTokenTransfersHubFactory.sol';
-import {SafeEntrypointFactory} from 'contracts/factories/SafeEntrypointFactory.sol';
 import {SimpleActionsFactory} from 'contracts/factories/SimpleActionsFactory.sol';
 import {SimpleTransfersFactory} from 'contracts/factories/SimpleTransfersFactory.sol';
 
@@ -24,8 +25,8 @@ contract Setup is Test, Constants {
   SafeProxyFactory private _safeProxyFactory;
   Safe private _safeSingleton;
   MultiSendCallOnly private _multiSendCallOnly;
-  SafeEntrypointFactory private _safeEntrypointFactory;
-  SafeEntrypoint private _safeEntrypoint;
+  CanonGuardFactory private _canonGuardFactory;
+  CanonGuard private _canonGuard;
   Safe private _safe;
 
   AllowanceClaimorFactory public allowanceClaimorFactory;
@@ -53,7 +54,7 @@ contract Setup is Test, Constants {
 
     _safe = Safe(payable(_safeProxyFactory.createProxyWithNonce(address(_safeSingleton), bytes(''), 1)));
 
-    _safeEntrypointFactory = new SafeEntrypointFactory(address(_multiSendCallOnly));
+    _canonGuardFactory = new CanonGuardFactory(address(_multiSendCallOnly));
 
     _safe.setup({
       _owners: _signers,
@@ -66,8 +67,8 @@ contract Setup is Test, Constants {
       paymentReceiver: payable(address(0))
     });
 
-    _safeEntrypoint = SafeEntrypoint(
-      _safeEntrypointFactory.createSafeEntrypoint(
+    _canonGuard = CanonGuard(
+      _canonGuardFactory.createCanonGuard(
         address(_safe),
         SHORT_TX_EXECUTION_DELAY,
         LONG_TX_EXECUTION_DELAY,
@@ -79,9 +80,9 @@ contract Setup is Test, Constants {
     );
 
     vm.prank(address(_safe));
-    _safe.setGuard(address(_safeEntrypoint));
+    _safe.setGuard(address(_canonGuard));
 
-    handlersTarget = new HandlersTarget(_safeEntrypoint, _safeEntrypointFactory, _safe, _signers);
+    handlersTarget = new HandlersTarget(_canonGuard, _canonGuardFactory, _safe, _signers);
     targetContract(address(handlersTarget));
   }
 }

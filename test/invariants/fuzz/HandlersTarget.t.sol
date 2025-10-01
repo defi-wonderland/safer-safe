@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import {BaseHandlers, Safe, SafeEntrypoint, SafeEntrypointFactory} from './handlers/BaseHandlers.sol';
+import {BaseHandlers, CanonGuard, CanonGuardFactory, Safe} from './handlers/BaseHandlers.sol';
 
 import {HandlersAllowanceClaimor} from './handlers/HandlersAllowanceClaimor.t.sol';
 import {HandlersCappedTokenTransfersHub} from './handlers/HandlersCappedTokenTransfersHub.t.sol';
@@ -9,12 +9,12 @@ import {HandlersEverclearTokenConversion} from './handlers/HandlersEverclearToke
 import {HandlersEverclearTokenStake} from './handlers/HandlersEverclearTokenStake.t.sol';
 import {HandlersOPxAction} from './handlers/HandlersOPxAction.t.sol';
 
-import {HandlersSafeEntrypoint} from './handlers/HandlersSafeEntrypoint.t.sol';
+import {HandlersCanonGuard} from './handlers/HandlersCanonGuard.t.sol';
 import {HandlersSimpleActions} from './handlers/HandlersSimpleActions.t.sol';
 import {HandlersSimpleTransfers} from './handlers/HandlersSimpleTransfers.t.sol';
 
 contract HandlersTarget is
-  HandlersSafeEntrypoint,
+  HandlersCanonGuard,
   HandlersSimpleActions,
   HandlersAllowanceClaimor,
   HandlersCappedTokenTransfersHub,
@@ -24,11 +24,11 @@ contract HandlersTarget is
   HandlersSimpleTransfers
 {
   constructor(
-    SafeEntrypoint __safeEntrypoint,
-    SafeEntrypointFactory __safeEntrypointFactory,
+    CanonGuard __canonGuard,
+    CanonGuardFactory __canonGuardFactory,
     Safe __safe,
     address[] memory __signers
-  ) BaseHandlers(__safeEntrypoint, __safeEntrypointFactory, __safe, __signers) {}
+  ) BaseHandlers(__canonGuard, __canonGuardFactory, __safe, __signers) {}
 
   function getGhostHashesLength() public view returns (uint256) {
     return ghost_hashes.length;
