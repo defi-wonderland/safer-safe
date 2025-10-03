@@ -16,7 +16,34 @@ by default - use the nightly version (1.3.0) if desired: `foundryup --install ni
 
 The core of the security relying on the Safe contract, these tests are privileging non-revertion/system "frozen" state.
 
-Caps of any capped token transfers are never exceeded.
+### Cap & Accounting Invariants
+
+| Invariant | Description |
+|-----------|-------------|
+| `invariant_capNeverExceeded` | Cap limits are never exceeded in any hub (accounting for epoch boundaries) |
+
+### Ghost State Invariants
+
+| Invariant | Description |
+|-----------|-------------|
+| `invariant_sanity_ghostStateConsistency` | Every hash in ghost state has a corresponding non-zero action builder address |
+
+### Approval & Timing Invariants
+
+| Invariant | Description |
+|-----------|-------------|
+| `invariant_queuedTransactionsHaveValidApprovals` | Queued transactions only exist for approved action builders/hubs with valid approvals. Pre-approved transactions must have approval either directly or through parent hub |
+| `invariant_approvalExpiriesAreValid` | Approval expiries never exceed MAX_APPROVAL_DURATION from the current timestamp |
+| `invariant_transactionTimingIsCorrect` | Transaction timing is always correct: expiresAt > executableAt, and executableAt >= queuedAt |
+| `invariant_preApprovedTransactionsUsedShortDelay` | Pre-approved transactions use SHORT_TX_EXECUTION_DELAY at queue time (not LONG_TX_EXECUTION_DELAY) |
+
+### Queue Consistency Invariants
+
+| Invariant | Description |
+|-----------|-------------|
+| `invariant_queueHasNoDuplicates` | Queue has no duplicate action builder addresses |
+| `invariant_allQueuedBuildersHaveNonZeroExpiry` | All queued action builders have non-zero expiry timestamp |
+| `invariant_queueMappingConsistency` | Queue array and transactionsInfo mapping are always in sync: builders in queue have non-zero expiry, and builders with non-zero expiry are in queue |
 
 ## Setup
 
