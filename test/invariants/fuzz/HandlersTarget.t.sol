@@ -30,14 +30,6 @@ contract HandlersTarget is
     address[] memory __signers
   ) BaseHandlers(__canonGuard, __canonGuardFactory, __safe, __signers) {}
 
-  function getGhostHashesLength() public view returns (uint256) {
-    return ghost_hashes.length;
-  }
-
-  function getGhostHash(uint256 index) public view returns (bytes32) {
-    return ghost_hashes[index];
-  }
-
   function getCreatedHubs() public view returns (address[] memory) {
     return createdHubs;
   }

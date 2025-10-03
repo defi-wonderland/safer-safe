@@ -5,21 +5,36 @@ import {ActionTarget, BaseHandlers} from './BaseHandlers.sol';
 import {CappedTokenTransfers} from 'contracts/actions-builders/CappedTokenTransfers.sol';
 import {ICappedTokenTransfersHub} from 'interfaces/action-hubs/ICappedTokenTransfersHub.sol';
 
+/// @title HandlersCappedTokenTransfersHub
+/// @notice Handler for CappedTokenTransfersHub and its child action builders
+/// @dev Tests invariants related to spending caps and epoch boundaries
 abstract contract HandlersCappedTokenTransfersHub is BaseHandlers {
+  /*//////////////////////////////////////////////////////////////
+                            STATE TRACKING
+  //////////////////////////////////////////////////////////////*/
+
   // Track created hubs for testing
-  mapping(address => uint256) public hubTokenCaps;
-  mapping(address => address) public hubTokens; // hub -> token address
+  mapping(address hub => uint256 cap) public hubTokenCaps;
+  mapping(address hub => address token) public hubTokens;
   mapping(address token => mapping(uint256 amount => bool exists)) public actionBuilderExists;
   address[] public createdHubs;
 
+  /*//////////////////////////////////////////////////////////////
+                            HANDLERS
+  //////////////////////////////////////////////////////////////*/
+
+  /// @notice Create a new hub with token cap and approve it
+  /// @dev Tests hub creation and approval process
+  /// @param _approvalDuration Duration of approval for the hub
+  /// @param _amount Base amount for cap calculation
+  /// @param _capMultiplier Multiplier for the cap (1x to 5x the amount)
   function handler_createNewActionBuilderFromHub(
     uint256 _approvalDuration,
     uint256 _amount,
     uint256 _capMultiplier
   ) public {
-    _approvalDuration = bound(_approvalDuration, 1, 1000);
-    _amount = bound(_amount, 1, 1_000_000);
-    _capMultiplier = bound(_capMultiplier, 1, 5); // Cap will be 1x to 5x the amount
+    _amount = bound(_amount, MIN_AMOUNT, MAX_AMOUNT);
+    _capMultiplier = bound(_capMultiplier, MIN_CAP_MULTIPLIER, MAX_CAP_MULTIPLIER);
 
     address[] memory tokens = new address[](1);
     tokens[0] = address(actionTarget);
@@ -45,9 +60,12 @@ abstract contract HandlersCappedTokenTransfersHub is BaseHandlers {
     }
   }
 
+  /// @notice Queue a CappedTokenTransfers action builder from an existing hub
+  /// @dev Tests child action builder creation and queuing from approved hubs
+  /// @param _approvalDuration Duration of approval (not used directly, for consistency)
+  /// @param _amount Amount for the transfer (also used as hub selector seed)
   function handler_queueCappedTokenTransfersFromHub(uint256 _approvalDuration, uint256 _amount) public {
-    _approvalDuration = bound(_approvalDuration, 1, 1000);
-    _amount = bound(_amount, 1, 1_000_000);
+    _amount = bound(_amount, MIN_AMOUNT, MAX_AMOUNT);
 
     if (createdHubs.length == 0) return;
 

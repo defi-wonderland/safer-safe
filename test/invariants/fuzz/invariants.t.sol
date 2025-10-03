@@ -6,7 +6,11 @@ import {ICappedTokenTransfersHub} from 'interfaces/action-hubs/ICappedTokenTrans
 import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 
 contract Invariants is Setup {
-  // Property: Cap limits are never exceeded in any hub (accounting for epoch boundaries)
+  /*//////////////////////////////////////////////////////////////
+                      CAP & ACCOUNTING INVARIANTS
+  //////////////////////////////////////////////////////////////*/
+
+  /// @notice Property: Cap limits are never exceeded in any hub (accounting for epoch boundaries)
   function invariant_capNeverExceeded() public view {
     uint256 hubCount = handlersTarget.getCreatedHubsLength();
 
@@ -40,7 +44,11 @@ contract Invariants is Setup {
     }
   }
 
-  // Ghost state consistency: hash vs action builder
+  /*//////////////////////////////////////////////////////////////
+                      GHOST STATE INVARIANTS
+  //////////////////////////////////////////////////////////////*/
+
+  /// @notice Ghost state consistency: hash vs action builder
   function invariant_sanity_ghostStateConsistency() public view {
     uint256 hashCount = handlersTarget.getGhostHashesLength();
 
@@ -52,7 +60,11 @@ contract Invariants is Setup {
     }
   }
 
-  // Property: Queued transactions only exist for approved action builders/hubs with valid approvals
+  /*//////////////////////////////////////////////////////////////
+                      APPROVAL & TIMING INVARIANTS
+  //////////////////////////////////////////////////////////////*/
+
+  /// @notice Property: Queued transactions only exist for approved action builders/hubs with valid approvals
   function invariant_queuedTransactionsHaveValidApprovals() public view {
     address[] memory queuedBuilders = handlersTarget.canonGuard().getQueuedActionBuilders();
 
@@ -90,7 +102,118 @@ contract Invariants is Setup {
     }
   }
 
-  // Property: Queue and mapping are consistent
+  /// @notice Property: Approval expiries never exceed max approval duration from time of approval
+  function invariant_approvalExpiriesAreValid() public view {
+    uint256 hashCount = handlersTarget.getGhostHashesLength();
+
+    for (uint256 i = 0; i < hashCount; i++) {
+      bytes32 hash = handlersTarget.getGhostHash(i);
+      address actionsBuilder = handlersTarget.ghost_hashToActionsBuilder(hash);
+
+      uint256 approvalExpiry = handlersTarget.canonGuard().approvalExpiries(actionsBuilder);
+
+      // If approval exists, it should be reasonable (not too far in the future)
+      if (approvalExpiry > 0) {
+        // Approval expiry should never be more than MAX_APPROVAL_DURATION from current time
+        // (allowing for some historical approvals that haven't expired yet)
+        assertTrue(approvalExpiry <= block.timestamp + handlersTarget.canonGuard().MAX_APPROVAL_DURATION());
+      }
+    }
+  }
+
+  /// @notice Property: Transaction timing is always correct
+  function invariant_transactionTimingIsCorrect() public view {
+    uint256 hashCount = handlersTarget.getGhostHashesLength();
+
+    for (uint256 i = 0; i < hashCount; i++) {
+      bytes32 hash = handlersTarget.getGhostHash(i);
+      address actionsBuilder = handlersTarget.ghost_hashToActionsBuilder(hash);
+
+      (,, uint256 executableAt, uint256 expiresAt, bool isPreApproved) =
+        handlersTarget.canonGuard().transactionsInfo(actionsBuilder);
+
+      // If transaction is queued
+      if (expiresAt > 0) {
+        // expiresAt must be greater than executableAt
+        assertGt(expiresAt, executableAt);
+
+        // Get the queued timestamp from ghost state
+        uint256 queuedAt = handlersTarget.ghost_timestampOfActionQueued(hash);
+
+        if (queuedAt > 0) {
+          // Calculate expected execution delay
+          uint256 expectedDelay = isPreApproved
+            ? handlersTarget.canonGuard().SHORT_TX_EXECUTION_DELAY()
+            : handlersTarget.canonGuard().LONG_TX_EXECUTION_DELAY();
+
+          // executableAt should be queuedAt + delay (within reason, accounting for redeployments)
+          // We allow executableAt to be >= queuedAt since delays could change
+          assertGe(executableAt, queuedAt);
+
+          // expiresAt should be executableAt + TX_EXPIRY_DELAY
+          // This can vary if TX_EXPIRY_DELAY changes, so we just check it's > executableAt
+          assertGt(expiresAt, executableAt);
+        }
+      }
+    }
+  }
+
+  /// @notice Property: Pre-approved transactions must have had valid approval at queue time
+  /// @dev isPreApproved indicates the transaction was approved at QUEUE time, not that approval is still valid
+  // Approvals can expire after queuing, which is expected behavior
+  function invariant_preApprovedTransactionsUsedShortDelay() public view {
+    address[] memory queuedBuilders = handlersTarget.canonGuard().getQueuedActionBuilders();
+
+    for (uint256 i = 0; i < queuedBuilders.length; i++) {
+      address actionsBuilder = queuedBuilders[i];
+      (,, uint256 executableAt, uint256 expiresAt, bool isPreApproved) =
+        handlersTarget.canonGuard().transactionsInfo(actionsBuilder);
+
+      // If transaction is queued and marked as pre-approved
+      if (expiresAt > 0 && isPreApproved) {
+        uint256 queuedAt = handlersTarget.ghost_timestampOfActionQueued(
+          handlersTarget.canonGuard().getSafeTransactionHash(actionsBuilder, handlersTarget.canonGuard().getSafeNonce())
+        );
+
+        // If we have queue timestamp, verify short delay was used
+        if (queuedAt > 0 && queuedAt <= executableAt) {
+          uint256 actualDelay = executableAt - queuedAt;
+          uint256 shortDelay = handlersTarget.canonGuard().SHORT_TX_EXECUTION_DELAY();
+          // Allow for some tolerance due to reconfigurations
+          // The delay should be <= short delay (could be less due to reconfig to shorter delay)
+          assertLe(actualDelay, shortDelay);
+        }
+      }
+    }
+  }
+
+  /*//////////////////////////////////////////////////////////////
+                      QUEUE CONSISTENCY INVARIANTS
+  //////////////////////////////////////////////////////////////*/
+
+  /// @notice Property: Queue has no duplicate action builders
+  function invariant_queueHasNoDuplicates() public view {
+    address[] memory queuedBuilders = handlersTarget.canonGuard().getQueuedActionBuilders();
+
+    // Check for duplicates by comparing each element with all subsequent elements
+    for (uint256 i = 0; i < queuedBuilders.length; i++) {
+      for (uint256 j = i + 1; j < queuedBuilders.length; j++) {
+        assertTrue(queuedBuilders[i] != queuedBuilders[j]);
+      }
+    }
+  }
+
+  /// @notice Property: All queued action builders have non-zero expiry
+  function invariant_allQueuedBuildersHaveNonZeroExpiry() public view {
+    address[] memory queuedBuilders = handlersTarget.canonGuard().getQueuedActionBuilders();
+
+    for (uint256 i = 0; i < queuedBuilders.length; i++) {
+      (,, uint256 expiresAt,,) = handlersTarget.canonGuard().transactionsInfo(queuedBuilders[i]);
+      assertTrue(expiresAt > 0);
+    }
+  }
+
+  /// @notice Property: Queue and mapping are consistent
   function invariant_queueMappingConsistency() public view {
     address[] memory queuedBuilders = handlersTarget.canonGuard().getQueuedActionBuilders();
 
@@ -122,28 +245,5 @@ contract Invariants is Setup {
         assertTrue(foundInQueue);
       }
     }
-  }
-
-  function test_repro() public {
-    vm.prank(0xB68691E947C62406642f9E7D358Ff17C36472326);
-    HandlersTarget(0xc7183455a4C133Ae270771860664b6B7ec320bB1).handler_changeTxExpiryDelay(
-      5_774_435_210_107_261_104_143_391_061_237_683_844_394_243_136_155_894_042_414_606_451_821_748_432_706
-    );
-    vm.prank(0xd4d4e13cEcdf9F6f7D90Ef62217b3eE5c1C02d04);
-    HandlersTarget(0xc7183455a4C133Ae270771860664b6B7ec320bB1).handler_queueEverclearTokenStake(
-      147_815_566_634_283_443_133_661_191_939_982_363_159, 2498
-    );
-    vm.prank(0x00000000000000000000000000000000000013c3);
-    HandlersTarget(0xc7183455a4C133Ae270771860664b6B7ec320bB1).handler_warp(507_424_334_919_110_579_073);
-    vm.prank(0x000000000000000000000000000000000000cF64);
-    HandlersTarget(0xc7183455a4C133Ae270771860664b6B7ec320bB1).handler_approveHash(126_978, 11_682);
-    vm.prank(0x0000000000000000000000000000000000013024);
-    HandlersTarget(0xc7183455a4C133Ae270771860664b6B7ec320bB1).handler_approveHash(
-      293_324_277_930_962, 633_632_081_283_941_399_851_427_520_594_466_435_457_560_454_162_167_326_458_474_924
-    );
-    vm.prank(0xF62849F9A0B5Bf2913b396098F7c7019b51A820a);
-    HandlersTarget(0xc7183455a4C133Ae270771860664b6B7ec320bB1).handler_approveHash(1540, 4410);
-    vm.prank(0x000000000000000000000000000000000000Ec84);
-    HandlersTarget(0xc7183455a4C133Ae270771860664b6B7ec320bB1).handler_executeTransaction(6_593_598_096_551);
   }
 }

@@ -3,24 +3,16 @@ pragma solidity ^0.8.0;
 
 import {ActionTarget, BaseHandlers, CanonGuard, CanonGuardFactory, Safe} from './BaseHandlers.sol';
 
+/// @title HandlersAllowanceClaimor
+/// @notice Handler for AllowanceClaimor action builders
+/// @dev Tests invariants related to token allowance claiming
 abstract contract HandlersAllowanceClaimor is BaseHandlers {
+  /// @notice Queue an AllowanceClaimor action builder
+  /// @dev Creates and queues an action builder that claims tokens via allowance
+  /// @param _approvalDuration Duration of approval (bounded to reasonable values)
   function handler_queueAllowanceClaimor(uint256 _approvalDuration) public {
-    _approvalDuration = bound(_approvalDuration, 1, 1000);
-
-    address _actionsBuilder = allowanceClaimorFactory.createAllowanceClaimor(
-      address(actionTarget), // token
-      TOKEN_SENDER, // token owner
-      TOKEN_RECIPIENT // token recipient
-    );
-
-    vm.prank(signers[0]);
-    canonGuard.queueTransaction(_actionsBuilder);
-
-    bytes32 _safeTxHash = canonGuard.getSafeTransactionHash(_actionsBuilder);
-
-    ghost_hashToActionsBuilder[_safeTxHash] = _actionsBuilder;
-    ghost_hashes.push(_safeTxHash);
-    ghost_timestampOfActionQueued[_safeTxHash] = block.timestamp;
-    ghost_actionsBuilderType[_actionsBuilder] = ActionsBuilderType.ALLOWANCE_CLAIMOR;
+    address builder =
+      allowanceClaimorFactory.createAllowanceClaimor(address(actionTarget), TOKEN_SENDER, TOKEN_RECIPIENT);
+    _createApproveAndQueueBuilder(builder, ActionsBuilderType.ALLOWANCE_CLAIMOR, _approvalDuration);
   }
 }

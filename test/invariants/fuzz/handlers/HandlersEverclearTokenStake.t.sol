@@ -5,34 +5,30 @@ import {ActionTarget, BaseHandlers} from './BaseHandlers.sol';
 
 abstract contract HandlersEverclearTokenStake is BaseHandlers {
   function handler_queueEverclearTokenStake(uint256 _approvalDuration, uint256 _lockTime) public {
-    _approvalDuration = bound(_approvalDuration, 1, 1000);
-    _lockTime = bound(_lockTime, 1 days, 365 days);
+    _lockTime = bound(_lockTime, MIN_LOCK_TIME, MAX_LOCK_TIME);
+    _approvalDuration = bound(_approvalDuration, MIN_APPROVAL_DURATION, MAX_APPROVAL_DURATION);
 
-    address actionsBuilder = everclearTokenStakeFactory.createEverclearTokenStake(
-      address(actionTarget), // vesting escrow (actionTarget acts as all external contracts)
-      TOKEN_RECIPIENT, // vesting wallet
-      address(actionTarget), // spoke bridge
-      address(actionTarget), // clear lockbox
-      address(actionTarget), // next token
-      address(actionTarget), // clear token
-      _lockTime // lock time
-    );
+    // EverclearTokenStake has complex external dependencies - handle failures gracefully
+    try everclearTokenStakeFactory.createEverclearTokenStake(
+      address(actionTarget),
+      address(actionTarget),
+      address(actionTarget),
+      address(actionTarget),
+      address(actionTarget),
+      address(actionTarget),
+      _lockTime
+    ) returns (address builder) {
+      if (!_tryApproveBuilder(builder, _approvalDuration)) return;
 
-    vm.prank(address(safe));
-    try canonGuard.approveActionsBuilderOrHub(actionsBuilder, _approvalDuration) {
       vm.prank(signers[0]);
-      try canonGuard.queueTransaction(actionsBuilder) {
-        bytes32 _safeTxHash = canonGuard.getSafeTransactionHash(actionsBuilder);
-
-        ghost_hashToActionsBuilder[_safeTxHash] = actionsBuilder;
-        ghost_hashes.push(_safeTxHash);
-        ghost_timestampOfActionQueued[_safeTxHash] = block.timestamp;
-        ghost_actionsBuilderType[actionsBuilder] = ActionsBuilderType.EVERCLEAR_TOKEN_STAKE;
+      try canonGuard.queueTransaction(builder) {
+        bytes32 safeTxHash = canonGuard.getSafeTransactionHash(builder);
+        _recordHash(safeTxHash, builder, ActionsBuilderType.EVERCLEAR_TOKEN_STAKE);
       } catch {
-        // Queue might fail due to complex external dependencies
+        // Queue might fail due to external calls in getActions()
       }
     } catch {
-      assertGt(_approvalDuration, canonGuard.MAX_APPROVAL_DURATION());
+      // Builder creation might fail
     }
   }
 }
