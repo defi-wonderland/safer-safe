@@ -46,7 +46,7 @@ contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
 
     // Deploy the ApproveAction contract for both approve and disapprove
     approveAction = IApproveAction(approveActionFactory.createApproveAction(address(actionsBuilder), APPROVAL_DURATION));
-    disapproveAction = IApproveAction(disapproveActionFactory.createApproveAction(address(actionsBuilder), 0));
+    disapproveAction = IApproveAction(approveActionFactory.createApproveAction(address(actionsBuilder), 0));
 
     // Deploy emergency actions
     setEmergencyCallerAction =
