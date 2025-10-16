@@ -17,12 +17,12 @@ contract UnitChangeSafeGuardAction is Test {
     changeSafeGuardAction = new ChangeSafeGuardAction(address(0), mockCanonGuard);
   }
 
-  function test_ConstructorWhenCalled() external view {
+  function test_Constructor_WhenCalled() external view {
     // it sets the safe guard address
     assertEq(changeSafeGuardAction.SAFE_GUARD(), mockCanonGuard);
   }
 
-  function test_GetActionsWhenCalled() external {
+  function test_GetActions_WhenCalled() external {
     vm.mockCall(mockCanonGuard, abi.encodeWithSelector(ISafeManageable.SAFE.selector), abi.encode(mockSafe));
     vm.expectCall(mockCanonGuard, abi.encodeWithSelector(ISafeManageable.SAFE.selector));
 
