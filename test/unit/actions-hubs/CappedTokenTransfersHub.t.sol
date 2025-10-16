@@ -29,7 +29,7 @@ contract UnitCappedTokenTransfersHub is Test {
     cappedTokenTransfersHub = new CappedTokenTransfersHub(address(0), safe, recipient, tokens, caps, EPOCH_LENGTH);
   }
 
-  function test_ConstructorWhenCalled(address _safe, address _recipient, uint256 _epochLength) external {
+  function test_Constructor_WhenCalled(address _safe, address _recipient, uint256 _epochLength) external {
     _epochLength = bound(_epochLength, 1, type(uint256).max);
     cappedTokenTransfersHub = new CappedTokenTransfersHub(address(0), _safe, _recipient, tokens, caps, _epochLength);
 
@@ -50,7 +50,7 @@ contract UnitCappedTokenTransfersHub is Test {
     }
   }
 
-  function test_ConstructorWhenTokensRegisteredContainADuplicatedToken(
+  function test_Constructor_WhenTokensRegisteredContainADuplicatedToken(
     address _token,
     address _tokenB,
     uint256 _amountA,
@@ -76,7 +76,7 @@ contract UnitCappedTokenTransfersHub is Test {
     new CappedTokenTransfersHub(address(0), safe, recipient, tokens, caps, EPOCH_LENGTH);
   }
 
-  function test_ConstructorWhenTheEpochLengthIsZero() external {
+  function test_Constructor_WhenTheEpochLengthIsZero() external {
     // it reverts
     vm.expectRevert(ICappedTokenTransfersHub.EpochLengthCannotBeZero.selector);
     new CappedTokenTransfersHub(address(0), safe, recipient, tokens, caps, 0);
@@ -87,7 +87,7 @@ contract UnitCappedTokenTransfersHub is Test {
     _;
   }
 
-  function test_CreateNewActionsBuilderWhenTheTokenIsNotRegisteredInTheHub(
+  function test_CreateNewActionsBuilder_WhenTheTokenIsNotRegisteredInTheHub(
     address _token,
     uint256 _amount
   ) external whenCalledByTheSafeOwner {
@@ -99,7 +99,7 @@ contract UnitCappedTokenTransfersHub is Test {
     cappedTokenTransfersHub.createNewActionsBuilder(_token, _amount);
   }
 
-  function test_CreateNewActionsBuilderWhenTheTokenIsRegisteredInTheHub() external whenCalledByTheSafeOwner {
+  function test_CreateNewActionsBuilder_WhenTheTokenIsRegisteredInTheHub() external whenCalledByTheSafeOwner {
     // it creates a new CappedTokenTransfers actions builder
     address _actionsBuilder =
       cappedTokenTransfersHub.createNewActionsBuilder(tokens[0], cappedTokenTransfersHub.cap(tokens[0]));
@@ -109,7 +109,7 @@ contract UnitCappedTokenTransfersHub is Test {
     assertEq(IActionsBuilder(_actionsBuilder).PARENT(), address(cappedTokenTransfersHub));
   }
 
-  function test_CreateNewActionsBuilderWhenNotCalledByTheSafeOwner() external {
+  function test_CreateNewActionsBuilder_WhenNotCalledByTheSafeOwner() external {
     vm.mockCall(address(safe), abi.encodeWithSelector(IOwnerManager.isOwner.selector), abi.encode(false));
 
     // It reverts
@@ -123,7 +123,7 @@ contract UnitCappedTokenTransfersHub is Test {
     vm.stopPrank();
   }
 
-  function test_UpdateStateWhenCalledByTheSafe(uint256 _amount) external whenCalledByTheSafe {
+  function test_UpdateState_WhenCalledByTheSafe(uint256 _amount) external whenCalledByTheSafe {
     _amount = bound(_amount, 0, cappedTokenTransfersHub.cap(tokens[0]));
 
     cappedTokenTransfersHub.updateState(tokens[0], _amount);
@@ -132,7 +132,7 @@ contract UnitCappedTokenTransfersHub is Test {
     assertEq(cappedTokenTransfersHub.totalSpent(tokens[0]), _amount);
   }
 
-  function test_UpdateStateWhenTheCurrentEpochIsGreaterThanTheEpochOfTheState(uint256 _amount)
+  function test_UpdateState_WhenTheCurrentEpochIsGreaterThanTheEpochOfTheState(uint256 _amount)
     external
     whenCalledByTheSafe
   {
@@ -152,7 +152,7 @@ contract UnitCappedTokenTransfersHub is Test {
     assertEq(cappedTokenTransfersHub.currentEpoch(), 1);
   }
 
-  function test_UpdateStateWhenTheTotalSpentIsGreaterThanTheCap(uint256 _amount) external whenCalledByTheSafe {
+  function test_UpdateState_WhenTheTotalSpentIsGreaterThanTheCap(uint256 _amount) external whenCalledByTheSafe {
     _amount = bound(_amount, cappedTokenTransfersHub.cap(tokens[0]) + 1, type(uint256).max);
 
     // it reverts
@@ -160,14 +160,14 @@ contract UnitCappedTokenTransfersHub is Test {
     cappedTokenTransfersHub.updateState(tokens[0], _amount);
   }
 
-  function test_UpdateStateWhenNotCalledByTheSafe() external {
+  function test_UpdateState_WhenNotCalledByTheSafe() external {
     // It reverts
     vm.prank(makeAddr('notSafe'));
     vm.expectRevert(ISafeManageable.NotSafe.selector);
     cappedTokenTransfersHub.updateState(tokens[0], 0);
   }
 
-  function test_TokensWhenCalled() external view {
+  function test_Tokens_WhenCalled() external view {
     // it returns the tokens
     address[] memory _tokens = cappedTokenTransfersHub.tokens();
     assertEq(_tokens.length, 3);
@@ -176,7 +176,7 @@ contract UnitCappedTokenTransfersHub is Test {
     assertEq(_tokens[2], tokens[2]);
   }
 
-  function test_CapLeftWhenTokenDoesNotExist(address _token) external view {
+  function test_CapLeft_WhenTokenDoesNotExist(address _token) external view {
     vm.assume(_token != tokens[0] && _token != tokens[1] && _token != tokens[2]);
     // it returns zero
     assertEq(cappedTokenTransfersHub.capLeft(_token), 0);
@@ -186,7 +186,7 @@ contract UnitCappedTokenTransfersHub is Test {
     _;
   }
 
-  function test_CapLeftWhenTheCurrentEpochIsGreaterThanTheEpochOfTheState(uint256 _amount) external whenTokenExists {
+  function test_CapLeft_WhenTheCurrentEpochIsGreaterThanTheEpochOfTheState(uint256 _amount) external whenTokenExists {
     _amount = bound(_amount, 1, cappedTokenTransfersHub.cap(tokens[0]));
 
     vm.prank(safe);
@@ -197,7 +197,7 @@ contract UnitCappedTokenTransfersHub is Test {
     assertEq(cappedTokenTransfersHub.capLeft(tokens[0]), cappedTokenTransfersHub.cap(tokens[0]));
   }
 
-  function test_CapLeftWhenTheCurrentEpochIsTheSameAsTheEpochOfTheState(uint256 _amount) external whenTokenExists {
+  function test_CapLeft_WhenTheCurrentEpochIsTheSameAsTheEpochOfTheState(uint256 _amount) external whenTokenExists {
     _amount = bound(_amount, 1, cappedTokenTransfersHub.cap(tokens[0]));
 
     vm.prank(safe);

@@ -18,12 +18,12 @@ contract UnitCanonGuardFactory is Test {
     canonGuardFactory = new CanonGuardFactory(multiSendCallOnly);
   }
 
-  function test_ConstructorWhenCalled() external view {
+  function test_Constructor_WhenCalled() external view {
     // it should store the multi send call only address
     assertEq(canonGuardFactory.MULTI_SEND_CALL_ONLY(), multiSendCallOnly);
   }
 
-  function test_CreateCanonGuardWhenCalledWithValidParameters(
+  function test_CreateCanonGuard_WhenCalledWithValidParameters(
     address _safe,
     uint256 _shortTxExecutionDelay,
     uint256 _longTxExecutionDelay,
@@ -84,7 +84,7 @@ contract UnitCanonGuardFactory is Test {
     assertTrue(canonGuardFactory.isChild(_canonGuard));
   }
 
-  function test_CreateCanonGuardWhenTheTransactionExpiryDelayIsLessThanTheMinimumExpiryTime(
+  function test_CreateCanonGuard_WhenTheTransactionExpiryDelayIsLessThanTheMinimumExpiryTime(
     address _safe,
     uint256 _shortTxExecutionDelay,
     uint256 _longTxExecutionDelay,
@@ -107,7 +107,7 @@ contract UnitCanonGuardFactory is Test {
     );
   }
 
-  function test_CreateCanonGuardWhenTheMaximumApprovalDurationIsLessThanTheMinimumExpiryTime(
+  function test_CreateCanonGuard_WhenTheMaximumApprovalDurationIsLessThanTheMinimumExpiryTime(
     address _safe,
     uint256 _shortTxExecutionDelay,
     uint256 _longTxExecutionDelay,
