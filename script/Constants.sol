@@ -14,7 +14,8 @@ abstract contract Constants {
   // Safe Deployments (https://github.com/safe-global/safe-deployments/tree/main/src/assets/v1.4.1)
   ISafe public constant SAFE = ISafe(0x41675C099F32341bf84BFc5382aF534df5C7461a);
   SafeProxyFactory public constant SAFE_PROXY_FACTORY = SafeProxyFactory(0x4e1DCf7AD4e460CfD30791CCC4F9c8a4f820ec67);
-  MultiSendCallOnly public constant MULTI_SEND_CALL_ONLY = MultiSendCallOnly(0x9641d764fc13c8B624c04430C7356C1C7C8102e2);
+  MultiSendCallOnly public constant MULTI_SEND_CALL_ONLY =
+    MultiSendCallOnly(0x9641d764fc13c8B624c04430C7356C1C7C8102e2);
 
   // Wonderland Canon Guard
   ISafe public constant SAFE_PROXY = ISafe(0x74fEa3FB0eD030e9228026E7F413D66186d3D107);

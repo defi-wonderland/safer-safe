@@ -159,7 +159,10 @@ contract UnitCanonGuard is Test {
     vm.stopPrank();
   }
 
-  function test_ApproveActionsBuilderOrHubWhenCallerIsSafe(uint256 _approvalDuration, address _actionsBuilder) external {
+  function test_ApproveActionsBuilderOrHubWhenCallerIsSafe(
+    uint256 _approvalDuration,
+    address _actionsBuilder
+  ) external {
     _approvalDuration = bound(_approvalDuration, 0, MAX_APPROVAL_DURATION);
 
     vm.expectEmit(address(canonGuard));
@@ -173,9 +176,10 @@ contract UnitCanonGuard is Test {
     assertEq(canonGuard.approvalExpiries(_actionsBuilder), block.timestamp + _approvalDuration);
   }
 
-  function test_ApproveActionsBuilderOrHubWhenApprovalDurationIsGreaterThanMaxApprovalDuration(
-    uint256 _approvalDuration
-  ) external whenCallerIsSafe {
+  function test_ApproveActionsBuilderOrHubWhenApprovalDurationIsGreaterThanMaxApprovalDuration(uint256 _approvalDuration)
+    external
+    whenCallerIsSafe
+  {
     _approvalDuration = bound(_approvalDuration, canonGuard.MAX_APPROVAL_DURATION() + 1, type(uint256).max);
 
     // it reverts with InvalidApprovalDuration

@@ -146,7 +146,7 @@ contract DeployCanonGuard is Constants, Script {
     new CappedTokenTransfersHub(
       DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS, new address[](0), new uint256[](0), DUMMY_EPOCH_LENGTH
     );
-    ICanonGuard _canonGuard = new CanonGuard(
+    new CanonGuard(
       DUMMY_ADDRESS,
       DUMMY_ADDRESS,
       DUMMY_ADDRESS,
