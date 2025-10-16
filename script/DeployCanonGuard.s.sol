@@ -6,7 +6,6 @@ import {AllowanceClaimor} from 'contracts/actions-builders/AllowanceClaimor.sol'
 import {ApproveAction} from 'contracts/actions-builders/ApproveAction.sol';
 import {CappedTokenTransfers} from 'contracts/actions-builders/CappedTokenTransfers.sol';
 import {ChangeSafeGuardAction} from 'contracts/actions-builders/ChangeSafeGuardAction.sol';
-import {DisapproveAction} from 'contracts/actions-builders/DisapproveAction.sol';
 import {EverclearTokenConversion} from 'contracts/actions-builders/EverclearTokenConversion.sol';
 import {OPxAction} from 'contracts/actions-builders/OPxAction.sol';
 import {SetEmergencyCallerAction} from 'contracts/actions-builders/SetEmergencyCallerAction.sol';
@@ -19,7 +18,6 @@ import {ApproveActionFactory} from 'contracts/factories/ApproveActionFactory.sol
 import {CanonGuardFactory} from 'contracts/factories/CanonGuardFactory.sol';
 import {CappedTokenTransfersHubFactory} from 'contracts/factories/CappedTokenTransfersHubFactory.sol';
 import {ChangeSafeGuardActionFactory} from 'contracts/factories/ChangeSafeGuardActionFactory.sol';
-import {DisapproveActionFactory} from 'contracts/factories/DisapproveActionFactory.sol';
 import {EverclearTokenConversionFactory} from 'contracts/factories/EverclearTokenConversionFactory.sol';
 import {OPxActionFactory} from 'contracts/factories/OPxActionFactory.sol';
 import {SetEmergencyCallerActionFactory} from 'contracts/factories/SetEmergencyCallerActionFactory.sol';
@@ -33,7 +31,6 @@ import {IApproveActionFactory} from 'interfaces/factories/IApproveActionFactory.
 import {ICanonGuardFactory} from 'interfaces/factories/ICanonGuardFactory.sol';
 import {ICappedTokenTransfersHubFactory} from 'interfaces/factories/ICappedTokenTransfersHubFactory.sol';
 import {IChangeSafeGuardActionFactory} from 'interfaces/factories/IChangeSafeGuardActionFactory.sol';
-import {IDisapproveActionFactory} from 'interfaces/factories/IDisapproveActionFactory.sol';
 import {IEverclearTokenConversionFactory} from 'interfaces/factories/IEverclearTokenConversionFactory.sol';
 import {IOPxActionFactory} from 'interfaces/factories/IOPxActionFactory.sol';
 import {ISetEmergencyCallerActionFactory} from 'interfaces/factories/ISetEmergencyCallerActionFactory.sol';
@@ -64,7 +61,6 @@ contract DeployCanonGuard is Constants, Script {
   ICanonGuardFactory public canonGuardFactory;
   ICappedTokenTransfersHubFactory public cappedTokenTransfersHubFactory;
   IChangeSafeGuardActionFactory public changeSafeGuardActionFactory;
-  IDisapproveActionFactory public disapproveActionFactory;
   IEverclearTokenConversionFactory public everclearTokenConversionFactory;
   IOPxActionFactory public opxActionFactory;
   ISetEmergencyCallerActionFactory public setEmergencyCallerActionFactory;
@@ -124,7 +120,6 @@ contract DeployCanonGuard is Constants, Script {
     approveActionFactory = new ApproveActionFactory();
     cappedTokenTransfersHubFactory = new CappedTokenTransfersHubFactory();
     changeSafeGuardActionFactory = new ChangeSafeGuardActionFactory();
-    disapproveActionFactory = new DisapproveActionFactory();
     setEmergencyCallerActionFactory = new SetEmergencyCallerActionFactory();
     setEmergencyTriggerActionFactory = new SetEmergencyTriggerActionFactory();
     simpleActionsFactory = new SimpleActionsFactory();
@@ -144,7 +139,6 @@ contract DeployCanonGuard is Constants, Script {
     new ApproveAction(DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_APPROVAL_DURATION);
     new CappedTokenTransfers(DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_AMOUNT, DUMMY_ADDRESS, DUMMY_ADDRESS);
     new ChangeSafeGuardAction(DUMMY_ADDRESS, DUMMY_ADDRESS);
-    new DisapproveAction(DUMMY_ADDRESS, DUMMY_ADDRESS);
     new SetEmergencyCallerAction(DUMMY_ADDRESS, DUMMY_ADDRESS);
     new SetEmergencyTriggerAction(DUMMY_ADDRESS, DUMMY_ADDRESS);
     new SimpleActions(DUMMY_ADDRESS, new SimpleActions.SimpleAction[](0));
