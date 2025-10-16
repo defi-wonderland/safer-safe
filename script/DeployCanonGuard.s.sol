@@ -8,7 +8,6 @@ import {CappedTokenTransfers} from 'contracts/actions-builders/CappedTokenTransf
 import {ChangeSafeGuardAction} from 'contracts/actions-builders/ChangeSafeGuardAction.sol';
 import {DisapproveAction} from 'contracts/actions-builders/DisapproveAction.sol';
 import {EverclearTokenConversion} from 'contracts/actions-builders/EverclearTokenConversion.sol';
-import {EverclearTokenStake} from 'contracts/actions-builders/EverclearTokenStake.sol';
 import {OPxAction} from 'contracts/actions-builders/OPxAction.sol';
 import {SetEmergencyCallerAction} from 'contracts/actions-builders/SetEmergencyCallerAction.sol';
 import {SetEmergencyTriggerAction} from 'contracts/actions-builders/SetEmergencyTriggerAction.sol';
@@ -22,7 +21,6 @@ import {CappedTokenTransfersHubFactory} from 'contracts/factories/CappedTokenTra
 import {ChangeSafeGuardActionFactory} from 'contracts/factories/ChangeSafeGuardActionFactory.sol';
 import {DisapproveActionFactory} from 'contracts/factories/DisapproveActionFactory.sol';
 import {EverclearTokenConversionFactory} from 'contracts/factories/EverclearTokenConversionFactory.sol';
-import {EverclearTokenStakeFactory} from 'contracts/factories/EverclearTokenStakeFactory.sol';
 import {OPxActionFactory} from 'contracts/factories/OPxActionFactory.sol';
 import {SetEmergencyCallerActionFactory} from 'contracts/factories/SetEmergencyCallerActionFactory.sol';
 import {SetEmergencyTriggerActionFactory} from 'contracts/factories/SetEmergencyTriggerActionFactory.sol';
@@ -37,7 +35,6 @@ import {ICappedTokenTransfersHubFactory} from 'interfaces/factories/ICappedToken
 import {IChangeSafeGuardActionFactory} from 'interfaces/factories/IChangeSafeGuardActionFactory.sol';
 import {IDisapproveActionFactory} from 'interfaces/factories/IDisapproveActionFactory.sol';
 import {IEverclearTokenConversionFactory} from 'interfaces/factories/IEverclearTokenConversionFactory.sol';
-import {IEverclearTokenStakeFactory} from 'interfaces/factories/IEverclearTokenStakeFactory.sol';
 import {IOPxActionFactory} from 'interfaces/factories/IOPxActionFactory.sol';
 import {ISetEmergencyCallerActionFactory} from 'interfaces/factories/ISetEmergencyCallerActionFactory.sol';
 import {ISetEmergencyTriggerActionFactory} from 'interfaces/factories/ISetEmergencyTriggerActionFactory.sol';
@@ -69,7 +66,6 @@ contract DeployCanonGuard is Constants, Script {
   IChangeSafeGuardActionFactory public changeSafeGuardActionFactory;
   IDisapproveActionFactory public disapproveActionFactory;
   IEverclearTokenConversionFactory public everclearTokenConversionFactory;
-  IEverclearTokenStakeFactory public everclearTokenStakeFactory;
   IOPxActionFactory public opxActionFactory;
   ISetEmergencyCallerActionFactory public setEmergencyCallerActionFactory;
   ISetEmergencyTriggerActionFactory public setEmergencyTriggerActionFactory;
@@ -137,7 +133,6 @@ contract DeployCanonGuard is Constants, Script {
 
   function _deployEthereumFactories() internal {
     everclearTokenConversionFactory = new EverclearTokenConversionFactory();
-    everclearTokenStakeFactory = new EverclearTokenStakeFactory();
   }
 
   function _deployOptimismFactories() internal {
@@ -174,16 +169,6 @@ contract DeployCanonGuard is Constants, Script {
 
   function _deployEthereumContracts() internal {
     new EverclearTokenConversion(DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS);
-    new EverclearTokenStake(
-      DUMMY_ADDRESS,
-      DUMMY_ADDRESS,
-      DUMMY_ADDRESS,
-      DUMMY_ADDRESS,
-      DUMMY_ADDRESS,
-      DUMMY_ADDRESS,
-      DUMMY_ADDRESS,
-      DUMMY_LOCK_TIME
-    );
   }
 
   function _deployOptimismContracts() internal {

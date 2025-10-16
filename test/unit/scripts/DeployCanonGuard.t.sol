@@ -8,8 +8,6 @@ import {ChangeSafeGuardActionFactory} from 'contracts/factories/ChangeSafeGuardA
 import {DisapproveActionFactory} from 'contracts/factories/DisapproveActionFactory.sol';
 import {DisapproveActionFactory} from 'contracts/factories/DisapproveActionFactory.sol';
 import {EverclearTokenConversionFactory} from 'contracts/factories/EverclearTokenConversionFactory.sol';
-import {EverclearTokenStakeFactory} from 'contracts/factories/EverclearTokenStakeFactory.sol';
-import {EverclearTokenStakeFactory} from 'contracts/factories/EverclearTokenStakeFactory.sol';
 import {OPxActionFactory} from 'contracts/factories/OPxActionFactory.sol';
 import {SetEmergencyCallerActionFactory} from 'contracts/factories/SetEmergencyCallerActionFactory.sol';
 import {SetEmergencyTriggerActionFactory} from 'contracts/factories/SetEmergencyTriggerActionFactory.sol';
@@ -42,7 +40,6 @@ contract UnitDeployCanonGuard is DeployCanonGuard, Test {
 
     // it should deploy the ethereum factories
     assertEq(address(everclearTokenConversionFactory).code, type(EverclearTokenConversionFactory).runtimeCode);
-    assertEq(address(everclearTokenStakeFactory).code, type(EverclearTokenStakeFactory).runtimeCode);
   }
 
   function test_WhenDeployingToOptimismMainnet() external {
