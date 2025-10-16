@@ -44,7 +44,6 @@ import {ISetEmergencyTriggerActionFactory} from 'interfaces/factories/ISetEmerge
 import {ISimpleActionsFactory} from 'interfaces/factories/ISimpleActionsFactory.sol';
 import {ISimpleTransfersFactory} from 'interfaces/factories/ISimpleTransfersFactory.sol';
 import {Constants} from 'script/Constants.sol';
-import {Approver} from 'src/contracts/Approver.sol';
 import {CanonGuard} from 'src/contracts/CanonGuard.sol';
 import {SetGuardAction} from 'src/contracts/actions-builders/SetGuardAction.sol';
 
@@ -169,7 +168,6 @@ contract DeployCanonGuard is Constants, Script {
       DUMMY_ADDRESS,
       DUMMY_ADDRESS
     );
-    new Approver(address(_canonGuard));
     setGuardAction = new SetGuardAction();
     unsetEmergencyModeAction = new UnsetEmergencyModeAction();
   }
