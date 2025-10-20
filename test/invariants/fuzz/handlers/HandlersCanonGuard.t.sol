@@ -45,8 +45,9 @@ abstract contract HandlersCanonGuard is BaseHandlers {
 
     vm.prank(currentSigner);
     try safe.approveHash(_hash) {
-      // Hash approval is part of Safe, we don't track it here
-    } catch {
+    // Hash approval is part of Safe, we don't track it here
+    }
+    catch {
       assertEq(_hash, bytes32(0));
     }
   }

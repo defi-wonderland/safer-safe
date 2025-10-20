@@ -66,10 +66,9 @@ abstract contract HandlerHelpers is GhostState {
   /// @return isTimingError True if the error is timing-related
   function _isTimingError(bytes memory _reason) internal pure virtual returns (bool isTimingError) {
     bytes4 selector = bytes4(_reason);
-    return (
-      selector == bytes4(keccak256('TransactionNotYetExecutable()'))
-        || selector == bytes4(keccak256('NoTransactionQueued()')) || selector == bytes4(keccak256('TransactionExpired()'))
-    );
+    return (selector == bytes4(keccak256('TransactionNotYetExecutable()'))
+        || selector == bytes4(keccak256('NoTransactionQueued()'))
+        || selector == bytes4(keccak256('TransactionExpired()')));
   }
 
   /// @notice Assert that a timing error is correct
@@ -96,11 +95,9 @@ abstract contract HandlerHelpers is GhostState {
   /// @return isAuthError True if the error is authorization-related
   function _isAuthError(bytes memory _reason) internal pure returns (bool isAuthError) {
     bytes4 selector = bytes4(_reason);
-    return (
-      selector == bytes4(keccak256('CallerMustBeTransactionProposer()'))
+    return (selector == bytes4(keccak256('CallerMustBeTransactionProposer()'))
         || selector == bytes4(keccak256('TransactionWithSignaturesCannotBeCancelled()'))
-        || selector == bytes4(keccak256('Unauthorized(address,address)'))
-    );
+        || selector == bytes4(keccak256('Unauthorized(address,address)')));
   }
 
   /*//////////////////////////////////////////////////////////////
