@@ -5,7 +5,6 @@ import {IEmergencyModeHook} from 'interfaces/IEmergencyModeHook.sol';
 import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 import {IApproveAction} from 'interfaces/actions-builders/IApproveAction.sol';
 import {IChangeSafeGuardAction} from 'interfaces/actions-builders/IChangeSafeGuardAction.sol';
-import {IDisapproveAction} from 'interfaces/actions-builders/IDisapproveAction.sol';
 import {ISetEmergencyCallerAction} from 'interfaces/actions-builders/ISetEmergencyCallerAction.sol';
 import {ISetEmergencyTriggerAction} from 'interfaces/actions-builders/ISetEmergencyTriggerAction.sol';
 import {ISimpleActions} from 'interfaces/actions-builders/ISimpleActions.sol';
@@ -13,8 +12,7 @@ import {IntegrationEthereumBase} from 'test/integration/ethereum/IntegrationEthe
 
 contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
   IApproveAction public approveAction;
-
-  IDisapproveAction public disapproveAction;
+  IApproveAction public disapproveAction;
 
   IChangeSafeGuardAction public changeSafeGuardAction;
   IChangeSafeGuardAction public disableSafeGuardAction;
@@ -46,17 +44,15 @@ contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
     newEmergencyCaller = makeAddr('newEmergencyCaller');
     newEmergencyTrigger = makeAddr('newEmergencyTrigger');
 
-    // Deploy the ApproveAction contract
+    // Deploy the ApproveAction contract for both approve and disapprove
     approveAction = IApproveAction(approveActionFactory.createApproveAction(address(actionsBuilder), APPROVAL_DURATION));
+    disapproveAction = IApproveAction(approveActionFactory.createApproveAction(address(actionsBuilder), 0));
 
     // Deploy emergency actions
     setEmergencyCallerAction =
       ISetEmergencyCallerAction(setEmergencyCallerActionFactory.createSetEmergencyCallerAction(newEmergencyCaller));
     setEmergencyTriggerAction =
       ISetEmergencyTriggerAction(setEmergencyTriggerActionFactory.createSetEmergencyTriggerAction(newEmergencyTrigger));
-
-    // Deploy the DisapproveAction contract
-    disapproveAction = IDisapproveAction(disapproveActionFactory.createDisapproveAction(address(actionsBuilder)));
 
     // Deploy the ChangeSafeGuardAction contract
     changeSafeGuardAction =
@@ -468,19 +464,13 @@ contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
     address _recipient = makeAddr('recipient');
     address _wethTransferSimpleAction = simpleActionsFactory.createSimpleAction(
       ISimpleActions.SimpleAction({
-        target: address(WETH),
-        signature: 'transfer(address,uint256)',
-        data: abi.encode(_recipient, 1 ether),
-        value: 0
+        target: address(WETH), signature: 'transfer(address,uint256)', data: abi.encode(_recipient, 1 ether), value: 0
       })
     );
 
     address _usdcTransferSimpleAction = simpleActionsFactory.createSimpleAction(
       ISimpleActions.SimpleAction({
-        target: address(USDC),
-        signature: 'transfer(address,uint256)',
-        data: abi.encode(_recipient, 1 ether),
-        value: 0
+        target: address(USDC), signature: 'transfer(address,uint256)', data: abi.encode(_recipient, 1 ether), value: 0
       })
     );
 

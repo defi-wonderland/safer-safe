@@ -15,14 +15,14 @@ contract UnitApproveAction is Test {
     approveAction = new ApproveAction(address(0), actionsBuilder, APPROVAL_DURATION);
   }
 
-  function test_ConstructorWhenCalled() external view {
+  function test_Constructor_WhenCalled() external view {
     // it sets the actions builder address
     assertEq(approveAction.ACTIONS_BUILDER(), actionsBuilder);
     // it sets the approval duration
     assertEq(approveAction.APPROVAL_DURATION(), APPROVAL_DURATION);
   }
 
-  function test_GetActionsWhenCalled() external view {
+  function test_GetActions_WhenCalled() external view {
     // it returns an action to approve the actions builder or action hub
     IActionsBuilder.Action[] memory actions = approveAction.getActions();
     assertEq(actions[0].target, address(this));

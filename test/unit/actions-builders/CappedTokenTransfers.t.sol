@@ -24,7 +24,12 @@ contract UnitCappedTokenTransfers is Test {
     cappedTokenTransfers = new CappedTokenTransfers(address(0), token, amount, recipient, hub);
   }
 
-  function test_ConstructorWhenCalled(address _token, uint256 _amount, address _recipient, address _actionHub) external {
+  function test_Constructor_WhenCalled(
+    address _token,
+    uint256 _amount,
+    address _recipient,
+    address _actionHub
+  ) external {
     cappedTokenTransfers = new CappedTokenTransfers(address(0), _token, _amount, _recipient, _actionHub);
 
     // it sets the token
@@ -37,7 +42,7 @@ contract UnitCappedTokenTransfers is Test {
     assertEq(cappedTokenTransfers.HUB(), _actionHub);
   }
 
-  function test_GetActionsWhenCalled() external view {
+  function test_GetActions_WhenCalled() external view {
     IActionsBuilder.Action[] memory actions = cappedTokenTransfers.getActions();
 
     // it returns an action to update the state

@@ -5,11 +5,7 @@ import {AllowanceClaimorFactory} from 'contracts/factories/AllowanceClaimorFacto
 import {ApproveActionFactory} from 'contracts/factories/ApproveActionFactory.sol';
 import {CappedTokenTransfersHubFactory} from 'contracts/factories/CappedTokenTransfersHubFactory.sol';
 import {ChangeSafeGuardActionFactory} from 'contracts/factories/ChangeSafeGuardActionFactory.sol';
-import {DisapproveActionFactory} from 'contracts/factories/DisapproveActionFactory.sol';
-import {DisapproveActionFactory} from 'contracts/factories/DisapproveActionFactory.sol';
 import {EverclearTokenConversionFactory} from 'contracts/factories/EverclearTokenConversionFactory.sol';
-import {EverclearTokenStakeFactory} from 'contracts/factories/EverclearTokenStakeFactory.sol';
-import {EverclearTokenStakeFactory} from 'contracts/factories/EverclearTokenStakeFactory.sol';
 import {OPxActionFactory} from 'contracts/factories/OPxActionFactory.sol';
 import {SetEmergencyCallerActionFactory} from 'contracts/factories/SetEmergencyCallerActionFactory.sol';
 import {SetEmergencyTriggerActionFactory} from 'contracts/factories/SetEmergencyTriggerActionFactory.sol';
@@ -42,7 +38,6 @@ contract UnitDeployCanonGuard is DeployCanonGuard, Test {
 
     // it should deploy the ethereum factories
     assertEq(address(everclearTokenConversionFactory).code, type(EverclearTokenConversionFactory).runtimeCode);
-    assertEq(address(everclearTokenStakeFactory).code, type(EverclearTokenStakeFactory).runtimeCode);
   }
 
   function test_WhenDeployingToOptimismMainnet() external {
@@ -101,7 +96,6 @@ contract UnitDeployCanonGuard is DeployCanonGuard, Test {
     assertEq(canonGuardFactory.MULTI_SEND_CALL_ONLY(), address(MULTI_SEND_CALL_ONLY));
     assertEq(address(cappedTokenTransfersHubFactory).code, type(CappedTokenTransfersHubFactory).runtimeCode);
     assertEq(address(changeSafeGuardActionFactory).code, type(ChangeSafeGuardActionFactory).runtimeCode);
-    assertEq(address(disapproveActionFactory).code, type(DisapproveActionFactory).runtimeCode);
     assertEq(address(setEmergencyCallerActionFactory).code, type(SetEmergencyCallerActionFactory).runtimeCode);
     assertEq(address(setEmergencyTriggerActionFactory).code, type(SetEmergencyTriggerActionFactory).runtimeCode);
     assertEq(address(simpleActionsFactory).code, type(SimpleActionsFactory).runtimeCode);

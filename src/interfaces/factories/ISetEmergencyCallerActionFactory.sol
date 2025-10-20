@@ -13,7 +13,5 @@ interface ISetEmergencyCallerActionFactory {
    * @param _emergencyCaller The emergency caller address
    * @return _setEmergencyCallerAction The SetEmergencyCallerAction contract address
    */
-  function createSetEmergencyCallerAction(address _emergencyCaller)
-    external
-    returns (address _setEmergencyCallerAction);
+  function createSetEmergencyCallerAction(address _emergencyCaller) external returns (address _setEmergencyCallerAction);
 }

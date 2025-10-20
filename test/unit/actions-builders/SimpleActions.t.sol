@@ -12,19 +12,13 @@ contract UnitSimpleActionsconstructor is Test {
   function setUp() public {
     actions.push(
       ISimpleActions.SimpleAction({
-        target: address(1),
-        signature: 'transfer(address,uint256)',
-        data: abi.encode(address(0), 100),
-        value: 0
+        target: address(1), signature: 'transfer(address,uint256)', data: abi.encode(address(0), 100), value: 0
       })
     );
 
     actions.push(
       ISimpleActions.SimpleAction({
-        target: address(2),
-        signature: 'approve(address,uint256)',
-        data: abi.encode(address(0), 100),
-        value: 0
+        target: address(2), signature: 'approve(address,uint256)', data: abi.encode(address(0), 100), value: 0
       })
     );
   }
