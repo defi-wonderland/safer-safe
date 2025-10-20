@@ -1,8 +1,5 @@
 # Canon Guard Invariant tests
 
-/!\ As of writing, Forge Foundry does not use corpus and coverage guided fuzzing
-by default - use the nightly version (1.3.0) if desired: `foundryup --install nightly` /!\
-
 ## Scope
 
 - `CanonGuard`

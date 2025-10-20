@@ -6,7 +6,6 @@ import {BaseHandlers, CanonGuard, CanonGuardFactory, Safe} from './handlers/Base
 import {HandlersAllowanceClaimor} from './handlers/HandlersAllowanceClaimor.t.sol';
 import {HandlersCappedTokenTransfersHub} from './handlers/HandlersCappedTokenTransfersHub.t.sol';
 import {HandlersEverclearTokenConversion} from './handlers/HandlersEverclearTokenConversion.t.sol';
-import {HandlersEverclearTokenStake} from './handlers/HandlersEverclearTokenStake.t.sol';
 import {HandlersOPxAction} from './handlers/HandlersOPxAction.t.sol';
 
 import {HandlersCanonGuard} from './handlers/HandlersCanonGuard.t.sol';
@@ -19,7 +18,6 @@ contract HandlersTarget is
   HandlersAllowanceClaimor,
   HandlersCappedTokenTransfersHub,
   HandlersEverclearTokenConversion,
-  HandlersEverclearTokenStake,
   HandlersOPxAction,
   HandlersSimpleTransfers
 {
