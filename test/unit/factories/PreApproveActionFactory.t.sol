@@ -6,7 +6,7 @@ import {Test} from 'forge-std/Test.sol';
 import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 import {IPreApproveAction} from 'interfaces/actions-builders/IPreApproveAction.sol';
 
-contract UnitApproveActionFactorycreateApproveAction is Test {
+contract UnitPreApproveActionFactorycreateApproveAction is Test {
   PreApproveActionFactory public preApproveActionFactory;
   IPreApproveAction public auxApproveAction;
 
