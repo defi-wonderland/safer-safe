@@ -2,20 +2,20 @@
 pragma solidity 0.8.30;
 
 /**
- * @title IApproveActionFactory
- * @notice Interface for the ApproveActionFactory contract
+ * @title IPreApproveActionFactory
+ * @notice Interface for the PreApproveActionFactory contract
  */
-interface IApproveActionFactory {
+interface IPreApproveActionFactory {
   // ~~~ FACTORY METHODS ~~~
 
   /**
-   * @notice Creates an ApproveAction contract
+   * @notice Creates an PreApproveAction contract
    * @param _actionsBuilder The actions builder contract address
    * @param _approvalDuration The approval duration
-   * @return _approveAction The ApproveAction contract address
+   * @return _preApproveAction The PreApproveAction contract address
    */
   function createApproveAction(
     address _actionsBuilder,
     uint256 _approvalDuration
-  ) external returns (address _approveAction);
+  ) external returns (address _preApproveAction);
 }
