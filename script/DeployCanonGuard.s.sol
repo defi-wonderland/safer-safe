@@ -25,7 +25,6 @@ import {SetEmergencyTriggerActionFactory} from 'contracts/factories/SetEmergency
 import {SimpleActionsFactory} from 'contracts/factories/SimpleActionsFactory.sol';
 import {SimpleTransfersFactory} from 'contracts/factories/SimpleTransfersFactory.sol';
 import {Script} from 'forge-std/Script.sol';
-import {ICanonGuard} from 'interfaces/ICanonGuard.sol';
 import {IAllowanceClaimorFactory} from 'interfaces/factories/IAllowanceClaimorFactory.sol';
 import {IApproveActionFactory} from 'interfaces/factories/IApproveActionFactory.sol';
 import {ICanonGuardFactory} from 'interfaces/factories/ICanonGuardFactory.sol';
@@ -51,9 +50,6 @@ import {SetGuardAction} from 'src/contracts/actions-builders/SetGuardAction.sol'
 contract DeployCanonGuard is Constants, Script {
   // ~~~ ERRORS ~~~
   error UnsupportedChainId();
-
-  // ~~~ CANON GUARD ~~~
-  ICanonGuard public canonGuard;
 
   // ~~~ FACTORIES ~~~
   IAllowanceClaimorFactory public allowanceClaimorFactory;
@@ -86,8 +82,6 @@ contract DeployCanonGuard is Constants, Script {
     _deployAllChainsFactories();
     _deployAllChainsContracts();
 
-    _deployCanonGuard();
-
     if (block.chainid == ETHEREUM_MAINNET_CHAIN_ID) {
       _deployEthereumFactories();
       _deployEthereumContracts();
@@ -97,21 +91,6 @@ contract DeployCanonGuard is Constants, Script {
     }
 
     vm.stopBroadcast();
-  }
-
-  function _deployCanonGuard() internal {
-    // Deploy the CanonGuard contract
-    canonGuard = ICanonGuard(
-      canonGuardFactory.createCanonGuard(
-        address(SAFE_PROXY),
-        SHORT_TX_EXECUTION_DELAY,
-        LONG_TX_EXECUTION_DELAY,
-        TX_EXPIRY_DELAY,
-        MAX_APPROVAL_DURATION,
-        EMERGENCY_TRIGGER,
-        EMERGENCY_CALLER
-      )
-    );
   }
 
   function _deployAllChainsFactories() internal {

@@ -12,13 +12,11 @@ import {SetEmergencyTriggerActionFactory} from 'contracts/factories/SetEmergency
 import {SimpleActionsFactory} from 'contracts/factories/SimpleActionsFactory.sol';
 import {SimpleTransfersFactory} from 'contracts/factories/SimpleTransfersFactory.sol';
 import {Test} from 'forge-std/Test.sol';
-import {ICanonGuard} from 'interfaces/ICanonGuard.sol';
 import {ICanonGuardFactory} from 'interfaces/factories/ICanonGuardFactory.sol';
 import {DeployCanonGuard} from 'script/DeployCanonGuard.s.sol';
 
 contract UnitDeployCanonGuard is DeployCanonGuard, Test {
   ICanonGuardFactory internal _auxCanonGuardFactory;
-  ICanonGuard internal _auxCanonGuard;
 
   function setUp() public {
     // Deploy the DeployCanonGuard contract
@@ -60,33 +58,6 @@ contract UnitDeployCanonGuard is DeployCanonGuard, Test {
 
     // it should deploy the common factories
     _assertCommonFactories();
-
-    // Deploy the CanonGuard contract
-    _auxCanonGuard = ICanonGuard(
-      deployCode(
-        'CanonGuard',
-        abi.encode(
-          address(canonGuardFactory),
-          SAFE_PROXY,
-          MULTI_SEND_CALL_ONLY,
-          SHORT_TX_EXECUTION_DELAY,
-          LONG_TX_EXECUTION_DELAY,
-          TX_EXPIRY_DELAY,
-          MAX_APPROVAL_DURATION,
-          EMERGENCY_TRIGGER,
-          EMERGENCY_CALLER
-        )
-      )
-    );
-
-    // it should deploy the CanonGuard contract with correct args
-    assertEq(address(canonGuard).code, address(_auxCanonGuard).code);
-    assertEq(address(canonGuard.SAFE()), address(SAFE_PROXY));
-    assertEq(canonGuard.MULTI_SEND_CALL_ONLY(), address(MULTI_SEND_CALL_ONLY));
-    assertEq(canonGuard.SHORT_TX_EXECUTION_DELAY(), SHORT_TX_EXECUTION_DELAY);
-    assertEq(canonGuard.LONG_TX_EXECUTION_DELAY(), LONG_TX_EXECUTION_DELAY);
-    assertEq(canonGuard.TX_EXPIRY_DELAY(), TX_EXPIRY_DELAY);
-    assertEq(canonGuard.MAX_APPROVAL_DURATION(), MAX_APPROVAL_DURATION);
   }
 
   function _assertCommonFactories() private view {

@@ -14,6 +14,8 @@ import {EthereumConstants} from 'script/Constants.sol';
 
 contract IntegrationBasicTest is DeployCanonGuard, EthereumConstants, Test {
   uint256 internal constant _ETHEREUM_FORK_BLOCK = 18_920_905;
+  address internal constant _EMERGENCY_TRIGGER = address(1);
+  address internal constant _EMERGENCY_CALLER = address(2);
 
   // ~~~ SAFE ~~~
   ISafe internal _safeProxy;
@@ -61,8 +63,8 @@ contract IntegrationBasicTest is DeployCanonGuard, EthereumConstants, Test {
         LONG_TX_EXECUTION_DELAY,
         TX_EXPIRY_DELAY,
         MAX_APPROVAL_DURATION,
-        EMERGENCY_TRIGGER,
-        EMERGENCY_CALLER
+        _EMERGENCY_TRIGGER,
+        _EMERGENCY_CALLER
       )
     );
 
