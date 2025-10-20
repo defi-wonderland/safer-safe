@@ -14,7 +14,7 @@ contract UnitSimpleActionsFactory is Test {
     simpleActionsFactory = new SimpleActionsFactory();
   }
 
-  function test_CreateSimpleActionsWhenCreatingASimpleActionsContract(
+  function test_CreateSimpleActions_WhenCreatingASimpleActionsContract(
     ISimpleActions.SimpleAction memory _simpleActionsA,
     ISimpleActions.SimpleAction memory _simpleActionsB
   ) external {
@@ -52,7 +52,7 @@ contract UnitSimpleActionsFactory is Test {
     assertEq(IActionsBuilder(_simpleActionsContract).PARENT(), address(simpleActionsFactory));
   }
 
-  function test_CreateSimpleActionWhenCreatingASimpleActionsContractWithASingleSimpleAction(
+  function test_CreateSimpleAction_WhenCreatingASimpleActionsContractWithASingleSimpleAction(
     ISimpleActions.SimpleAction memory _simpleActions
   ) external {
     ISimpleActions.SimpleAction[] memory _actions = new ISimpleActions.SimpleAction[](1);

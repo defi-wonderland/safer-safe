@@ -73,10 +73,7 @@ contract IntegrationBasicTest is DeployCanonGuard, EthereumConstants, Test {
     ISimpleActions.SimpleAction memory _depositAction =
       ISimpleActions.SimpleAction({target: address(WETH), signature: 'deposit()', data: bytes(''), value: 1});
     ISimpleActions.SimpleAction memory _transferAction = ISimpleActions.SimpleAction({
-      target: address(WETH),
-      signature: 'transfer(address,uint256)',
-      data: abi.encode(_safeOwner, 1),
-      value: 0
+      target: address(WETH), signature: 'transfer(address,uint256)', data: abi.encode(_safeOwner, 1), value: 0
     });
 
     ISimpleActions.SimpleAction[] memory _simpleActions = new ISimpleActions.SimpleAction[](2);

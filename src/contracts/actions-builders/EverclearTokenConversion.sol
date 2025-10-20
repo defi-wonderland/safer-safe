@@ -43,8 +43,9 @@ contract EverclearTokenConversion is IEverclearTokenConversion, ActionsBuilder {
     uint256 _amount = NEXT.balanceOf(address(ICanonGuard(msg.sender).SAFE()));
 
     _actions = new Action[](2);
-    _actions[0] =
-      Action({target: address(NEXT), data: abi.encodeCall(IERC20.approve, (address(CLEAR_LOCKBOX), _amount)), value: 0});
+    _actions[0] = Action({
+      target: address(NEXT), data: abi.encodeCall(IERC20.approve, (address(CLEAR_LOCKBOX), _amount)), value: 0
+    });
     _actions[1] =
       Action({target: address(CLEAR_LOCKBOX), data: abi.encodeCall(IxERC20Lockbox.deposit, (_amount)), value: 0});
   }
