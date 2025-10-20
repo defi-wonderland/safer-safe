@@ -33,9 +33,8 @@ interface ISimpleActionsFactory {
    * @param _smplActions The array of simple actions
    * @return _simpleActions The SimpleActions contract address
    */
-  function createSimpleActions(ISimpleActions.SimpleAction[] memory _smplActions)
-    external
-    returns (address _simpleActions);
+  function createSimpleActions(ISimpleActions
+        .SimpleAction[] memory _smplActions) external returns (address _simpleActions);
 
   /**
    * @notice Creates a SimpleActions contract with a single simple action
@@ -50,7 +49,7 @@ interface ISimpleActionsFactory {
    * @param _simpleAction The simple action
    * @return _simpleActions The SimpleActions contract address
    */
-  function createSimpleAction(ISimpleActions.SimpleAction memory _simpleAction)
-    external
-    returns (address _simpleActions);
+  function createSimpleAction(
+    ISimpleActions.SimpleAction memory _simpleAction
+  ) external returns (address _simpleActions);
 }

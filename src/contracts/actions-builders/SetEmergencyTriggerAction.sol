@@ -30,9 +30,7 @@ contract SetEmergencyTriggerAction is ISetEmergencyTriggerAction, ActionsBuilder
   function getActions() external view override returns (Action[] memory _actions) {
     _actions = new Action[](1);
     _actions[0] = Action({
-      target: msg.sender,
-      data: abi.encodeCall(IEmergencyModeHook.setEmergencyTrigger, (EMERGENCY_TRIGGER)),
-      value: 0
+      target: msg.sender, data: abi.encodeCall(IEmergencyModeHook.setEmergencyTrigger, (EMERGENCY_TRIGGER)), value: 0
     });
   }
 }

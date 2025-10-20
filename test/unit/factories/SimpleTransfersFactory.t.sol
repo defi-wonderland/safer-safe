@@ -15,7 +15,7 @@ contract UnitSimpleTransfersFactory is Test {
     simpleTransfersFactory = new SimpleTransfersFactory();
   }
 
-  function test_CreateSimpleTransfersWhenCreatingASimpleTransfersContract(
+  function test_CreateSimpleTransfers_WhenCreatingASimpleTransfersContract(
     ISimpleTransfers.TransferAction memory _transferActionA,
     ISimpleTransfers.TransferAction memory _transferActionB
   ) external {
@@ -47,7 +47,7 @@ contract UnitSimpleTransfersFactory is Test {
     assertTrue(simpleTransfersFactory.isChild(_simpleTransfers));
   }
 
-  function test_CreateSimpleTransferWhenCreatingASimpleTransfersContractWithASingleTransferAction(
+  function test_CreateSimpleTransfer_WhenCreatingASimpleTransfersContractWithASingleTransferAction(
     address _token,
     address _to,
     uint256 _amount

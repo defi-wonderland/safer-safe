@@ -92,7 +92,9 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
     address _emergencyTrigger,
     address _emergencyCaller
   ) SafeManageable(_safe) EmergencyModeHook(_emergencyTrigger, _emergencyCaller) {
-    if (_shortTxExecutionDelay > _longTxExecutionDelay) revert ShortDelayCannotBeGreaterThanLongDelay();
+    if (_shortTxExecutionDelay > _longTxExecutionDelay) {
+      revert ShortDelayCannotBeGreaterThanLongDelay();
+    }
     if (_txExpiryDelay > type(uint128).max) revert TxExpiryDelayCannotBeGreaterThanMax();
     if (_longTxExecutionDelay > type(uint128).max) revert LongDelayCannotBeGreaterThanMax();
 
@@ -286,7 +288,9 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
    * @param _signatures The signatures for the transaction
    */
   function _execSafeTransaction(bytes memory _multiSendData, bytes memory _signatures) internal {
-    SAFE.execTransaction{value: msg.value}({
+    SAFE.execTransaction{
+      value: msg.value
+    }({
       to: MULTI_SEND_CALL_ONLY,
       value: 0, // Value must be 0 for delegatecall operations
       data: _multiSendData,
@@ -451,11 +455,8 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
    * @param _actions The batch of actions to encode
    * @return _multiSendData The encoded MultiSend data
    */
-  function _buildMultiSendData(IActionsBuilder.Action[] memory _actions)
-    internal
-    pure
-    returns (bytes memory _multiSendData)
-  {
+  function _buildMultiSendData(IActionsBuilder
+        .Action[] memory _actions) internal pure returns (bytes memory _multiSendData) {
     // Initialize an empty bytes array to avoid null reference
     _multiSendData = new bytes(0);
 

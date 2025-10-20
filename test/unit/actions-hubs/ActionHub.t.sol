@@ -15,26 +15,26 @@ contract UnitActionHub is Test {
     actionHub = new ActionHubForTest(parent);
   }
 
-  function test_ConstructorWhenCalledByAChildContract() external view {
+  function test_Constructor_WhenCalledByAChildContract() external view {
     // it sets the parent
     assertEq(actionHub.PARENT(), parent);
   }
 
-  function test_IsHubChildWhenTheActionsBuilderIsAChild(address _actionsBuilder) external {
+  function test_IsHubChild_WhenTheActionsBuilderIsAChild(address _actionsBuilder) external {
     actionHub.forTest_set__actionsBuilders(_actionsBuilder, true);
 
     // it returns true
     assertTrue(actionHub.isHubChild(_actionsBuilder));
   }
 
-  function test_IsHubChildWhenTheActionsBuilderIsNotAChild(address _actionsBuilder) external {
+  function test_IsHubChild_WhenTheActionsBuilderIsNotAChild(address _actionsBuilder) external {
     actionHub.forTest_set__actionsBuilders(_actionsBuilder, false);
 
     // it returns false
     assertFalse(actionHub.isHubChild(_actionsBuilder));
   }
 
-  function test__createNewActionsBuilderWhenCalled(
+  function test__createNewActionsBuilder_WhenCalled(
     bytes32 _salt,
     address _token,
     uint256 _amount,

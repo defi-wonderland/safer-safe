@@ -43,7 +43,11 @@ abstract contract OnlyCanonGuard is BaseTransactionGuard, IOnlyCanonGuard {
   }
 
   /// @inheritdoc ITransactionGuard
-  function checkAfterExecution(bytes32, /* _hash */ bool /* _success */ ) external pure virtual override {
+  function checkAfterExecution(
+    bytes32,
+    /* _hash */
+    bool /* _success */
+  ) external pure virtual override {
     // No post-execution checks needed
   }
 }

@@ -464,19 +464,13 @@ contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
     address _recipient = makeAddr('recipient');
     address _wethTransferSimpleAction = simpleActionsFactory.createSimpleAction(
       ISimpleActions.SimpleAction({
-        target: address(WETH),
-        signature: 'transfer(address,uint256)',
-        data: abi.encode(_recipient, 1 ether),
-        value: 0
+        target: address(WETH), signature: 'transfer(address,uint256)', data: abi.encode(_recipient, 1 ether), value: 0
       })
     );
 
     address _usdcTransferSimpleAction = simpleActionsFactory.createSimpleAction(
       ISimpleActions.SimpleAction({
-        target: address(USDC),
-        signature: 'transfer(address,uint256)',
-        data: abi.encode(_recipient, 1 ether),
-        value: 0
+        target: address(USDC), signature: 'transfer(address,uint256)', data: abi.encode(_recipient, 1 ether), value: 0
       })
     );
 
