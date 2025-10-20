@@ -6,7 +6,7 @@ import {PreApproveAction} from 'src/contracts/actions-builders/PreApproveAction.
 import {ICanonGuard} from 'src/interfaces/ICanonGuard.sol';
 import {IActionsBuilder} from 'src/interfaces/actions-builders/IActionsBuilder.sol';
 
-contract UnitApproveAction is Test {
+contract UnitPreApproveAction is Test {
   uint256 public constant APPROVAL_DURATION = 100;
   PreApproveAction public preApproveAction;
   address public actionsBuilder = makeAddr('actionsBuilder');
