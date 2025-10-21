@@ -77,7 +77,7 @@ contract CappedTokenTransfersHub is ActionHub, ICappedTokenTransfersHub, SafeMan
   ) external isSafeOwner returns (address _actionsBuilder) {
     if (!__tokens.contains(_token)) revert TokenNotRegisteredInHub();
 
-    _actionsBuilder = address(new CappedTokenTransfers(address(this), _token, _amount, RECIPIENT, address(this)));
+    _actionsBuilder = address(new CappedTokenTransfers(_token, _amount, RECIPIENT));
 
     _saveNewActionsBuilder(_actionsBuilder);
   }
