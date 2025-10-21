@@ -26,6 +26,7 @@ UnitCappedTokenTransfersHub::updateState
 │   │   ├── it resets the total spent
 │   │   └── it updates the current epoch
 │   ├── it increments the total spent
+│   ├── it emits the StateUpdated event
 │   └── when the total spent is greater than the cap
 │       └── it reverts
 └── When not called by the safe
