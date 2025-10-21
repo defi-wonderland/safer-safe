@@ -68,16 +68,6 @@ interface ICanonGuard is ISafeManageable {
   event NoActionTransactionExecuted(bytes32 indexed _safeTxHash, address[] _signers);
 
   /**
-   * @notice Emitted when a enqueued transaction is cancelled
-   * @param _actionsBuilder The actions builder contract address
-   * @param _proposer The address of the proposer of the transaction
-   * @param _safeTxHash The hash of the Safe transaction
-   */
-  event EnqueuedTransactionCancelled(
-    address indexed _actionsBuilder, address indexed _proposer, bytes32 indexed _safeTxHash
-  );
-
-  /**
    * @notice Thrown when no transaction is queued for the actions builder
    */
   error NoTransactionQueued();
@@ -133,16 +123,6 @@ interface ICanonGuard is ISafeManageable {
    */
   error NotAnActionsBuilder();
 
-  /**
-   * @notice Thrown when the caller is not the proposer of the transaction being cancelled
-   */
-  error CallerMustBeTransactionProposer();
-
-  /**
-   * @notice Thrown when attempting to cancel a transaction with approved hash signers
-   */
-  error TransactionWithSignaturesCannotBeCancelled();
-
   // ~~~ ADMIN METHODS ~~~
 
   /**
@@ -185,14 +165,6 @@ interface ICanonGuard is ISafeManageable {
    * @dev Can be called by anyone if not in emergency mode
    */
   function executeNoActionTransaction() external;
-
-  /**
-   * @notice Cancels an enqueued transaction
-   * @dev Can only be called by the proposer of the transaction
-   * @dev The transaction must not have any approved hash signers
-   * @param _actionsBuilder The actions builder contract address
-   */
-  function cancelEnqueuedTransaction(address _actionsBuilder) external;
 
   // ~~~ STORAGE METHODS ~~~
 

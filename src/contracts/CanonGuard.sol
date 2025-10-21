@@ -166,29 +166,6 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
     emit NoActionTransactionExecuted(_safeTxHash, _signers);
   }
 
-  /// @inheritdoc ICanonGuard
-  function cancelEnqueuedTransaction(address _actionsBuilder) external {
-    _onBeforeExecution();
-
-    TransactionInfo memory _txInfo = transactionsInfo[_actionsBuilder];
-    if (_txInfo.expiresAt == 0) revert NoTransactionQueued();
-    if (!emergencyMode && msg.sender != _txInfo.proposer) revert CallerMustBeTransactionProposer();
-
-    IActionsBuilder.Action[] memory _actions = abi.decode(_txInfo.actionsData, (IActionsBuilder.Action[]));
-
-    bytes memory _multiSendData = _buildMultiSendData(_actions);
-    bytes32 _safeTxHash = _getSafeTransactionHash(_multiSendData, SAFE.nonce());
-    address[] memory _signers = _getApprovedHashSigners(_safeTxHash);
-
-    if (_signers.length > 0) revert TransactionWithSignaturesCannotBeCancelled();
-
-    // Remove the transaction from the queue and mapping
-    delete transactionsInfo[_actionsBuilder];
-    __queuedActionBuilders.remove(_actionsBuilder);
-
-    emit EnqueuedTransactionCancelled(_actionsBuilder, msg.sender, _safeTxHash);
-  }
-
   // ~~~ GETTER METHODS ~~~
 
   /// @inheritdoc ICanonGuard
