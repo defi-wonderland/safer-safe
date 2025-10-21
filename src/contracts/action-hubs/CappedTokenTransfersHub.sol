@@ -77,12 +77,9 @@ contract CappedTokenTransfersHub is ActionHub, ICappedTokenTransfersHub, SafeMan
   ) external isSafeOwner returns (address _actionsBuilder) {
     if (!__tokens.contains(_token)) revert TokenNotRegisteredInHub();
 
-    bytes memory _initCode = abi.encodePacked(
-      type(CappedTokenTransfers).creationCode, abi.encode(address(this), _token, _amount, RECIPIENT, address(this))
-    );
-    bytes32 _salt = keccak256(abi.encode(_token, _amount, RECIPIENT));
+    _actionsBuilder = address(new CappedTokenTransfers(address(this), _token, _amount, RECIPIENT, address(this)));
 
-    _actionsBuilder = _createNewActionsBuilder(_initCode, _salt);
+    _saveNewActionsBuilder(_actionsBuilder);
   }
 
   /// @inheritdoc ICappedTokenTransfersHub
