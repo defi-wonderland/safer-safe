@@ -22,6 +22,7 @@ import {MultiSendCallOnly} from '@safe-smart-account/libraries/MultiSendCallOnly
 import {EmergencyModeHook} from 'contracts/EmergencyModeHook.sol';
 import {OnlyCanonGuard} from 'contracts/OnlyCanonGuard.sol';
 import {SafeManageable} from 'contracts/SafeManageable.sol';
+import {IERC20} from 'forge-std/interfaces/IERC20.sol';
 import {ICanonGuard} from 'interfaces/ICanonGuard.sol';
 import {IActionHub} from 'interfaces/action-hubs/IActionHub.sol';
 import {IActionHubChild} from 'interfaces/action-hubs/IActionHubChild.sol';
@@ -187,6 +188,18 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
     __queuedActionBuilders.remove(_actionsBuilder);
 
     emit EnqueuedTransactionCancelled(_actionsBuilder, msg.sender, _safeTxHash);
+  }
+
+  /// @inheritdoc ICanonGuard
+  function collectDust(address _token) external {
+    if (_token == address(0)) {
+      uint256 _balance = address(this).balance;
+      if (_balance != 0) payable(address(SAFE)).transfer(_balance);
+    } else {
+      IERC20 _token = IERC20(_token);
+      uint256 _balance = _token.balanceOf(address(this));
+      if (_balance != 0) _token.transfer(address(SAFE), _balance);
+    }
   }
 
   // ~~~ GETTER METHODS ~~~
