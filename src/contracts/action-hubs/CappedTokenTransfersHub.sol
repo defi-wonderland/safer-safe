@@ -100,6 +100,8 @@ contract CappedTokenTransfersHub is ActionHub, ICappedTokenTransfersHub, SafeMan
     if (totalSpent[_token] > cap[_token]) {
       revert CapExceeded();
     }
+
+    emit StateUpdated(_token, _amount);
   }
 
   /// @inheritdoc ICappedTokenTransfersHub

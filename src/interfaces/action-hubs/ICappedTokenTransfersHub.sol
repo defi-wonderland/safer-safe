@@ -34,6 +34,13 @@ interface ICappedTokenTransfersHub is ISafeManageable {
   error TokenAlreadyRegisteredInHub(address _token);
 
   /**
+   * @notice Emitted when the state is updated for a token with a certain amount
+   * @param _token The token that was updated
+   * @param _amountSpent The amount of tokens that were spent
+   */
+  event StateUpdated(address indexed _token, uint256 _amountSpent);
+
+  /**
    * @notice Checks if the spending cap is exceeded and resets the spending if we're in a new epoch.
    * @param _token The token to update the state for
    * @param _amount The amount of tokens to update the state for. Reverts if the spending cap is exceeded with this amount.
