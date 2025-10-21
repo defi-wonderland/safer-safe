@@ -43,7 +43,7 @@ contract SimpleTransfers is ISimpleTransfers, ActionsBuilder {
       _actions.push(_action);
       emit TransferActionAdded(_transferAction.token, _transferAction.to, _transferAction.amount);
 
-      // Save the array in order to fetch it from the UI
+      // Save the array for data availability
       _transferActions.push(_inputTransferActions[_i]);
     }
   }

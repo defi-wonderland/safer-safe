@@ -44,7 +44,7 @@ contract SimpleActions is ISimpleActions, ActionsBuilder {
       _actions.push(_action);
       emit SimpleActionAdded(_simpleAction.target, _simpleAction.signature, _simpleAction.data, _simpleAction.value);
 
-      // Save the array in order to fetch it from the UI
+      // Save the array for data availability
       _simpleActions.push(_inputSimpleActions[_i]);
     }
   }
