@@ -1,4 +1,4 @@
-UnitPreApproveActionFactory::createApproveAction
+UnitPreApproveActionFactory::createPreApproveAction
 └── when called
     ├── it should deploy an PreApproveAction contract with correct args
     ├── it should match the parameters sent to the constructor

@@ -13,7 +13,7 @@ contract PreApproveActionFactory is IPreApproveActionFactory, Factory {
   // ~~~ FACTORY METHODS ~~~
 
   /// @inheritdoc IPreApproveActionFactory
-  function createApproveAction(
+  function createPreApproveAction(
     address _actionsBuilder,
     uint256 _approvalDuration
   ) external returns (address _preApproveAction) {

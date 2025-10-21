@@ -46,8 +46,8 @@ contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
 
     // Deploy the PreApproveAction contract for both approve and disapprove
     preApproveAction =
-      IPreApproveAction(preApproveActionFactory.createApproveAction(address(actionsBuilder), APPROVAL_DURATION));
-    disapproveAction = IPreApproveAction(preApproveActionFactory.createApproveAction(address(actionsBuilder), 0));
+      IPreApproveAction(preApproveActionFactory.createPreApproveAction(address(actionsBuilder), APPROVAL_DURATION));
+    disapproveAction = IPreApproveAction(preApproveActionFactory.createPreApproveAction(address(actionsBuilder), 0));
 
     // Deploy emergency actions
     setEmergencyCallerAction =
@@ -426,7 +426,7 @@ contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
     uint256 _originalBlockTimestamp = block.timestamp;
 
     preApproveAction = IPreApproveAction(
-      preApproveActionFactory.createApproveAction(address(setEmergencyCallerAction), APPROVAL_DURATION)
+      preApproveActionFactory.createPreApproveAction(address(setEmergencyCallerAction), APPROVAL_DURATION)
     );
 
     vm.prank(_safeOwners[0]);

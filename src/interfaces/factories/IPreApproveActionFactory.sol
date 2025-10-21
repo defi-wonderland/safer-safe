@@ -14,7 +14,7 @@ interface IPreApproveActionFactory {
    * @param _approvalDuration The approval duration
    * @return _preApproveAction The PreApproveAction contract address
    */
-  function createApproveAction(
+  function createPreApproveAction(
     address _actionsBuilder,
     uint256 _approvalDuration
   ) external returns (address _preApproveAction);

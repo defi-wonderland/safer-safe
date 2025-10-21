@@ -6,7 +6,7 @@ import {Test} from 'forge-std/Test.sol';
 import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 import {IPreApproveAction} from 'interfaces/actions-builders/IPreApproveAction.sol';
 
-contract UnitPreApproveActionFactorycreateApproveAction is Test {
+contract UnitPreApproveActionFactorycreatePreApproveAction is Test {
   PreApproveActionFactory public preApproveActionFactory;
   IPreApproveAction public auxApproveAction;
 
@@ -15,7 +15,7 @@ contract UnitPreApproveActionFactorycreateApproveAction is Test {
   }
 
   function test_WhenCalled(address _actionsBuilder, uint256 _approvalDuration) external {
-    address _preApproveAction = preApproveActionFactory.createApproveAction(_actionsBuilder, _approvalDuration);
+    address _preApproveAction = preApproveActionFactory.createPreApproveAction(_actionsBuilder, _approvalDuration);
 
     auxApproveAction = IPreApproveAction(
       deployCode('PreApproveAction', abi.encode(address(preApproveActionFactory), _actionsBuilder, _approvalDuration))
