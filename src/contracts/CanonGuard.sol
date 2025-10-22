@@ -288,9 +288,7 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
    * @param _signatures The signatures for the transaction
    */
   function _execSafeTransaction(bytes memory _multiSendData, bytes memory _signatures) internal {
-    SAFE.execTransaction{
-      value: msg.value
-    }({
+    SAFE.execTransaction{value: msg.value}({
       to: MULTI_SEND_CALL_ONLY,
       value: 0, // Value must be 0 for delegatecall operations
       data: _multiSendData,
