@@ -2,10 +2,10 @@
 pragma solidity 0.8.30;
 
 /**
- * @title IApproveAction
- * @notice Interface for the ApproveAction contract
+ * @title IPreApproveAction
+ * @notice Interface for the PreApproveAction contract
  */
-interface IApproveAction {
+interface IPreApproveAction {
   // ~~~ STORAGE METHODS ~~~
 
   /**

@@ -29,4 +29,12 @@ interface ISimpleTransfers {
    * @param _amount The amount of the transfer
    */
   event TransferActionAdded(address indexed _token, address indexed _to, uint256 _amount);
+
+  // ~~~ VIEW METHODS ~~~
+
+  /**
+   * @notice Gets the array of transfer actions
+   * @return _transferActions The array of transfer actions
+   */
+  function transferActions() external view returns (TransferAction[] memory _transferActions);
 }
