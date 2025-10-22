@@ -4,11 +4,10 @@ pragma solidity ^0.8.0;
 import {HandlerHelpers} from './HandlerHelpers.sol';
 
 import {AllowanceClaimorFactory} from 'contracts/factories/AllowanceClaimorFactory.sol';
-import {ApproveActionFactory} from 'contracts/factories/ApproveActionFactory.sol';
 import {CappedTokenTransfersHubFactory} from 'contracts/factories/CappedTokenTransfersHubFactory.sol';
 import {EverclearTokenConversionFactory} from 'contracts/factories/EverclearTokenConversionFactory.sol';
-import {EverclearTokenStakeFactory} from 'contracts/factories/EverclearTokenStakeFactory.sol';
 import {OPxActionFactory} from 'contracts/factories/OPxActionFactory.sol';
+import {PreApproveActionFactory} from 'contracts/factories/PreApproveActionFactory.sol';
 import {SimpleActionsFactory} from 'contracts/factories/SimpleActionsFactory.sol';
 import {SimpleTransfersFactory} from 'contracts/factories/SimpleTransfersFactory.sol';
 
@@ -30,10 +29,9 @@ abstract contract BaseHandlers is HandlerHelpers {
 
   // All Actions builders factories
   AllowanceClaimorFactory public allowanceClaimorFactory;
-  ApproveActionFactory public approveActionFactory;
+  PreApproveActionFactory public preApproveActionFactory;
   CappedTokenTransfersHubFactory public cappedTokenTransfersHubFactory;
   EverclearTokenConversionFactory public everclearTokenConversionFactory;
-  EverclearTokenStakeFactory public everclearTokenStakeFactory;
   OPxActionFactory public opxActionFactory;
   SimpleActionsFactory public simpleActionsFactory;
   SimpleTransfersFactory public simpleTransfersFactory;
@@ -84,10 +82,9 @@ abstract contract BaseHandlers is HandlerHelpers {
     actionTarget = new ActionTarget();
 
     allowanceClaimorFactory = new AllowanceClaimorFactory();
-    approveActionFactory = new ApproveActionFactory();
+    preApproveActionFactory = new PreApproveActionFactory();
     cappedTokenTransfersHubFactory = new CappedTokenTransfersHubFactory();
     everclearTokenConversionFactory = new EverclearTokenConversionFactory();
-    everclearTokenStakeFactory = new EverclearTokenStakeFactory();
     opxActionFactory = new OPxActionFactory();
     simpleActionsFactory = new SimpleActionsFactory();
     simpleTransfersFactory = new SimpleTransfersFactory();
