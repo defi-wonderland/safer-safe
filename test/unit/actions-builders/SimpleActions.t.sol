@@ -44,6 +44,12 @@ contract UnitSimpleActionsconstructor is Test {
       assertEq(simpleActions.getActions()[_i].target, _simpleAction.target);
       assertEq(simpleActions.getActions()[_i].data, _completeCallData);
       assertEq(simpleActions.getActions()[_i].value, actions[_i].value);
+
+      // it should save the entire array of actions
+      assertEq(simpleActions.simpleActions()[_i].target, _simpleAction.target);
+      assertEq(simpleActions.simpleActions()[_i].signature, _simpleAction.signature);
+      assertEq(simpleActions.simpleActions()[_i].data, _simpleAction.data);
+      assertEq(simpleActions.simpleActions()[_i].value, _simpleAction.value);
     }
   }
 }

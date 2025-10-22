@@ -40,6 +40,17 @@ contract UnitSimpleTransfersFactory is Test {
     assertEq(_actions[1].data, abi.encodeCall(IERC20.transfer, (_transferActionB.to, _transferActionB.amount)));
     assertEq(_actions[1].value, 0);
 
+    // it should save the entire array of transfer actions
+    ISimpleTransfers.TransferAction[] memory _savedTransferActions =
+      ISimpleTransfers(_simpleTransfers).transferActions();
+    assertEq(_savedTransferActions.length, 2);
+    assertEq(_savedTransferActions[0].token, _transferActionA.token);
+    assertEq(_savedTransferActions[0].to, _transferActionA.to);
+    assertEq(_savedTransferActions[0].amount, _transferActionA.amount);
+    assertEq(_savedTransferActions[1].token, _transferActionB.token);
+    assertEq(_savedTransferActions[1].to, _transferActionB.to);
+    assertEq(_savedTransferActions[1].amount, _transferActionB.amount);
+
     // it should set the parent address in the child contract
     assertEq(IActionsBuilder(_simpleTransfers).PARENT(), address(simpleTransfersFactory));
 
@@ -70,6 +81,14 @@ contract UnitSimpleTransfersFactory is Test {
     assertEq(_actions[0].target, _token);
     assertEq(_actions[0].data, abi.encodeCall(IERC20.transfer, (_to, _amount)));
     assertEq(_actions[0].value, 0);
+
+    // it should save the entire array of transfer actions
+    ISimpleTransfers.TransferAction[] memory _savedTransferActions =
+      ISimpleTransfers(_simpleTransfers).transferActions();
+    assertEq(_savedTransferActions.length, 1);
+    assertEq(_savedTransferActions[0].token, _token);
+    assertEq(_savedTransferActions[0].to, _to);
+    assertEq(_savedTransferActions[0].amount, _amount);
 
     // it should set the parent address in the child contract
     assertEq(IActionsBuilder(_simpleTransfers).PARENT(), address(simpleTransfersFactory));

@@ -36,6 +36,11 @@ contract UnitSimpleTransfersconstructor is Test {
       assertEq(_actions[_i].target, transferActions[_i].token);
       assertEq(_actions[_i].data, abi.encodeCall(IERC20.transfer, (_transferAction.to, _transferAction.amount)));
       assertEq(_actions[_i].value, 0);
+
+      // it should save the entire array of transfer actions
+      assertEq(simpleTransfers.transferActions()[_i].token, _transferAction.token);
+      assertEq(simpleTransfers.transferActions()[_i].to, _transferAction.to);
+      assertEq(simpleTransfers.transferActions()[_i].amount, _transferAction.amount);
     }
   }
 }

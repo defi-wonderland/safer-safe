@@ -3,22 +3,22 @@ pragma solidity 0.8.30;
 
 import {ActionsBuilder} from 'contracts/actions-builders/ActionsBuilder.sol';
 import {ICanonGuard} from 'interfaces/ICanonGuard.sol';
-import {IApproveAction} from 'interfaces/actions-builders/IApproveAction.sol';
+import {IPreApproveAction} from 'interfaces/actions-builders/IPreApproveAction.sol';
 
 /**
- * @title ApproveAction
+ * @title PreApproveAction
  * @notice Contract that builds an action to approve the actions builder or action hub
  * @dev Builds an action that calls ICanonGuard.approveActionsBuilderOrHub with the approval duration
  */
-contract ApproveAction is IApproveAction, ActionsBuilder {
-  /// @inheritdoc IApproveAction
+contract PreApproveAction is IPreApproveAction, ActionsBuilder {
+  /// @inheritdoc IPreApproveAction
   address public immutable ACTIONS_BUILDER;
 
-  /// @inheritdoc IApproveAction
+  /// @inheritdoc IPreApproveAction
   uint256 public immutable APPROVAL_DURATION;
 
   /**
-   * @notice Constructor that sets up the ApproveAction contract
+   * @notice Constructor that sets up the PreApproveAction contract
    * @param _parent The parent that deployed the actions builder
    * @param _actionsBuilder The actions builder or action hub contract address
    * @param _approvalDuration The approval duration
