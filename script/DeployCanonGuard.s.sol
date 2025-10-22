@@ -64,6 +64,18 @@ contract DeployCanonGuard is Constants, Script {
   ISimpleActionsFactory public simpleActionsFactory;
   ISimpleTransfersFactory public simpleTransfersFactory;
 
+  // ~~~ DUMMY CONTRACTS ~~~
+  AllowanceClaimor internal _allowanceClaimor;
+  ApproveAction internal _approveAction;
+  CappedTokenTransfers internal _cappedTokenTransfers;
+  ChangeSafeGuardAction internal _changeSafeGuardAction;
+  SetEmergencyCallerAction internal _setEmergencyCallerAction;
+  SetEmergencyTriggerAction internal _setEmergencyTriggerAction;
+  SimpleActions internal _simpleActions;
+  SimpleTransfers internal _simpleTransfers;
+  CappedTokenTransfersHub internal _cappedTokenTransfersHub;
+  CanonGuard internal _canonGuard;
+
   // ~~~ ACTIONS BUILDERS ~~~
   SetGuardAction public setGuardAction;
   UnsetEmergencyModeAction public unsetEmergencyModeAction;
@@ -114,18 +126,19 @@ contract DeployCanonGuard is Constants, Script {
   }
 
   function _deployAllChainsContracts() internal {
-    new AllowanceClaimor(DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS);
-    new ApproveAction(DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_APPROVAL_DURATION);
-    new CappedTokenTransfers(DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_AMOUNT, DUMMY_ADDRESS, DUMMY_ADDRESS);
-    new ChangeSafeGuardAction(DUMMY_ADDRESS, DUMMY_ADDRESS);
-    new SetEmergencyCallerAction(DUMMY_ADDRESS, DUMMY_ADDRESS);
-    new SetEmergencyTriggerAction(DUMMY_ADDRESS, DUMMY_ADDRESS);
-    new SimpleActions(DUMMY_ADDRESS, new SimpleActions.SimpleAction[](0));
-    new SimpleTransfers(DUMMY_ADDRESS, new SimpleTransfers.TransferAction[](0));
-    new CappedTokenTransfersHub(
+    _allowanceClaimor = new AllowanceClaimor(DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS);
+    _approveAction = new ApproveAction(DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_APPROVAL_DURATION);
+    _cappedTokenTransfers =
+      new CappedTokenTransfers(DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_AMOUNT, DUMMY_ADDRESS, DUMMY_ADDRESS);
+    _changeSafeGuardAction = new ChangeSafeGuardAction(DUMMY_ADDRESS, DUMMY_ADDRESS);
+    _setEmergencyCallerAction = new SetEmergencyCallerAction(DUMMY_ADDRESS, DUMMY_ADDRESS);
+    _setEmergencyTriggerAction = new SetEmergencyTriggerAction(DUMMY_ADDRESS, DUMMY_ADDRESS);
+    _simpleActions = new SimpleActions(DUMMY_ADDRESS, new SimpleActions.SimpleAction[](0));
+    _simpleTransfers = new SimpleTransfers(DUMMY_ADDRESS, new SimpleTransfers.TransferAction[](0));
+    _cappedTokenTransfersHub = new CappedTokenTransfersHub(
       DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS, new address[](0), new uint256[](0), DUMMY_EPOCH_LENGTH
     );
-    new CanonGuard(
+    _canonGuard = new CanonGuard(
       DUMMY_ADDRESS,
       DUMMY_ADDRESS,
       DUMMY_ADDRESS,

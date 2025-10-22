@@ -7,4 +7,5 @@ UnitDeployCanonGuard
 │   └── it should deploy the optimism factories
 └── when deploying to other chains
     ├── it should deploy the common factories
-    └── it should deploy the factories for the chain
+    ├── it should deploy the factories for the chain
+    └── it should deploy the common contracts for the chain

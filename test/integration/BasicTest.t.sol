@@ -1,16 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import {Test} from 'forge-std/Test.sol';
-
-import {ICanonGuard} from 'interfaces/ICanonGuard.sol';
-import {ISimpleActions} from 'interfaces/actions-builders/ISimpleActions.sol';
-
 import {ISafe} from '@safe-smart-account/interfaces/ISafe.sol';
-
-import {DeployCanonGuard} from 'script/DeployCanonGuard.s.sol';
-
+import {Test} from 'forge-std/Test.sol';
+import {ISimpleActions} from 'interfaces/actions-builders/ISimpleActions.sol';
 import {EthereumConstants} from 'script/Constants.sol';
+import {DeployCanonGuard} from 'script/DeployCanonGuard.s.sol';
+import {CanonGuard} from 'src/contracts/CanonGuard.sol';
 
 contract IntegrationBasicTest is DeployCanonGuard, EthereumConstants, Test {
   uint256 internal constant _ETHEREUM_FORK_BLOCK = 18_920_905;
@@ -21,9 +17,6 @@ contract IntegrationBasicTest is DeployCanonGuard, EthereumConstants, Test {
   ISafe internal _safeProxy;
   address internal _safeOwner;
   uint256 internal _safeThreshold;
-
-  // ~~~ CANON_GUARD ~~~
-  ICanonGuard internal _canonGuard;
 
   // ~~~ ACTIONS ~~~
   address internal _actionsBuilder;
@@ -55,8 +48,8 @@ contract IntegrationBasicTest is DeployCanonGuard, EthereumConstants, Test {
     // Deploy the CanonGuard contract
     run();
 
-    // Deploy the CanonGuard contract
-    _canonGuard = ICanonGuard(
+    // Deploy the CanonGuard contract (overriding the dummy contract)
+    _canonGuard = CanonGuard(
       canonGuardFactory.createCanonGuard(
         address(_safeProxy),
         SHORT_TX_EXECUTION_DELAY,
