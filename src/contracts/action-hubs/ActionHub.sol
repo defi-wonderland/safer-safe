@@ -2,7 +2,6 @@
 pragma solidity 0.8.30;
 
 import {IActionHub} from 'interfaces/action-hubs/IActionHub.sol';
-import {CREATE3} from 'solady/utils/CREATE3.sol';
 
 abstract contract ActionHub is IActionHub {
   /// @inheritdoc IActionHub
