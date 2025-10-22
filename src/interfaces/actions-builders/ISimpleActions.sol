@@ -32,4 +32,12 @@ interface ISimpleActions {
    * @param _value The value of the action
    */
   event SimpleActionAdded(address indexed _target, string indexed _signature, bytes _data, uint256 _value);
+
+  // ~~~ VIEW METHODS ~~~
+
+  /**
+   * @notice Gets the array of simple actions
+   * @return _simpleActions The array of simple actions
+   */
+  function simpleActions() external view returns (SimpleAction[] memory _simpleActions);
 }

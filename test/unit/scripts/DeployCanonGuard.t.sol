@@ -2,20 +2,20 @@
 pragma solidity 0.8.30;
 
 import {AllowanceClaimor} from 'contracts/actions-builders/AllowanceClaimor.sol';
-import {ApproveAction} from 'contracts/actions-builders/ApproveAction.sol';
 import {CappedTokenTransfers} from 'contracts/actions-builders/CappedTokenTransfers.sol';
 import {ChangeSafeGuardAction} from 'contracts/actions-builders/ChangeSafeGuardAction.sol';
+import {PreApproveAction} from 'contracts/actions-builders/PreApproveAction.sol';
 import {SetEmergencyCallerAction} from 'contracts/actions-builders/SetEmergencyCallerAction.sol';
 import {SetEmergencyTriggerAction} from 'contracts/actions-builders/SetEmergencyTriggerAction.sol';
 import {SimpleActions} from 'contracts/actions-builders/SimpleActions.sol';
 import {SimpleTransfers} from 'contracts/actions-builders/SimpleTransfers.sol';
 import {UnsetEmergencyModeAction} from 'contracts/actions-builders/UnsetEmergencyModeAction.sol';
 import {AllowanceClaimorFactory} from 'contracts/factories/AllowanceClaimorFactory.sol';
-import {ApproveActionFactory} from 'contracts/factories/ApproveActionFactory.sol';
 import {CappedTokenTransfersHubFactory} from 'contracts/factories/CappedTokenTransfersHubFactory.sol';
 import {ChangeSafeGuardActionFactory} from 'contracts/factories/ChangeSafeGuardActionFactory.sol';
 import {EverclearTokenConversionFactory} from 'contracts/factories/EverclearTokenConversionFactory.sol';
 import {OPxActionFactory} from 'contracts/factories/OPxActionFactory.sol';
+import {PreApproveActionFactory} from 'contracts/factories/PreApproveActionFactory.sol';
 import {SetEmergencyCallerActionFactory} from 'contracts/factories/SetEmergencyCallerActionFactory.sol';
 import {SetEmergencyTriggerActionFactory} from 'contracts/factories/SetEmergencyTriggerActionFactory.sol';
 import {SimpleActionsFactory} from 'contracts/factories/SimpleActionsFactory.sol';
@@ -77,7 +77,7 @@ contract UnitDeployCanonGuard is DeployCanonGuard, Test {
 
   function _assertCommonFactories() private view {
     assertEq(address(allowanceClaimorFactory).code, type(AllowanceClaimorFactory).runtimeCode);
-    assertEq(address(approveActionFactory).code, type(ApproveActionFactory).runtimeCode);
+    assertEq(address(preApproveActionFactory).code, type(PreApproveActionFactory).runtimeCode);
     assertEq(address(canonGuardFactory).code, address(_auxCanonGuardFactory).code);
     assertEq(canonGuardFactory.MULTI_SEND_CALL_ONLY(), address(MULTI_SEND_CALL_ONLY));
     assertEq(address(cappedTokenTransfersHubFactory).code, type(CappedTokenTransfersHubFactory).runtimeCode);
@@ -92,8 +92,9 @@ contract UnitDeployCanonGuard is DeployCanonGuard, Test {
     AllowanceClaimor _auxAllowanceClaimor = AllowanceClaimor(
       deployCode('AllowanceClaimor', abi.encode(DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS))
     );
-    ApproveAction _auxApproveAction =
-      ApproveAction(deployCode('ApproveAction', abi.encode(DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_APPROVAL_DURATION)));
+    PreApproveAction _auxPreApproveAction = PreApproveAction(
+      deployCode('PreApproveAction', abi.encode(DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_APPROVAL_DURATION))
+    );
     CappedTokenTransfers _auxCappedTokenTransfers = CappedTokenTransfers(
       deployCode(
         'CappedTokenTransfers', abi.encode(DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_AMOUNT, DUMMY_ADDRESS, DUMMY_ADDRESS)
@@ -137,7 +138,7 @@ contract UnitDeployCanonGuard is DeployCanonGuard, Test {
       UnsetEmergencyModeAction(deployCode('UnsetEmergencyModeAction'));
 
     assertEq(address(_allowanceClaimor).code, address(_auxAllowanceClaimor).code);
-    assertEq(address(_approveAction).code, address(_auxApproveAction).code);
+    assertEq(address(_preApproveAction).code, address(_auxPreApproveAction).code);
     assertEq(address(_cappedTokenTransfers).code, address(_auxCappedTokenTransfers).code);
     assertEq(address(_changeSafeGuardAction).code, address(_auxChangeSafeGuardAction).code);
     assertEq(address(_setEmergencyCallerAction).code, address(_auxSetEmergencyCallerAction).code);

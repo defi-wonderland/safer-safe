@@ -3,35 +3,35 @@ pragma solidity 0.8.30;
 
 import {CappedTokenTransfersHub} from 'contracts/action-hubs/CappedTokenTransfersHub.sol';
 import {AllowanceClaimor} from 'contracts/actions-builders/AllowanceClaimor.sol';
-import {ApproveAction} from 'contracts/actions-builders/ApproveAction.sol';
 import {CappedTokenTransfers} from 'contracts/actions-builders/CappedTokenTransfers.sol';
 import {ChangeSafeGuardAction} from 'contracts/actions-builders/ChangeSafeGuardAction.sol';
 import {EverclearTokenConversion} from 'contracts/actions-builders/EverclearTokenConversion.sol';
 import {OPxAction} from 'contracts/actions-builders/OPxAction.sol';
+import {PreApproveAction} from 'contracts/actions-builders/PreApproveAction.sol';
 import {SetEmergencyCallerAction} from 'contracts/actions-builders/SetEmergencyCallerAction.sol';
 import {SetEmergencyTriggerAction} from 'contracts/actions-builders/SetEmergencyTriggerAction.sol';
 import {SimpleActions} from 'contracts/actions-builders/SimpleActions.sol';
 import {SimpleTransfers} from 'contracts/actions-builders/SimpleTransfers.sol';
 import {UnsetEmergencyModeAction} from 'contracts/actions-builders/UnsetEmergencyModeAction.sol';
 import {AllowanceClaimorFactory} from 'contracts/factories/AllowanceClaimorFactory.sol';
-import {ApproveActionFactory} from 'contracts/factories/ApproveActionFactory.sol';
 import {CanonGuardFactory} from 'contracts/factories/CanonGuardFactory.sol';
 import {CappedTokenTransfersHubFactory} from 'contracts/factories/CappedTokenTransfersHubFactory.sol';
 import {ChangeSafeGuardActionFactory} from 'contracts/factories/ChangeSafeGuardActionFactory.sol';
 import {EverclearTokenConversionFactory} from 'contracts/factories/EverclearTokenConversionFactory.sol';
 import {OPxActionFactory} from 'contracts/factories/OPxActionFactory.sol';
+import {PreApproveActionFactory} from 'contracts/factories/PreApproveActionFactory.sol';
 import {SetEmergencyCallerActionFactory} from 'contracts/factories/SetEmergencyCallerActionFactory.sol';
 import {SetEmergencyTriggerActionFactory} from 'contracts/factories/SetEmergencyTriggerActionFactory.sol';
 import {SimpleActionsFactory} from 'contracts/factories/SimpleActionsFactory.sol';
 import {SimpleTransfersFactory} from 'contracts/factories/SimpleTransfersFactory.sol';
 import {Script} from 'forge-std/Script.sol';
 import {IAllowanceClaimorFactory} from 'interfaces/factories/IAllowanceClaimorFactory.sol';
-import {IApproveActionFactory} from 'interfaces/factories/IApproveActionFactory.sol';
 import {ICanonGuardFactory} from 'interfaces/factories/ICanonGuardFactory.sol';
 import {ICappedTokenTransfersHubFactory} from 'interfaces/factories/ICappedTokenTransfersHubFactory.sol';
 import {IChangeSafeGuardActionFactory} from 'interfaces/factories/IChangeSafeGuardActionFactory.sol';
 import {IEverclearTokenConversionFactory} from 'interfaces/factories/IEverclearTokenConversionFactory.sol';
 import {IOPxActionFactory} from 'interfaces/factories/IOPxActionFactory.sol';
+import {IPreApproveActionFactory} from 'interfaces/factories/IPreApproveActionFactory.sol';
 import {ISetEmergencyCallerActionFactory} from 'interfaces/factories/ISetEmergencyCallerActionFactory.sol';
 import {ISetEmergencyTriggerActionFactory} from 'interfaces/factories/ISetEmergencyTriggerActionFactory.sol';
 import {ISimpleActionsFactory} from 'interfaces/factories/ISimpleActionsFactory.sol';
@@ -53,7 +53,7 @@ contract DeployCanonGuard is Constants, Script {
 
   // ~~~ FACTORIES ~~~
   IAllowanceClaimorFactory public allowanceClaimorFactory;
-  IApproveActionFactory public approveActionFactory;
+  IPreApproveActionFactory public preApproveActionFactory;
   ICanonGuardFactory public canonGuardFactory;
   ICappedTokenTransfersHubFactory public cappedTokenTransfersHubFactory;
   IChangeSafeGuardActionFactory public changeSafeGuardActionFactory;
@@ -66,7 +66,7 @@ contract DeployCanonGuard is Constants, Script {
 
   // ~~~ DUMMY CONTRACTS ~~~
   AllowanceClaimor internal _allowanceClaimor;
-  ApproveAction internal _approveAction;
+  PreApproveAction internal _preApproveAction;
   CappedTokenTransfers internal _cappedTokenTransfers;
   ChangeSafeGuardAction internal _changeSafeGuardAction;
   SetEmergencyCallerAction internal _setEmergencyCallerAction;
@@ -108,7 +108,7 @@ contract DeployCanonGuard is Constants, Script {
   function _deployAllChainsFactories() internal {
     canonGuardFactory = new CanonGuardFactory(address(MULTI_SEND_CALL_ONLY));
     allowanceClaimorFactory = new AllowanceClaimorFactory();
-    approveActionFactory = new ApproveActionFactory();
+    preApproveActionFactory = new PreApproveActionFactory();
     cappedTokenTransfersHubFactory = new CappedTokenTransfersHubFactory();
     changeSafeGuardActionFactory = new ChangeSafeGuardActionFactory();
     setEmergencyCallerActionFactory = new SetEmergencyCallerActionFactory();
@@ -127,7 +127,7 @@ contract DeployCanonGuard is Constants, Script {
 
   function _deployAllChainsContracts() internal {
     _allowanceClaimor = new AllowanceClaimor(DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS);
-    _approveAction = new ApproveAction(DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_APPROVAL_DURATION);
+    _preApproveAction = new PreApproveAction(DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_APPROVAL_DURATION);
     _cappedTokenTransfers =
       new CappedTokenTransfers(DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_AMOUNT, DUMMY_ADDRESS, DUMMY_ADDRESS);
     _changeSafeGuardAction = new ChangeSafeGuardAction(DUMMY_ADDRESS, DUMMY_ADDRESS);
