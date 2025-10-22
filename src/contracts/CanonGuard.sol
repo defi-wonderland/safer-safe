@@ -338,7 +338,7 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
 
   /**
    * @notice Internal function to prepare a transaction to be executed
-   * @dev If isSmulation is enabled, the signers array will be set to this contract address.
+   * @dev If isSimulation is enabled, the signers array will be set to this contract address.
    * @param _actionsBuilder The actions builder address of the transaction to prepare
    * @param _safeNonce The Safe nonce to use for the hash calculation. For multiple transactions, the nonce should
    * be incremented by 1 for each transaction.

@@ -3,16 +3,16 @@ pragma solidity 0.8.30;
 
 import {IEmergencyModeHook} from 'interfaces/IEmergencyModeHook.sol';
 import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
-import {IApproveAction} from 'interfaces/actions-builders/IApproveAction.sol';
 import {IChangeSafeGuardAction} from 'interfaces/actions-builders/IChangeSafeGuardAction.sol';
+import {IPreApproveAction} from 'interfaces/actions-builders/IPreApproveAction.sol';
 import {ISetEmergencyCallerAction} from 'interfaces/actions-builders/ISetEmergencyCallerAction.sol';
 import {ISetEmergencyTriggerAction} from 'interfaces/actions-builders/ISetEmergencyTriggerAction.sol';
 import {ISimpleActions} from 'interfaces/actions-builders/ISimpleActions.sol';
 import {IntegrationEthereumBase} from 'test/integration/ethereum/IntegrationEthereumBase.sol';
 
 contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
-  IApproveAction public approveAction;
-  IApproveAction public disapproveAction;
+  IPreApproveAction public preApproveAction;
+  IPreApproveAction public disapproveAction;
 
   IChangeSafeGuardAction public changeSafeGuardAction;
   IChangeSafeGuardAction public disableSafeGuardAction;
@@ -44,9 +44,10 @@ contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
     newEmergencyCaller = makeAddr('newEmergencyCaller');
     newEmergencyTrigger = makeAddr('newEmergencyTrigger');
 
-    // Deploy the ApproveAction contract for both approve and disapprove
-    approveAction = IApproveAction(approveActionFactory.createApproveAction(address(actionsBuilder), APPROVAL_DURATION));
-    disapproveAction = IApproveAction(approveActionFactory.createApproveAction(address(actionsBuilder), 0));
+    // Deploy the PreApproveAction contract for both approve and disapprove
+    preApproveAction =
+      IPreApproveAction(preApproveActionFactory.createPreApproveAction(address(actionsBuilder), APPROVAL_DURATION));
+    disapproveAction = IPreApproveAction(preApproveActionFactory.createPreApproveAction(address(actionsBuilder), 0));
 
     // Deploy emergency actions
     setEmergencyCallerAction =
@@ -177,13 +178,13 @@ contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
   function test_ApproveActionsBuilderOrHub() public {
     // Queue the transaction
     vm.prank(_safeOwners[0]);
-    canonGuard.queueTransaction(address(approveAction));
+    canonGuard.queueTransaction(address(preApproveAction));
 
     // Wait for the timelock period
     vm.warp(block.timestamp + LONG_TX_EXECUTION_DELAY);
 
     // Get the Safe transaction hash
-    bytes32 _safeTxHash = canonGuard.getSafeTransactionHash(address(approveAction));
+    bytes32 _safeTxHash = canonGuard.getSafeTransactionHash(address(preApproveAction));
 
     // Approve the Safe transaction hash
     for (uint256 _i; _i < _safeThreshold; ++_i) {
@@ -193,7 +194,7 @@ contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
     vm.stopPrank();
 
     // Execute the transaction
-    canonGuard.executeTransaction(address(approveAction));
+    canonGuard.executeTransaction(address(preApproveAction));
 
     // Assert if the actions builder is approved
     assertEq(canonGuard.approvalExpiries(address(actionsBuilder)), block.timestamp + APPROVAL_DURATION);
@@ -424,19 +425,20 @@ contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
 
     uint256 _originalBlockTimestamp = block.timestamp;
 
-    approveAction =
-      IApproveAction(approveActionFactory.createApproveAction(address(setEmergencyCallerAction), APPROVAL_DURATION));
+    preApproveAction = IPreApproveAction(
+      preApproveActionFactory.createPreApproveAction(address(setEmergencyCallerAction), APPROVAL_DURATION)
+    );
 
     vm.prank(_safeOwners[0]);
-    canonGuard.queueTransaction(address(approveAction));
+    canonGuard.queueTransaction(address(preApproveAction));
     vm.warp(block.timestamp + LONG_TX_EXECUTION_DELAY);
-    bytes32 _safeTxHash = canonGuard.getSafeTransactionHash(address(approveAction));
+    bytes32 _safeTxHash = canonGuard.getSafeTransactionHash(address(preApproveAction));
     for (uint256 _i; _i < _safeThreshold; ++_i) {
       vm.startPrank(_safeOwners[_i]);
       SAFE_PROXY.approveHash(_safeTxHash);
     }
     vm.stopPrank();
-    canonGuard.executeTransaction(address(approveAction));
+    canonGuard.executeTransaction(address(preApproveAction));
 
     // Get the queued action builders info
     address[] memory _queuedActionBuilders = canonGuard.getQueuedActionBuilders();

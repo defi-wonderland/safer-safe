@@ -2,11 +2,11 @@
 pragma solidity 0.8.30;
 
 import {AllowanceClaimorFactory} from 'contracts/factories/AllowanceClaimorFactory.sol';
-import {ApproveActionFactory} from 'contracts/factories/ApproveActionFactory.sol';
 import {CappedTokenTransfersHubFactory} from 'contracts/factories/CappedTokenTransfersHubFactory.sol';
 import {ChangeSafeGuardActionFactory} from 'contracts/factories/ChangeSafeGuardActionFactory.sol';
 import {EverclearTokenConversionFactory} from 'contracts/factories/EverclearTokenConversionFactory.sol';
 import {OPxActionFactory} from 'contracts/factories/OPxActionFactory.sol';
+import {PreApproveActionFactory} from 'contracts/factories/PreApproveActionFactory.sol';
 import {SetEmergencyCallerActionFactory} from 'contracts/factories/SetEmergencyCallerActionFactory.sol';
 import {SetEmergencyTriggerActionFactory} from 'contracts/factories/SetEmergencyTriggerActionFactory.sol';
 import {SimpleActionsFactory} from 'contracts/factories/SimpleActionsFactory.sol';
@@ -91,7 +91,7 @@ contract UnitDeployCanonGuard is DeployCanonGuard, Test {
 
   function _assertCommonFactories() private view {
     assertEq(address(allowanceClaimorFactory).code, type(AllowanceClaimorFactory).runtimeCode);
-    assertEq(address(approveActionFactory).code, type(ApproveActionFactory).runtimeCode);
+    assertEq(address(preApproveActionFactory).code, type(PreApproveActionFactory).runtimeCode);
     assertEq(address(canonGuardFactory).code, address(_auxCanonGuardFactory).code);
     assertEq(canonGuardFactory.MULTI_SEND_CALL_ONLY(), address(MULTI_SEND_CALL_ONLY));
     assertEq(address(cappedTokenTransfersHubFactory).code, type(CappedTokenTransfersHubFactory).runtimeCode);
