@@ -21,16 +21,13 @@ contract UnitCappedTokenTransfers is Test {
     recipient = makeAddr('recipient');
     hub = makeAddr('hub');
 
-    cappedTokenTransfers = new CappedTokenTransfers(address(0), token, amount, recipient, hub);
+    vm.prank(hub);
+    cappedTokenTransfers = new CappedTokenTransfers(token, amount, recipient);
   }
 
-  function test_Constructor_WhenCalled(
-    address _token,
-    uint256 _amount,
-    address _recipient,
-    address _actionHub
-  ) external {
-    cappedTokenTransfers = new CappedTokenTransfers(address(0), _token, _amount, _recipient, _actionHub);
+  function test_Constructor_WhenCalled(address _token, uint256 _amount, address _recipient) external {
+    vm.prank(hub);
+    cappedTokenTransfers = new CappedTokenTransfers(_token, _amount, _recipient);
 
     // it sets the token
     assertEq(cappedTokenTransfers.TOKEN(), _token);
@@ -39,7 +36,7 @@ contract UnitCappedTokenTransfers is Test {
     // it sets the recipient
     assertEq(cappedTokenTransfers.RECIPIENT(), _recipient);
     // it sets the hub
-    assertEq(cappedTokenTransfers.HUB(), _actionHub);
+    assertEq(cappedTokenTransfers.HUB(), hub);
   }
 
   function test_GetActions_WhenCalled() external view {

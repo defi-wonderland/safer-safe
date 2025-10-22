@@ -128,8 +128,7 @@ contract DeployCanonGuard is Constants, Script {
   function _deployAllChainsContracts() internal {
     _allowanceClaimor = new AllowanceClaimor(DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS);
     _preApproveAction = new PreApproveAction(DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_APPROVAL_DURATION);
-    _cappedTokenTransfers =
-      new CappedTokenTransfers(DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_AMOUNT, DUMMY_ADDRESS, DUMMY_ADDRESS);
+    _cappedTokenTransfers = new CappedTokenTransfers(DUMMY_ADDRESS, DUMMY_AMOUNT, DUMMY_ADDRESS);
     _changeSafeGuardAction = new ChangeSafeGuardAction(DUMMY_ADDRESS, DUMMY_ADDRESS);
     _setEmergencyCallerAction = new SetEmergencyCallerAction(DUMMY_ADDRESS, DUMMY_ADDRESS);
     _setEmergencyTriggerAction = new SetEmergencyTriggerAction(DUMMY_ADDRESS, DUMMY_ADDRESS);
