@@ -92,12 +92,10 @@ contract UnitDeployCanonGuard is DeployCanonGuard, Test {
     PreApproveAction _auxPreApproveAction = PreApproveAction(
       deployCode('PreApproveAction', abi.encode(DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_APPROVAL_DURATION))
     );
-    // TODO: fix this
-    // CappedTokenTransfers _auxCappedTokenTransfers = CappedTokenTransfers(
-    //   deployCode(
-    //     'CappedTokenTransfers', abi.encode(DUMMY_ADDRESS, DUMMY_AMOUNT, DUMMY_ADDRESS)
-    //   )
-    // );
+    // NOTE: doing this in order to match msg.sender when deploying the contract
+    vm.prank(DEFAULT_SENDER);
+    CappedTokenTransfers _auxCappedTokenTransfers =
+      CappedTokenTransfers(deployCode('CappedTokenTransfers', abi.encode(DUMMY_ADDRESS, DUMMY_AMOUNT, DUMMY_ADDRESS)));
     ChangeSafeGuardAction _auxChangeSafeGuardAction =
       ChangeSafeGuardAction(deployCode('ChangeSafeGuardAction', abi.encode(DUMMY_ADDRESS, DUMMY_ADDRESS)));
     SetEmergencyCallerAction _auxSetEmergencyCallerAction =
@@ -137,7 +135,7 @@ contract UnitDeployCanonGuard is DeployCanonGuard, Test {
 
     assertEq(address(_allowanceClaimor).code, address(_auxAllowanceClaimor).code);
     assertEq(address(_preApproveAction).code, address(_auxPreApproveAction).code);
-    // assertEq(address(_cappedTokenTransfers).code, address(_auxCappedTokenTransfers).code);
+    assertEq(address(_cappedTokenTransfers).code, address(_auxCappedTokenTransfers).code);
     assertEq(address(_changeSafeGuardAction).code, address(_auxChangeSafeGuardAction).code);
     assertEq(address(_setEmergencyCallerAction).code, address(_auxSetEmergencyCallerAction).code);
     assertEq(address(_setEmergencyTriggerAction).code, address(_auxSetEmergencyTriggerAction).code);
