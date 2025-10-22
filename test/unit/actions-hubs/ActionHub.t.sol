@@ -3,8 +3,6 @@ pragma solidity 0.8.30;
 
 import {Test} from 'forge-std/Test.sol';
 import {IActionHub} from 'interfaces/action-hubs/IActionHub.sol';
-import {CREATE3} from 'solady/utils/CREATE3.sol';
-import {CappedTokenTransfers} from 'src/contracts/actions-builders/CappedTokenTransfers.sol';
 import {ActionHubForTest} from 'test/unit/mocks/ActionHubForTest.sol';
 
 contract UnitActionHub is Test {
@@ -34,27 +32,13 @@ contract UnitActionHub is Test {
     assertFalse(actionHub.isHubChild(_actionsBuilder));
   }
 
-  function test__createNewActionsBuilder_WhenCalled(
-    bytes32 _salt,
-    address _token,
-    uint256 _amount,
-    address _recipient
-  ) external {
-    bytes memory _initCode = abi.encodePacked(
-      type(CappedTokenTransfers).creationCode,
-      abi.encode(address(actionHub), _token, _amount, _recipient, address(this))
-    );
-
-    address _expectedActionsBuilder = CREATE3.predictDeterministicAddress(_salt, address(actionHub));
-
-    // it emits a NewActionsBuilderCreated event
+  function test__saveNewActionsBuilder_WhenCalled(address _actionsBuilder) external {
+    // it emits a NewActionsBuilderSaved event
     vm.expectEmit();
-    emit IActionHub.NewActionsBuilderCreated(_expectedActionsBuilder, _initCode, _salt);
+    emit IActionHub.NewActionsBuilderSaved(_actionsBuilder);
 
-    address _actionsBuilder = actionHub.forTest_createNewActionsBuilder(_initCode, _salt);
+    actionHub.forTest_saveNewActionsBuilder(_actionsBuilder);
 
-    // it creates a new actions builder
-    assertEq(_actionsBuilder, _expectedActionsBuilder);
     // it marks the actions builder as a child
     assertTrue(actionHub.isHubChild(_actionsBuilder));
   }
