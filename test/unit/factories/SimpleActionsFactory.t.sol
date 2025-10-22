@@ -45,6 +45,17 @@ contract UnitSimpleActionsFactory is Test {
     assertEq(_savedActions[1].data, _completeCallDataB);
     assertEq(_savedActions[1].value, _simpleActionsB.value);
 
+    // it should save the entire array of actions
+    ISimpleActions.SimpleAction[] memory _savedSimpleActions = ISimpleActions(_simpleActionsContract).simpleActions();
+    assertEq(_savedSimpleActions.length, 2);
+    assertEq(_savedSimpleActions[0].target, _simpleActionsA.target);
+    assertEq(_savedSimpleActions[0].signature, _simpleActionsA.signature);
+    assertEq(_savedSimpleActions[0].data, _simpleActionsA.data);
+    assertEq(_savedSimpleActions[0].value, _simpleActionsA.value);
+    assertEq(_savedSimpleActions[1].target, _simpleActionsB.target);
+    assertEq(_savedSimpleActions[1].signature, _simpleActionsB.signature);
+    assertEq(_savedSimpleActions[1].data, _simpleActionsB.data);
+
     // it should store the contract as a factory children
     assertTrue(simpleActionsFactory.isChild(_simpleActionsContract));
 
@@ -72,6 +83,14 @@ contract UnitSimpleActionsFactory is Test {
     assertEq(_savedActions[0].target, _simpleActions.target);
     assertEq(_savedActions[0].data, _completeCallData);
     assertEq(_savedActions[0].value, _simpleActions.value);
+
+    // it should save the entire array of actions
+    ISimpleActions.SimpleAction[] memory _savedSimpleActions = ISimpleActions(_simpleActionsContract).simpleActions();
+    assertEq(_savedSimpleActions.length, 1);
+    assertEq(_savedSimpleActions[0].target, _simpleActions.target);
+    assertEq(_savedSimpleActions[0].signature, _simpleActions.signature);
+    assertEq(_savedSimpleActions[0].data, _simpleActions.data);
+    assertEq(_savedSimpleActions[0].value, _simpleActions.value);
 
     // it should set the parent address in the child contract
     assertEq(IActionsBuilder(_simpleActionsContract).PARENT(), address(simpleActionsFactory));
