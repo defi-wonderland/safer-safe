@@ -88,6 +88,7 @@ contract CappedTokenTransfersHub is ActionHub, ICappedTokenTransfersHub, SafeMan
   /// @inheritdoc ICappedTokenTransfersHub
   function updateState(address _token, uint256 _amount) external isSafe {
     uint256 _currentEpoch = (block.timestamp - STARTING_TIMESTAMP) / EPOCH_LENGTH;
+    uint256 _tokenCap = cap[_token];
 
     // If we're in a new epoch, reset the spending
     if (_currentEpoch > currentEpoch) {
@@ -97,11 +98,12 @@ contract CappedTokenTransfersHub is ActionHub, ICappedTokenTransfersHub, SafeMan
 
     totalSpent[_token] += _amount;
 
-    if (totalSpent[_token] > cap[_token]) {
+    if (totalSpent[_token] > _tokenCap) {
       revert CapExceeded();
     }
 
-    emit StateUpdated(_token, _amount);
+    uint256 _capLeft = _tokenCap - totalSpent[_token];
+    emit StateUpdated(_token, _amount, currentEpoch, _capLeft);
   }
 
   /// @inheritdoc ICappedTokenTransfersHub

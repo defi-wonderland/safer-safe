@@ -126,9 +126,13 @@ contract UnitCappedTokenTransfersHub is Test {
   function test_UpdateState_WhenCalledByTheSafe(uint256 _amount) external whenCalledByTheSafe {
     _amount = bound(_amount, 0, cappedTokenTransfersHub.cap(tokens[0]));
 
+    uint256 _capLeft = cappedTokenTransfersHub.cap(tokens[0]) - _amount;
+    uint256 _currentEpoch =
+      (block.timestamp - cappedTokenTransfersHub.STARTING_TIMESTAMP()) / cappedTokenTransfersHub.EPOCH_LENGTH();
+
     // it emits the StateUpdated event
     vm.expectEmit();
-    emit ICappedTokenTransfersHub.StateUpdated(tokens[0], _amount);
+    emit ICappedTokenTransfersHub.StateUpdated(tokens[0], _amount, _currentEpoch, _capLeft);
 
     cappedTokenTransfersHub.updateState(tokens[0], _amount);
 
