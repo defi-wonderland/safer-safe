@@ -138,11 +138,6 @@ interface ICanonGuard is ISafeManageable {
    */
   error CallerMustBeTransactionProposer();
 
-  /**
-   * @notice Thrown when attempting to cancel a transaction with approved hash signers
-   */
-  error TransactionWithSignaturesCannotBeCancelled();
-
   // ~~~ ADMIN METHODS ~~~
 
   /**
