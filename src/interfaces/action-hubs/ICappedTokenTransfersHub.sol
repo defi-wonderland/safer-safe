@@ -8,14 +8,21 @@ import {ISafeManageable} from 'interfaces/ISafeManageable.sol';
  * @notice Interface for the CappedTokenTransfersHub contract
  */
 interface ICappedTokenTransfersHub is ISafeManageable {
+  // ~~~ EVENTS ~~~
+
+  /**
+   * @notice Emitted when the state is updated for a token with a certain amount
+   * @param _token The token that was updated
+   * @param _amountSpent The amount of tokens that were spent
+   */
+  event StateUpdated(address indexed _token, uint256 _amountSpent);
+
   // ~~~ ERRORS ~~~
 
   /**
    * @notice Thrown when the cap is exceeded
    */
   error CapExceeded();
-
-  // ~~~ FUNCTIONS ~~~
 
   /**
    * @notice Thrown when creating a hub actions builder for a token that is not registered in the hub
@@ -33,12 +40,7 @@ interface ICappedTokenTransfersHub is ISafeManageable {
    */
   error TokenAlreadyRegisteredInHub(address _token);
 
-  /**
-   * @notice Emitted when the state is updated for a token with a certain amount
-   * @param _token The token that was updated
-   * @param _amountSpent The amount of tokens that were spent
-   */
-  event StateUpdated(address indexed _token, uint256 _amountSpent);
+  // ~~~ FUNCTIONS ~~~
 
   /**
    * @notice Checks if the spending cap is exceeded and resets the spending if we're in a new epoch.
