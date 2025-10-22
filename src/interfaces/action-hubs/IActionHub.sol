@@ -7,7 +7,7 @@ pragma solidity 0.8.30;
  */
 interface IActionHub {
   /**
-   * @notice Emitted when a new actions builder is created and saved as a child of the actionHub
+   * @notice Emitted when a new actions builder is created through the hub
    * @param _actionsBuilder The address of the new actions builder
    */
   event NewActionsBuilderSaved(address indexed _actionsBuilder);
