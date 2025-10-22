@@ -178,9 +178,6 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
 
     bytes memory _multiSendData = _buildMultiSendData(_actions);
     bytes32 _safeTxHash = _getSafeTransactionHash(_multiSendData, SAFE.nonce());
-    address[] memory _signers = _getApprovedHashSigners(_safeTxHash);
-
-    if (_signers.length > 0) revert TransactionWithSignaturesCannotBeCancelled();
 
     // Remove the transaction from the queue and mapping
     delete transactionsInfo[_actionsBuilder];
