@@ -124,7 +124,7 @@ interface ICanonGuard is ISafeManageable {
   error TxExpiryDelayCannotBeGreaterThanMax();
 
   /**
-   * @notice Thrown when the long transaction execution delay is greater than the maximum value (uint128.max)
+   * @notice Thrown when the long transaction execution delay is greater than the maximum value (6 months)
    */
   error LongDelayCannotBeGreaterThanMax();
 
@@ -137,6 +137,26 @@ interface ICanonGuard is ISafeManageable {
    * @notice Thrown when the caller is not the proposer of the transaction being cancelled
    */
   error CallerMustBeTransactionProposer();
+
+  /**
+   * @notice Thrown when the MultiSendCallOnly contract is the zero address
+   */
+  error ZeroMultiSendCallOnly();
+
+  /**
+   * @notice Thrown when the transaction expiry delay is less than the minimum expiry time
+   */
+  error TxExpiryDelayCannotBeLessThanMin();
+
+  /**
+   * @notice Thrown when the maximum approval duration is less than the minimum expiry time
+   */
+  error MaxApprovalDurationCannotBeLessThanMin();
+
+  /**
+   * @notice Thrown when the short transaction execution delay is greater than the maximum value (6 months)
+   */
+  error ShortDelayCannotBeGreaterThanMax();
 
   // ~~~ ADMIN METHODS ~~~
 
@@ -226,6 +246,18 @@ interface ICanonGuard is ISafeManageable {
    * @return _maxApprovalDuration The maximum approval duration for an actions builder or hub (in seconds)
    */
   function MAX_APPROVAL_DURATION() external view returns (uint256 _maxApprovalDuration);
+
+  /**
+   * @notice Gets the minimum expiry time
+   * @return _minExpiryTime The minimum expiry time (in seconds)
+   */
+  function MIN_EXPIRY_TIME() external view returns (uint256 _minExpiryTime);
+
+  /**
+   * @notice Gets the maximum transaction execution delay
+   * @return _maxTxExecutionDelay The maximum transaction execution delay (in seconds)
+   */
+  function MAX_TX_EXECUTION_DELAY() external view returns (uint256 _maxTxExecutionDelay);
 
   /**
    * @notice Gets the approval expiry time for an actions builder

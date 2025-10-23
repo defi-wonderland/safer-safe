@@ -5,13 +5,12 @@ import {Test} from 'forge-std/Test.sol';
 import {CanonGuardFactory} from 'src/contracts/factories/CanonGuardFactory.sol';
 import {ICanonGuard} from 'src/interfaces/ICanonGuard.sol';
 import {ISafeManageable} from 'src/interfaces/ISafeManageable.sol';
-import {ICanonGuardFactory} from 'src/interfaces/factories/ICanonGuardFactory.sol';
 
 contract UnitCanonGuardFactory is Test {
   CanonGuardFactory public canonGuardFactory;
   ICanonGuard public auxCanonGuard;
   address public multiSendCallOnly;
-  uint256 public constant MIN_EXPIRY_TIME = 1 days;
+  uint256 public constant MIN_EXPIRY_TIME = 1 hours;
 
   function setUp() external {
     multiSendCallOnly = makeAddr('multiSendCallOnly');
@@ -82,52 +81,5 @@ contract UnitCanonGuardFactory is Test {
 
     // it should store the contract as a factory children
     assertTrue(canonGuardFactory.isChild(_canonGuard));
-  }
-
-  function test_CreateCanonGuard_WhenTheTransactionExpiryDelayIsLessThanTheMinimumExpiryTime(
-    address _safe,
-    uint256 _shortTxExecutionDelay,
-    uint256 _longTxExecutionDelay,
-    uint256 _txExpiryDelay,
-    uint256 _maxApprovalDuration,
-    address _emergencyTrigger,
-    address _emergencyCaller
-  ) external {
-    _txExpiryDelay = bound(_txExpiryDelay, 0, canonGuardFactory.MIN_EXPIRY_TIME() - 1);
-    // it reverts
-    vm.expectRevert(ICanonGuardFactory.TxExpiryDelayCannotBeLessThanMin.selector);
-    canonGuardFactory.createCanonGuard(
-      _safe,
-      _shortTxExecutionDelay,
-      _longTxExecutionDelay,
-      _txExpiryDelay,
-      _maxApprovalDuration,
-      _emergencyTrigger,
-      _emergencyCaller
-    );
-  }
-
-  function test_CreateCanonGuard_WhenTheMaximumApprovalDurationIsLessThanTheMinimumExpiryTime(
-    address _safe,
-    uint256 _shortTxExecutionDelay,
-    uint256 _longTxExecutionDelay,
-    uint256 _txExpiryDelay,
-    uint256 _maxApprovalDuration,
-    address _emergencyTrigger,
-    address _emergencyCaller
-  ) external {
-    _txExpiryDelay = bound(_txExpiryDelay, canonGuardFactory.MIN_EXPIRY_TIME(), type(uint128).max);
-    _maxApprovalDuration = bound(_maxApprovalDuration, 0, canonGuardFactory.MIN_EXPIRY_TIME() - 1);
-    // it reverts
-    vm.expectRevert(ICanonGuardFactory.MaxApprovalDurationCannotBeLessThanMin.selector);
-    canonGuardFactory.createCanonGuard(
-      _safe,
-      _shortTxExecutionDelay,
-      _longTxExecutionDelay,
-      _txExpiryDelay,
-      _maxApprovalDuration,
-      _emergencyTrigger,
-      _emergencyCaller
-    );
   }
 }

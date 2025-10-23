@@ -153,7 +153,7 @@ abstract contract HandlersCanonGuard is BaseHandlers {
   /// @dev Tests redeployment with new expiry delay
   /// @param _txExpiryDelay New expiry delay
   function handler_changeTxExpiryDelay(uint256 _txExpiryDelay) public {
-    _txExpiryDelay = bound(_txExpiryDelay, canonGuardFactory.MIN_EXPIRY_TIME(), 3650 days);
+    _txExpiryDelay = bound(_txExpiryDelay, canonGuard.MIN_EXPIRY_TIME(), 3650 days);
 
     // get current params
     uint256 _shortTxExecutionDelay = canonGuard.SHORT_TX_EXECUTION_DELAY();
@@ -184,7 +184,7 @@ abstract contract HandlersCanonGuard is BaseHandlers {
   /// @dev Tests redeployment with new max approval duration
   /// @param _maxApprovalDuration New max approval duration
   function handler_changeMaxApprovalDuration(uint256 _maxApprovalDuration) public {
-    _maxApprovalDuration = bound(_maxApprovalDuration, canonGuardFactory.MIN_EXPIRY_TIME(), 365 days);
+    _maxApprovalDuration = bound(_maxApprovalDuration, canonGuard.MIN_EXPIRY_TIME(), 365 days);
 
     // get current params
     uint256 _shortTxExecutionDelay = canonGuard.SHORT_TX_EXECUTION_DELAY();
