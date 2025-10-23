@@ -74,8 +74,8 @@ contract Setup is Test, Constants {
         LONG_TX_EXECUTION_DELAY,
         TX_EXPIRY_DELAY,
         MAX_APPROVAL_DURATION,
-        EMERGENCY_TRIGGER,
-        EMERGENCY_CALLER
+        address(1),
+        address(1)
       )
     );
 

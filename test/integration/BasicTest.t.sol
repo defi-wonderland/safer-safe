@@ -1,27 +1,22 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
+import {ISafe} from '@safe-smart-account/interfaces/ISafe.sol';
 import {Test} from 'forge-std/Test.sol';
-
 import {ICanonGuard} from 'interfaces/ICanonGuard.sol';
 import {ISimpleActions} from 'interfaces/actions-builders/ISimpleActions.sol';
-
-import {ISafe} from '@safe-smart-account/interfaces/ISafe.sol';
-
-import {DeployCanonGuard} from 'script/DeployCanonGuard.s.sol';
-
 import {EthereumConstants} from 'script/Constants.sol';
+import {DeployCanonGuard} from 'script/DeployCanonGuard.s.sol';
 
 contract IntegrationBasicTest is DeployCanonGuard, EthereumConstants, Test {
   uint256 internal constant _ETHEREUM_FORK_BLOCK = 18_920_905;
+  address internal constant _EMERGENCY_TRIGGER = address(1);
+  address internal constant _EMERGENCY_CALLER = address(2);
 
   // ~~~ SAFE ~~~
   ISafe internal _safeProxy;
   address internal _safeOwner;
   uint256 internal _safeThreshold;
-
-  // ~~~ CANON_GUARD ~~~
-  ICanonGuard internal _canonGuard;
 
   // ~~~ ACTIONS ~~~
   address internal _actionsBuilder;
@@ -53,7 +48,7 @@ contract IntegrationBasicTest is DeployCanonGuard, EthereumConstants, Test {
     // Deploy the CanonGuard contract
     run();
 
-    // Deploy the CanonGuard contract
+    // Deploy the CanonGuard contract (overriding the dummy contract)
     _canonGuard = ICanonGuard(
       canonGuardFactory.createCanonGuard(
         address(_safeProxy),
@@ -61,8 +56,8 @@ contract IntegrationBasicTest is DeployCanonGuard, EthereumConstants, Test {
         LONG_TX_EXECUTION_DELAY,
         TX_EXPIRY_DELAY,
         MAX_APPROVAL_DURATION,
-        EMERGENCY_TRIGGER,
-        EMERGENCY_CALLER
+        _EMERGENCY_TRIGGER,
+        _EMERGENCY_CALLER
       )
     );
 
