@@ -35,6 +35,11 @@ interface ICanonGuardFactory {
    */
   error MaxApprovalDurationCannotBeLessThanMin();
 
+  /**
+   * @notice Thrown when the MultiSendCallOnly contract address is zero
+   */
+  error MultiSendCallOnlyCannotBeZero();
+
   // ~~~ FACTORY METHODS ~~~
 
   /**
@@ -65,10 +70,4 @@ interface ICanonGuardFactory {
    * @return _multiSendCallOnly The MultiSendCallOnly contract address
    */
   function MULTI_SEND_CALL_ONLY() external view returns (address _multiSendCallOnly);
-
-  /**
-   * @notice Gets the minimum expiry time
-   * @return _minExpiryTime The minimum expiry time (in seconds)
-   */
-  function MIN_EXPIRY_TIME() external view returns (uint256 _minExpiryTime);
 }
