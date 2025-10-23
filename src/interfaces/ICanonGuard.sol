@@ -153,11 +153,6 @@ interface ICanonGuard is ISafeManageable {
    */
   error MaxApprovalDurationCannotBeLessThanMin();
 
-  /**
-   * @notice Thrown when the short transaction execution delay is greater than the maximum value (6 months)
-   */
-  error ShortDelayCannotBeGreaterThanMax();
-
   // ~~~ ADMIN METHODS ~~~
 
   /**

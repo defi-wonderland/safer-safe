@@ -102,8 +102,8 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
     if (_shortTxExecutionDelay > _longTxExecutionDelay) {
       revert ShortDelayCannotBeGreaterThanLongDelay();
     }
+    // NOTE: no need to check short delay > MAX_TX_EXECUTION_DELAY because we assume short delay <= long delay
     if (_longTxExecutionDelay > MAX_TX_EXECUTION_DELAY) revert LongDelayCannotBeGreaterThanMax();
-    if (_shortTxExecutionDelay > MAX_TX_EXECUTION_DELAY) revert ShortDelayCannotBeGreaterThanMax();
     if (_multiSendCallOnly == address(0)) revert ZeroMultiSendCallOnly();
     if (_txExpiryDelay > type(uint128).max) revert TxExpiryDelayCannotBeGreaterThanMax();
     if (_txExpiryDelay < MIN_EXPIRY_TIME) revert TxExpiryDelayCannotBeLessThanMin();

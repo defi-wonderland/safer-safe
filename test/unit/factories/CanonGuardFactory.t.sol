@@ -36,8 +36,8 @@ contract UnitCanonGuardFactory is Test {
 
     _txExpiryDelay = bound(_txExpiryDelay, MIN_EXPIRY_TIME, type(uint128).max);
     _maxApprovalDuration = bound(_maxApprovalDuration, MIN_EXPIRY_TIME, type(uint256).max);
-    _shortTxExecutionDelay = bound(_shortTxExecutionDelay, 0, type(uint128).max - 1);
-    _longTxExecutionDelay = bound(_longTxExecutionDelay, _shortTxExecutionDelay, type(uint128).max);
+    _shortTxExecutionDelay = bound(_shortTxExecutionDelay, 0, 6 * 30 days);
+    _longTxExecutionDelay = bound(_longTxExecutionDelay, _shortTxExecutionDelay, 6 * 30 days);
 
     address _canonGuard = canonGuardFactory.createCanonGuard(
       _safe,
