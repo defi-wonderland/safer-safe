@@ -15,6 +15,13 @@ import {IActionHub} from 'interfaces/action-hubs/IActionHub.sol';
 import {IActionHubChild} from 'interfaces/action-hubs/IActionHubChild.sol';
 import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 
+contract RevertingFallbackSAFE {
+  fallback() external payable {
+    // solhint-disable-next-line custom-errors
+    revert('');
+  }
+}
+
 contract UnitCanonGuard is Test {
   CanonGuardForTest public canonGuard;
 
@@ -1258,7 +1265,8 @@ contract UnitCanonGuard is Test {
     whenTheTokenIsTheZeroAddress
     whenTheBalanceIsNotZero
   {
-    vm.skip(true);
+    // This will set the code of the safe to a safe with a reverting fallback
+    vm.etch(address(SAFE), address(new RevertingFallbackSAFE()).code);
 
     _balance = bound(_balance, 1, type(uint256).max);
     vm.deal(address(canonGuard), _balance);
