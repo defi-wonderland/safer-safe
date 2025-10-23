@@ -6,6 +6,18 @@ pragma solidity 0.8.30;
  * @notice Interface for the SetEmergencyTriggerActionFactory contract
  */
 interface ISetEmergencyTriggerActionFactory {
+  // ~~~ EVENTS ~~~
+
+  /**
+   * @notice Emitted when a new SetEmergencyTriggerAction contract is created
+   * @param _setEmergencyTriggerAction The address of the created SetEmergencyTriggerAction contract
+   * @param _emergencyTrigger The emergency trigger address
+   * @param _creator The address that created the contract
+   */
+  event SetEmergencyTriggerActionCreated(
+    address indexed _setEmergencyTriggerAction, address indexed _emergencyTrigger, address indexed _creator
+  );
+
   // ~~~ FACTORY METHODS ~~~
 
   /**

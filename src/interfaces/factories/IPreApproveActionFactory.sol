@@ -6,6 +6,22 @@ pragma solidity 0.8.30;
  * @notice Interface for the PreApproveActionFactory contract
  */
 interface IPreApproveActionFactory {
+  // ~~~ EVENTS ~~~
+
+  /**
+   * @notice Emitted when a new PreApproveAction contract is created
+   * @param _preApproveAction The address of the created PreApproveAction contract
+   * @param _actionsBuilder The actions builder contract address
+   * @param _approvalDuration The approval duration
+   * @param _creator The address that created the contract
+   */
+  event PreApproveActionCreated(
+    address indexed _preApproveAction,
+    address indexed _actionsBuilder,
+    uint256 _approvalDuration,
+    address indexed _creator
+  );
+
   // ~~~ FACTORY METHODS ~~~
 
   /**

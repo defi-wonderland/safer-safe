@@ -20,5 +20,7 @@ contract SetEmergencyCallerActionFactory is ISetEmergencyCallerActionFactory, Fa
     _setEmergencyCallerAction = address(new SetEmergencyCallerAction(address(this), _emergencyCaller));
 
     _children[_setEmergencyCallerAction] = true;
+
+    emit SetEmergencyCallerActionCreated(_setEmergencyCallerAction, _emergencyCaller, msg.sender);
   }
 }

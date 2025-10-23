@@ -21,5 +21,7 @@ contract AllowanceClaimorFactory is IAllowanceClaimorFactory, Factory {
     _allowanceClaimor = address(new AllowanceClaimor(address(this), _token, _tokenOwner, _tokenRecipient));
 
     _children[_allowanceClaimor] = true;
+
+    emit AllowanceClaimorCreated(_allowanceClaimor, _token, _tokenOwner, _tokenRecipient, msg.sender);
   }
 }

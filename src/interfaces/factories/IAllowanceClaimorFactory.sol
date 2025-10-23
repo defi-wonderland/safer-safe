@@ -6,6 +6,24 @@ pragma solidity 0.8.30;
  * @notice Interface for the AllowanceClaimorFactory contract
  */
 interface IAllowanceClaimorFactory {
+  // ~~~ EVENTS ~~~
+
+  /**
+   * @notice Emitted when a new AllowanceClaimor contract is created
+   * @param _allowanceClaimor The address of the created AllowanceClaimor contract
+   * @param _token The token contract address
+   * @param _tokenOwner The token owner address
+   * @param _tokenRecipient The token recipient address
+   * @param _creator The address that created the contract
+   */
+  event AllowanceClaimorCreated(
+    address indexed _allowanceClaimor,
+    address indexed _token,
+    address indexed _tokenOwner,
+    address _tokenRecipient,
+    address _creator
+  );
+
   // ~~~ FACTORY METHODS ~~~
 
   /**

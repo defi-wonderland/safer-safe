@@ -17,5 +17,7 @@ contract OPxActionFactory is IOPxActionFactory, Factory {
     _opxAction = address(new OPxAction(address(this), _opx));
 
     _children[_opxAction] = true;
+
+    emit OPxActionCreated(_opxAction, _opx, msg.sender);
   }
 }

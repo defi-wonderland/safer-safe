@@ -19,6 +19,8 @@ contract SimpleActionsFactory is ISimpleActionsFactory, Factory {
     _simpleActions = address(new SimpleActions(address(this), _smplActions));
 
     _children[_simpleActions] = true;
+
+    emit SimpleActionsCreated(_simpleActions, msg.sender);
   }
 
   /// @inheritdoc ISimpleActionsFactory
@@ -30,5 +32,6 @@ contract SimpleActionsFactory is ISimpleActionsFactory, Factory {
     _simpleActions = address(new SimpleActions(address(this), _simpleActionsArray));
 
     _children[_simpleActions] = true;
+    emit SimpleActionsCreated(_simpleActions, msg.sender);
   }
 }

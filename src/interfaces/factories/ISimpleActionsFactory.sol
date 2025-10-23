@@ -8,6 +8,15 @@ import {ISimpleActions} from 'interfaces/actions-builders/ISimpleActions.sol';
  * @notice Interface for the SimpleActionsFactory contract
  */
 interface ISimpleActionsFactory {
+  // ~~~ EVENTS ~~~
+
+  /**
+   * @notice Emitted when a new SimpleActions contract is created
+   * @param _simpleActions The address of the created SimpleActions contract
+   * @param _creator The address that created the contract
+   */
+  event SimpleActionsCreated(address indexed _simpleActions, address indexed _creator);
+
   // ~~~ FACTORY METHODS ~~~
 
   /**

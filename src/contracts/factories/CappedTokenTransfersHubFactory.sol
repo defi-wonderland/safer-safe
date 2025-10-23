@@ -25,5 +25,7 @@ contract CappedTokenTransfersHubFactory is ICappedTokenTransfersHubFactory, Fact
     );
 
     _children[_cappedTokenTransfersHub] = true;
+
+    emit CappedTokenTransfersHubCreated(_cappedTokenTransfersHub, _safe, _recipient, msg.sender);
   }
 }

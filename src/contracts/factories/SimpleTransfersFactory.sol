@@ -19,6 +19,8 @@ contract SimpleTransfersFactory is ISimpleTransfersFactory, Factory {
     _simpleTransfers = address(new SimpleTransfers(address(this), _transferActions));
 
     _children[_simpleTransfers] = true;
+
+    emit SimpleTransfersCreated(_simpleTransfers, msg.sender);
   }
 
   /// @inheritdoc ISimpleTransfersFactory
@@ -30,5 +32,6 @@ contract SimpleTransfersFactory is ISimpleTransfersFactory, Factory {
     _simpleTransfers = address(new SimpleTransfers(address(this), _transferActions));
 
     _children[_simpleTransfers] = true;
+    emit SimpleTransfersCreated(_simpleTransfers, msg.sender);
   }
 }

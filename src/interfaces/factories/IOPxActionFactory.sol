@@ -6,6 +6,16 @@ pragma solidity 0.8.30;
  * @notice Interface for the OPxActionFactory contract
  */
 interface IOPxActionFactory {
+  // ~~~ EVENTS ~~~
+
+  /**
+   * @notice Emitted when a new OPxAction contract is created
+   * @param _opxAction The address of the created OPxAction contract
+   * @param _opx The OPX contract address
+   * @param _creator The address that created the contract
+   */
+  event OPxActionCreated(address indexed _opxAction, address indexed _opx, address indexed _creator);
+
   // ~~~ FACTORY METHODS ~~~
 
   /**

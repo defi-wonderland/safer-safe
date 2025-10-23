@@ -6,6 +6,19 @@ pragma solidity 0.8.30;
  * @notice Interface for the CappedTokenTransfersHubFactory contract
  */
 interface ICappedTokenTransfersHubFactory {
+  // ~~~ EVENTS ~~~
+
+  /**
+   * @notice Emitted when a new CappedTokenTransfersHub contract is created
+   * @param _cappedTokenTransfersHub The address of the created CappedTokenTransfersHub contract
+   * @param _safe The Gnosis Safe contract address
+   * @param _recipient The recipient of the token transfers
+   * @param _creator The address that created the contract
+   */
+  event CappedTokenTransfersHubCreated(
+    address indexed _cappedTokenTransfersHub, address indexed _safe, address indexed _recipient, address _creator
+  );
+
   // ~~~ FACTORY METHODS ~~~
 
   /**

@@ -20,5 +20,7 @@ contract EverclearTokenConversionFactory is IEverclearTokenConversionFactory, Fa
     _everclearTokenConversion = address(new EverclearTokenConversion(address(this), _lockbox, _next));
 
     _children[_everclearTokenConversion] = true;
+
+    emit EverclearTokenConversionCreated(_everclearTokenConversion, _lockbox, _next, msg.sender);
   }
 }

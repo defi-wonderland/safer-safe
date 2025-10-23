@@ -8,6 +8,15 @@ import {ISimpleTransfers} from 'interfaces/actions-builders/ISimpleTransfers.sol
  * @notice Interface for the SimpleTransfersFactory contract
  */
 interface ISimpleTransfersFactory {
+  // ~~~ EVENTS ~~~
+
+  /**
+   * @notice Emitted when a new SimpleTransfers contract is created
+   * @param _simpleTransfers The address of the created SimpleTransfers contract
+   * @param _creator The address that created the contract
+   */
+  event SimpleTransfersCreated(address indexed _simpleTransfers, address indexed _creator);
+
   // ~~~ FACTORY METHODS ~~~
 
   /**

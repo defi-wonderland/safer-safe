@@ -6,6 +6,18 @@ pragma solidity 0.8.30;
  * @notice Interface for the ChangeSafeGuardActionFactory contract
  */
 interface IChangeSafeGuardActionFactory {
+  // ~~~ EVENTS ~~~
+
+  /**
+   * @notice Emitted when a new ChangeSafeGuardAction contract is created
+   * @param _changeSafeGuardAction The address of the created ChangeSafeGuardAction contract
+   * @param _safeGuard The safe guard contract address
+   * @param _creator The address that created the contract
+   */
+  event ChangeSafeGuardActionCreated(
+    address indexed _changeSafeGuardAction, address indexed _safeGuard, address indexed _creator
+  );
+
   // ~~~ FACTORY METHODS ~~~
 
   /**
