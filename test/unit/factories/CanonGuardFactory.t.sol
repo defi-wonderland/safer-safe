@@ -6,8 +6,9 @@ import {CanonGuardFactory} from 'src/contracts/factories/CanonGuardFactory.sol';
 import {ICanonGuard} from 'src/interfaces/ICanonGuard.sol';
 import {ISafeManageable} from 'src/interfaces/ISafeManageable.sol';
 import {ICanonGuardFactory} from 'src/interfaces/factories/ICanonGuardFactory.sol';
+import {Utils} from 'test/unit/utils/Utils.sol';
 
-contract UnitCanonGuardFactory is Test {
+contract UnitCanonGuardFactory is Test, Utils {
   CanonGuardFactory public canonGuardFactory;
   ICanonGuard public auxCanonGuard;
   address public multiSendCallOnly;
@@ -39,6 +40,16 @@ contract UnitCanonGuardFactory is Test {
     _maxApprovalDuration = bound(_maxApprovalDuration, MIN_EXPIRY_TIME, type(uint256).max);
     _shortTxExecutionDelay = bound(_shortTxExecutionDelay, 0, type(uint128).max - 1);
     _longTxExecutionDelay = bound(_longTxExecutionDelay, _shortTxExecutionDelay, type(uint128).max);
+
+    // it should emit CanonGuardCreated event with correct parameters
+    vm.expectEmit();
+    emit ICanonGuardFactory.CanonGuardCreated(
+      _getNextContractDeployedAddress(address(canonGuardFactory)),
+      _safe,
+      _emergencyTrigger,
+      _emergencyCaller,
+      address(this)
+    );
 
     address _canonGuard = canonGuardFactory.createCanonGuard(
       _safe,

@@ -3,4 +3,5 @@ UnitPreApproveActionFactory::createPreApproveAction
     ├── it should deploy an PreApproveAction contract with correct args
     ├── it should match the parameters sent to the constructor
     ├── it should set the parent address in the child contract
-    └── it should store the contract as a factory children
+    ├── it should store the contract as a factory children
+    └── it should emit PreApproveActionCreated event with correct parameters

@@ -5,8 +5,10 @@ import {Test} from 'forge-std/Test.sol';
 import {CappedTokenTransfersHubFactory} from 'src/contracts/factories/CappedTokenTransfersHubFactory.sol';
 import {IActionHub} from 'src/interfaces/action-hubs/IActionHub.sol';
 import {ICappedTokenTransfersHub} from 'src/interfaces/action-hubs/ICappedTokenTransfersHub.sol';
+import {ICappedTokenTransfersHubFactory} from 'src/interfaces/factories/ICappedTokenTransfersHubFactory.sol';
+import {Utils} from 'test/unit/utils/Utils.sol';
 
-contract UnitCappedTokenTransfersHubFactorycreateCappedTokenTransfersHub is Test {
+contract UnitCappedTokenTransfersHubFactorycreateCappedTokenTransfersHub is Test, Utils {
   CappedTokenTransfersHubFactory public cappedTokenTransfersHubFactory;
   address public safe;
   address public recipient;
@@ -25,6 +27,12 @@ contract UnitCappedTokenTransfersHubFactorycreateCappedTokenTransfersHub is Test
   }
 
   function test_WhenCalled() external {
+    // it should emit CappedTokenTransfersHubCreated event with correct parameters
+    vm.expectEmit();
+    emit ICappedTokenTransfersHubFactory.CappedTokenTransfersHubCreated(
+      _getNextContractDeployedAddress(address(cappedTokenTransfersHubFactory)), safe, recipient, address(this)
+    );
+
     address hub =
       cappedTokenTransfersHubFactory.createCappedTokenTransfersHub(safe, recipient, tokens, caps, epochLength);
 

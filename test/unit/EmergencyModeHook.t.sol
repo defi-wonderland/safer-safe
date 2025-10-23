@@ -56,6 +56,11 @@ contract UnitEmergencyModeHook is Test {
 
   function test_SetEmergencyMode_WhenSenderIsEmergencyTrigger() external {
     vm.prank(emergencyModeHook.emergencyTrigger());
+
+    // It emits EmergencyModeSet event
+    vm.expectEmit();
+    emit IEmergencyModeHook.EmergencyModeSet();
+
     emergencyModeHook.setEmergencyMode();
 
     // It sets emergencyMode to true
@@ -64,6 +69,11 @@ contract UnitEmergencyModeHook is Test {
 
   function test_UnsetEmergencyMode_WhenSenderIsSafe() external {
     vm.prank(safe);
+
+    // It emits EmergencyModeUnset event
+    vm.expectEmit();
+    emit IEmergencyModeHook.EmergencyModeUnset();
+
     emergencyModeHook.unsetEmergencyMode();
 
     // It sets emergencyMode to false
@@ -97,6 +107,12 @@ contract UnitEmergencyModeHook is Test {
   {
     vm.assume(_emergencyCaller != address(0));
 
+    address _oldCaller = emergencyModeHook.emergencyCaller();
+
+    // It emits EmergencyCallerSet event with old and new caller
+    vm.expectEmit();
+    emit IEmergencyModeHook.EmergencyCallerSet(_oldCaller, _emergencyCaller);
+
     // It sets emergencyCaller to the given value
     emergencyModeHook.setEmergencyCaller(_emergencyCaller);
     assertEq(emergencyModeHook.emergencyCaller(), _emergencyCaller);
@@ -122,6 +138,12 @@ contract UnitEmergencyModeHook is Test {
     whenSenderIsSafe
   {
     vm.assume(_emergencyTrigger != address(0));
+
+    address _oldTrigger = emergencyModeHook.emergencyTrigger();
+
+    // It emits EmergencyTriggerSet event with old and new trigger
+    vm.expectEmit();
+    emit IEmergencyModeHook.EmergencyTriggerSet(_oldTrigger, _emergencyTrigger);
 
     // It sets emergencyTrigger to the given value
     emergencyModeHook.setEmergencyTrigger(_emergencyTrigger);
