@@ -10,6 +10,8 @@ UnitCanonGuard::constructor
 │   └── it reverts
 ├── when long execution delay is greater than max
 │   └── it reverts
+├── when short execution delay is greater than max
+│   └── it reverts
 ├── when tx expiry delay is greater than max
 │   └── it reverts
 ├── when tx expiry delay is less than min
