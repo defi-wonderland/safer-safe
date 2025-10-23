@@ -5,6 +5,7 @@ import {Test} from 'forge-std/Test.sol';
 import {CanonGuardFactory} from 'src/contracts/factories/CanonGuardFactory.sol';
 import {ICanonGuard} from 'src/interfaces/ICanonGuard.sol';
 import {ISafeManageable} from 'src/interfaces/ISafeManageable.sol';
+import {ICanonGuardFactory} from 'src/interfaces/factories/ICanonGuardFactory.sol';
 
 contract UnitCanonGuardFactory is Test {
   CanonGuardFactory public canonGuardFactory;
@@ -20,6 +21,12 @@ contract UnitCanonGuardFactory is Test {
   function test_Constructor_WhenCalled() external view {
     // it should store the multi send call only address
     assertEq(canonGuardFactory.MULTI_SEND_CALL_ONLY(), multiSendCallOnly);
+  }
+
+  function test_Constructor_WhenTheMultiSendCallOnlyAddressIsZero() external {
+    // it reverts
+    vm.expectRevert(ICanonGuardFactory.MultiSendCallOnlyCannotBeZero.selector);
+    new CanonGuardFactory(address(0));
   }
 
   function test_CreateCanonGuard_WhenCalledWithValidParameters(

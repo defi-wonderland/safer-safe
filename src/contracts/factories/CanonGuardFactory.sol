@@ -22,6 +22,8 @@ contract CanonGuardFactory is ICanonGuardFactory, Factory {
    * @param _multiSendCallOnly The MultiSendCallOnly contract address
    */
   constructor(address _multiSendCallOnly) {
+    if (_multiSendCallOnly == address(0)) revert MultiSendCallOnlyCannotBeZero();
+
     MULTI_SEND_CALL_ONLY = _multiSendCallOnly;
   }
 

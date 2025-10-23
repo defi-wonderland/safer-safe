@@ -6,6 +6,22 @@ pragma solidity 0.8.30;
  * @notice Interface for the CanonGuardFactory contract
  */
 interface ICanonGuardFactory {
+  // ~~~ ERRORS ~~~
+  /**
+   * @notice Thrown when the transaction expiry delay is less than the minimum expiry time
+   */
+  error TxExpiryDelayCannotBeLessThanMin();
+
+  /**
+   * @notice Thrown when the maximum approval duration is less than the minimum expiry time
+   */
+  error MaxApprovalDurationCannotBeLessThanMin();
+
+  /**
+   * @notice Thrown when the MultiSendCallOnly contract address is zero
+   */
+  error MultiSendCallOnlyCannotBeZero();
+
   // ~~~ FACTORY METHODS ~~~
 
   /**
