@@ -124,7 +124,7 @@ interface ICanonGuard is ISafeManageable {
   error TxExpiryDelayCannotBeGreaterThanMax();
 
   /**
-   * @notice Thrown when the long transaction execution delay is greater than the maximum value (6 months)
+   * @notice Thrown when the long transaction execution delay is greater than the maximum value
    */
   error LongDelayCannotBeGreaterThanMax();
 

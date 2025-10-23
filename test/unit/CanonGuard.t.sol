@@ -119,26 +119,8 @@ contract UnitCanonGuard is Test {
     );
   }
 
-  function test_Constructor_WhenLongDelayIsGreaterThanMax(uint256 _longTxExecutionDelay) external {
-    _longTxExecutionDelay = bound(_longTxExecutionDelay, canonGuard.MAX_TX_EXECUTION_DELAY() + 1, type(uint256).max);
-
-    // it reverts
-    vm.expectRevert(ICanonGuard.LongDelayCannotBeGreaterThanMax.selector);
-    new CanonGuardForTest(
-      PARENT,
-      SAFE,
-      MULTI_SEND_CALL_ONLY,
-      SHORT_TX_EXECUTION_DELAY,
-      _longTxExecutionDelay,
-      TX_EXPIRY_DELAY,
-      MAX_APPROVAL_DURATION,
-      EMERGENCY_TRIGGER,
-      EMERGENCY_CALLER
-    );
-  }
-
   function test_Constructor_WhenLongExecutionDelayIsGreaterThanMax(uint256 _longTxExecutionDelay) external {
-    _longTxExecutionDelay = bound(_longTxExecutionDelay, uint256(type(uint128).max) + 1, type(uint256).max);
+    _longTxExecutionDelay = bound(_longTxExecutionDelay, canonGuard.MAX_TX_EXECUTION_DELAY() + 1, type(uint256).max);
 
     // it reverts
     vm.expectRevert(ICanonGuard.LongDelayCannotBeGreaterThanMax.selector);
