@@ -24,3 +24,4 @@ crytic-export
 
 # Echidna corpus
 test/invariants/fuzz/echidna_coverage
+corpus
