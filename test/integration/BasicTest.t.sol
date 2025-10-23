@@ -3,10 +3,10 @@ pragma solidity 0.8.30;
 
 import {ISafe} from '@safe-smart-account/interfaces/ISafe.sol';
 import {Test} from 'forge-std/Test.sol';
+import {ICanonGuard} from 'interfaces/ICanonGuard.sol';
 import {ISimpleActions} from 'interfaces/actions-builders/ISimpleActions.sol';
 import {EthereumConstants} from 'script/Constants.sol';
 import {DeployCanonGuard} from 'script/DeployCanonGuard.s.sol';
-import {CanonGuard} from 'src/contracts/CanonGuard.sol';
 
 contract IntegrationBasicTest is DeployCanonGuard, EthereumConstants, Test {
   uint256 internal constant _ETHEREUM_FORK_BLOCK = 18_920_905;
@@ -49,7 +49,7 @@ contract IntegrationBasicTest is DeployCanonGuard, EthereumConstants, Test {
     run();
 
     // Deploy the CanonGuard contract (overriding the dummy contract)
-    _canonGuard = CanonGuard(
+    _canonGuard = ICanonGuard(
       canonGuardFactory.createCanonGuard(
         address(_safeProxy),
         SHORT_TX_EXECUTION_DELAY,
