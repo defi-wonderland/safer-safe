@@ -1,31 +1,30 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import {AllowanceClaimor} from 'contracts/actions-builders/AllowanceClaimor.sol';
-import {CappedTokenTransfers} from 'contracts/actions-builders/CappedTokenTransfers.sol';
-import {ChangeSafeGuardAction} from 'contracts/actions-builders/ChangeSafeGuardAction.sol';
-import {PreApproveAction} from 'contracts/actions-builders/PreApproveAction.sol';
-import {SetEmergencyCallerAction} from 'contracts/actions-builders/SetEmergencyCallerAction.sol';
-import {SetEmergencyTriggerAction} from 'contracts/actions-builders/SetEmergencyTriggerAction.sol';
-import {SimpleActions} from 'contracts/actions-builders/SimpleActions.sol';
-import {SimpleTransfers} from 'contracts/actions-builders/SimpleTransfers.sol';
-import {UnsetEmergencyModeAction} from 'contracts/actions-builders/UnsetEmergencyModeAction.sol';
-import {AllowanceClaimorFactory} from 'contracts/factories/AllowanceClaimorFactory.sol';
-import {CappedTokenTransfersHubFactory} from 'contracts/factories/CappedTokenTransfersHubFactory.sol';
-import {ChangeSafeGuardActionFactory} from 'contracts/factories/ChangeSafeGuardActionFactory.sol';
-import {EverclearTokenConversionFactory} from 'contracts/factories/EverclearTokenConversionFactory.sol';
-import {OPxActionFactory} from 'contracts/factories/OPxActionFactory.sol';
-import {PreApproveActionFactory} from 'contracts/factories/PreApproveActionFactory.sol';
-import {SetEmergencyCallerActionFactory} from 'contracts/factories/SetEmergencyCallerActionFactory.sol';
-import {SetEmergencyTriggerActionFactory} from 'contracts/factories/SetEmergencyTriggerActionFactory.sol';
-import {SimpleActionsFactory} from 'contracts/factories/SimpleActionsFactory.sol';
-import {SimpleTransfersFactory} from 'contracts/factories/SimpleTransfersFactory.sol';
 import {Test} from 'forge-std/Test.sol';
+import {ICanonGuard} from 'interfaces/ICanonGuard.sol';
+import {ICappedTokenTransfersHub} from 'interfaces/action-hubs/ICappedTokenTransfersHub.sol';
+import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
+import {IAllowanceClaimor} from 'interfaces/actions-builders/IAllowanceClaimor.sol';
+import {ICappedTokenTransfers} from 'interfaces/actions-builders/ICappedTokenTransfers.sol';
+import {IChangeSafeGuardAction} from 'interfaces/actions-builders/IChangeSafeGuardAction.sol';
+import {IPreApproveAction} from 'interfaces/actions-builders/IPreApproveAction.sol';
+import {ISetEmergencyCallerAction} from 'interfaces/actions-builders/ISetEmergencyCallerAction.sol';
+import {ISetEmergencyTriggerAction} from 'interfaces/actions-builders/ISetEmergencyTriggerAction.sol';
+import {ISimpleActions} from 'interfaces/actions-builders/ISimpleActions.sol';
+import {ISimpleTransfers} from 'interfaces/actions-builders/ISimpleTransfers.sol';
 import {ICanonGuardFactory} from 'interfaces/factories/ICanonGuardFactory.sol';
 import {DeployCanonGuard} from 'script/DeployCanonGuard.s.sol';
-import {CanonGuard} from 'src/contracts/CanonGuard.sol';
-import {CappedTokenTransfersHub} from 'src/contracts/action-hubs/CappedTokenTransfersHub.sol';
-import {SetGuardAction} from 'src/contracts/actions-builders/SetGuardAction.sol';
+import {AllowanceClaimorFactory} from 'src/contracts/factories/AllowanceClaimorFactory.sol';
+import {CappedTokenTransfersHubFactory} from 'src/contracts/factories/CappedTokenTransfersHubFactory.sol';
+import {ChangeSafeGuardActionFactory} from 'src/contracts/factories/ChangeSafeGuardActionFactory.sol';
+import {EverclearTokenConversionFactory} from 'src/contracts/factories/EverclearTokenConversionFactory.sol';
+import {OPxActionFactory} from 'src/contracts/factories/OPxActionFactory.sol';
+import {PreApproveActionFactory} from 'src/contracts/factories/PreApproveActionFactory.sol';
+import {SetEmergencyCallerActionFactory} from 'src/contracts/factories/SetEmergencyCallerActionFactory.sol';
+import {SetEmergencyTriggerActionFactory} from 'src/contracts/factories/SetEmergencyTriggerActionFactory.sol';
+import {SimpleActionsFactory} from 'src/contracts/factories/SimpleActionsFactory.sol';
+import {SimpleTransfersFactory} from 'src/contracts/factories/SimpleTransfersFactory.sol';
 
 contract UnitDeployCanonGuard is DeployCanonGuard, Test {
   ICanonGuardFactory internal _auxCanonGuardFactory;
@@ -86,34 +85,34 @@ contract UnitDeployCanonGuard is DeployCanonGuard, Test {
   }
 
   function _assertCommonContracts() private {
-    AllowanceClaimor _auxAllowanceClaimor = AllowanceClaimor(
+    IAllowanceClaimor _auxAllowanceClaimor = IAllowanceClaimor(
       deployCode('AllowanceClaimor', abi.encode(DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS))
     );
-    PreApproveAction _auxPreApproveAction = PreApproveAction(
+    IPreApproveAction _auxPreApproveAction = IPreApproveAction(
       deployCode('PreApproveAction', abi.encode(DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_APPROVAL_DURATION))
     );
     // NOTE: doing this in order to match msg.sender when deploying the contract
     vm.prank(DEFAULT_SENDER);
-    CappedTokenTransfers _auxCappedTokenTransfers =
-      CappedTokenTransfers(deployCode('CappedTokenTransfers', abi.encode(DUMMY_ADDRESS, DUMMY_AMOUNT, DUMMY_ADDRESS)));
-    ChangeSafeGuardAction _auxChangeSafeGuardAction =
-      ChangeSafeGuardAction(deployCode('ChangeSafeGuardAction', abi.encode(DUMMY_ADDRESS, DUMMY_ADDRESS)));
-    SetEmergencyCallerAction _auxSetEmergencyCallerAction =
-      SetEmergencyCallerAction(deployCode('SetEmergencyCallerAction', abi.encode(DUMMY_ADDRESS, DUMMY_ADDRESS)));
-    SetEmergencyTriggerAction _auxSetEmergencyTriggerAction =
-      SetEmergencyTriggerAction(deployCode('SetEmergencyTriggerAction', abi.encode(DUMMY_ADDRESS, DUMMY_ADDRESS)));
-    SimpleActions _auxSimpleActions =
-      SimpleActions(deployCode('SimpleActions', abi.encode(DUMMY_ADDRESS, new SimpleActions.SimpleAction[](0))));
-    SimpleTransfers _auxSimpleTransfers = SimpleTransfers(
-      deployCode('SimpleTransfers', abi.encode(DUMMY_ADDRESS, new SimpleTransfers.TransferAction[](0)))
+    ICappedTokenTransfers _auxCappedTokenTransfers =
+      ICappedTokenTransfers(deployCode('CappedTokenTransfers', abi.encode(DUMMY_ADDRESS, DUMMY_AMOUNT, DUMMY_ADDRESS)));
+    IChangeSafeGuardAction _auxChangeSafeGuardAction =
+      IChangeSafeGuardAction(deployCode('ChangeSafeGuardAction', abi.encode(DUMMY_ADDRESS, DUMMY_ADDRESS)));
+    ISetEmergencyCallerAction _auxSetEmergencyCallerAction =
+      ISetEmergencyCallerAction(deployCode('SetEmergencyCallerAction', abi.encode(DUMMY_ADDRESS, DUMMY_ADDRESS)));
+    ISetEmergencyTriggerAction _auxSetEmergencyTriggerAction =
+      ISetEmergencyTriggerAction(deployCode('SetEmergencyTriggerAction', abi.encode(DUMMY_ADDRESS, DUMMY_ADDRESS)));
+    ISimpleActions _auxSimpleActions =
+      ISimpleActions(deployCode('SimpleActions', abi.encode(DUMMY_ADDRESS, new ISimpleActions.SimpleAction[](0))));
+    ISimpleTransfers _auxSimpleTransfers = ISimpleTransfers(
+      deployCode('SimpleTransfers', abi.encode(DUMMY_ADDRESS, new ISimpleTransfers.TransferAction[](0)))
     );
-    CappedTokenTransfersHub _auxCappedTokenTransfersHub = CappedTokenTransfersHub(
+    ICappedTokenTransfersHub _auxCappedTokenTransfersHub = ICappedTokenTransfersHub(
       deployCode(
         'CappedTokenTransfersHub',
         abi.encode(DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS, new address[](0), new uint256[](0), DUMMY_EPOCH_LENGTH)
       )
     );
-    CanonGuard _auxCanonGuard = CanonGuard(
+    ICanonGuard _auxCanonGuard = ICanonGuard(
       deployCode(
         'CanonGuard',
         abi.encode(
@@ -129,9 +128,8 @@ contract UnitDeployCanonGuard is DeployCanonGuard, Test {
         )
       )
     );
-    SetGuardAction _auxSetGuardAction = SetGuardAction(deployCode('SetGuardAction'));
-    UnsetEmergencyModeAction _auxUnsetEmergencyModeAction =
-      UnsetEmergencyModeAction(deployCode('UnsetEmergencyModeAction'));
+    IActionsBuilder _auxSetGuardAction = IActionsBuilder(deployCode('SetGuardAction'));
+    IActionsBuilder _auxUnsetEmergencyModeAction = IActionsBuilder(deployCode('UnsetEmergencyModeAction'));
 
     assertEq(address(_allowanceClaimor).code, address(_auxAllowanceClaimor).code);
     assertEq(address(_preApproveAction).code, address(_auxPreApproveAction).code);
