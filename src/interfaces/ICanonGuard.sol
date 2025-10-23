@@ -78,6 +78,13 @@ interface ICanonGuard is ISafeManageable {
   );
 
   /**
+   * @notice Emitted when dust is collected
+   * @param _token The token sent to the SAFE contract
+   * @param _balance The balance of the token sent to the SAFE contract
+   */
+  event DustCollected(address indexed _token, uint256 _balance);
+
+  /**
    * @notice Thrown when no transaction is queued for the actions builder
    */
   error NoTransactionQueued();
@@ -142,6 +149,11 @@ interface ICanonGuard is ISafeManageable {
    * @notice Thrown when attempting to cancel a transaction with approved hash signers
    */
   error TransactionWithSignaturesCannotBeCancelled();
+
+  /**
+   * @notice Thrown when attempting to collect dust and the transfer fails
+   */
+  error ETHCollectionFailed();
 
   // ~~~ ADMIN METHODS ~~~
 

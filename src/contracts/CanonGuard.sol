@@ -192,14 +192,21 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
 
   /// @inheritdoc ICanonGuard
   function collectDust(address _token) external {
+    uint256 _balance;
+
     if (_token == address(0)) {
-      uint256 _balance = address(this).balance;
-      if (_balance != 0) payable(address(SAFE)).transfer(_balance);
+      _balance = address(this).balance;
+      if (_balance != 0) {
+        (bool _success,) = address(SAFE).call{value: _balance}('');
+        if (!_success) revert ETHCollectionFailed();
+      }
     } else {
-      IERC20 _token = IERC20(_token);
-      uint256 _balance = _token.balanceOf(address(this));
-      if (_balance != 0) _token.transfer(address(SAFE), _balance);
+      IERC20 _tokenToCollect = IERC20(_token);
+      _balance = _tokenToCollect.balanceOf(address(this));
+      if (_balance != 0) _tokenToCollect.transfer(address(SAFE), _balance);
     }
+
+    emit DustCollected(_token, _balance);
   }
 
   // ~~~ GETTER METHODS ~~~

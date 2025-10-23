@@ -143,6 +143,23 @@ UnitCanonGuard::cancelEnqueuedTransaction
     ├── it deletes transaction from mapping
     └── it emits EnqueuedTransactionCancelled event
 
+UnitCanonGuard::collectDust
+├── when the token is the zero address
+│   ├── when the balance is zero
+│   │   └── it emits DustCollected event
+│   └── when the balance is not zero
+│       ├── when the collection fails
+│       │   └── it reverts with ETHCollectionFailed
+│       └── when the collection succeeds
+│           ├── it collects dust from the contract
+│           └── it emits DustCollected event
+└── when the token is not the zero address
+    ├── when the balance is zero
+    │   └── it emits DustCollected event
+    └── when the balance is not zero
+        ├── it collects dust from the contract
+        └── it emits DustCollected event
+
 UnitCanonGuard::executeNoActionTransaction
 ├── when emergency mode is active
 │   ├── when the caller is the emergency caller

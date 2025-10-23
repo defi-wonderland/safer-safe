@@ -10,6 +10,7 @@ import {ICanonGuard} from 'contracts/CanonGuard.sol';
 import {IEmergencyModeHook} from 'contracts/EmergencyModeHook.sol';
 import {ISafeManageable} from 'contracts/SafeManageable.sol';
 import {Test} from 'forge-std/Test.sol';
+import {IERC20} from 'forge-std/interfaces/IERC20.sol';
 import {IActionHub} from 'interfaces/action-hubs/IActionHub.sol';
 import {IActionHubChild} from 'interfaces/action-hubs/IActionHubChild.sol';
 import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
@@ -1232,6 +1233,95 @@ contract UnitCanonGuard is Test {
 
     // it deletes transaction from mapping
     assertEq(canonGuard.getQueuedActionBuilders().length, 0);
+  }
+
+  modifier whenTheTokenIsTheZeroAddress() {
+    _;
+  }
+
+  function test_CollectDust_WhenTheBalanceIsZero() external whenTheTokenIsTheZeroAddress {
+    vm.deal(address(canonGuard), 0);
+
+    // it emits DustCollected event
+    vm.expectEmit();
+    emit ICanonGuard.DustCollected(address(0), 0);
+
+    canonGuard.collectDust(address(0));
+  }
+
+  modifier whenTheBalanceIsNotZero() {
+    _;
+  }
+
+  function test_CollectDust_WhenTheCollectionFails(uint256 _balance)
+    external
+    whenTheTokenIsTheZeroAddress
+    whenTheBalanceIsNotZero
+  {
+    vm.skip(true);
+
+    _balance = bound(_balance, 1, type(uint256).max);
+    vm.deal(address(canonGuard), _balance);
+
+    // it reverts with ETHCollectionFailed
+    vm.expectRevert(ICanonGuard.ETHCollectionFailed.selector);
+    canonGuard.collectDust(address(0));
+  }
+
+  function test_CollectDust_WhenTheCollectionSucceeds(uint256 _balance)
+    external
+    whenTheTokenIsTheZeroAddress
+    whenTheBalanceIsNotZero
+  {
+    _balance = bound(_balance, 1, type(uint256).max);
+    vm.deal(address(canonGuard), _balance);
+    uint256 _safeBalanceBefore = address(SAFE).balance;
+
+    // it emits DustCollected event
+    vm.expectEmit();
+    emit ICanonGuard.DustCollected(address(0), _balance);
+
+    canonGuard.collectDust(address(0));
+
+    // it collects dust from the contract
+    uint256 _safeBalanceAfter = address(SAFE).balance;
+    assertEq(_safeBalanceAfter, _safeBalanceBefore + _balance);
+  }
+
+  modifier whenTheTokenIsNotTheZeroAddress(address _token) {
+    vm.assume(_token != address(0));
+    _assumeFuzzable(_token);
+    _;
+  }
+
+  function test_CollectDust_WhenTheBalanceIsZero_WhenTheTokenIsNotTheZeroAddress(address _token)
+    external
+    whenTheTokenIsNotTheZeroAddress(_token)
+  {
+    _mockAndExpect(_token, abi.encodeWithSelector(IERC20.balanceOf.selector), abi.encode(0));
+
+    // it emits DustCollected event
+    vm.expectEmit();
+    emit ICanonGuard.DustCollected(_token, 0);
+
+    canonGuard.collectDust(_token);
+  }
+
+  function test_CollectDust_WhenTheBalanceIsNotZero(
+    uint256 _balance,
+    address _token
+  ) external whenTheTokenIsNotTheZeroAddress(_token) {
+    _balance = bound(_balance, 1, type(uint256).max);
+
+    // it collects dust from the contract
+    _mockAndExpect(_token, abi.encodeWithSelector(IERC20.balanceOf.selector), abi.encode(_balance));
+    _mockAndExpect(_token, abi.encodeWithSelector(IERC20.transfer.selector), abi.encode(true));
+
+    // it emits DustCollected event
+    vm.expectEmit();
+    emit ICanonGuard.DustCollected(_token, _balance);
+
+    canonGuard.collectDust(_token);
   }
 
   function test_ExecuteNoActionTransaction_WhenTheCallerIsTheEmergencyCaller(bytes32 _safeTxHash)
