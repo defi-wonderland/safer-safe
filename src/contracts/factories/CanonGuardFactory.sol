@@ -4,6 +4,7 @@ pragma solidity 0.8.30;
 import {CanonGuard} from 'contracts/CanonGuard.sol';
 import {Factory} from 'contracts/factories/Factory.sol';
 import {ICanonGuardFactory} from 'interfaces/factories/ICanonGuardFactory.sol';
+import {CREATE3} from 'solady/utils/CREATE3.sol';
 
 /**
  * @title CanonGuardFactory
@@ -39,18 +40,22 @@ contract CanonGuardFactory is ICanonGuardFactory, Factory {
     address _emergencyTrigger,
     address _emergencyCaller
   ) external returns (address _canonGuard) {
-    _canonGuard = address(
-      new CanonGuard{salt: keccak256(abi.encode(_safe))}(
-        address(this),
-        _safe,
-        MULTI_SEND_CALL_ONLY,
-        _shortTxExecutionDelay,
-        _longTxExecutionDelay,
-        _txExpiryDelay,
-        _maxApprovalDuration,
-        _emergencyTrigger,
-        _emergencyCaller
-      )
+    _canonGuard = CREATE3.deployDeterministic(
+      abi.encodePacked(
+        type(CanonGuard).creationCode,
+        abi.encode(
+          address(this),
+          _safe,
+          MULTI_SEND_CALL_ONLY,
+          _shortTxExecutionDelay,
+          _longTxExecutionDelay,
+          _txExpiryDelay,
+          _maxApprovalDuration,
+          _emergencyTrigger,
+          _emergencyCaller
+        )
+      ),
+      keccak256(abi.encode(_safe))
     );
 
     _children[_canonGuard] = true;

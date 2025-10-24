@@ -2,6 +2,7 @@
 pragma solidity 0.8.30;
 
 import {Test} from 'forge-std/Test.sol';
+import {CREATE3} from 'solady/utils/CREATE3.sol';
 import {CanonGuard} from 'src/contracts/CanonGuard.sol';
 import {CanonGuardFactory} from 'src/contracts/factories/CanonGuardFactory.sol';
 import {ICanonGuard} from 'src/interfaces/ICanonGuard.sol';
@@ -91,28 +92,6 @@ contract UnitCanonGuardFactory is Test {
     assertTrue(canonGuardFactory.isChild(_canonGuard));
 
     // it should match the deterministic address
-    assertEq(
-      _canonGuard,
-      vm.computeCreate2Address(
-        keccak256(abi.encode(_safe)),
-        keccak256(
-          abi.encodePacked(
-            type(CanonGuard).creationCode,
-            abi.encode(
-              address(canonGuardFactory),
-              _safe,
-              multiSendCallOnly,
-              _shortTxExecutionDelay,
-              _longTxExecutionDelay,
-              _txExpiryDelay,
-              _maxApprovalDuration,
-              _emergencyTrigger,
-              _emergencyCaller
-            )
-          )
-        ),
-        address(canonGuardFactory)
-      )
-    );
+    assertEq(_canonGuard, CREATE3.predictDeterministicAddress(keccak256(abi.encode(_safe)), address(canonGuardFactory)));
   }
 }
