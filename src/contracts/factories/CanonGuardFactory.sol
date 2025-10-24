@@ -40,7 +40,7 @@ contract CanonGuardFactory is ICanonGuardFactory, Factory {
     address _emergencyCaller
   ) external returns (address _canonGuard) {
     _canonGuard = address(
-      new CanonGuard(
+      new CanonGuard{salt: keccak256(abi.encode(_safe))}(
         address(this),
         _safe,
         MULTI_SEND_CALL_ONLY,
