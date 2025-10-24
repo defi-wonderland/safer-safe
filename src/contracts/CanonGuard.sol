@@ -28,6 +28,7 @@ import {IActionHub} from 'interfaces/action-hubs/IActionHub.sol';
 import {IActionHubChild} from 'interfaces/action-hubs/IActionHubChild.sol';
 import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 import {EnumerableSetLib} from 'solady/utils/EnumerableSetLib.sol';
+import {SafeTransferLib} from 'solady/utils/SafeTransferLib.sol';
 
 /**
  * @title CanonGuard
@@ -35,6 +36,7 @@ import {EnumerableSetLib} from 'solady/utils/EnumerableSetLib.sol';
  */
 contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
   using EnumerableSetLib for EnumerableSetLib.AddressSet;
+  using SafeTransferLib for address;
 
   // ~~~ STORAGE ~~~
   /// @inheritdoc ICanonGuard
@@ -193,14 +195,10 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
 
     if (_token == address(0)) {
       _balance = address(this).balance;
-      if (_balance != 0) {
-        (bool _success,) = address(SAFE).call{value: _balance}('');
-        if (!_success) revert ETHCollectionFailed();
-      }
+      if (_balance != 0) address(SAFE).safeTransferAllETH();
     } else {
-      IERC20 _tokenToCollect = IERC20(_token);
-      _balance = _tokenToCollect.balanceOf(address(this));
-      if (_balance != 0) _tokenToCollect.transfer(address(SAFE), _balance);
+      _balance = IERC20(_token).balanceOf(address(this));
+      if (_balance != 0) _token.safeTransferAll(address(SAFE));
     }
 
     emit DustCollected(_token, _balance);

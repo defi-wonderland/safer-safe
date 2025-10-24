@@ -14,6 +14,7 @@ import {IERC20} from 'forge-std/interfaces/IERC20.sol';
 import {IActionHub} from 'interfaces/action-hubs/IActionHub.sol';
 import {IActionHubChild} from 'interfaces/action-hubs/IActionHubChild.sol';
 import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
+import {SafeTransferLib} from 'solady/utils/SafeTransferLib.sol';
 
 contract UnitCanonGuard is Test {
   CanonGuardForTest public canonGuard;
@@ -1233,7 +1234,7 @@ contract UnitCanonGuard is Test {
     vm.deal(address(canonGuard), _balance);
 
     // it reverts with ETHCollectionFailed
-    vm.expectRevert(ICanonGuard.ETHCollectionFailed.selector);
+    vm.expectRevert(SafeTransferLib.ETHTransferFailed.selector);
     canonGuard.collectDust(address(0));
   }
 
