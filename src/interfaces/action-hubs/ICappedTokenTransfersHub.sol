@@ -15,9 +15,8 @@ interface ICappedTokenTransfersHub is ISafeManageable {
    * @param _token The token that was updated
    * @param _amountSpent The amount of tokens that were spent
    * @param _currentEpoch The current epoch after the update
-   * @param _capLeft The cap left for the token in the current epoch
    */
-  event StateUpdated(address indexed _token, uint256 _amountSpent, uint256 _currentEpoch, uint256 _capLeft);
+  event StateUpdated(address indexed _token, uint256 _amountSpent, uint256 _currentEpoch);
 
   // ~~~ ERRORS ~~~
 
