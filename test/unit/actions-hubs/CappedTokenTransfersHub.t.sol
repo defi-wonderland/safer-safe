@@ -124,8 +124,8 @@ contract UnitCappedTokenTransfersHub is Test {
   function test_UpdateState_WhenCalledByTheSafe(uint256 _amount) external whenCalledByTheSafe {
     _amount = bound(_amount, 0, cappedTokenTransfersHub.cap(tokens[0]));
 
-    uint256 _secondsSinceLastUpdate = block.timestamp - cappedTokenTransfersHub.lastEpoch();
-    uint256 _remainder = _secondsSinceLastUpdate % cappedTokenTransfersHub.EPOCH_LENGTH();
+    uint256 _secondsSinceLastEpoch = block.timestamp - cappedTokenTransfersHub.lastEpoch();
+    uint256 _remainder = _secondsSinceLastEpoch % cappedTokenTransfersHub.EPOCH_LENGTH();
     uint256 _currentEpoch = block.timestamp - _remainder;
 
     // it emits the StateUpdated event

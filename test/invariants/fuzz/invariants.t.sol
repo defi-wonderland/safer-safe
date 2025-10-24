@@ -27,8 +27,8 @@ contract Invariants is Setup {
           uint256 epochLength = ICappedTokenTransfersHub(hub).EPOCH_LENGTH();
 
           // Calculate the actual current epoch based on block.timestamp
-          uint256 secondsSinceLastUpdate = block.timestamp - lastEpoch;
-          uint256 remainder = secondsSinceLastUpdate % epochLength;
+          uint256 secondsSinceLastEpoch = block.timestamp - lastEpoch;
+          uint256 remainder = secondsSinceLastEpoch % epochLength;
           uint256 actualCurrentEpoch = block.timestamp - remainder;
 
           // If we're in a new epoch (not yet updated), totalSpent should be from old epoch
