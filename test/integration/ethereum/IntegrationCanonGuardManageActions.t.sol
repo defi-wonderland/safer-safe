@@ -542,4 +542,28 @@ contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
     bytes32 _guardSlot = vm.load(address(SAFE_PROXY), keccak256('guard_manager.guard.address'));
     assertEq(address(uint160(uint256(_guardSlot))), address(canonGuard));
   }
+
+  function test_CollectDust() public {
+    // Send ETH to the canon guard
+    vm.deal(address(canonGuard), 1 ether);
+
+    uint256 _safeETHBalanceBefore = address(SAFE_PROXY).balance;
+
+    // Collect the dust
+    canonGuard.collectDust(canonGuard.ETH_ADDRESS());
+
+    // Assert that the ETH has been collected
+    assertEq(address(SAFE_PROXY).balance, _safeETHBalanceBefore + 1 ether);
+
+    // Send WETH to the canon guard
+    deal(address(WETH), address(canonGuard), 1 ether);
+
+    uint256 _safeWETHBalanceBefore = WETH.balanceOf(address(SAFE_PROXY));
+
+    // Collect the WETH
+    canonGuard.collectDust(address(WETH));
+
+    // Assert that the WETH has been collected
+    assertEq(WETH.balanceOf(address(SAFE_PROXY)), _safeWETHBalanceBefore + 1 ether);
+  }
 }
