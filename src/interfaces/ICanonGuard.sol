@@ -206,6 +206,12 @@ interface ICanonGuard is ISafeManageable {
   // ~~~ STORAGE METHODS ~~~
 
   /**
+   * @notice Gets the address that represents ETH for dust collection
+   * @return _ethAddress The ETH address
+   */
+  function ETH_ADDRESS() external view returns (address _ethAddress);
+
+  /**
    * @notice Gets the parent address
    * @return _parent The parent address. Returns address(0) if it was not deployed by a factory
    */

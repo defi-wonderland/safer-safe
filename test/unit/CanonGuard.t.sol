@@ -1204,18 +1204,18 @@ contract UnitCanonGuard is Test {
     assertEq(canonGuard.getQueuedActionBuilders().length, 0);
   }
 
-  modifier whenTheTokenIsTheZeroAddress() {
+  modifier whenTheTokenIsTheEthAddress() {
     _;
   }
 
-  function test_CollectDust_WhenTheBalanceIsZero() external whenTheTokenIsTheZeroAddress {
+  function test_CollectDust_WhenTheBalanceIsZero() external whenTheTokenIsTheEthAddress {
     vm.deal(address(canonGuard), 0);
 
     // it emits DustCollected event
     vm.expectEmit();
-    emit ICanonGuard.DustCollected(address(0), 0);
+    emit ICanonGuard.DustCollected(canonGuard.ETH_ADDRESS(), 0);
 
-    canonGuard.collectDust(address(0));
+    canonGuard.collectDust(canonGuard.ETH_ADDRESS());
   }
 
   modifier whenTheBalanceIsNotZero() {
@@ -1224,7 +1224,7 @@ contract UnitCanonGuard is Test {
 
   function test_CollectDust_WhenTheCollectionFails(uint256 _balance)
     external
-    whenTheTokenIsTheZeroAddress
+    whenTheTokenIsTheEthAddress
     whenTheBalanceIsNotZero
   {
     // This will set the code of the safe to a safe with a reverting fallback
@@ -1233,14 +1233,16 @@ contract UnitCanonGuard is Test {
     _balance = bound(_balance, 1, type(uint256).max);
     vm.deal(address(canonGuard), _balance);
 
-    // it reverts with ETHCollectionFailed
+    address _ethAddress = canonGuard.ETH_ADDRESS();
+
+    // it reverts with ETHTransferFailed
     vm.expectRevert(SafeTransferLib.ETHTransferFailed.selector);
-    canonGuard.collectDust(address(0));
+    canonGuard.collectDust(_ethAddress);
   }
 
   function test_CollectDust_WhenTheCollectionSucceeds(uint256 _balance)
     external
-    whenTheTokenIsTheZeroAddress
+    whenTheTokenIsTheEthAddress
     whenTheBalanceIsNotZero
   {
     _balance = bound(_balance, 1, type(uint256).max);
@@ -1249,24 +1251,24 @@ contract UnitCanonGuard is Test {
 
     // it emits DustCollected event
     vm.expectEmit();
-    emit ICanonGuard.DustCollected(address(0), _balance);
+    emit ICanonGuard.DustCollected(canonGuard.ETH_ADDRESS(), _balance);
 
-    canonGuard.collectDust(address(0));
+    canonGuard.collectDust(canonGuard.ETH_ADDRESS());
 
     // it collects dust from the contract
     uint256 _safeBalanceAfter = address(SAFE).balance;
     assertEq(_safeBalanceAfter, _safeBalanceBefore + _balance);
   }
 
-  modifier whenTheTokenIsNotTheZeroAddress(address _token) {
-    vm.assume(_token != address(0));
+  modifier whenTheTokenIsNotTheEthAddress(address _token) {
+    vm.assume(_token != canonGuard.ETH_ADDRESS());
     _assumeFuzzable(_token);
     _;
   }
 
-  function test_CollectDust_WhenTheBalanceIsZero_WhenTheTokenIsNotTheZeroAddress(address _token)
+  function test_CollectDust_WhenTheBalanceIsZero_WhenTheTokenIsNotTheEthAddress(address _token)
     external
-    whenTheTokenIsNotTheZeroAddress(_token)
+    whenTheTokenIsNotTheEthAddress(_token)
   {
     _mockAndExpect(_token, abi.encodeWithSelector(IERC20.balanceOf.selector), abi.encode(0));
 
@@ -1280,7 +1282,7 @@ contract UnitCanonGuard is Test {
   function test_CollectDust_WhenTheBalanceIsNotZero(
     uint256 _balance,
     address _token
-  ) external whenTheTokenIsNotTheZeroAddress(_token) {
+  ) external whenTheTokenIsNotTheEthAddress(_token) {
     _balance = bound(_balance, 1, type(uint256).max);
 
     // it collects dust from the contract

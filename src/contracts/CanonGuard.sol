@@ -40,6 +40,9 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
 
   // ~~~ STORAGE ~~~
   /// @inheritdoc ICanonGuard
+  address public constant ETH_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+
+  /// @inheritdoc ICanonGuard
   address public immutable PARENT;
 
   /// @inheritdoc ICanonGuard
@@ -193,7 +196,7 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
   function collectDust(address _token) external {
     uint256 _balance;
 
-    if (_token == address(0)) {
+    if (_token == ETH_ADDRESS) {
       _balance = address(this).balance;
       if (_balance != 0) address(SAFE).safeTransferAllETH();
     } else {

@@ -142,16 +142,16 @@ UnitCanonGuard::cancelEnqueuedTransaction
     └── it emits EnqueuedTransactionCancelled event
 
 UnitCanonGuard::collectDust
-├── when the token is the zero address
+├── when the token is the eth address
 │   ├── when the balance is zero
 │   │   └── it emits DustCollected event
 │   └── when the balance is not zero
 │       ├── when the collection fails
-│       │   └── it reverts with ETHCollectionFailed
+│       │   └── it reverts with ETHTransferFailed
 │       └── when the collection succeeds
 │           ├── it collects dust from the contract
 │           └── it emits DustCollected event
-└── when the token is not the zero address
+└── when the token is not the eth address
     ├── when the balance is zero
     │   └── it emits DustCollected event
     └── when the balance is not zero

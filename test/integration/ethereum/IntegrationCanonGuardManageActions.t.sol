@@ -550,7 +550,7 @@ contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
     uint256 _safeETHBalanceBefore = address(SAFE_PROXY).balance;
 
     // Collect the dust
-    canonGuard.collectDust(address(0));
+    canonGuard.collectDust(canonGuard.ETH_ADDRESS());
 
     // Assert that the ETH has been collected
     assertEq(address(SAFE_PROXY).balance, _safeETHBalanceBefore + 1 ether);
