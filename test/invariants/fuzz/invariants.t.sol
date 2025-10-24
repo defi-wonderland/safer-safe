@@ -23,16 +23,17 @@ contract Invariants is Setup {
         if (token != address(0)) {
           uint256 cap = ICappedTokenTransfersHub(hub).cap(token);
           uint256 totalSpent = ICappedTokenTransfersHub(hub).totalSpent(token);
-          uint256 currentEpoch = ICappedTokenTransfersHub(hub).currentEpoch();
+          uint256 lastEpoch = ICappedTokenTransfersHub(hub).lastEpoch();
           uint256 epochLength = ICappedTokenTransfersHub(hub).EPOCH_LENGTH();
-          uint256 startingTimestamp = ICappedTokenTransfersHub(hub).STARTING_TIMESTAMP();
 
           // Calculate the actual current epoch based on block.timestamp
-          uint256 actualCurrentEpoch = (block.timestamp - startingTimestamp) / epochLength;
+          uint256 secondsSinceLastUpdate = block.timestamp - lastEpoch;
+          uint256 remainder = secondsSinceLastUpdate % epochLength;
+          uint256 actualCurrentEpoch = block.timestamp - remainder;
 
           // If we're in a new epoch (not yet updated), totalSpent should be from old epoch
           // Otherwise, totalSpent is for current epoch
-          if (actualCurrentEpoch > currentEpoch) {
+          if (actualCurrentEpoch > lastEpoch) {
             // Hub hasn't updated yet, so totalSpent is from previous epoch
             // This is fine, cap only matters within same epoch
           } else {

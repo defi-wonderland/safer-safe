@@ -3,7 +3,6 @@ UnitCappedTokenTransfersHub::constructor
 │   ├── it sets the safe
 │   ├── it sets the recipient
 │   ├── it sets the epoch length
-│   ├── it sets the starting timestamp
 │   └── it sets the tokens and caps
 ├── When tokens registered contain a duplicated token
 │   └── it reverts
@@ -24,7 +23,7 @@ UnitCappedTokenTransfersHub::updateState
 ├── When called by the safe
 │   ├── when the current epoch is greater than the epoch of the state
 │   │   ├── it resets the total spent
-│   │   └── it updates the current epoch
+│   │   └── it updates the last epoch
 │   ├── it increments the total spent
 │   ├── it emits the StateUpdated event
 │   └── when the total spent is greater than the cap

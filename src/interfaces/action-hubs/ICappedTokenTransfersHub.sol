@@ -14,9 +14,9 @@ interface ICappedTokenTransfersHub is ISafeManageable {
    * @notice Emitted when the state is updated for a token with a certain amount
    * @param _token The token that was updated
    * @param _amountSpent The amount of tokens that were spent
-   * @param _currentEpoch The current epoch after the update
+   * @param _lastEpoch The last epoch after the update
    */
-  event StateUpdated(address indexed _token, uint256 _amountSpent, uint256 _currentEpoch);
+  event StateUpdated(address indexed _token, uint256 _amountSpent, uint256 _lastEpoch);
 
   // ~~~ ERRORS ~~~
 
@@ -72,16 +72,10 @@ interface ICappedTokenTransfersHub is ISafeManageable {
   function EPOCH_LENGTH() external view returns (uint256 _epochLength);
 
   /**
-   * @notice Gets the starting timestamp
-   * @return _startingTimestamp The starting timestamp
+   * @notice Gets the last epoch
+   * @return _lastEpoch The last epoch
    */
-  function STARTING_TIMESTAMP() external view returns (uint256 _startingTimestamp);
-
-  /**
-   * @notice Gets the current epoch
-   * @return _currentEpoch The current epoch
-   */
-  function currentEpoch() external view returns (uint256 _currentEpoch);
+  function lastEpoch() external view returns (uint256 _lastEpoch);
 
   /**
    * @notice Gets the total amount of tokens spent
