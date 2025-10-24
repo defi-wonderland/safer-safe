@@ -23,9 +23,6 @@ abstract contract Constants {
   uint256 public constant LONG_TX_EXECUTION_DELAY = 7 days;
   uint256 public constant TX_EXPIRY_DELAY = 7 days;
   uint256 public constant MAX_APPROVAL_DURATION = 4 * 365 days;
-  // TODO: Replace with the correct address
-  address public constant EMERGENCY_TRIGGER = address(1);
-  address public constant EMERGENCY_CALLER = address(1);
 
   uint256 public constant ETHEREUM_MAINNET_CHAIN_ID = 1;
   uint256 public constant OPTIMISM_MAINNET_CHAIN_ID = 10;

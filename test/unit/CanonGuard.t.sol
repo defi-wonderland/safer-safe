@@ -71,9 +71,11 @@ contract UnitCanonGuard is Test {
     uint256 _txExpiryDelay,
     uint256 _maxApprovalDuration
   ) external {
+    vm.assume(_multiSendCallOnly != address(0));
     _txExpiryDelay = bound(_txExpiryDelay, 1 hours, type(uint128).max);
-    _shortTxExecutionDelay = bound(_shortTxExecutionDelay, 0, type(uint128).max - 1);
-    _longTxExecutionDelay = bound(_longTxExecutionDelay, _shortTxExecutionDelay, type(uint128).max);
+    _shortTxExecutionDelay = bound(_shortTxExecutionDelay, 0, 6 * 30 days);
+    _longTxExecutionDelay = bound(_longTxExecutionDelay, _shortTxExecutionDelay, 6 * 30 days);
+    _maxApprovalDuration = bound(_maxApprovalDuration, canonGuard.MIN_EXPIRY_TIME(), type(uint256).max);
 
     canonGuard = new CanonGuardForTest(
       PARENT,
@@ -117,6 +119,45 @@ contract UnitCanonGuard is Test {
     );
   }
 
+  function test_Constructor_WhenLongExecutionDelayIsGreaterThanMax(uint256 _longTxExecutionDelay) external {
+    _longTxExecutionDelay = bound(_longTxExecutionDelay, canonGuard.MAX_TX_EXECUTION_DELAY() + 1, type(uint256).max);
+
+    // it reverts
+    vm.expectRevert(ICanonGuard.LongDelayCannotBeGreaterThanMax.selector);
+    new CanonGuardForTest(
+      PARENT,
+      SAFE,
+      MULTI_SEND_CALL_ONLY,
+      SHORT_TX_EXECUTION_DELAY,
+      _longTxExecutionDelay,
+      TX_EXPIRY_DELAY,
+      MAX_APPROVAL_DURATION,
+      EMERGENCY_TRIGGER,
+      EMERGENCY_CALLER
+    );
+  }
+
+  function test_Constructor_WhenShortExecutionDelayIsGreaterThanMax(uint256 _shortTxExecutionDelay) external {
+    _shortTxExecutionDelay = bound(_shortTxExecutionDelay, canonGuard.MAX_TX_EXECUTION_DELAY() + 1, type(uint256).max);
+
+    // set to max value possible
+    uint256 _longTxExecutionDelay = canonGuard.MAX_TX_EXECUTION_DELAY();
+
+    // it reverts
+    vm.expectRevert(ICanonGuard.ShortDelayCannotBeGreaterThanLongDelay.selector);
+    new CanonGuardForTest(
+      PARENT,
+      SAFE,
+      MULTI_SEND_CALL_ONLY,
+      _shortTxExecutionDelay,
+      _longTxExecutionDelay,
+      TX_EXPIRY_DELAY,
+      MAX_APPROVAL_DURATION,
+      EMERGENCY_TRIGGER,
+      EMERGENCY_CALLER
+    );
+  }
+
   function test_Constructor_WhenTxExpiryDelayIsGreaterThanMax(uint256 _txExpiryDelay) external {
     _txExpiryDelay = bound(_txExpiryDelay, uint256(type(uint128).max) + 1, type(uint256).max);
 
@@ -135,17 +176,51 @@ contract UnitCanonGuard is Test {
     );
   }
 
-  function test_Constructor_WhenLongDelayIsGreaterThanMax(uint256 _longTxExecutionDelay) external {
-    _longTxExecutionDelay = bound(_longTxExecutionDelay, uint256(type(uint128).max) + 1, type(uint256).max);
+  function test_Constructor_WhenTxExpiryDelayIsLessThanMin(uint256 _txExpiryDelay) external {
+    _txExpiryDelay = bound(_txExpiryDelay, 0, canonGuard.MIN_EXPIRY_TIME() - 1);
 
     // it reverts
-    vm.expectRevert(ICanonGuard.LongDelayCannotBeGreaterThanMax.selector);
+    vm.expectRevert(ICanonGuard.TxExpiryDelayCannotBeLessThanMin.selector);
     new CanonGuardForTest(
       PARENT,
       SAFE,
       MULTI_SEND_CALL_ONLY,
       SHORT_TX_EXECUTION_DELAY,
-      _longTxExecutionDelay,
+      LONG_TX_EXECUTION_DELAY,
+      _txExpiryDelay,
+      MAX_APPROVAL_DURATION,
+      EMERGENCY_TRIGGER,
+      EMERGENCY_CALLER
+    );
+  }
+
+  function test_Constructor_WhenMaxApprovalDurationIsLessThanMinExpiryTime(uint256 _maxApprovalDuration) external {
+    _maxApprovalDuration = bound(_maxApprovalDuration, 0, canonGuard.MIN_EXPIRY_TIME() - 1);
+
+    // it reverts
+    vm.expectRevert(ICanonGuard.MaxApprovalDurationCannotBeLessThanMin.selector);
+    new CanonGuardForTest(
+      PARENT,
+      SAFE,
+      MULTI_SEND_CALL_ONLY,
+      SHORT_TX_EXECUTION_DELAY,
+      LONG_TX_EXECUTION_DELAY,
+      TX_EXPIRY_DELAY,
+      _maxApprovalDuration,
+      EMERGENCY_TRIGGER,
+      EMERGENCY_CALLER
+    );
+  }
+
+  function test_Constructor_WhenMultiSendCallOnlyIsTheZeroAddress() external {
+    // it reverts with ZeroMultiSendCallOnly
+    vm.expectRevert(ICanonGuard.ZeroMultiSendCallOnly.selector);
+    new CanonGuardForTest(
+      PARENT,
+      SAFE,
+      address(0),
+      SHORT_TX_EXECUTION_DELAY,
+      LONG_TX_EXECUTION_DELAY,
       TX_EXPIRY_DELAY,
       MAX_APPROVAL_DURATION,
       EMERGENCY_TRIGGER,
@@ -1071,7 +1146,6 @@ contract UnitCanonGuard is Test {
 
     _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.nonce.selector), abi.encode(1));
     _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.getTransactionHash.selector), abi.encode(bytes32(0)));
-    _mockAndExpect(SAFE, abi.encodeWithSelector(IOwnerManager.getOwners.selector), abi.encode(new address[](0)));
 
     canonGuard.mockTransaction(
       _txInfo.proposer, _actionsBuilder, _actionsData, _txInfo.executableAt, _txInfo.expiresAt, _txInfo.isPreApproved
@@ -1111,7 +1185,6 @@ contract UnitCanonGuard is Test {
 
     _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.nonce.selector), abi.encode(1));
     _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.getTransactionHash.selector), abi.encode(bytes32(0)));
-    _mockAndExpect(SAFE, abi.encodeWithSelector(IOwnerManager.getOwners.selector), abi.encode(new address[](0)));
 
     canonGuard.mockTransaction(
       _txInfo.proposer, _actionsBuilder, _actionsData, _txInfo.executableAt, _txInfo.expiresAt, _txInfo.isPreApproved
@@ -1166,35 +1239,6 @@ contract UnitCanonGuard is Test {
     canonGuard.cancelEnqueuedTransaction(_actionsBuilder);
   }
 
-  function test_CancelEnqueuedTransaction_WhenTransactionHasApprovedHashSigners(
-    address _actionsBuilder,
-    IActionsBuilder.Action calldata _action,
-    ICanonGuard.TransactionInfo memory _txInfo,
-    address[] memory _signers
-  ) external {
-    _assumeFuzzable(_actionsBuilder);
-    vm.assume(_signers.length > 0);
-    _txInfo.expiresAt = bound(_txInfo.expiresAt, 1, type(uint64).max - 1);
-
-    IActionsBuilder.Action[] memory _actions = new IActionsBuilder.Action[](1);
-    _actions[0] = _action;
-    bytes memory _actionsData = abi.encode(_actions);
-
-    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.nonce.selector), abi.encode(1));
-    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.getTransactionHash.selector), abi.encode(bytes32(0)));
-    _mockAndExpect(SAFE, abi.encodeWithSelector(IOwnerManager.getOwners.selector), abi.encode(_signers));
-    _mockApprovedHashesForSigners(_signers, 1);
-
-    canonGuard.mockTransaction(
-      _txInfo.proposer, _actionsBuilder, _actionsData, _txInfo.executableAt, _txInfo.expiresAt, _txInfo.isPreApproved
-    );
-
-    // it reverts with TransactionWithSignaturesCannotBeCancelled
-    vm.prank(_txInfo.proposer);
-    vm.expectRevert(ICanonGuard.TransactionWithSignaturesCannotBeCancelled.selector);
-    canonGuard.cancelEnqueuedTransaction(_actionsBuilder);
-  }
-
   function test_CancelEnqueuedTransaction_WhenTransactionCanBeCancelled(
     address _actionsBuilder,
     IActionsBuilder.Action calldata _action,
@@ -1209,7 +1253,6 @@ contract UnitCanonGuard is Test {
 
     _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.nonce.selector), abi.encode(1));
     _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.getTransactionHash.selector), abi.encode(bytes32(0)));
-    _mockAndExpect(SAFE, abi.encodeWithSelector(IOwnerManager.getOwners.selector), abi.encode(new address[](0)));
 
     canonGuard.mockTransaction(
       _txInfo.proposer, _actionsBuilder, _actionsData, _txInfo.executableAt, _txInfo.expiresAt, _txInfo.isPreApproved

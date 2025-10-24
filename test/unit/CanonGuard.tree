@@ -8,10 +8,18 @@ UnitCanonGuard::constructor
 │   └── it set transaction expiry delay
 ├── when the short execution delay is greater than the long execution delay
 │   └── it reverts
+├── when long execution delay is greater than max
+│   └── it reverts
+├── when short execution delay is greater than max
+│   └── it reverts
 ├── when tx expiry delay is greater than max
 │   └── it reverts
-└── when long delay is greater than max
-    └── it reverts
+├── when tx expiry delay is less than min
+│   └── it reverts
+├── when max approval duration is less than min expiry time
+│   └── it reverts
+└── when multi send call only is the zero address
+    └── it reverts with ZeroMultiSendCallOnly
 
 UnitCanonGuard::approveActionsBuilderOrHub
 ├── when caller is safe
@@ -136,8 +144,6 @@ UnitCanonGuard::cancelEnqueuedTransaction
 │   └── it reverts with NoTransactionQueued
 ├── when caller is not the proposer
 │   └── it reverts with CallerMustBeTransactionProposer
-├── when transaction has approved hash signers
-│   └── it reverts with TransactionWithSignaturesCannotBeCancelled
 └── when transaction can be cancelled
     ├── it deletes transaction from queue
     ├── it deletes transaction from mapping

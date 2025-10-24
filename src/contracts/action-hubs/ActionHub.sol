@@ -2,7 +2,6 @@
 pragma solidity 0.8.30;
 
 import {IActionHub} from 'interfaces/action-hubs/IActionHub.sol';
-import {CREATE3} from 'solady/utils/CREATE3.sol';
 
 abstract contract ActionHub is IActionHub {
   /// @inheritdoc IActionHub
@@ -27,18 +26,13 @@ abstract contract ActionHub is IActionHub {
   }
 
   /**
-   * @notice Deploys a new actions builder with deterministic address. Reverts if the action builder already exists.
-   * @param _initCode The init code of the new actions builder
-   * @param _salt The salt used to deploy the new actions builder
-   * @return _actionsBuilder The address of the new actions builder
+   * @notice Saves the actions builder as a child of the actionHub.
+   * @param _actionsBuilder The address of the actions builder to save as a child
    */
-  function _createNewActionsBuilder(bytes memory _initCode, bytes32 _salt) internal returns (address _actionsBuilder) {
-    // Deploy with create3 to have deterministic addresses, if the child already exists, it will revert
-    _actionsBuilder = CREATE3.deployDeterministic(_initCode, _salt);
-
+  function _saveNewActionsBuilder(address _actionsBuilder) internal {
     _actionsBuilders[_actionsBuilder] = true;
 
-    emit NewActionsBuilderCreated(_actionsBuilder, _initCode, _salt);
+    emit NewActionsBuilderSaved(_actionsBuilder);
   }
 
   /**
