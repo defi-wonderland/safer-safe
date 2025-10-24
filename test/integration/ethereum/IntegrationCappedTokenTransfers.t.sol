@@ -4,12 +4,10 @@ pragma solidity 0.8.30;
 import {CappedTokenTransfersHub} from 'src/contracts/action-hubs/CappedTokenTransfersHub.sol';
 import {IActionHub} from 'src/interfaces/action-hubs/IActionHub.sol';
 import {IActionHubChild} from 'src/interfaces/action-hubs/IActionHubChild.sol';
-import {ICappedTokenTransfersHub} from 'src/interfaces/action-hubs/ICappedTokenTransfersHub.sol';
 import {ICappedTokenTransfers} from 'src/interfaces/actions-builders/ICappedTokenTransfers.sol';
 import {IntegrationEthereumBase} from 'test/integration/ethereum/IntegrationEthereumBase.sol';
 
 contract IntegrationCappedTokenTransfers is IntegrationEthereumBase {
-  ICappedTokenTransfersHub internal _cappedTokenTransfersHub;
   address internal _recipient;
 
   function setUp() public override {
@@ -25,7 +23,7 @@ contract IntegrationCappedTokenTransfers is IntegrationEthereumBase {
     _caps[0] = 100 ether;
     _caps[1] = 200 ether;
 
-    // Deploy the CappedTokenTransfersHub
+    // Deploy the CappedTokenTransfersHub (overriding the dummy contract)
     _cappedTokenTransfersHub =
       new CappedTokenTransfersHub(address(0), address(SAFE_PROXY), _recipient, _tokens, _caps, 7 days);
   }

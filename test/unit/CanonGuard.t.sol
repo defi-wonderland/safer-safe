@@ -73,9 +73,11 @@ contract UnitCanonGuard is Test {
     uint256 _txExpiryDelay,
     uint256 _maxApprovalDuration
   ) external {
+    vm.assume(_multiSendCallOnly != address(0));
     _txExpiryDelay = bound(_txExpiryDelay, 1 hours, type(uint128).max);
-    _shortTxExecutionDelay = bound(_shortTxExecutionDelay, 0, type(uint128).max - 1);
-    _longTxExecutionDelay = bound(_longTxExecutionDelay, _shortTxExecutionDelay, type(uint128).max);
+    _shortTxExecutionDelay = bound(_shortTxExecutionDelay, 0, 6 * 30 days);
+    _longTxExecutionDelay = bound(_longTxExecutionDelay, _shortTxExecutionDelay, 6 * 30 days);
+    _maxApprovalDuration = bound(_maxApprovalDuration, canonGuard.MIN_EXPIRY_TIME(), type(uint256).max);
 
     canonGuard = new CanonGuardForTest(
       PARENT,
@@ -119,6 +121,45 @@ contract UnitCanonGuard is Test {
     );
   }
 
+  function test_Constructor_WhenLongExecutionDelayIsGreaterThanMax(uint256 _longTxExecutionDelay) external {
+    _longTxExecutionDelay = bound(_longTxExecutionDelay, canonGuard.MAX_TX_EXECUTION_DELAY() + 1, type(uint256).max);
+
+    // it reverts
+    vm.expectRevert(ICanonGuard.LongDelayCannotBeGreaterThanMax.selector);
+    new CanonGuardForTest(
+      PARENT,
+      SAFE,
+      MULTI_SEND_CALL_ONLY,
+      SHORT_TX_EXECUTION_DELAY,
+      _longTxExecutionDelay,
+      TX_EXPIRY_DELAY,
+      MAX_APPROVAL_DURATION,
+      EMERGENCY_TRIGGER,
+      EMERGENCY_CALLER
+    );
+  }
+
+  function test_Constructor_WhenShortExecutionDelayIsGreaterThanMax(uint256 _shortTxExecutionDelay) external {
+    _shortTxExecutionDelay = bound(_shortTxExecutionDelay, canonGuard.MAX_TX_EXECUTION_DELAY() + 1, type(uint256).max);
+
+    // set to max value possible
+    uint256 _longTxExecutionDelay = canonGuard.MAX_TX_EXECUTION_DELAY();
+
+    // it reverts
+    vm.expectRevert(ICanonGuard.ShortDelayCannotBeGreaterThanLongDelay.selector);
+    new CanonGuardForTest(
+      PARENT,
+      SAFE,
+      MULTI_SEND_CALL_ONLY,
+      _shortTxExecutionDelay,
+      _longTxExecutionDelay,
+      TX_EXPIRY_DELAY,
+      MAX_APPROVAL_DURATION,
+      EMERGENCY_TRIGGER,
+      EMERGENCY_CALLER
+    );
+  }
+
   function test_Constructor_WhenTxExpiryDelayIsGreaterThanMax(uint256 _txExpiryDelay) external {
     _txExpiryDelay = bound(_txExpiryDelay, uint256(type(uint128).max) + 1, type(uint256).max);
 
@@ -137,17 +178,51 @@ contract UnitCanonGuard is Test {
     );
   }
 
-  function test_Constructor_WhenLongDelayIsGreaterThanMax(uint256 _longTxExecutionDelay) external {
-    _longTxExecutionDelay = bound(_longTxExecutionDelay, uint256(type(uint128).max) + 1, type(uint256).max);
+  function test_Constructor_WhenTxExpiryDelayIsLessThanMin(uint256 _txExpiryDelay) external {
+    _txExpiryDelay = bound(_txExpiryDelay, 0, canonGuard.MIN_EXPIRY_TIME() - 1);
 
     // it reverts
-    vm.expectRevert(ICanonGuard.LongDelayCannotBeGreaterThanMax.selector);
+    vm.expectRevert(ICanonGuard.TxExpiryDelayCannotBeLessThanMin.selector);
     new CanonGuardForTest(
       PARENT,
       SAFE,
       MULTI_SEND_CALL_ONLY,
       SHORT_TX_EXECUTION_DELAY,
-      _longTxExecutionDelay,
+      LONG_TX_EXECUTION_DELAY,
+      _txExpiryDelay,
+      MAX_APPROVAL_DURATION,
+      EMERGENCY_TRIGGER,
+      EMERGENCY_CALLER
+    );
+  }
+
+  function test_Constructor_WhenMaxApprovalDurationIsLessThanMinExpiryTime(uint256 _maxApprovalDuration) external {
+    _maxApprovalDuration = bound(_maxApprovalDuration, 0, canonGuard.MIN_EXPIRY_TIME() - 1);
+
+    // it reverts
+    vm.expectRevert(ICanonGuard.MaxApprovalDurationCannotBeLessThanMin.selector);
+    new CanonGuardForTest(
+      PARENT,
+      SAFE,
+      MULTI_SEND_CALL_ONLY,
+      SHORT_TX_EXECUTION_DELAY,
+      LONG_TX_EXECUTION_DELAY,
+      TX_EXPIRY_DELAY,
+      _maxApprovalDuration,
+      EMERGENCY_TRIGGER,
+      EMERGENCY_CALLER
+    );
+  }
+
+  function test_Constructor_WhenMultiSendCallOnlyIsTheZeroAddress() external {
+    // it reverts with ZeroMultiSendCallOnly
+    vm.expectRevert(ICanonGuard.ZeroMultiSendCallOnly.selector);
+    new CanonGuardForTest(
+      PARENT,
+      SAFE,
+      address(0),
+      SHORT_TX_EXECUTION_DELAY,
+      LONG_TX_EXECUTION_DELAY,
       TX_EXPIRY_DELAY,
       MAX_APPROVAL_DURATION,
       EMERGENCY_TRIGGER,
