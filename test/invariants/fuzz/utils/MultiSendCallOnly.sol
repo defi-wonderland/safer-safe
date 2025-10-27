@@ -1,4 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-only
+// solhint-disable compiler-version
 pragma solidity >=0.7.0 <0.9.0;
 
 // Taken from eth:0x9641d764fc13c8b624c04430c7356c1c7c8102e2
