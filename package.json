@@ -46,6 +46,7 @@
     "husky": "9.1.7",
     "lint-staged": "16.1.6",
     "solhint-community": "4.0.1",
+    "solhint-config-wonderland": "0.0.1",
     "sort-package-json": "3.4.0"
   }
 }
