@@ -44,7 +44,7 @@ contract ActionTarget is IERC20 {
   // Cap tracking
   mapping(address token => uint256 cap) public tokenCaps;
   mapping(address token => uint256 totalSpent) public tokenTotalSpent;
-  uint256 public currentEpochState;
+  uint256 public lastEpochState;
   uint256 public constant EPOCH_LENGTH = 1 days;
   uint256 public constant STARTING_TIMESTAMP = 1;
 
@@ -136,8 +136,8 @@ contract ActionTarget is IERC20 {
     return tokenTotalSpent[_token];
   }
 
-  function currentEpoch() external view returns (uint256) {
-    return currentEpochState;
+  function lastEpoch() external view returns (uint256) {
+    return lastEpochState;
   }
 
   function setCap(address _token, uint256 _cap) external {
