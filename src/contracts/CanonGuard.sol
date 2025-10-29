@@ -21,7 +21,6 @@ import {Enum} from '@safe-smart-account/libraries/Enum.sol';
 import {MultiSendCallOnly} from '@safe-smart-account/libraries/MultiSendCallOnly.sol';
 import {EmergencyModeHook} from 'contracts/EmergencyModeHook.sol';
 import {OnlyCanonGuard} from 'contracts/OnlyCanonGuard.sol';
-import {SafeManageable} from 'contracts/SafeManageable.sol';
 import {IERC20} from 'forge-std/interfaces/IERC20.sol';
 import {ICanonGuard} from 'interfaces/ICanonGuard.sol';
 import {IActionHub} from 'interfaces/action-hubs/IActionHub.sol';
@@ -104,7 +103,7 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
     uint256 _maxApprovalDuration,
     address _emergencyTrigger,
     address _emergencyCaller
-  ) SafeManageable(_safe) EmergencyModeHook(_emergencyTrigger, _emergencyCaller) {
+  ) EmergencyModeHook(_emergencyTrigger, _emergencyCaller, _safe) {
     if (_shortTxExecutionDelay > _longTxExecutionDelay) {
       revert ShortDelayCannotBeGreaterThanLongDelay();
     }
