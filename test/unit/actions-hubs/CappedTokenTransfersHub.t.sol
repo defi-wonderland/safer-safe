@@ -80,6 +80,21 @@ contract UnitCappedTokenTransfersHub is Test {
     new CappedTokenTransfersHub(safe, recipient, tokens, caps, 0);
   }
 
+  function test_Constructor_WhenTheTokensAndCapsLengthMismatch() external {
+    tokens = new address[](2);
+    tokens[0] = makeAddr('token1');
+    tokens[1] = makeAddr('token2');
+
+    caps = new uint256[](3);
+    caps[0] = 100;
+    caps[1] = 200;
+    caps[2] = 300;
+
+    // it reverts
+    vm.expectRevert(ICappedTokenTransfersHub.TokensAndCapsLengthMismatch.selector);
+    new CappedTokenTransfersHub(safe, recipient, tokens, caps, EPOCH_LENGTH);
+  }
+
   modifier whenCalledByTheSafeOwner() {
     vm.mockCall(address(safe), abi.encodeWithSelector(IOwnerManager.isOwner.selector), abi.encode(true));
     _;

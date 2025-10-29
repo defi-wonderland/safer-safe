@@ -52,6 +52,7 @@ contract CappedTokenTransfersHub is ActionHub, ICappedTokenTransfersHub, SafeMan
     EPOCH_LENGTH = _epochLength;
     lastEpoch = block.timestamp;
 
+    if (_tokens.length != _caps.length) revert TokensAndCapsLengthMismatch();
     if (_epochLength == 0) revert EpochLengthCannotBeZero();
 
     for (uint256 i = 0; i < _tokens.length; i++) {
