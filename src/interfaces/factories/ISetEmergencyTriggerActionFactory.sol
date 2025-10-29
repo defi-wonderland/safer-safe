@@ -8,6 +8,15 @@ import {IFactory} from 'interfaces/factories/IFactory.sol';
  * @notice Interface for the SetEmergencyTriggerActionFactory contract
  */
 interface ISetEmergencyTriggerActionFactory is IFactory {
+  // ~~~ EVENTS ~~~
+
+  /**
+   * @notice Emitted when a new SetEmergencyTriggerAction contract is created
+   * @param _setEmergencyTriggerAction The address of the created SetEmergencyTriggerAction contract
+   * @param _emergencyTrigger The emergency trigger address
+   */
+  event SetEmergencyTriggerActionCreated(address indexed _setEmergencyTriggerAction, address indexed _emergencyTrigger);
+
   // ~~~ FACTORY METHODS ~~~
 
   /**

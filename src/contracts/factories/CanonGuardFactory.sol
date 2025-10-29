@@ -59,5 +59,7 @@ contract CanonGuardFactory is ICanonGuardFactory, Factory {
     );
 
     _children[_canonGuard] = true;
+
+    emit CanonGuardCreated(_canonGuard, _safe, _emergencyTrigger, _emergencyCaller);
   }
 }

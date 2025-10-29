@@ -4,7 +4,8 @@ UnitSimpleActionsFactory::createSimpleActions
     ├── it should match the parameters sent to the constructor
     ├── it should save the entire array of actions
     ├── it should set the parent address in the child contract
-    └── it should store the contract as a factory children
+    ├── it should store the contract as a factory children
+    └── it should emit SimpleActionsCreated event with correct parameters
 
 UnitSimpleActionsFactory::createSimpleAction
 └── when creating a SimpleActions contract with a single simple action
@@ -12,4 +13,5 @@ UnitSimpleActionsFactory::createSimpleAction
     ├── it should match the parameters sent to the constructor
     ├── it should save the entire array of actions
     ├── it should set the parent address in the child contract
-    └── it should store the contract as a factory children
+    ├── it should store the contract as a factory children
+    └── it should emit SimpleActionsCreated event with correct parameters

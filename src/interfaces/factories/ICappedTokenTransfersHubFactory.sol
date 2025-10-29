@@ -8,6 +8,18 @@ import {IFactory} from 'interfaces/factories/IFactory.sol';
  * @notice Interface for the CappedTokenTransfersHubFactory contract
  */
 interface ICappedTokenTransfersHubFactory is IFactory {
+  // ~~~ EVENTS ~~~
+
+  /**
+   * @notice Emitted when a new CappedTokenTransfersHub contract is created
+   * @param _cappedTokenTransfersHub The address of the created CappedTokenTransfersHub contract
+   * @param _safe The Gnosis Safe contract address
+   * @param _recipient The recipient of the token transfers
+   */
+  event CappedTokenTransfersHubCreated(
+    address indexed _cappedTokenTransfersHub, address indexed _safe, address indexed _recipient
+  );
+
   // ~~~ FACTORY METHODS ~~~
 
   /**

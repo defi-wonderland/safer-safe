@@ -5,8 +5,10 @@ import {PreApproveActionFactory} from 'contracts/factories/PreApproveActionFacto
 import {Test} from 'forge-std/Test.sol';
 import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 import {IPreApproveAction} from 'interfaces/actions-builders/IPreApproveAction.sol';
+import {IPreApproveActionFactory} from 'interfaces/factories/IPreApproveActionFactory.sol';
+import {Utils} from 'test/unit/utils/Utils.sol';
 
-contract UnitPreApproveActionFactorycreatePreApproveAction is Test {
+contract UnitPreApproveActionFactorycreatePreApproveAction is Test, Utils {
   PreApproveActionFactory public preApproveActionFactory;
   IPreApproveAction public auxApproveAction;
 
@@ -15,6 +17,12 @@ contract UnitPreApproveActionFactorycreatePreApproveAction is Test {
   }
 
   function test_WhenCalled(address _actionsBuilder, uint256 _approvalDuration) external {
+    // it should emit PreApproveActionCreated event with correct parameters
+    vm.expectEmit();
+    emit IPreApproveActionFactory.PreApproveActionCreated(
+      _getNextContractDeployedAddress(address(preApproveActionFactory)), _actionsBuilder, _approvalDuration
+    );
+
     address _preApproveAction = preApproveActionFactory.createPreApproveAction(_actionsBuilder, _approvalDuration);
 
     auxApproveAction = IPreApproveAction(

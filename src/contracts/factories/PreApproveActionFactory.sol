@@ -20,5 +20,7 @@ contract PreApproveActionFactory is IPreApproveActionFactory, Factory {
     _preApproveAction = address(new PreApproveAction(address(this), _actionsBuilder, _approvalDuration));
 
     _children[_preApproveAction] = true;
+
+    emit PreApproveActionCreated(_preApproveAction, _actionsBuilder, _approvalDuration);
   }
 }

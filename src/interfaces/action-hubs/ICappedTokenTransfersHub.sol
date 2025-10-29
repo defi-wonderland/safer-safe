@@ -12,6 +12,14 @@ interface ICappedTokenTransfersHub is IActionHub, ISafeManageable {
   // ~~~ EVENTS ~~~
 
   /**
+   * @notice Emitted when a new CappedTokenTransfers actions builder is created
+   * @param _actionsBuilder The address of the new CappedTokenTransfers actions builder
+   * @param _token The token that is capped
+   * @param _amount The maximum amount of tokens that can be transferred in the current epoch
+   */
+  event CappedTokenTransfersCreated(address _actionsBuilder, address _token, uint256 _amount);
+
+  /**
    * @notice Emitted when the state is updated for a token with a certain amount
    * @param _token The token that was updated
    * @param _amountSpent The amount of tokens that were spent

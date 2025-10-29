@@ -17,5 +17,7 @@ contract ChangeSafeGuardActionFactory is IChangeSafeGuardActionFactory, Factory 
     _changeSafeGuardAction = address(new ChangeSafeGuardAction(address(this), _safeGuard));
 
     _children[_changeSafeGuardAction] = true;
+
+    emit ChangeSafeGuardActionCreated(_changeSafeGuardAction, _safeGuard);
   }
 }

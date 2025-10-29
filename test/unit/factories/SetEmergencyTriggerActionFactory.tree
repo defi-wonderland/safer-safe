@@ -3,5 +3,6 @@ UnitSetEmergencyTriggerActionFactory::createSetEmergencyTriggerAction
     ├── It should deploy a SetEmergencyTriggerAction contract with correct args
     ├── It should match the parameters sent to the constructor
     ├── It should set the parent address in the child contract
-    └── It should store the contract as a factory children
+    ├── It should store the contract as a factory children
+    └── It should emit SetEmergencyTriggerActionCreated event with correct parameters
 

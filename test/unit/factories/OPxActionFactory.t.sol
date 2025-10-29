@@ -5,8 +5,10 @@ import {Test} from 'forge-std/Test.sol';
 import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 import {OPxActionFactory} from 'src/contracts/factories/OPxActionFactory.sol';
 import {IOPxAction} from 'src/interfaces/actions-builders/IOPxAction.sol';
+import {IOPxActionFactory} from 'src/interfaces/factories/IOPxActionFactory.sol';
+import {Utils} from 'test/unit/utils/Utils.sol';
 
-contract UnitOPxActionFactorycreateOPxAction is Test {
+contract UnitOPxActionFactorycreateOPxAction is Test, Utils {
   OPxActionFactory public opxActionFactory;
   IOPxAction public auxOPxAction;
 
@@ -15,6 +17,10 @@ contract UnitOPxActionFactorycreateOPxAction is Test {
   }
 
   function test_WhenCalled(address _opx) external {
+    // it should emit OPxActionCreated event with correct parameters
+    vm.expectEmit();
+    emit IOPxActionFactory.OPxActionCreated(_getNextContractDeployedAddress(address(opxActionFactory)), _opx);
+
     address _opxAction = opxActionFactory.createOPxAction(_opx);
 
     // it should deploy an OPxAction

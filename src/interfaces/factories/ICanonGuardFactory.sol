@@ -8,6 +8,19 @@ import {IFactory} from 'interfaces/factories/IFactory.sol';
  * @notice Interface for the CanonGuardFactory contract
  */
 interface ICanonGuardFactory is IFactory {
+  // ~~~ EVENTS ~~~
+
+  /**
+   * @notice Emitted when a new CanonGuard contract is created
+   * @param _canonGuard The address of the created CanonGuard contract
+   * @param _safe The Gnosis Safe contract address
+   * @param _emergencyTrigger The emergency trigger address
+   * @param _emergencyCaller The emergency caller address
+   */
+  event CanonGuardCreated(
+    address indexed _canonGuard, address indexed _safe, address indexed _emergencyTrigger, address _emergencyCaller
+  );
+
   // ~~~ ERRORS ~~~
   /**
    * @notice Thrown when the transaction expiry delay is less than the minimum expiry time

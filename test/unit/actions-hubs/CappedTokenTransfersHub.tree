@@ -14,8 +14,9 @@ UnitCappedTokenTransfersHub::createNewActionsBuilder
 │   ├── When the token is not registered in the hub
 │   │   └── it reverts
 │   └── When the token is registered in the hub
-│       └── it creates a new CappedTokenTransfers actions builder
-│       └── it sets the hub address in the child contract
+│       ├── it creates a new CappedTokenTransfers actions builder
+│       ├── it sets the hub address in the child contract
+│       └── it emits the event CappedTokenTransfersCreated
 └── When not called by the safe owner
     └── It reverts
 

@@ -5,8 +5,10 @@ import {SimpleActionsFactory} from 'contracts/factories/SimpleActionsFactory.sol
 import {Test} from 'forge-std/Test.sol';
 import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 import {ISimpleActions} from 'interfaces/actions-builders/ISimpleActions.sol';
+import {ISimpleActionsFactory} from 'interfaces/factories/ISimpleActionsFactory.sol';
+import {Utils} from 'test/unit/utils/Utils.sol';
 
-contract UnitSimpleActionsFactory is Test {
+contract UnitSimpleActionsFactory is Test, Utils {
   SimpleActionsFactory public simpleActionsFactory;
   ISimpleActions public auxSimpleActions;
 
@@ -22,6 +24,10 @@ contract UnitSimpleActionsFactory is Test {
     ISimpleActions.SimpleAction[] memory _actions = new ISimpleActions.SimpleAction[](2);
     _actions[0] = _simpleActionsA;
     _actions[1] = _simpleActionsB;
+
+    // it should emit SimpleActionsCreated event with correct parameters
+    vm.expectEmit();
+    emit ISimpleActionsFactory.SimpleActionsCreated(_getNextContractDeployedAddress(address(simpleActionsFactory)));
 
     address _simpleActionsContract = simpleActionsFactory.createSimpleActions(_actions);
 
@@ -68,6 +74,11 @@ contract UnitSimpleActionsFactory is Test {
   ) external {
     ISimpleActions.SimpleAction[] memory _actions = new ISimpleActions.SimpleAction[](1);
     _actions[0] = _simpleActions;
+
+    // it should emit SimpleActionsCreated event with correct parameters
+    vm.expectEmit();
+    emit ISimpleActionsFactory.SimpleActionsCreated(_getNextContractDeployedAddress(address(simpleActionsFactory)));
+
     // it should deploy a SimpleActions contract with that single simple action args
     address _simpleActionsContract = simpleActionsFactory.createSimpleAction(_simpleActions);
 

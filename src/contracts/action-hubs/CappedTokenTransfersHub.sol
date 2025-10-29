@@ -74,6 +74,8 @@ contract CappedTokenTransfersHub is ActionHub, ICappedTokenTransfersHub, SafeMan
     _actionsBuilder = address(new CappedTokenTransfers(_token, _amount, RECIPIENT));
 
     _saveNewActionsBuilder(_actionsBuilder);
+
+    emit CappedTokenTransfersCreated(_actionsBuilder, _token, _amount);
   }
 
   /// @inheritdoc ICappedTokenTransfersHub

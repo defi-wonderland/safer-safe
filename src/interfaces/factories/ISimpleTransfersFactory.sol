@@ -9,6 +9,14 @@ import {IFactory} from 'interfaces/factories/IFactory.sol';
  * @notice Interface for the SimpleTransfersFactory contract
  */
 interface ISimpleTransfersFactory is IFactory {
+  // ~~~ EVENTS ~~~
+
+  /**
+   * @notice Emitted when a new SimpleTransfers contract is created
+   * @param _simpleTransfers The address of the created SimpleTransfers contract
+   */
+  event SimpleTransfersCreated(address indexed _simpleTransfers);
+
   // ~~~ FACTORY METHODS ~~~
 
   /**

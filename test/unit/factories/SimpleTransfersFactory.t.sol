@@ -6,8 +6,10 @@ import {SimpleTransfersFactory} from 'contracts/factories/SimpleTransfersFactory
 import {Test} from 'forge-std/Test.sol';
 import {IERC20} from 'forge-std/interfaces/IERC20.sol';
 import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
+import {ISimpleTransfersFactory} from 'interfaces/factories/ISimpleTransfersFactory.sol';
+import {Utils} from 'test/unit/utils/Utils.sol';
 
-contract UnitSimpleTransfersFactory is Test {
+contract UnitSimpleTransfersFactory is Test, Utils {
   SimpleTransfersFactory public simpleTransfersFactory;
   ISimpleTransfers public auxSimpleTransfers;
 
@@ -22,6 +24,11 @@ contract UnitSimpleTransfersFactory is Test {
     ISimpleTransfers.TransferAction[] memory _transferActions = new ISimpleTransfers.TransferAction[](2);
     _transferActions[0] = _transferActionA;
     _transferActions[1] = _transferActionB;
+
+    // it should emit SimpleTransfersCreated event with correct parameters
+    vm.expectEmit();
+    emit ISimpleTransfersFactory
+      .SimpleTransfersCreated(_getNextContractDeployedAddress(address(simpleTransfersFactory)));
 
     address _simpleTransfers = simpleTransfersFactory.createSimpleTransfers(_transferActions);
 
@@ -67,6 +74,11 @@ contract UnitSimpleTransfersFactory is Test {
       ISimpleTransfers.TransferAction({token: _token, to: _to, amount: _amount});
     ISimpleTransfers.TransferAction[] memory _transferActions = new ISimpleTransfers.TransferAction[](1);
     _transferActions[0] = _transferAction;
+
+    // it should emit SimpleTransfersCreated event with correct parameters
+    vm.expectEmit();
+    emit ISimpleTransfersFactory
+      .SimpleTransfersCreated(_getNextContractDeployedAddress(address(simpleTransfersFactory)));
 
     address _simpleTransfers = simpleTransfersFactory.createSimpleTransfer(_transferAction);
 

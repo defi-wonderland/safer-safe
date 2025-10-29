@@ -3,7 +3,6 @@ pragma solidity 0.8.30;
 
 import {Test} from 'forge-std/Test.sol';
 import {CREATE3} from 'solady/utils/CREATE3.sol';
-import {CanonGuard} from 'src/contracts/CanonGuard.sol';
 import {CanonGuardFactory} from 'src/contracts/factories/CanonGuardFactory.sol';
 import {ICanonGuard} from 'src/interfaces/ICanonGuard.sol';
 import {ISafeManageable} from 'src/interfaces/ISafeManageable.sol';
@@ -47,6 +46,13 @@ contract UnitCanonGuardFactory is Test {
     _maxApprovalDuration = bound(_maxApprovalDuration, MIN_EXPIRY_TIME, type(uint256).max);
     _shortTxExecutionDelay = bound(_shortTxExecutionDelay, 0, 6 * 30 days);
     _longTxExecutionDelay = bound(_longTxExecutionDelay, _shortTxExecutionDelay, 6 * 30 days);
+
+    address _expectedCanonGuard =
+      CREATE3.predictDeterministicAddress(keccak256(abi.encode(_safe)), address(canonGuardFactory));
+
+    // it should emit CanonGuardCreated event with correct parameters
+    vm.expectEmit();
+    emit ICanonGuardFactory.CanonGuardCreated(_expectedCanonGuard, _safe, _emergencyTrigger, _emergencyCaller);
 
     address _canonGuard = canonGuardFactory.createCanonGuard(
       _safe,
@@ -92,6 +98,6 @@ contract UnitCanonGuardFactory is Test {
     assertTrue(canonGuardFactory.isChild(_canonGuard));
 
     // it should match the deterministic address
-    assertEq(_canonGuard, CREATE3.predictDeterministicAddress(keccak256(abi.encode(_safe)), address(canonGuardFactory)));
+    assertEq(_canonGuard, _expectedCanonGuard);
   }
 }

@@ -4,6 +4,32 @@ pragma solidity 0.8.30;
 import {ISafeManageable} from 'interfaces/ISafeManageable.sol';
 
 interface IEmergencyModeHook is ISafeManageable {
+  // ~~~ EVENTS ~~~
+
+  /**
+   * @notice Emitted when emergency mode is activated
+   */
+  event EmergencyModeSet();
+
+  /**
+   * @notice Emitted when emergency mode is deactivated
+   */
+  event EmergencyModeUnset();
+
+  /**
+   * @notice Emitted when the emergency caller is updated
+   * @param _oldCaller The previous emergency caller address
+   * @param _newCaller The new emergency caller address
+   */
+  event EmergencyCallerSet(address indexed _oldCaller, address indexed _newCaller);
+
+  /**
+   * @notice Emitted when the emergency trigger is updated
+   * @param _oldTrigger The previous emergency trigger address
+   * @param _newTrigger The new emergency trigger address
+   */
+  event EmergencyTriggerSet(address indexed _oldTrigger, address indexed _newTrigger);
+
   // ~~~ ERRORS ~~~
 
   /**

@@ -8,6 +8,18 @@ import {IFactory} from 'interfaces/factories/IFactory.sol';
  * @notice Interface for the PreApproveActionFactory contract
  */
 interface IPreApproveActionFactory is IFactory {
+  // ~~~ EVENTS ~~~
+
+  /**
+   * @notice Emitted when a new PreApproveAction contract is created
+   * @param _preApproveAction The address of the created PreApproveAction contract
+   * @param _actionsBuilder The actions builder contract address
+   * @param _approvalDuration The approval duration
+   */
+  event PreApproveActionCreated(
+    address indexed _preApproveAction, address indexed _actionsBuilder, uint256 _approvalDuration
+  );
+
   // ~~~ FACTORY METHODS ~~~
 
   /**

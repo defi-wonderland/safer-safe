@@ -5,8 +5,10 @@ import {Test} from 'forge-std/Test.sol';
 import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 import {EverclearTokenConversionFactory} from 'src/contracts/factories/EverclearTokenConversionFactory.sol';
 import {IEverclearTokenConversion} from 'src/interfaces/actions-builders/IEverclearTokenConversion.sol';
+import {IEverclearTokenConversionFactory} from 'src/interfaces/factories/IEverclearTokenConversionFactory.sol';
+import {Utils} from 'test/unit/utils/Utils.sol';
 
-contract UnitEverclearTokenConversionFactorycreateEverclearTokenConversion is Test {
+contract UnitEverclearTokenConversionFactorycreateEverclearTokenConversion is Test, Utils {
   EverclearTokenConversionFactory public everclearTokenConversionFactory;
   IEverclearTokenConversion public auxEverclearTokenConversion;
 
@@ -15,6 +17,12 @@ contract UnitEverclearTokenConversionFactorycreateEverclearTokenConversion is Te
   }
 
   function test_WhenCalled(address _lockbox, address _next) external {
+    // it should emit EverclearTokenConversionCreated event with correct parameters
+    vm.expectEmit();
+    emit IEverclearTokenConversionFactory.EverclearTokenConversionCreated(
+      _getNextContractDeployedAddress(address(everclearTokenConversionFactory)), _lockbox, _next
+    );
+
     address _everclearTokenConversion = everclearTokenConversionFactory.createEverclearTokenConversion(_lockbox, _next);
     auxEverclearTokenConversion = IEverclearTokenConversion(
       deployCode('EverclearTokenConversion', abi.encode(address(everclearTokenConversionFactory), _lockbox, _next))

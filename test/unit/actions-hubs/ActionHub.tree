@@ -10,5 +10,4 @@ UnitActionHub::isHubChild
 
 UnitActionHub::_saveNewActionsBuilder
 └── When called
-    ├── it marks the actions builder as a child
-    └── it emits a NewActionsBuilderSaved event
+    └── it marks the actions builder as a child
