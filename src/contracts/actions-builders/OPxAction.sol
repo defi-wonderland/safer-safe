@@ -3,7 +3,7 @@ pragma solidity 0.8.30;
 
 import {ActionsBuilder} from 'contracts/actions-builders/ActionsBuilder.sol';
 import {IERC20} from 'forge-std/interfaces/IERC20.sol';
-import {ISafeManageable} from 'interfaces/ISafeManageable.sol';
+import {ICanonGuard} from 'interfaces/ICanonGuard.sol';
 import {IOPxAction} from 'interfaces/actions-builders/IOPxAction.sol';
 import {IOPx} from 'interfaces/external/IOPx.sol';
 
@@ -33,7 +33,7 @@ contract OPxAction is IOPxAction, ActionsBuilder {
 
   /// @inheritdoc ActionsBuilder
   function getActions() external view override returns (Action[] memory _actions) {
-    uint256 _balance = IERC20(OPX).balanceOf(address(ISafeManageable(msg.sender).SAFE()));
+    uint256 _balance = IERC20(OPX).balanceOf(address(ICanonGuard(msg.sender).SAFE()));
 
     _actions = new Action[](1);
     _actions[0] = Action({target: OPX, data: abi.encodeCall(IOPx.downgrade, (_balance)), value: 0});

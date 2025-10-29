@@ -3,7 +3,7 @@ pragma solidity 0.8.30;
 
 import {IGuardManager} from '@safe-smart-account/interfaces/IGuardManager.sol';
 import {ActionsBuilder} from 'contracts/actions-builders/ActionsBuilder.sol';
-import {ISafeManageable} from 'interfaces/ISafeManageable.sol';
+import {ICanonGuard} from 'interfaces/ICanonGuard.sol';
 import {IChangeSafeGuardAction} from 'interfaces/actions-builders/IChangeSafeGuardAction.sol';
 
 /**
@@ -30,7 +30,7 @@ contract ChangeSafeGuardAction is IChangeSafeGuardAction, ActionsBuilder {
   function getActions() external view override returns (Action[] memory _actions) {
     _actions = new Action[](1);
     _actions[0] = Action({
-      target: address(ISafeManageable(msg.sender).SAFE()),
+      target: address(ICanonGuard(msg.sender).SAFE()),
       data: abi.encodeCall(IGuardManager.setGuard, (SAFE_GUARD)),
       value: 0
     });

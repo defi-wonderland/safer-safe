@@ -1,11 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
+import {IEmergencyModeHook} from 'interfaces/IEmergencyModeHook.sol';
+import {IOnlyCanonGuard} from 'interfaces/IOnlyCanonGuard.sol';
+
 /**
  * @title ICanonGuard
  * @notice Interface for the CanonGuard contract
  */
-interface ICanonGuard {
+interface ICanonGuard is IOnlyCanonGuard, IEmergencyModeHook {
   // ~~~ STRUCTS ~~~
 
   /**
