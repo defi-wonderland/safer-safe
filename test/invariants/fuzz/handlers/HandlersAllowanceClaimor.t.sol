@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity 0.8.30;
 
-import {ActionTarget, BaseHandlers, CanonGuard, CanonGuardFactory, Safe} from './BaseHandlers.sol';
+import {BaseHandlers} from './BaseHandlers.sol';
 
 /// @title HandlersAllowanceClaimor
 /// @notice Handler for AllowanceClaimor action builders

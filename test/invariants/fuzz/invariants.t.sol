@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity 0.8.30;
 
-import {HandlersTarget, Setup} from './Setup.t.sol';
+import {Setup} from './Setup.t.sol';
 import {ICappedTokenTransfersHub} from 'interfaces/action-hubs/ICappedTokenTransfersHub.sol';
 import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 
@@ -143,9 +143,10 @@ contract Invariants is Setup {
 
         if (queuedAt > 0) {
           // Calculate expected execution delay
+          // solhint-disable-next-line no-unused-vars
           uint256 expectedDelay = isPreApproved
             ? handlersTarget.canonGuard().SHORT_TX_EXECUTION_DELAY()
-            : handlersTarget.canonGuard().LONG_TX_EXECUTION_DELAY();
+            : handlersTarget.canonGuard().MAX_TX_EXECUTION_DELAY();
 
           // executableAt should be queuedAt + delay (within reason, accounting for redeployments)
           // We allow executableAt to be >= queuedAt since delays could change
