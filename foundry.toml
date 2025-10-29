@@ -13,6 +13,7 @@ solc_version = '0.8.30'
 libs = ['node_modules', 'lib']
 optimizer_runs = 10_000
 evm_version = 'prague'
+always_use_create_2_factory = true
 
 [profile.optimized]
 via_ir = true
