@@ -19,7 +19,7 @@ contract SetGuardAction is ActionsBuilder {
   // ~~~ ACTIONS METHODS ~~~
 
   /// @inheritdoc ActionsBuilder
-  function getActions() external view override(ActionsBuilder) returns (Action[] memory _actions) {
+  function getActions() external view override returns (Action[] memory _actions) {
     _actions = new Action[](1);
     _actions[0] = Action({
       target: address(ICanonGuard(msg.sender).SAFE()),
