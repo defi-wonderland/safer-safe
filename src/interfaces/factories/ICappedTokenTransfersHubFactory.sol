@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
+import {IFactory} from 'interfaces/factories/IFactory.sol';
+
 /**
  * @title ICappedTokenTransfersHubFactory
  * @notice Interface for the CappedTokenTransfersHubFactory contract
  */
-interface ICappedTokenTransfersHubFactory {
+interface ICappedTokenTransfersHubFactory is IFactory {
   // ~~~ EVENTS ~~~
 
   /**

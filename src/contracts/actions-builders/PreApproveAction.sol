@@ -3,6 +3,7 @@ pragma solidity 0.8.30;
 
 import {ActionsBuilder} from 'contracts/actions-builders/ActionsBuilder.sol';
 import {ICanonGuard} from 'interfaces/ICanonGuard.sol';
+import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 import {IPreApproveAction} from 'interfaces/actions-builders/IPreApproveAction.sol';
 
 /**
@@ -31,7 +32,7 @@ contract PreApproveAction is IPreApproveAction, ActionsBuilder {
   // ~~~ ACTIONS METHODS ~~~
 
   /// @inheritdoc ActionsBuilder
-  function getActions() external view override returns (Action[] memory _actions) {
+  function getActions() external view override(ActionsBuilder, IActionsBuilder) returns (Action[] memory _actions) {
     _actions = new Action[](1);
     _actions[0] = Action({
       target: msg.sender,

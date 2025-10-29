@@ -4,6 +4,7 @@ pragma solidity 0.8.30;
 import {ActionsBuilder} from 'contracts/actions-builders/ActionsBuilder.sol';
 import {IERC20} from 'forge-std/interfaces/IERC20.sol';
 import {ICanonGuard} from 'interfaces/ICanonGuard.sol';
+import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 import {IOPxAction} from 'interfaces/actions-builders/IOPxAction.sol';
 import {IOPx} from 'interfaces/external/IOPx.sol';
 
@@ -32,7 +33,7 @@ contract OPxAction is IOPxAction, ActionsBuilder {
   // ~~~ ACTIONS METHODS ~~~
 
   /// @inheritdoc ActionsBuilder
-  function getActions() external view override returns (Action[] memory _actions) {
+  function getActions() external view override(ActionsBuilder, IActionsBuilder) returns (Action[] memory _actions) {
     uint256 _balance = IERC20(OPX).balanceOf(address(ICanonGuard(msg.sender).SAFE()));
 
     _actions = new Action[](1);

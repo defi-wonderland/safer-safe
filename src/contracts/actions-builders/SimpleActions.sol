@@ -2,6 +2,7 @@
 pragma solidity 0.8.30;
 
 import {ActionsBuilder} from 'contracts/actions-builders/ActionsBuilder.sol';
+import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 import {ISimpleActions} from 'interfaces/actions-builders/ISimpleActions.sol';
 
 /**
@@ -59,7 +60,7 @@ contract SimpleActions is ISimpleActions, ActionsBuilder {
   // ~~~ ACTIONS METHODS ~~~
 
   /// @inheritdoc ActionsBuilder
-  function getActions() external view override returns (Action[] memory) {
+  function getActions() external view override(ActionsBuilder, IActionsBuilder) returns (Action[] memory) {
     return _actions;
   }
 }

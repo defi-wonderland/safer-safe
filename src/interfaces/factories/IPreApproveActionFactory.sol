@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
+import {IFactory} from 'interfaces/factories/IFactory.sol';
+
 /**
  * @title IPreApproveActionFactory
  * @notice Interface for the PreApproveActionFactory contract
  */
-interface IPreApproveActionFactory {
+interface IPreApproveActionFactory is IFactory {
   // ~~~ EVENTS ~~~
 
   /**

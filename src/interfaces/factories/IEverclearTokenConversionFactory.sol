@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
+import {IFactory} from 'interfaces/factories/IFactory.sol';
+
 /**
  * @title IEverclearTokenConversionFactory
  * @notice Interface for the EverclearTokenConversionFactory contract
  */
-interface IEverclearTokenConversionFactory {
+interface IEverclearTokenConversionFactory is IFactory {
   // ~~~ EVENTS ~~~
 
   /**

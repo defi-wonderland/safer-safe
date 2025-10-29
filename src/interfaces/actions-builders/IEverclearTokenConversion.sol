@@ -2,13 +2,14 @@
 pragma solidity 0.8.30;
 
 import {IERC20} from 'forge-std/interfaces/IERC20.sol';
+import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 import {IxERC20Lockbox} from 'interfaces/external/IxERC20Lockbox.sol';
 
 /**
  * @title IEverclearTokenConversion
  * @notice Interface for an EverclearTokenConversion contract
  */
-interface IEverclearTokenConversion {
+interface IEverclearTokenConversion is IActionsBuilder {
   // ~~~ STORAGE METHODS ~~~
 
   /**
