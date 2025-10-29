@@ -27,9 +27,8 @@ contract UnitSimpleTransfersFactory is Test, Utils {
 
     // it should emit SimpleTransfersCreated event with correct parameters
     vm.expectEmit();
-    emit ISimpleTransfersFactory.SimpleTransfersCreated(
-      _getNextContractDeployedAddress(address(simpleTransfersFactory)), address(this)
-    );
+    emit ISimpleTransfersFactory
+      .SimpleTransfersCreated(_getNextContractDeployedAddress(address(simpleTransfersFactory)));
 
     address _simpleTransfers = simpleTransfersFactory.createSimpleTransfers(_transferActions);
 
@@ -78,9 +77,8 @@ contract UnitSimpleTransfersFactory is Test, Utils {
 
     // it should emit SimpleTransfersCreated event with correct parameters
     vm.expectEmit();
-    emit ISimpleTransfersFactory.SimpleTransfersCreated(
-      _getNextContractDeployedAddress(address(simpleTransfersFactory)), address(this)
-    );
+    emit ISimpleTransfersFactory
+      .SimpleTransfersCreated(_getNextContractDeployedAddress(address(simpleTransfersFactory)));
 
     address _simpleTransfers = simpleTransfersFactory.createSimpleTransfer(_transferAction);
 

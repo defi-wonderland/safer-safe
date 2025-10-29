@@ -27,9 +27,7 @@ contract UnitSimpleActionsFactory is Test, Utils {
 
     // it should emit SimpleActionsCreated event with correct parameters
     vm.expectEmit();
-    emit ISimpleActionsFactory.SimpleActionsCreated(
-      _getNextContractDeployedAddress(address(simpleActionsFactory)), address(this)
-    );
+    emit ISimpleActionsFactory.SimpleActionsCreated(_getNextContractDeployedAddress(address(simpleActionsFactory)));
 
     address _simpleActionsContract = simpleActionsFactory.createSimpleActions(_actions);
 
@@ -79,9 +77,7 @@ contract UnitSimpleActionsFactory is Test, Utils {
 
     // it should emit SimpleActionsCreated event with correct parameters
     vm.expectEmit();
-    emit ISimpleActionsFactory.SimpleActionsCreated(
-      _getNextContractDeployedAddress(address(simpleActionsFactory)), address(this)
-    );
+    emit ISimpleActionsFactory.SimpleActionsCreated(_getNextContractDeployedAddress(address(simpleActionsFactory)));
 
     // it should deploy a SimpleActions contract with that single simple action args
     address _simpleActionsContract = simpleActionsFactory.createSimpleAction(_simpleActions);

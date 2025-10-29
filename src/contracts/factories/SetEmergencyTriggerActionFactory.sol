@@ -21,6 +21,6 @@ contract SetEmergencyTriggerActionFactory is ISetEmergencyTriggerActionFactory, 
 
     _children[_setEmergencyTriggerAction] = true;
 
-    emit SetEmergencyTriggerActionCreated(_setEmergencyTriggerAction, _emergencyTrigger, msg.sender);
+    emit SetEmergencyTriggerActionCreated(_setEmergencyTriggerAction, _emergencyTrigger);
   }
 }

@@ -23,7 +23,7 @@ contract UnitChangeSafeGuardActionFactorycreateChangeSafeGuardAction is Test, Ut
     // it should emit ChangeSafeGuardActionCreated event with correct parameters
     vm.expectEmit();
     emit IChangeSafeGuardActionFactory.ChangeSafeGuardActionCreated(
-      _getNextContractDeployedAddress(address(changeSafeGuardActionFactory)), _safeGuard, address(this)
+      _getNextContractDeployedAddress(address(changeSafeGuardActionFactory)), _safeGuard
     );
 
     address _changeSafeGuardActionContract = changeSafeGuardActionFactory.createChangeSafeGuardAction(_safeGuard);

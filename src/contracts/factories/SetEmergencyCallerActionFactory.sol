@@ -21,6 +21,6 @@ contract SetEmergencyCallerActionFactory is ISetEmergencyCallerActionFactory, Fa
 
     _children[_setEmergencyCallerAction] = true;
 
-    emit SetEmergencyCallerActionCreated(_setEmergencyCallerAction, _emergencyCaller, msg.sender);
+    emit SetEmergencyCallerActionCreated(_setEmergencyCallerAction, _emergencyCaller);
   }
 }

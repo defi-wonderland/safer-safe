@@ -12,11 +12,8 @@ interface ISetEmergencyCallerActionFactory {
    * @notice Emitted when a new SetEmergencyCallerAction contract is created
    * @param _setEmergencyCallerAction The address of the created SetEmergencyCallerAction contract
    * @param _emergencyCaller The emergency caller address
-   * @param _creator The address that created the contract
    */
-  event SetEmergencyCallerActionCreated(
-    address indexed _setEmergencyCallerAction, address indexed _emergencyCaller, address indexed _creator
-  );
+  event SetEmergencyCallerActionCreated(address indexed _setEmergencyCallerAction, address indexed _emergencyCaller);
 
   // ~~~ FACTORY METHODS ~~~
 

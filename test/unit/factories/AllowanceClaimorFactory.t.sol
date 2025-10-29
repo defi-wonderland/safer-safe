@@ -20,11 +20,7 @@ contract UnitAllowanceClaimorFactorycreateAllowanceClaimor is Test, Utils {
     // it should emit AllowanceClaimorCreated event with correct parameters
     vm.expectEmit();
     emit IAllowanceClaimorFactory.AllowanceClaimorCreated(
-      _getNextContractDeployedAddress(address(allowanceClaimorFactory)),
-      _token,
-      _tokenOwner,
-      _tokenRecipient,
-      address(this)
+      _getNextContractDeployedAddress(address(allowanceClaimorFactory)), _token, _tokenOwner, _tokenRecipient
     );
 
     address _allowanceClaimor = allowanceClaimorFactory.createAllowanceClaimor(_token, _tokenOwner, _tokenRecipient);

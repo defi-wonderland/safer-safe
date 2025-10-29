@@ -14,14 +14,9 @@ interface ICanonGuardFactory {
    * @param _safe The Gnosis Safe contract address
    * @param _emergencyTrigger The emergency trigger address
    * @param _emergencyCaller The emergency caller address
-   * @param _creator The address that created the contract
    */
   event CanonGuardCreated(
-    address indexed _canonGuard,
-    address indexed _safe,
-    address indexed _emergencyTrigger,
-    address _emergencyCaller,
-    address _creator
+    address indexed _canonGuard, address indexed _safe, address indexed _emergencyTrigger, address _emergencyCaller
   );
 
   // ~~~ ERRORS ~~~

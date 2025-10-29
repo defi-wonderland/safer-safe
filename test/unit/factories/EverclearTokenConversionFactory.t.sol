@@ -20,7 +20,7 @@ contract UnitEverclearTokenConversionFactorycreateEverclearTokenConversion is Te
     // it should emit EverclearTokenConversionCreated event with correct parameters
     vm.expectEmit();
     emit IEverclearTokenConversionFactory.EverclearTokenConversionCreated(
-      _getNextContractDeployedAddress(address(everclearTokenConversionFactory)), _lockbox, _next, address(this)
+      _getNextContractDeployedAddress(address(everclearTokenConversionFactory)), _lockbox, _next
     );
 
     address _everclearTokenConversion = everclearTokenConversionFactory.createEverclearTokenConversion(_lockbox, _next);

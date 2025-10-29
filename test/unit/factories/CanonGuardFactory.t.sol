@@ -52,9 +52,7 @@ contract UnitCanonGuardFactory is Test {
 
     // it should emit CanonGuardCreated event with correct parameters
     vm.expectEmit();
-    emit ICanonGuardFactory.CanonGuardCreated(
-      _expectedCanonGuard, _safe, _emergencyTrigger, _emergencyCaller, address(this)
-    );
+    emit ICanonGuardFactory.CanonGuardCreated(_expectedCanonGuard, _safe, _emergencyTrigger, _emergencyCaller);
 
     address _canonGuard = canonGuardFactory.createCanonGuard(
       _safe,

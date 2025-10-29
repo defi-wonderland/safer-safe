@@ -13,9 +13,8 @@ interface ISimpleActionsFactory {
   /**
    * @notice Emitted when a new SimpleActions contract is created
    * @param _simpleActions The address of the created SimpleActions contract
-   * @param _creator The address that created the contract
    */
-  event SimpleActionsCreated(address indexed _simpleActions, address indexed _creator);
+  event SimpleActionsCreated(address indexed _simpleActions);
 
   // ~~~ FACTORY METHODS ~~~
 

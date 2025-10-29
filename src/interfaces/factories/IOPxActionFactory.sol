@@ -12,9 +12,8 @@ interface IOPxActionFactory {
    * @notice Emitted when a new OPxAction contract is created
    * @param _opxAction The address of the created OPxAction contract
    * @param _opx The OPX contract address
-   * @param _creator The address that created the contract
    */
-  event OPxActionCreated(address indexed _opxAction, address indexed _opx, address indexed _creator);
+  event OPxActionCreated(address indexed _opxAction, address indexed _opx);
 
   // ~~~ FACTORY METHODS ~~~
 

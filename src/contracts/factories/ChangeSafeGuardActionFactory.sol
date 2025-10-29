@@ -18,6 +18,6 @@ contract ChangeSafeGuardActionFactory is IChangeSafeGuardActionFactory, Factory 
 
     _children[_changeSafeGuardAction] = true;
 
-    emit ChangeSafeGuardActionCreated(_changeSafeGuardAction, _safeGuard, msg.sender);
+    emit ChangeSafeGuardActionCreated(_changeSafeGuardAction, _safeGuard);
   }
 }

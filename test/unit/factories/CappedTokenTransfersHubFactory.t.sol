@@ -30,7 +30,7 @@ contract UnitCappedTokenTransfersHubFactorycreateCappedTokenTransfersHub is Test
     // it should emit CappedTokenTransfersHubCreated event with correct parameters
     vm.expectEmit();
     emit ICappedTokenTransfersHubFactory.CappedTokenTransfersHubCreated(
-      _getNextContractDeployedAddress(address(cappedTokenTransfersHubFactory)), safe, recipient, address(this)
+      _getNextContractDeployedAddress(address(cappedTokenTransfersHubFactory)), safe, recipient
     );
 
     address hub =

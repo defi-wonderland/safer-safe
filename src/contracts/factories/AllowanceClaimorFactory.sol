@@ -22,6 +22,6 @@ contract AllowanceClaimorFactory is IAllowanceClaimorFactory, Factory {
 
     _children[_allowanceClaimor] = true;
 
-    emit AllowanceClaimorCreated(_allowanceClaimor, _token, _tokenOwner, _tokenRecipient, msg.sender);
+    emit AllowanceClaimorCreated(_allowanceClaimor, _token, _tokenOwner, _tokenRecipient);
   }
 }

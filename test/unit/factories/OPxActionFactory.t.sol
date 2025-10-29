@@ -19,9 +19,7 @@ contract UnitOPxActionFactorycreateOPxAction is Test, Utils {
   function test_WhenCalled(address _opx) external {
     // it should emit OPxActionCreated event with correct parameters
     vm.expectEmit();
-    emit IOPxActionFactory.OPxActionCreated(
-      _getNextContractDeployedAddress(address(opxActionFactory)), _opx, address(this)
-    );
+    emit IOPxActionFactory.OPxActionCreated(_getNextContractDeployedAddress(address(opxActionFactory)), _opx);
 
     address _opxAction = opxActionFactory.createOPxAction(_opx);
 

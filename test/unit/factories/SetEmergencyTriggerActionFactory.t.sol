@@ -20,7 +20,7 @@ contract UnitSetEmergencyTriggerActionFactorycreateSetEmergencyTriggerAction is 
     // It should emit SetEmergencyTriggerActionCreated event with correct parameters
     vm.expectEmit();
     emit ISetEmergencyTriggerActionFactory.SetEmergencyTriggerActionCreated(
-      _getNextContractDeployedAddress(address(setEmergencyTriggerActionFactory)), _emergencyTrigger, address(this)
+      _getNextContractDeployedAddress(address(setEmergencyTriggerActionFactory)), _emergencyTrigger
     );
 
     address _setEmergencyTriggerAction =

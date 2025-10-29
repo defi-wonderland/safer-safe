@@ -18,6 +18,6 @@ contract OPxActionFactory is IOPxActionFactory, Factory {
 
     _children[_opxAction] = true;
 
-    emit OPxActionCreated(_opxAction, _opx, msg.sender);
+    emit OPxActionCreated(_opxAction, _opx);
   }
 }

@@ -21,6 +21,6 @@ contract EverclearTokenConversionFactory is IEverclearTokenConversionFactory, Fa
 
     _children[_everclearTokenConversion] = true;
 
-    emit EverclearTokenConversionCreated(_everclearTokenConversion, _lockbox, _next, msg.sender);
+    emit EverclearTokenConversionCreated(_everclearTokenConversion, _lockbox, _next);
   }
 }

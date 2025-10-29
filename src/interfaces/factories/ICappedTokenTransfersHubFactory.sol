@@ -13,10 +13,9 @@ interface ICappedTokenTransfersHubFactory {
    * @param _cappedTokenTransfersHub The address of the created CappedTokenTransfersHub contract
    * @param _safe The Gnosis Safe contract address
    * @param _recipient The recipient of the token transfers
-   * @param _creator The address that created the contract
    */
   event CappedTokenTransfersHubCreated(
-    address indexed _cappedTokenTransfersHub, address indexed _safe, address indexed _recipient, address _creator
+    address indexed _cappedTokenTransfersHub, address indexed _safe, address indexed _recipient
   );
 
   // ~~~ FACTORY METHODS ~~~

@@ -20,10 +20,7 @@ contract UnitPreApproveActionFactorycreatePreApproveAction is Test, Utils {
     // it should emit PreApproveActionCreated event with correct parameters
     vm.expectEmit();
     emit IPreApproveActionFactory.PreApproveActionCreated(
-      _getNextContractDeployedAddress(address(preApproveActionFactory)),
-      _actionsBuilder,
-      _approvalDuration,
-      address(this)
+      _getNextContractDeployedAddress(address(preApproveActionFactory)), _actionsBuilder, _approvalDuration
     );
 
     address _preApproveAction = preApproveActionFactory.createPreApproveAction(_actionsBuilder, _approvalDuration);

@@ -21,6 +21,6 @@ contract PreApproveActionFactory is IPreApproveActionFactory, Factory {
 
     _children[_preApproveAction] = true;
 
-    emit PreApproveActionCreated(_preApproveAction, _actionsBuilder, _approvalDuration, msg.sender);
+    emit PreApproveActionCreated(_preApproveAction, _actionsBuilder, _approvalDuration);
   }
 }

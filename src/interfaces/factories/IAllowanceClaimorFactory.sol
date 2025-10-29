@@ -14,14 +14,9 @@ interface IAllowanceClaimorFactory {
    * @param _token The token contract address
    * @param _tokenOwner The token owner address
    * @param _tokenRecipient The token recipient address
-   * @param _creator The address that created the contract
    */
   event AllowanceClaimorCreated(
-    address indexed _allowanceClaimor,
-    address indexed _token,
-    address indexed _tokenOwner,
-    address _tokenRecipient,
-    address _creator
+    address indexed _allowanceClaimor, address indexed _token, address indexed _tokenOwner, address _tokenRecipient
   );
 
   // ~~~ FACTORY METHODS ~~~

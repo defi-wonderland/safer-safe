@@ -13,10 +13,9 @@ interface IEverclearTokenConversionFactory {
    * @param _everclearTokenConversion The address of the created EverclearTokenConversion contract
    * @param _lockbox The xERC20Lockbox contract address
    * @param _next The NEXT contract address
-   * @param _creator The address that created the contract
    */
   event EverclearTokenConversionCreated(
-    address indexed _everclearTokenConversion, address indexed _lockbox, address indexed _next, address _creator
+    address indexed _everclearTokenConversion, address indexed _lockbox, address indexed _next
   );
 
   // ~~~ FACTORY METHODS ~~~

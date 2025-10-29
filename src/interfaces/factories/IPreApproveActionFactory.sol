@@ -13,13 +13,9 @@ interface IPreApproveActionFactory {
    * @param _preApproveAction The address of the created PreApproveAction contract
    * @param _actionsBuilder The actions builder contract address
    * @param _approvalDuration The approval duration
-   * @param _creator The address that created the contract
    */
   event PreApproveActionCreated(
-    address indexed _preApproveAction,
-    address indexed _actionsBuilder,
-    uint256 _approvalDuration,
-    address indexed _creator
+    address indexed _preApproveAction, address indexed _actionsBuilder, uint256 _approvalDuration
   );
 
   // ~~~ FACTORY METHODS ~~~

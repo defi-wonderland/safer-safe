@@ -20,7 +20,7 @@ contract UnitSetEmergencyCallerActionFactorycreateSetEmergencyCallerAction is Te
     // It should emit SetEmergencyCallerActionCreated event with correct parameters
     vm.expectEmit();
     emit ISetEmergencyCallerActionFactory.SetEmergencyCallerActionCreated(
-      _getNextContractDeployedAddress(address(setEmergencyCallerActionFactory)), _emergencyCaller, address(this)
+      _getNextContractDeployedAddress(address(setEmergencyCallerActionFactory)), _emergencyCaller
     );
 
     address _setEmergencyCallerAction = setEmergencyCallerActionFactory.createSetEmergencyCallerAction(_emergencyCaller);
