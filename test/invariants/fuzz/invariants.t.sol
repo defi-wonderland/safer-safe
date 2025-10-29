@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity 0.8.30;
 
-import {HandlersTarget, Setup} from './Setup.t.sol';
+import {Setup} from './Setup.t.sol';
 import {ICappedTokenTransfersHub} from 'interfaces/action-hubs/ICappedTokenTransfersHub.sol';
 import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 
@@ -23,16 +23,17 @@ contract Invariants is Setup {
         if (token != address(0)) {
           uint256 cap = ICappedTokenTransfersHub(hub).cap(token);
           uint256 totalSpent = ICappedTokenTransfersHub(hub).totalSpent(token);
-          uint256 currentEpoch = ICappedTokenTransfersHub(hub).currentEpoch();
+          uint256 lastEpoch = ICappedTokenTransfersHub(hub).lastEpoch();
           uint256 epochLength = ICappedTokenTransfersHub(hub).EPOCH_LENGTH();
-          uint256 startingTimestamp = ICappedTokenTransfersHub(hub).STARTING_TIMESTAMP();
 
           // Calculate the actual current epoch based on block.timestamp
-          uint256 actualCurrentEpoch = (block.timestamp - startingTimestamp) / epochLength;
+          uint256 secondsSinceLastEpoch = block.timestamp - lastEpoch;
+          uint256 remainder = secondsSinceLastEpoch % epochLength;
+          uint256 actualCurrentEpoch = block.timestamp - remainder;
 
           // If we're in a new epoch (not yet updated), totalSpent should be from old epoch
           // Otherwise, totalSpent is for current epoch
-          if (actualCurrentEpoch > currentEpoch) {
+          if (actualCurrentEpoch > lastEpoch) {
             // Hub hasn't updated yet, so totalSpent is from previous epoch
             // This is fine, cap only matters within same epoch
           } else {
@@ -142,9 +143,10 @@ contract Invariants is Setup {
 
         if (queuedAt > 0) {
           // Calculate expected execution delay
+          // solhint-disable-next-line no-unused-vars
           uint256 expectedDelay = isPreApproved
             ? handlersTarget.canonGuard().SHORT_TX_EXECUTION_DELAY()
-            : handlersTarget.canonGuard().LONG_TX_EXECUTION_DELAY();
+            : handlersTarget.canonGuard().MAX_TX_EXECUTION_DELAY();
 
           // executableAt should be queuedAt + delay (within reason, accounting for redeployments)
           // We allow executableAt to be >= queuedAt since delays could change

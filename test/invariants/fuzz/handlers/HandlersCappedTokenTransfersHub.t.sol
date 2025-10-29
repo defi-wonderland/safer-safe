@@ -1,8 +1,7 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity 0.8.30;
 
-import {ActionTarget, BaseHandlers} from './BaseHandlers.sol';
-import {CappedTokenTransfers} from 'contracts/actions-builders/CappedTokenTransfers.sol';
+import {BaseHandlers} from './BaseHandlers.sol';
 import {ICappedTokenTransfersHub} from 'interfaces/action-hubs/ICappedTokenTransfersHub.sol';
 
 /// @title HandlersCappedTokenTransfersHub
@@ -33,8 +32,8 @@ abstract contract HandlersCappedTokenTransfersHub is BaseHandlers {
     uint256 _amount,
     uint256 _capMultiplier
   ) public {
-    _amount = bound(_amount, MIN_AMOUNT, MAX_AMOUNT);
-    _capMultiplier = bound(_capMultiplier, MIN_CAP_MULTIPLIER, MAX_CAP_MULTIPLIER);
+    _amount = bound(_amount, _MIN_AMOUNT, _MAX_AMOUNT);
+    _capMultiplier = bound(_capMultiplier, _MIN_CAP_MULTIPLIER, _MAX_CAP_MULTIPLIER);
 
     address[] memory tokens = new address[](1);
     tokens[0] = address(actionTarget);
@@ -64,8 +63,9 @@ abstract contract HandlersCappedTokenTransfersHub is BaseHandlers {
   /// @dev Tests child action builder creation and queuing from approved hubs
   /// @param _approvalDuration Duration of approval (not used directly, for consistency)
   /// @param _amount Amount for the transfer (also used as hub selector seed)
+  // solhint-disable-next-line no-unused-vars
   function handler_queueCappedTokenTransfersFromHub(uint256 _approvalDuration, uint256 _amount) public {
-    _amount = bound(_amount, MIN_AMOUNT, MAX_AMOUNT);
+    _amount = bound(_amount, _MIN_AMOUNT, _MAX_AMOUNT);
 
     if (createdHubs.length == 0) return;
 

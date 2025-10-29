@@ -2,13 +2,13 @@
 pragma solidity 0.8.30;
 
 import {Test} from 'forge-std/Test.sol';
+import {CREATE3} from 'solady/utils/CREATE3.sol';
 import {CanonGuardFactory} from 'src/contracts/factories/CanonGuardFactory.sol';
 import {ICanonGuard} from 'src/interfaces/ICanonGuard.sol';
 import {ISafeManageable} from 'src/interfaces/ISafeManageable.sol';
 import {ICanonGuardFactory} from 'src/interfaces/factories/ICanonGuardFactory.sol';
-import {Utils} from 'test/unit/utils/Utils.sol';
 
-contract UnitCanonGuardFactory is Test, Utils {
+contract UnitCanonGuardFactory is Test {
   CanonGuardFactory public canonGuardFactory;
   ICanonGuard public auxCanonGuard;
   address public multiSendCallOnly;
@@ -47,14 +47,13 @@ contract UnitCanonGuardFactory is Test, Utils {
     _shortTxExecutionDelay = bound(_shortTxExecutionDelay, 0, 6 * 30 days);
     _longTxExecutionDelay = bound(_longTxExecutionDelay, _shortTxExecutionDelay, 6 * 30 days);
 
+    address _expectedCanonGuard =
+      CREATE3.predictDeterministicAddress(keccak256(abi.encode(_safe)), address(canonGuardFactory));
+
     // it should emit CanonGuardCreated event with correct parameters
     vm.expectEmit();
     emit ICanonGuardFactory.CanonGuardCreated(
-      _getNextContractDeployedAddress(address(canonGuardFactory)),
-      _safe,
-      _emergencyTrigger,
-      _emergencyCaller,
-      address(this)
+      _expectedCanonGuard, _safe, _emergencyTrigger, _emergencyCaller, address(this)
     );
 
     address _canonGuard = canonGuardFactory.createCanonGuard(
@@ -99,5 +98,8 @@ contract UnitCanonGuardFactory is Test, Utils {
 
     // it should store the contract as a factory children
     assertTrue(canonGuardFactory.isChild(_canonGuard));
+
+    // it should match the deterministic address
+    assertEq(_canonGuard, _expectedCanonGuard);
   }
 }

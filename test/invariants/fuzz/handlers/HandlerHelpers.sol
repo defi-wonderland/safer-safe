@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity 0.8.30;
 
 import {GhostState} from './GhostState.sol';
 
 import {Safe} from '@safe-smart-account/Safe.sol';
 import {CanonGuard} from 'contracts/CanonGuard.sol';
-import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 
 /// @title HandlerHelpers
 /// @notice Common helper functions for handlers to reduce code duplication

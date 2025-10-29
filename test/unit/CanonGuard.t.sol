@@ -10,9 +10,11 @@ import {ICanonGuard} from 'contracts/CanonGuard.sol';
 import {IEmergencyModeHook} from 'contracts/EmergencyModeHook.sol';
 import {ISafeManageable} from 'contracts/SafeManageable.sol';
 import {Test} from 'forge-std/Test.sol';
+import {IERC20} from 'forge-std/interfaces/IERC20.sol';
 import {IActionHub} from 'interfaces/action-hubs/IActionHub.sol';
 import {IActionHubChild} from 'interfaces/action-hubs/IActionHubChild.sol';
 import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
+import {SafeTransferLib} from 'solady/utils/SafeTransferLib.sol';
 
 contract UnitCanonGuard is Test {
   CanonGuardForTest public canonGuard;
@@ -1277,6 +1279,98 @@ contract UnitCanonGuard is Test {
     assertEq(canonGuard.getQueuedActionBuilders().length, 0);
   }
 
+  modifier whenTheTokenIsTheEthAddress() {
+    _;
+  }
+
+  function test_CollectDust_WhenTheBalanceIsZero() external whenTheTokenIsTheEthAddress {
+    vm.deal(address(canonGuard), 0);
+
+    // it emits DustCollected event
+    vm.expectEmit();
+    emit ICanonGuard.DustCollected(canonGuard.ETH_ADDRESS(), 0);
+
+    canonGuard.collectDust(canonGuard.ETH_ADDRESS());
+  }
+
+  modifier whenTheBalanceIsNotZero() {
+    _;
+  }
+
+  function test_CollectDust_WhenTheCollectionFails(uint256 _balance)
+    external
+    whenTheTokenIsTheEthAddress
+    whenTheBalanceIsNotZero
+  {
+    // This will set the code of the safe to a safe with a reverting fallback
+    vm.etch(address(SAFE), address(new RevertingFallbackSAFE()).code);
+
+    _balance = bound(_balance, 1, type(uint256).max);
+    vm.deal(address(canonGuard), _balance);
+
+    address _ethAddress = canonGuard.ETH_ADDRESS();
+
+    // it reverts with ETHTransferFailed
+    vm.expectRevert(SafeTransferLib.ETHTransferFailed.selector);
+    canonGuard.collectDust(_ethAddress);
+  }
+
+  function test_CollectDust_WhenTheCollectionSucceeds(uint256 _balance)
+    external
+    whenTheTokenIsTheEthAddress
+    whenTheBalanceIsNotZero
+  {
+    _balance = bound(_balance, 1, type(uint256).max);
+    vm.deal(address(canonGuard), _balance);
+    uint256 _safeBalanceBefore = address(SAFE).balance;
+
+    // it emits DustCollected event
+    vm.expectEmit();
+    emit ICanonGuard.DustCollected(canonGuard.ETH_ADDRESS(), _balance);
+
+    canonGuard.collectDust(canonGuard.ETH_ADDRESS());
+
+    // it collects dust from the contract
+    uint256 _safeBalanceAfter = address(SAFE).balance;
+    assertEq(_safeBalanceAfter, _safeBalanceBefore + _balance);
+  }
+
+  modifier whenTheTokenIsNotTheEthAddress(address _token) {
+    vm.assume(_token != canonGuard.ETH_ADDRESS());
+    _assumeFuzzable(_token);
+    _;
+  }
+
+  function test_CollectDust_WhenTheBalanceIsZero_WhenTheTokenIsNotTheEthAddress(address _token)
+    external
+    whenTheTokenIsNotTheEthAddress(_token)
+  {
+    _mockAndExpect(_token, abi.encodeWithSelector(IERC20.balanceOf.selector), abi.encode(0));
+
+    // it emits DustCollected event
+    vm.expectEmit();
+    emit ICanonGuard.DustCollected(_token, 0);
+
+    canonGuard.collectDust(_token);
+  }
+
+  function test_CollectDust_WhenTheBalanceIsNotZero(
+    uint256 _balance,
+    address _token
+  ) external whenTheTokenIsNotTheEthAddress(_token) {
+    _balance = bound(_balance, 1, type(uint256).max);
+
+    // it collects dust from the contract
+    _mockAndExpect(_token, abi.encodeWithSelector(IERC20.balanceOf.selector), abi.encode(_balance));
+    _mockAndExpect(_token, abi.encodeWithSelector(IERC20.transfer.selector), abi.encode(true));
+
+    // it emits DustCollected event
+    vm.expectEmit();
+    emit ICanonGuard.DustCollected(_token, _balance);
+
+    canonGuard.collectDust(_token);
+  }
+
   function test_ExecuteNoActionTransaction_WhenTheCallerIsTheEmergencyCaller(bytes32 _safeTxHash)
     external
     whenEmergencyModeIsActive
@@ -1520,5 +1614,12 @@ contract UnitCanonGuard is Test {
     vm.prank(SAFE);
     canonGuard.approveActionsBuilderOrHub(_actionsBuilder, ACTIONS_BUILDER_APPROVAL_DURATION);
     _;
+  }
+}
+
+contract RevertingFallbackSAFE {
+  fallback() external payable {
+    // solhint-disable-next-line custom-errors
+    revert('');
   }
 }

@@ -78,6 +78,13 @@ interface ICanonGuard is ISafeManageable {
   );
 
   /**
+   * @notice Emitted when dust is collected
+   * @param _token The token sent to the SAFE contract
+   * @param _balance The balance of the token sent to the SAFE contract
+   */
+  event DustCollected(address indexed _token, uint256 _balance);
+
+  /**
    * @notice Thrown when no transaction is queued for the actions builder
    */
   error NoTransactionQueued();
@@ -204,7 +211,20 @@ interface ICanonGuard is ISafeManageable {
    */
   function cancelEnqueuedTransaction(address _actionsBuilder) external;
 
+  /**
+   * @notice Collects dust (ETH or ERC20 tokens) from the contract and sends it to the SAFE contract.
+   * @dev Can be called by anyone. If balance is zero, nothing happens.
+   * @param _token The token to collect dust from. Zero address for ETH.
+   */
+  function collectDust(address _token) external;
+
   // ~~~ STORAGE METHODS ~~~
+
+  /**
+   * @notice Gets the address that represents ETH for dust collection
+   * @return _ethAddress The ETH address
+   */
+  function ETH_ADDRESS() external view returns (address _ethAddress);
 
   /**
    * @notice Gets the parent address

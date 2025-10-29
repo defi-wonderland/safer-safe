@@ -16,6 +16,7 @@ import {ISimpleTransfers} from 'interfaces/actions-builders/ISimpleTransfers.sol
 import {ICanonGuardFactory} from 'interfaces/factories/ICanonGuardFactory.sol';
 import {DeployCanonGuard} from 'script/DeployCanonGuard.s.sol';
 import {AllowanceClaimorFactory} from 'src/contracts/factories/AllowanceClaimorFactory.sol';
+import {CanonGuardFactory} from 'src/contracts/factories/CanonGuardFactory.sol';
 import {CappedTokenTransfersHubFactory} from 'src/contracts/factories/CappedTokenTransfersHubFactory.sol';
 import {ChangeSafeGuardActionFactory} from 'src/contracts/factories/ChangeSafeGuardActionFactory.sol';
 import {EverclearTokenConversionFactory} from 'src/contracts/factories/EverclearTokenConversionFactory.sol';
@@ -32,6 +33,10 @@ contract UnitDeployCanonGuard is DeployCanonGuard, Test {
   function setUp() public {
     // Deploy the CanonGuardFactory contract
     _auxCanonGuardFactory = ICanonGuardFactory(deployCode('CanonGuardFactory', abi.encode(MULTI_SEND_CALL_ONLY)));
+  }
+
+  function _computeCreate2Address(bytes memory _creationCode) private pure returns (address _address) {
+    _address = vm.computeCreate2Address(SALT, keccak256(_creationCode));
   }
 
   function test_WhenDeployingToEthereumMainnet() external {
@@ -64,6 +69,9 @@ contract UnitDeployCanonGuard is DeployCanonGuard, Test {
 
     run();
 
+    // it should match the deterministic address
+    _assertFactoriesAddresses();
+
     // it should deploy the common factories
     _assertCommonFactories();
 
@@ -82,6 +90,31 @@ contract UnitDeployCanonGuard is DeployCanonGuard, Test {
     assertEq(address(setEmergencyTriggerActionFactory).code, type(SetEmergencyTriggerActionFactory).runtimeCode);
     assertEq(address(simpleActionsFactory).code, type(SimpleActionsFactory).runtimeCode);
     assertEq(address(simpleTransfersFactory).code, type(SimpleTransfersFactory).runtimeCode);
+  }
+
+  function _assertFactoriesAddresses() private view {
+    assertEq(
+      address(canonGuardFactory),
+      _computeCreate2Address(abi.encodePacked(type(CanonGuardFactory).creationCode, abi.encode(MULTI_SEND_CALL_ONLY)))
+    );
+    assertEq(address(allowanceClaimorFactory), _computeCreate2Address(type(AllowanceClaimorFactory).creationCode));
+    assertEq(address(preApproveActionFactory), _computeCreate2Address(type(PreApproveActionFactory).creationCode));
+    assertEq(
+      address(cappedTokenTransfersHubFactory), _computeCreate2Address(type(CappedTokenTransfersHubFactory).creationCode)
+    );
+    assertEq(
+      address(changeSafeGuardActionFactory), _computeCreate2Address(type(ChangeSafeGuardActionFactory).creationCode)
+    );
+    assertEq(
+      address(setEmergencyCallerActionFactory),
+      _computeCreate2Address(type(SetEmergencyCallerActionFactory).creationCode)
+    );
+    assertEq(
+      address(setEmergencyTriggerActionFactory),
+      _computeCreate2Address(type(SetEmergencyTriggerActionFactory).creationCode)
+    );
+    assertEq(address(simpleActionsFactory), _computeCreate2Address(type(SimpleActionsFactory).creationCode));
+    assertEq(address(simpleTransfersFactory), _computeCreate2Address(type(SimpleTransfersFactory).creationCode));
   }
 
   function _assertCommonContracts() private {

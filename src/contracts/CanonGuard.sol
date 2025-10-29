@@ -22,11 +22,13 @@ import {MultiSendCallOnly} from '@safe-smart-account/libraries/MultiSendCallOnly
 import {EmergencyModeHook} from 'contracts/EmergencyModeHook.sol';
 import {OnlyCanonGuard} from 'contracts/OnlyCanonGuard.sol';
 import {SafeManageable} from 'contracts/SafeManageable.sol';
+import {IERC20} from 'forge-std/interfaces/IERC20.sol';
 import {ICanonGuard} from 'interfaces/ICanonGuard.sol';
 import {IActionHub} from 'interfaces/action-hubs/IActionHub.sol';
 import {IActionHubChild} from 'interfaces/action-hubs/IActionHubChild.sol';
 import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 import {EnumerableSetLib} from 'solady/utils/EnumerableSetLib.sol';
+import {SafeTransferLib} from 'solady/utils/SafeTransferLib.sol';
 
 /**
  * @title CanonGuard
@@ -34,6 +36,7 @@ import {EnumerableSetLib} from 'solady/utils/EnumerableSetLib.sol';
  */
 contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
   using EnumerableSetLib for EnumerableSetLib.AddressSet;
+  using SafeTransferLib for address;
 
   // ~~~ STORAGE ~~~
 
@@ -42,6 +45,9 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
 
   /// @inheritdoc ICanonGuard
   uint256 public constant MAX_TX_EXECUTION_DELAY = 6 * 30 days;
+
+  /// @inheritdoc ICanonGuard
+  address public constant ETH_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
 
   /// @inheritdoc ICanonGuard
   address public immutable PARENT;
@@ -195,6 +201,21 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
     __queuedActionBuilders.remove(_actionsBuilder);
 
     emit EnqueuedTransactionCancelled(_actionsBuilder, msg.sender, _safeTxHash);
+  }
+
+  /// @inheritdoc ICanonGuard
+  function collectDust(address _token) external {
+    uint256 _balance;
+
+    if (_token == ETH_ADDRESS) {
+      _balance = address(this).balance;
+      if (_balance != 0) address(SAFE).safeTransferAllETH();
+    } else {
+      _balance = IERC20(_token).balanceOf(address(this));
+      if (_balance != 0) _token.safeTransferAll(address(SAFE));
+    }
+
+    emit DustCollected(_token, _balance);
   }
 
   // ~~~ GETTER METHODS ~~~

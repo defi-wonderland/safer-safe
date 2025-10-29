@@ -2,10 +2,8 @@
 pragma solidity 0.8.30;
 
 import {ICappedTokenTransfersHub} from 'interfaces/action-hubs/ICappedTokenTransfersHub.sol';
-
 import {EnumerableSetLib} from 'solady/utils/EnumerableSetLib.sol';
 import {SafeManageable} from 'src/contracts/SafeManageable.sol';
-
 import {ActionHub} from 'src/contracts/action-hubs/ActionHub.sol';
 import {CappedTokenTransfers} from 'src/contracts/actions-builders/CappedTokenTransfers.sol';
 
@@ -24,10 +22,7 @@ contract CappedTokenTransfersHub is ActionHub, ICappedTokenTransfersHub, SafeMan
   uint256 public immutable EPOCH_LENGTH;
 
   /// @inheritdoc ICappedTokenTransfersHub
-  uint256 public immutable STARTING_TIMESTAMP;
-
-  /// @inheritdoc ICappedTokenTransfersHub
-  uint256 public currentEpoch;
+  uint256 public lastEpoch;
 
   /// @inheritdoc ICappedTokenTransfersHub
   mapping(address _token => uint256 _cap) public cap;
@@ -45,8 +40,7 @@ contract CappedTokenTransfersHub is ActionHub, ICappedTokenTransfersHub, SafeMan
    * @param _recipient Address that receives transfers.
    * @param _tokens The tokens to cap
    * @param _caps The caps for the tokens
-   * @param _epochLength Duration of each epoch in seconds. Epochs are counted from STARTING_TIMESTAMP and computed as
-   *  (block.timestamp - STARTING_TIMESTAMP) / _epochLength. Per token caps reset when the epoch increments. Can't be zero.
+   * @param _epochLength Duration of each epoch in seconds. Per token caps reset when the epoch changes. Can't be zero.
    */
   constructor(
     address _parent,
@@ -58,7 +52,7 @@ contract CappedTokenTransfersHub is ActionHub, ICappedTokenTransfersHub, SafeMan
   ) SafeManageable(_safe) ActionHub(_parent) {
     RECIPIENT = _recipient;
     EPOCH_LENGTH = _epochLength;
-    STARTING_TIMESTAMP = block.timestamp;
+    lastEpoch = block.timestamp;
 
     if (_epochLength == 0) revert EpochLengthCannotBeZero();
 
@@ -86,12 +80,17 @@ contract CappedTokenTransfersHub is ActionHub, ICappedTokenTransfersHub, SafeMan
 
   /// @inheritdoc ICappedTokenTransfersHub
   function updateState(address _token, uint256 _amount) external isSafe {
-    uint256 _currentEpoch = (block.timestamp - STARTING_TIMESTAMP) / EPOCH_LENGTH;
+    // Calculate how many seconds have passed since the last saved epoch
+    uint256 _secondsSinceLastEpoch = block.timestamp - lastEpoch;
+    // Calculate the remainder of the seconds since the actual last epoch (given that many epochs may have passed without updating the state)
+    uint256 _remainder = _secondsSinceLastEpoch % EPOCH_LENGTH;
+    // Substract the remainder from the current timestamp to get the actual last epoch
+    uint256 _currentEpoch = block.timestamp - _remainder;
 
     // If we're in a new epoch, reset the spending
-    if (_currentEpoch > currentEpoch) {
+    if (_currentEpoch > lastEpoch) {
       delete totalSpent[_token];
-      currentEpoch = _currentEpoch;
+      lastEpoch = _currentEpoch;
     }
 
     totalSpent[_token] += _amount;
@@ -99,6 +98,8 @@ contract CappedTokenTransfersHub is ActionHub, ICappedTokenTransfersHub, SafeMan
     if (totalSpent[_token] > cap[_token]) {
       revert CapExceeded();
     }
+
+    emit StateUpdated(_token, _amount, lastEpoch);
   }
 
   /// @inheritdoc ICappedTokenTransfersHub
@@ -108,11 +109,14 @@ contract CappedTokenTransfersHub is ActionHub, ICappedTokenTransfersHub, SafeMan
 
   /// @inheritdoc ICappedTokenTransfersHub
   function capLeft(address _token) external view returns (uint256 _capLeft) {
-    uint256 _currentEpoch = (block.timestamp - STARTING_TIMESTAMP) / EPOCH_LENGTH;
+    uint256 _secondsSinceLastEpoch = block.timestamp - lastEpoch;
+    uint256 _remainder = _secondsSinceLastEpoch % EPOCH_LENGTH;
+    uint256 _currentEpoch = block.timestamp - _remainder;
+
     uint256 _tokenCap = cap[_token];
 
     // If we're in a new epoch, return the full cap
-    if (_currentEpoch > currentEpoch) {
+    if (_currentEpoch > lastEpoch) {
       _capLeft = _tokenCap;
     } else {
       // Otherwise, return the cap left for the token

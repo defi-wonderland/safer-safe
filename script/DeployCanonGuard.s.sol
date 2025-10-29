@@ -99,6 +99,9 @@ contract DeployCanonGuard is Constants, Script {
   uint256 public constant DUMMY_EPOCH_LENGTH = 1;
   uint256 public constant DUMMY_DELAY = 2 days;
 
+  // ~~~ CREATE2 SALT ~~~
+  bytes32 public constant SALT = keccak256('canon-guard');
+
   function run() public {
     vm.startBroadcast();
 
@@ -117,15 +120,15 @@ contract DeployCanonGuard is Constants, Script {
   }
 
   function _deployAllChainsFactories() internal {
-    canonGuardFactory = new CanonGuardFactory(address(MULTI_SEND_CALL_ONLY));
-    allowanceClaimorFactory = new AllowanceClaimorFactory();
-    preApproveActionFactory = new PreApproveActionFactory();
-    cappedTokenTransfersHubFactory = new CappedTokenTransfersHubFactory();
-    changeSafeGuardActionFactory = new ChangeSafeGuardActionFactory();
-    setEmergencyCallerActionFactory = new SetEmergencyCallerActionFactory();
-    setEmergencyTriggerActionFactory = new SetEmergencyTriggerActionFactory();
-    simpleActionsFactory = new SimpleActionsFactory();
-    simpleTransfersFactory = new SimpleTransfersFactory();
+    canonGuardFactory = new CanonGuardFactory{salt: SALT}(address(MULTI_SEND_CALL_ONLY));
+    allowanceClaimorFactory = new AllowanceClaimorFactory{salt: SALT}();
+    preApproveActionFactory = new PreApproveActionFactory{salt: SALT}();
+    cappedTokenTransfersHubFactory = new CappedTokenTransfersHubFactory{salt: SALT}();
+    changeSafeGuardActionFactory = new ChangeSafeGuardActionFactory{salt: SALT}();
+    setEmergencyCallerActionFactory = new SetEmergencyCallerActionFactory{salt: SALT}();
+    setEmergencyTriggerActionFactory = new SetEmergencyTriggerActionFactory{salt: SALT}();
+    simpleActionsFactory = new SimpleActionsFactory{salt: SALT}();
+    simpleTransfersFactory = new SimpleTransfersFactory{salt: SALT}();
   }
 
   function _deployEthereumFactories() internal {
