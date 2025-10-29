@@ -3,8 +3,7 @@ pragma solidity 0.8.30;
 
 import {ActionsBuilder} from 'contracts/actions-builders/ActionsBuilder.sol';
 import {IERC20} from 'forge-std/interfaces/IERC20.sol';
-
-import {ICanonGuard} from 'interfaces/ICanonGuard.sol';
+import {ISafeManageable} from 'interfaces/ISafeManageable.sol';
 import {IAllowanceClaimor} from 'interfaces/actions-builders/IAllowanceClaimor.sol';
 
 /**
@@ -43,7 +42,7 @@ contract AllowanceClaimor is IAllowanceClaimor, ActionsBuilder {
 
   /// @inheritdoc ActionsBuilder
   function getActions() external view override returns (Action[] memory _actions) {
-    uint256 _amountToClaim = TOKEN.allowance(TOKEN_OWNER, address(ICanonGuard(msg.sender).SAFE()));
+    uint256 _amountToClaim = TOKEN.allowance(TOKEN_OWNER, address(ISafeManageable(msg.sender).SAFE()));
     uint256 _balance = TOKEN.balanceOf(TOKEN_OWNER);
     if (_amountToClaim > _balance) {
       _amountToClaim = _balance;
