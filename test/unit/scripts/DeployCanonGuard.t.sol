@@ -118,31 +118,28 @@ contract UnitDeployCanonGuard is DeployCanonGuard, Test {
   }
 
   function _assertCommonContracts() private {
-    IAllowanceClaimor _auxAllowanceClaimor = IAllowanceClaimor(
-      deployCode('AllowanceClaimor', abi.encode(DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS))
-    );
-    IPreApproveAction _auxPreApproveAction = IPreApproveAction(
-      deployCode('PreApproveAction', abi.encode(DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_APPROVAL_DURATION))
-    );
     // NOTE: doing this in order to match msg.sender when deploying the contract
-    vm.prank(DEFAULT_SENDER);
+    vm.startPrank(DEFAULT_SENDER);
+    IAllowanceClaimor _auxAllowanceClaimor =
+      IAllowanceClaimor(deployCode('AllowanceClaimor', abi.encode(DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS)));
+    IPreApproveAction _auxPreApproveAction =
+      IPreApproveAction(deployCode('PreApproveAction', abi.encode(DUMMY_ADDRESS, DUMMY_APPROVAL_DURATION)));
     ICappedTokenTransfers _auxCappedTokenTransfers =
       ICappedTokenTransfers(deployCode('CappedTokenTransfers', abi.encode(DUMMY_ADDRESS, DUMMY_AMOUNT, DUMMY_ADDRESS)));
     IChangeSafeGuardAction _auxChangeSafeGuardAction =
-      IChangeSafeGuardAction(deployCode('ChangeSafeGuardAction', abi.encode(DUMMY_ADDRESS, DUMMY_ADDRESS)));
+      IChangeSafeGuardAction(deployCode('ChangeSafeGuardAction', abi.encode(DUMMY_ADDRESS)));
     ISetEmergencyCallerAction _auxSetEmergencyCallerAction =
-      ISetEmergencyCallerAction(deployCode('SetEmergencyCallerAction', abi.encode(DUMMY_ADDRESS, DUMMY_ADDRESS)));
+      ISetEmergencyCallerAction(deployCode('SetEmergencyCallerAction', abi.encode(DUMMY_ADDRESS)));
     ISetEmergencyTriggerAction _auxSetEmergencyTriggerAction =
-      ISetEmergencyTriggerAction(deployCode('SetEmergencyTriggerAction', abi.encode(DUMMY_ADDRESS, DUMMY_ADDRESS)));
+      ISetEmergencyTriggerAction(deployCode('SetEmergencyTriggerAction', abi.encode(DUMMY_ADDRESS)));
     ISimpleActions _auxSimpleActions =
-      ISimpleActions(deployCode('SimpleActions', abi.encode(DUMMY_ADDRESS, new ISimpleActions.SimpleAction[](0))));
-    ISimpleTransfers _auxSimpleTransfers = ISimpleTransfers(
-      deployCode('SimpleTransfers', abi.encode(DUMMY_ADDRESS, new ISimpleTransfers.TransferAction[](0)))
-    );
+      ISimpleActions(deployCode('SimpleActions', abi.encode(new ISimpleActions.SimpleAction[](0))));
+    ISimpleTransfers _auxSimpleTransfers =
+      ISimpleTransfers(deployCode('SimpleTransfers', abi.encode(new ISimpleTransfers.TransferAction[](0))));
     ICappedTokenTransfersHub _auxCappedTokenTransfersHub = ICappedTokenTransfersHub(
       deployCode(
         'CappedTokenTransfersHub',
-        abi.encode(DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS, new address[](0), new uint256[](0), DUMMY_EPOCH_LENGTH)
+        abi.encode(DUMMY_ADDRESS, DUMMY_ADDRESS, new address[](0), new uint256[](0), DUMMY_EPOCH_LENGTH)
       )
     );
     ICanonGuard _auxCanonGuard = ICanonGuard(
@@ -163,6 +160,7 @@ contract UnitDeployCanonGuard is DeployCanonGuard, Test {
     );
     IActionsBuilder _auxSetGuardAction = IActionsBuilder(deployCode('SetGuardAction'));
     IActionsBuilder _auxUnsetEmergencyModeAction = IActionsBuilder(deployCode('UnsetEmergencyModeAction'));
+    vm.stopPrank();
 
     assertEq(address(_allowanceClaimor).code, address(_auxAllowanceClaimor).code);
     assertEq(address(_preApproveAction).code, address(_auxPreApproveAction).code);

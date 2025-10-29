@@ -23,10 +23,9 @@ contract OPxAction is IOPxAction, ActionsBuilder {
 
   /**
    * @notice Constructor that sets up the OPX contract address
-   * @param _parent The parent that deployed the actions builder
    * @param _opx The OPx contract address
    */
-  constructor(address _parent, address _opx) ActionsBuilder(_parent) {
+  constructor(address _opx) ActionsBuilder(msg.sender) {
     OPX = _opx;
   }
 

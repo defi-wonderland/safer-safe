@@ -18,10 +18,9 @@ contract SetEmergencyCallerAction is ISetEmergencyCallerAction, ActionsBuilder {
 
   /**
    * @notice Constructor that sets up the SetEmergencyCallerAction contract
-   * @param _parent The parent that deployed the actions builder
    * @param _emergencyCaller The emergency caller address. This is the address that can execute transactions in emergency mode
    */
-  constructor(address _parent, address _emergencyCaller) ActionsBuilder(_parent) {
+  constructor(address _emergencyCaller) ActionsBuilder(msg.sender) {
     EMERGENCY_CALLER = _emergencyCaller;
   }
 

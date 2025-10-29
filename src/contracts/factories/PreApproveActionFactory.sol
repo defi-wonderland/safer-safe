@@ -17,7 +17,7 @@ contract PreApproveActionFactory is IPreApproveActionFactory, Factory {
     address _actionsBuilder,
     uint256 _approvalDuration
   ) external returns (address _preApproveAction) {
-    _preApproveAction = address(new PreApproveAction(address(this), _actionsBuilder, _approvalDuration));
+    _preApproveAction = address(new PreApproveAction(_actionsBuilder, _approvalDuration));
 
     _children[_preApproveAction] = true;
 

@@ -33,8 +33,8 @@ contract UnitSimpleTransfersFactory is Test, Utils {
     address _simpleTransfers = simpleTransfersFactory.createSimpleTransfers(_transferActions);
 
     // it should deploy a SimpleTransfers contract with correct args
-    auxSimpleTransfers =
-      ISimpleTransfers(deployCode('SimpleTransfers', abi.encode(address(simpleTransfersFactory), _transferActions)));
+    vm.prank(address(simpleTransfersFactory));
+    auxSimpleTransfers = ISimpleTransfers(deployCode('SimpleTransfers', abi.encode(_transferActions)));
     assertEq(address(auxSimpleTransfers).code, _simpleTransfers.code);
 
     // it should match the parameters sent to the constructor
@@ -83,8 +83,8 @@ contract UnitSimpleTransfersFactory is Test, Utils {
     address _simpleTransfers = simpleTransfersFactory.createSimpleTransfer(_transferAction);
 
     // it should deploy a SimpleTransfers contract with a single transfer action
-    auxSimpleTransfers =
-      ISimpleTransfers(deployCode('SimpleTransfers', abi.encode(address(simpleTransfersFactory), _transferActions)));
+    vm.prank(address(simpleTransfersFactory));
+    auxSimpleTransfers = ISimpleTransfers(deployCode('SimpleTransfers', abi.encode(_transferActions)));
     assertEq(address(auxSimpleTransfers).code, _simpleTransfers.code);
 
     // it should match the parameters sent to the constructor

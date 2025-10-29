@@ -14,7 +14,7 @@ contract UnitEverclearTokenConversion is Test {
   address public next = makeAddr('NEXT');
 
   function setUp() external {
-    everclearTokenConversion = new EverclearTokenConversion(address(0), clearLockbox, next);
+    everclearTokenConversion = new EverclearTokenConversion(clearLockbox, next);
   }
 
   function _mockAndExpect(address _target, bytes memory _call, bytes memory _returnData) internal {

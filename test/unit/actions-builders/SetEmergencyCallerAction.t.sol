@@ -11,7 +11,7 @@ contract UnitSetEmergencyCallerAction is Test {
   address public emergencyCaller = makeAddr('emergencyCaller');
 
   function setUp() external {
-    setEmergencyCallerAction = new SetEmergencyCallerAction(address(0), emergencyCaller);
+    setEmergencyCallerAction = new SetEmergencyCallerAction(emergencyCaller);
   }
 
   function test_Constructor_WhenCalled() external view {

@@ -25,9 +25,9 @@ contract UnitAllowanceClaimorFactorycreateAllowanceClaimor is Test, Utils {
 
     address _allowanceClaimor = allowanceClaimorFactory.createAllowanceClaimor(_token, _tokenOwner, _tokenRecipient);
 
-    auxAllowanceClaimor = IAllowanceClaimor(
-      deployCode('AllowanceClaimor', abi.encode(address(allowanceClaimorFactory), _token, _tokenOwner, _tokenRecipient))
-    );
+    vm.prank(address(allowanceClaimorFactory));
+    auxAllowanceClaimor =
+      IAllowanceClaimor(deployCode('AllowanceClaimor', abi.encode(_token, _tokenOwner, _tokenRecipient)));
 
     // it should deploy a AllowanceClaimor contract
     assertEq(address(auxAllowanceClaimor).code, _allowanceClaimor.code);

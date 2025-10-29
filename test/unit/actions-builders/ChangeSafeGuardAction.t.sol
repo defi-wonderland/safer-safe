@@ -14,7 +14,7 @@ contract UnitChangeSafeGuardAction is Test {
   address public mockCanonGuard = makeAddr('canonGuard');
 
   function setUp() external {
-    changeSafeGuardAction = new ChangeSafeGuardAction(address(0), mockCanonGuard);
+    changeSafeGuardAction = new ChangeSafeGuardAction(mockCanonGuard);
   }
 
   function test_Constructor_WhenCalled() external view {

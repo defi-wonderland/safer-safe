@@ -11,7 +11,7 @@ contract UnitSetEmergencyTriggerAction is Test {
   address public emergencyTrigger = makeAddr('emergencyTrigger');
 
   function setUp() external {
-    setEmergencyTriggerAction = new SetEmergencyTriggerAction(address(0), emergencyTrigger);
+    setEmergencyTriggerAction = new SetEmergencyTriggerAction(emergencyTrigger);
   }
 
   function test_Constructor_WhenCalled() external view {

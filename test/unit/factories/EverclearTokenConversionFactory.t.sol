@@ -24,9 +24,10 @@ contract UnitEverclearTokenConversionFactorycreateEverclearTokenConversion is Te
     );
 
     address _everclearTokenConversion = everclearTokenConversionFactory.createEverclearTokenConversion(_lockbox, _next);
-    auxEverclearTokenConversion = IEverclearTokenConversion(
-      deployCode('EverclearTokenConversion', abi.encode(address(everclearTokenConversionFactory), _lockbox, _next))
-    );
+
+    vm.prank(address(everclearTokenConversionFactory));
+    auxEverclearTokenConversion =
+      IEverclearTokenConversion(deployCode('EverclearTokenConversion', abi.encode(_lockbox, _next)));
 
     // it should deploy a EverclearTokenConversion
     assertEq(address(auxEverclearTokenConversion).code, _everclearTokenConversion.code);

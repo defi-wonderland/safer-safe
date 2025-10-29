@@ -25,9 +25,8 @@ contract UnitPreApproveActionFactorycreatePreApproveAction is Test, Utils {
 
     address _preApproveAction = preApproveActionFactory.createPreApproveAction(_actionsBuilder, _approvalDuration);
 
-    auxApproveAction = IPreApproveAction(
-      deployCode('PreApproveAction', abi.encode(address(preApproveActionFactory), _actionsBuilder, _approvalDuration))
-    );
+    vm.prank(address(preApproveActionFactory));
+    auxApproveAction = IPreApproveAction(deployCode('PreApproveAction', abi.encode(_actionsBuilder, _approvalDuration)));
 
     // it should deploy an PreApproveAction contract with correct args
     assertEq(address(auxApproveAction).code, _preApproveAction.code);
