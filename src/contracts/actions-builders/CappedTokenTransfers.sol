@@ -5,6 +5,7 @@ import {ActionHubChild} from 'contracts/action-hubs/ActionHubChild.sol';
 import {ActionsBuilder} from 'contracts/actions-builders/ActionsBuilder.sol';
 import {IERC20} from 'forge-std/interfaces/IERC20.sol';
 import {ICappedTokenTransfersHub} from 'interfaces/action-hubs/ICappedTokenTransfersHub.sol';
+import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 import {ICappedTokenTransfers} from 'interfaces/actions-builders/ICappedTokenTransfers.sol';
 
 /**
@@ -44,7 +45,7 @@ contract CappedTokenTransfers is ICappedTokenTransfers, ActionHubChild, ActionsB
   // ~~~ ACTIONS METHODS ~~~
 
   /// @inheritdoc ActionsBuilder
-  function getActions() external view override returns (Action[] memory _actions) {
+  function getActions() external view override(ActionsBuilder, IActionsBuilder) returns (Action[] memory _actions) {
     _actions = new Action[](2);
 
     // First action: update state

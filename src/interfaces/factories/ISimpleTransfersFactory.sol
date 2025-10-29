@@ -2,12 +2,13 @@
 pragma solidity 0.8.30;
 
 import {ISimpleTransfers} from 'interfaces/actions-builders/ISimpleTransfers.sol';
+import {IFactory} from 'interfaces/factories/IFactory.sol';
 
 /**
  * @title ISimpleTransfersFactory
  * @notice Interface for the SimpleTransfersFactory contract
  */
-interface ISimpleTransfersFactory {
+interface ISimpleTransfersFactory is IFactory {
   // ~~~ FACTORY METHODS ~~~
 
   /**

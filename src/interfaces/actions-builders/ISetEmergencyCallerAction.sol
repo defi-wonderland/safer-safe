@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
+import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
+
 /**
  * @title ISetEmergencyCallerAction
  * @notice Interface for the SetEmergencyCallerAction contract
  */
-interface ISetEmergencyCallerAction {
+interface ISetEmergencyCallerAction is IActionsBuilder {
   // ~~~ STORAGE METHODS ~~~
 
   /**

@@ -4,6 +4,7 @@ pragma solidity 0.8.30;
 import {ActionsBuilder} from 'contracts/actions-builders/ActionsBuilder.sol';
 import {IERC20} from 'forge-std/interfaces/IERC20.sol';
 import {ICanonGuard} from 'interfaces/ICanonGuard.sol';
+import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 import {IEverclearTokenConversion} from 'interfaces/actions-builders/IEverclearTokenConversion.sol';
 import {IxERC20Lockbox} from 'interfaces/external/IxERC20Lockbox.sol';
 
@@ -39,7 +40,7 @@ contract EverclearTokenConversion is IEverclearTokenConversion, ActionsBuilder {
   // ~~~ ACTIONS METHODS ~~~
 
   /// @inheritdoc ActionsBuilder
-  function getActions() external view override returns (Action[] memory _actions) {
+  function getActions() external view override(ActionsBuilder, IActionsBuilder) returns (Action[] memory _actions) {
     uint256 _amount = NEXT.balanceOf(address(ICanonGuard(msg.sender).SAFE()));
 
     _actions = new Action[](2);
