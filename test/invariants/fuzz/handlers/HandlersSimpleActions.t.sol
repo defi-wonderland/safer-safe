@@ -1,9 +1,8 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity 0.8.30;
 
-import {ActionTarget, BaseHandlers} from './BaseHandlers.sol';
+import {BaseHandlers} from './BaseHandlers.sol';
 
-import {SimpleActionsFactory} from 'contracts/factories/SimpleActionsFactory.sol';
 import {ISimpleActions} from 'interfaces/actions-builders/ISimpleActions.sol';
 
 /// @title HandlersSimpleActions

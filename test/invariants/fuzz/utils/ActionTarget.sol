@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity 0.8.30;
 
 /// "Global" mock for all call target of the safe
 
@@ -42,9 +42,9 @@ contract ActionTarget is IERC20 {
   uint256 public gasLimit;
 
   // Cap tracking
-  mapping(address => uint256) public tokenCaps;
-  mapping(address => uint256) public tokenTotalSpent;
-  uint256 public currentEpochState;
+  mapping(address token => uint256 cap) public tokenCaps;
+  mapping(address token => uint256 totalSpent) public tokenTotalSpent;
+  uint256 public lastEpochState;
   uint256 public constant EPOCH_LENGTH = 1 days;
   uint256 public constant STARTING_TIMESTAMP = 1;
 
@@ -136,8 +136,8 @@ contract ActionTarget is IERC20 {
     return tokenTotalSpent[_token];
   }
 
-  function currentEpoch() external view returns (uint256) {
-    return currentEpochState;
+  function lastEpoch() external view returns (uint256) {
+    return lastEpochState;
   }
 
   function setCap(address _token, uint256 _cap) external {
@@ -161,10 +161,12 @@ contract ActionTarget is IERC20 {
     return 1;
   }
 
+  // solhint-disable-next-line no-unused-vars
   function balanceOf(address account) public view override returns (uint256) {
     return 123;
   }
 
+  // solhint-disable-next-line no-unused-vars
   function allowance(address owner, address spender) public view override returns (uint256) {
     return 789;
   }

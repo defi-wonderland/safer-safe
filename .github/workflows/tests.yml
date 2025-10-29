@@ -67,7 +67,7 @@ jobs:
   invariant-tests:
     name: Forge invariant Tests
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/dev'
+    if: github.ref == 'refs/heads/dev' || github.base_ref == 'refs/heads/dev'
     steps:
       - uses: actions/checkout@v4
 

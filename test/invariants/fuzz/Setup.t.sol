@@ -1,14 +1,13 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity 0.8.30;
 
 import {Test} from 'forge-std/Test.sol';
 
-import {ISafe, Safe} from '@safe-smart-account/Safe.sol';
+import {Safe} from '@safe-smart-account/Safe.sol';
 import {SafeProxyFactory} from '@safe-smart-account/proxies/SafeProxyFactory.sol';
 
 import {HandlersTarget} from './HandlersTarget.t.sol';
 
-import {ActionTarget} from './utils/ActionTarget.sol';
 import {MultiSendCallOnly} from './utils/MultiSendCallOnly.sol';
 import {CanonGuard} from 'contracts/CanonGuard.sol';
 
