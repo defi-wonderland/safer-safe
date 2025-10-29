@@ -31,8 +31,6 @@ abstract contract ActionHub is IActionHub {
    */
   function _saveNewActionsBuilder(address _actionsBuilder) internal {
     _actionsBuilders[_actionsBuilder] = true;
-
-    emit NewActionsBuilderSaved(_actionsBuilder);
   }
 
   /**

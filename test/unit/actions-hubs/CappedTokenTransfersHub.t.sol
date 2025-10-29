@@ -100,9 +100,13 @@ contract UnitCappedTokenTransfersHub is Test {
   }
 
   function test_CreateNewActionsBuilder_WhenTheTokenIsRegisteredInTheHub() external whenCalledByTheSafeOwner {
+    // it emits the event CappedTokenTransfersCreated
+    address _expectedActionsBuilder = vm.computeCreateAddress(address(cappedTokenTransfersHub), 1);
+    vm.expectEmit();
+    emit ICappedTokenTransfersHub.CappedTokenTransfersCreated(_expectedActionsBuilder, tokens[0], caps[0]);
+
     // it creates a new CappedTokenTransfers actions builder
-    address _actionsBuilder =
-      cappedTokenTransfersHub.createNewActionsBuilder(tokens[0], cappedTokenTransfersHub.cap(tokens[0]));
+    address _actionsBuilder = cappedTokenTransfersHub.createNewActionsBuilder(tokens[0], caps[0]);
     assertNotEq(_actionsBuilder, address(0));
 
     // it sets the hub address in the child contract

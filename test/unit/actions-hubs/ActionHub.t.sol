@@ -2,7 +2,6 @@
 pragma solidity 0.8.30;
 
 import {Test} from 'forge-std/Test.sol';
-import {IActionHub} from 'interfaces/action-hubs/IActionHub.sol';
 import {ActionHubForTest} from 'test/unit/mocks/ActionHubForTest.sol';
 
 contract UnitActionHub is Test {
@@ -33,10 +32,6 @@ contract UnitActionHub is Test {
   }
 
   function test__saveNewActionsBuilder_WhenCalled(address _actionsBuilder) external {
-    // it emits a NewActionsBuilderSaved event
-    vm.expectEmit();
-    emit IActionHub.NewActionsBuilderSaved(_actionsBuilder);
-
     actionHub.forTest_saveNewActionsBuilder(_actionsBuilder);
 
     // it marks the actions builder as a child
