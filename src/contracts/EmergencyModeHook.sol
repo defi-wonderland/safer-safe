@@ -24,8 +24,9 @@ abstract contract EmergencyModeHook is IEmergencyModeHook, SafeManageable {
    * @notice Constructor that sets up the emergency mode hook
    * @param _emergencyTrigger The emergency trigger address
    * @param _emergencyCaller The emergency caller address
+   * @param _safe The safe address
    */
-  constructor(address _emergencyTrigger, address _emergencyCaller) {
+  constructor(address _emergencyTrigger, address _emergencyCaller, address _safe) SafeManageable(_safe) {
     if (_emergencyTrigger == address(0)) revert ZeroAddress();
     if (_emergencyCaller == address(0)) revert ZeroAddress();
 
