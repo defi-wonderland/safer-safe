@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
+import {IFactory} from 'interfaces/factories/IFactory.sol';
+
 /**
  * @title ICanonGuardFactory
  * @notice Interface for the CanonGuardFactory contract
  */
-interface ICanonGuardFactory {
+interface ICanonGuardFactory is IFactory {
   // ~~~ ERRORS ~~~
   /**
    * @notice Thrown when the transaction expiry delay is less than the minimum expiry time

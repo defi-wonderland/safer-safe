@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
+import {IFactory} from 'interfaces/factories/IFactory.sol';
+
 /**
  * @title ISetEmergencyTriggerActionFactory
  * @notice Interface for the SetEmergencyTriggerActionFactory contract
  */
-interface ISetEmergencyTriggerActionFactory {
+interface ISetEmergencyTriggerActionFactory is IFactory {
   // ~~~ FACTORY METHODS ~~~
 
   /**

@@ -3,6 +3,7 @@ pragma solidity 0.8.30;
 
 import {ActionsBuilder} from 'contracts/actions-builders/ActionsBuilder.sol';
 import {IERC20} from 'forge-std/interfaces/IERC20.sol';
+import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 import {ISimpleTransfers} from 'interfaces/actions-builders/ISimpleTransfers.sol';
 
 /**
@@ -58,7 +59,7 @@ contract SimpleTransfers is ISimpleTransfers, ActionsBuilder {
   // ~~~ ACTIONS METHODS ~~~
 
   /// @inheritdoc ActionsBuilder
-  function getActions() external view override returns (Action[] memory) {
+  function getActions() external view override(ActionsBuilder, IActionsBuilder) returns (Action[] memory) {
     return _actions;
   }
 }
