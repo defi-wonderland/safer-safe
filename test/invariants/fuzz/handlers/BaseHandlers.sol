@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity 0.8.30;
 
 import {HandlerHelpers} from './HandlerHelpers.sol';
 
@@ -40,24 +40,24 @@ abstract contract BaseHandlers is HandlerHelpers {
   ActionTarget public actionTarget;
 
   // Mock data for testing
-  address immutable TOKEN_SENDER;
-  address immutable TOKEN_RECIPIENT;
-  uint256 immutable AMOUNT;
+  address public immutable TOKEN_SENDER;
+  address public immutable TOKEN_RECIPIENT;
+  uint256 public immutable AMOUNT;
 
   /*//////////////////////////////////////////////////////////////
                             CONSTANTS
   //////////////////////////////////////////////////////////////*/
 
   // Fuzzing bounds
-  uint256 internal constant MIN_APPROVAL_DURATION = 1;
-  uint256 internal constant MAX_APPROVAL_DURATION = 10_000;
-  uint256 internal constant MIN_AMOUNT = 1;
-  uint256 internal constant MAX_AMOUNT = 1_000_000;
-  uint256 internal constant MIN_CAP_MULTIPLIER = 1;
-  uint256 internal constant MAX_CAP_MULTIPLIER = 5;
-  uint256 internal constant MIN_LOCK_TIME = 1 days;
-  uint256 internal constant MAX_LOCK_TIME = 365 days;
-  uint256 internal constant MAX_WARP_TIME = 365 days;
+  uint256 internal constant _MIN_APPROVAL_DURATION = 1;
+  uint256 internal constant _MAX_APPROVAL_DURATION = 10_000;
+  uint256 internal constant _MIN_AMOUNT = 1;
+  uint256 internal constant _MAX_AMOUNT = 1_000_000;
+  uint256 internal constant _MIN_CAP_MULTIPLIER = 1;
+  uint256 internal constant _MAX_CAP_MULTIPLIER = 5;
+  uint256 internal constant _MIN_LOCK_TIME = 1 days;
+  uint256 internal constant _MAX_LOCK_TIME = 365 days;
+  uint256 internal constant _MAX_WARP_TIME = 365 days;
 
   /*//////////////////////////////////////////////////////////////
                             MODIFIERS
@@ -109,7 +109,7 @@ abstract contract BaseHandlers is HandlerHelpers {
     ActionsBuilderType _type,
     uint256 _approvalDuration
   ) internal returns (bool success) {
-    _approvalDuration = bound(_approvalDuration, MIN_APPROVAL_DURATION, MAX_APPROVAL_DURATION);
+    _approvalDuration = bound(_approvalDuration, _MIN_APPROVAL_DURATION, _MAX_APPROVAL_DURATION);
 
     // Try to approve the builder
     if (!_tryApproveBuilder(_builder, _approvalDuration)) {
@@ -129,7 +129,7 @@ abstract contract BaseHandlers is HandlerHelpers {
   /// @dev Allows warping up to MAX_WARP_TIME to test epoch boundaries
   /// @param _timestamp The amount of time to warp forward
   function handler_warp(uint256 _timestamp) public {
-    _timestamp = bound(_timestamp, 1, MAX_WARP_TIME);
+    _timestamp = bound(_timestamp, 1, _MAX_WARP_TIME);
     vm.warp(block.timestamp + _timestamp);
   }
 }

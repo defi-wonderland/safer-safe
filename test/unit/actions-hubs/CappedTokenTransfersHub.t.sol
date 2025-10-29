@@ -39,8 +39,6 @@ contract UnitCappedTokenTransfersHub is Test {
     assertEq(cappedTokenTransfersHub.RECIPIENT(), _recipient);
     // it sets the epoch length
     assertEq(cappedTokenTransfersHub.EPOCH_LENGTH(), _epochLength);
-    // it sets the starting timestamp
-    assertEq(cappedTokenTransfersHub.STARTING_TIMESTAMP(), block.timestamp);
 
     // it sets the tokens and caps
     address[] memory _tokens = cappedTokenTransfersHub.tokens();
@@ -126,6 +124,14 @@ contract UnitCappedTokenTransfersHub is Test {
   function test_UpdateState_WhenCalledByTheSafe(uint256 _amount) external whenCalledByTheSafe {
     _amount = bound(_amount, 0, cappedTokenTransfersHub.cap(tokens[0]));
 
+    uint256 _secondsSinceLastEpoch = block.timestamp - cappedTokenTransfersHub.lastEpoch();
+    uint256 _remainder = _secondsSinceLastEpoch % cappedTokenTransfersHub.EPOCH_LENGTH();
+    uint256 _currentEpoch = block.timestamp - _remainder;
+
+    // it emits the StateUpdated event
+    vm.expectEmit();
+    emit ICappedTokenTransfersHub.StateUpdated(tokens[0], _amount, _currentEpoch);
+
     cappedTokenTransfersHub.updateState(tokens[0], _amount);
 
     // it increments the total spent
@@ -136,20 +142,21 @@ contract UnitCappedTokenTransfersHub is Test {
     external
     whenCalledByTheSafe
   {
+    uint256 _lastEpoch = cappedTokenTransfersHub.lastEpoch();
     _amount = bound(_amount, 0, cappedTokenTransfersHub.cap(tokens[0]));
 
     // spend all the cap for this epoch
     cappedTokenTransfersHub.updateState(tokens[0], cappedTokenTransfersHub.cap(tokens[0]));
 
-    // move to the next epoch
-    vm.warp(block.timestamp + EPOCH_LENGTH + 1);
+    // move to the next epoch + some buffer
+    vm.warp(block.timestamp + EPOCH_LENGTH + 1 days);
 
     cappedTokenTransfersHub.updateState(tokens[0], _amount);
 
     // it resets the total spent
     assertEq(cappedTokenTransfersHub.totalSpent(tokens[0]), _amount);
-    // it updates the current epoch
-    assertEq(cappedTokenTransfersHub.currentEpoch(), 1);
+    // it updates the last epoch
+    assertEq(cappedTokenTransfersHub.lastEpoch(), _lastEpoch + EPOCH_LENGTH);
   }
 
   function test_UpdateState_WhenTheTotalSpentIsGreaterThanTheCap(uint256 _amount) external whenCalledByTheSafe {

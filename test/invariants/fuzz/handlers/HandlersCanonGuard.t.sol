@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity 0.8.30;
 
-import {ActionTarget, BaseHandlers, CanonGuard, CanonGuardFactory, Safe} from './BaseHandlers.sol';
+import {ActionTarget, BaseHandlers, CanonGuard} from './BaseHandlers.sol';
 
 /// @title HandlersCanonGuard
 /// @notice Handlers for CanonGuard and Safe interactions
@@ -122,7 +122,8 @@ abstract contract HandlersCanonGuard is BaseHandlers {
   /// @dev Tests redeployment with new long delay
   /// @param _longTxExecutionDelay New long delay (must be >= short delay)
   function handler_changeLongTxDelay(uint256 _longTxExecutionDelay) public {
-    _longTxExecutionDelay = bound(_longTxExecutionDelay, canonGuard.SHORT_TX_EXECUTION_DELAY(), 3650 days);
+    _longTxExecutionDelay =
+      bound(_longTxExecutionDelay, canonGuard.SHORT_TX_EXECUTION_DELAY(), canonGuard.MAX_TX_EXECUTION_DELAY());
 
     // get current params
     uint256 _shortTxExecutionDelay = canonGuard.SHORT_TX_EXECUTION_DELAY();
