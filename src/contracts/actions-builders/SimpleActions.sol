@@ -24,10 +24,9 @@ contract SimpleActions is ISimpleActions, ActionsBuilder {
   /**
    * @notice Constructor that sets up the array of actions containing the simple actions
    * @notice Each SimpleAction is converted into an Action to perform a simple transaction
-   * @param _parent The parent that deployed the actions builder
    * @param _inputSimpleActions The array of simple actions
    */
-  constructor(address _parent, SimpleAction[] memory _inputSimpleActions) ActionsBuilder(_parent) {
+  constructor(SimpleAction[] memory _inputSimpleActions) ActionsBuilder(msg.sender) {
     uint256 _simpleActionsLength = _inputSimpleActions.length;
     SimpleAction memory _simpleAction;
     Action memory _action;

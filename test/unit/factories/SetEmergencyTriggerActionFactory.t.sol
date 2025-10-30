@@ -26,9 +26,9 @@ contract UnitSetEmergencyTriggerActionFactorycreateSetEmergencyTriggerAction is 
     address _setEmergencyTriggerAction =
       setEmergencyTriggerActionFactory.createSetEmergencyTriggerAction(_emergencyTrigger);
 
-    auxSetEmergencyTriggerAction = ISetEmergencyTriggerAction(
-      deployCode('SetEmergencyTriggerAction', abi.encode(address(setEmergencyTriggerActionFactory), _emergencyTrigger))
-    );
+    vm.prank(address(setEmergencyTriggerActionFactory));
+    auxSetEmergencyTriggerAction =
+      ISetEmergencyTriggerAction(deployCode('SetEmergencyTriggerAction', abi.encode(_emergencyTrigger)));
 
     // it should deploy a SetEmergencyTriggerAction contract with correct args
     assertEq(address(auxSetEmergencyTriggerAction).code, _setEmergencyTriggerAction.code);

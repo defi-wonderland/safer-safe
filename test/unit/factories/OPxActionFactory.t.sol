@@ -24,7 +24,8 @@ contract UnitOPxActionFactorycreateOPxAction is Test, Utils {
     address _opxAction = opxActionFactory.createOPxAction(_opx);
 
     // it should deploy an OPxAction
-    auxOPxAction = IOPxAction(deployCode('OPxAction', abi.encode(address(opxActionFactory), _opx)));
+    vm.prank(address(opxActionFactory));
+    auxOPxAction = IOPxAction(deployCode('OPxAction', abi.encode(_opx)));
     assertEq(address(auxOPxAction).code, _opxAction.code);
 
     // it should match the parameters sent to the constructor

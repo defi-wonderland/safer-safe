@@ -32,7 +32,7 @@ contract UnitSimpleActionsconstructor is Test {
       );
     }
 
-    simpleActions = new SimpleActions(address(0), actions);
+    simpleActions = new SimpleActions(actions);
 
     for (uint256 _i; _i < actions.length; _i++) {
       ISimpleActions.SimpleAction memory _simpleAction = actions[_i];

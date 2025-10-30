@@ -50,6 +50,11 @@ interface ICappedTokenTransfersHub is IActionHub, ISafeManageable {
    */
   error TokenAlreadyRegisteredInHub(address _token);
 
+  /**
+   * @notice Thrown when the tokens and caps length mismatch
+   */
+  error TokensAndCapsLengthMismatch();
+
   // ~~~ FUNCTIONS ~~~
 
   /**

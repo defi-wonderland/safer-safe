@@ -20,11 +20,10 @@ contract PreApproveAction is IPreApproveAction, ActionsBuilder {
 
   /**
    * @notice Constructor that sets up the PreApproveAction contract
-   * @param _parent The parent that deployed the actions builder
    * @param _actionsBuilder The actions builder or action hub contract address
    * @param _approvalDuration The approval duration
    */
-  constructor(address _parent, address _actionsBuilder, uint256 _approvalDuration) ActionsBuilder(_parent) {
+  constructor(address _actionsBuilder, uint256 _approvalDuration) ActionsBuilder(msg.sender) {
     ACTIONS_BUILDER = _actionsBuilder;
     APPROVAL_DURATION = _approvalDuration;
   }

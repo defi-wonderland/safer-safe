@@ -6,7 +6,9 @@ UnitCappedTokenTransfersHub::constructor
 │   └── it sets the tokens and caps
 ├── When tokens registered contain a duplicated token
 │   └── it reverts
-└── When the epoch length is zero
+├── When the epoch length is zero
+│   └── it reverts
+└── When the tokens and caps length mismatch
     └── it reverts
 
 UnitCappedTokenTransfersHub::createNewActionsBuilder

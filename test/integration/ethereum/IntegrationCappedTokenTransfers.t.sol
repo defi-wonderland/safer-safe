@@ -24,8 +24,7 @@ contract IntegrationCappedTokenTransfers is IntegrationEthereumBase {
     _caps[1] = 200 ether;
 
     // Deploy the CappedTokenTransfersHub (overriding the dummy contract)
-    _cappedTokenTransfersHub =
-      new CappedTokenTransfersHub(address(0), address(SAFE_PROXY), _recipient, _tokens, _caps, 7 days);
+    _cappedTokenTransfersHub = new CappedTokenTransfersHub(address(SAFE_PROXY), _recipient, _tokens, _caps, 7 days);
   }
 
   function test_CreateNewActionsBuilder() public {

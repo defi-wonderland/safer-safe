@@ -24,10 +24,9 @@ contract SimpleTransfers is ISimpleTransfers, ActionsBuilder {
   /**
    * @notice Constructor that sets up the array of actions containing the transfer actions
    * @notice Each TransferAction is converted into an Action to transfer an amount of ERC20 tokens to a recipient
-   * @param _parent The parent that deployed the actions builder
    * @param _inputTransferActions The array of transfer actions
    */
-  constructor(address _parent, TransferAction[] memory _inputTransferActions) ActionsBuilder(_parent) {
+  constructor(TransferAction[] memory _inputTransferActions) ActionsBuilder(msg.sender) {
     uint256 _transferActionsLength = _inputTransferActions.length;
     TransferAction memory _transferAction;
     Action memory _action;

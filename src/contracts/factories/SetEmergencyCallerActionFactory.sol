@@ -17,7 +17,7 @@ contract SetEmergencyCallerActionFactory is ISetEmergencyCallerActionFactory, Fa
     external
     returns (address _setEmergencyCallerAction)
   {
-    _setEmergencyCallerAction = address(new SetEmergencyCallerAction(address(this), _emergencyCaller));
+    _setEmergencyCallerAction = address(new SetEmergencyCallerAction(_emergencyCaller));
 
     _children[_setEmergencyCallerAction] = true;
 

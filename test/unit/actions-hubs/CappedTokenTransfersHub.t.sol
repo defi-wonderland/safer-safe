@@ -26,12 +26,12 @@ contract UnitCappedTokenTransfersHub is Test {
     caps.push(200);
     caps.push(100);
 
-    cappedTokenTransfersHub = new CappedTokenTransfersHub(address(0), safe, recipient, tokens, caps, EPOCH_LENGTH);
+    cappedTokenTransfersHub = new CappedTokenTransfersHub(safe, recipient, tokens, caps, EPOCH_LENGTH);
   }
 
   function test_Constructor_WhenCalled(address _safe, address _recipient, uint256 _epochLength) external {
     _epochLength = bound(_epochLength, 1, type(uint256).max);
-    cappedTokenTransfersHub = new CappedTokenTransfersHub(address(0), _safe, _recipient, tokens, caps, _epochLength);
+    cappedTokenTransfersHub = new CappedTokenTransfersHub(_safe, _recipient, tokens, caps, _epochLength);
 
     // it sets the safe
     assertEq(address(cappedTokenTransfersHub.SAFE()), _safe);
@@ -71,13 +71,28 @@ contract UnitCappedTokenTransfersHub is Test {
 
     // it reverts
     vm.expectRevert(abi.encodeWithSelector(ICappedTokenTransfersHub.TokenAlreadyRegisteredInHub.selector, _token));
-    new CappedTokenTransfersHub(address(0), safe, recipient, tokens, caps, EPOCH_LENGTH);
+    new CappedTokenTransfersHub(safe, recipient, tokens, caps, EPOCH_LENGTH);
   }
 
   function test_Constructor_WhenTheEpochLengthIsZero() external {
     // it reverts
     vm.expectRevert(ICappedTokenTransfersHub.EpochLengthCannotBeZero.selector);
-    new CappedTokenTransfersHub(address(0), safe, recipient, tokens, caps, 0);
+    new CappedTokenTransfersHub(safe, recipient, tokens, caps, 0);
+  }
+
+  function test_Constructor_WhenTheTokensAndCapsLengthMismatch() external {
+    tokens = new address[](2);
+    tokens[0] = makeAddr('token1');
+    tokens[1] = makeAddr('token2');
+
+    caps = new uint256[](3);
+    caps[0] = 100;
+    caps[1] = 200;
+    caps[2] = 300;
+
+    // it reverts
+    vm.expectRevert(ICappedTokenTransfersHub.TokensAndCapsLengthMismatch.selector);
+    new CappedTokenTransfersHub(safe, recipient, tokens, caps, EPOCH_LENGTH);
   }
 
   modifier whenCalledByTheSafeOwner() {

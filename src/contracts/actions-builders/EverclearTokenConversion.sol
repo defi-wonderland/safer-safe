@@ -28,11 +28,10 @@ contract EverclearTokenConversion is IEverclearTokenConversion, ActionsBuilder {
 
   /**
    * @notice Initializes the builder with the xERC20 lockbox, the NEXT token, and the SAFE whose balance will be converted.
-   * @param _parent The parent that deployed the actions builder
    * @param _lockbox The xERC20 lockbox that accepts NEXT and mints CLEAR
    * @param _next The NEXT ERC20 token to deposit into the lockbox
    */
-  constructor(address _parent, address _lockbox, address _next) ActionsBuilder(_parent) {
+  constructor(address _lockbox, address _next) ActionsBuilder(msg.sender) {
     CLEAR_LOCKBOX = IxERC20Lockbox(_lockbox);
     NEXT = IERC20(_next);
   }

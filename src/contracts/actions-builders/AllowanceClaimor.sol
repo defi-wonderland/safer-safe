@@ -28,12 +28,11 @@ contract AllowanceClaimor is IAllowanceClaimor, ActionsBuilder {
 
   /**
    * @notice Constructor that sets up the Safe, token, token owner and token recipient
-   * @param _parent The parent that deployed the actions builder
    * @param _token The token contract address to be transferred
    * @param _tokenOwner The token owner address
    * @param _tokenRecipient The token recipient address
    */
-  constructor(address _parent, address _token, address _tokenOwner, address _tokenRecipient) ActionsBuilder(_parent) {
+  constructor(address _token, address _tokenOwner, address _tokenRecipient) ActionsBuilder(msg.sender) {
     TOKEN = IERC20(_token);
     TOKEN_OWNER = _tokenOwner;
     TOKEN_RECIPIENT = _tokenRecipient;

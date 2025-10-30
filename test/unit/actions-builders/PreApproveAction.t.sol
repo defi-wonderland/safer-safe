@@ -12,7 +12,7 @@ contract UnitPreApproveAction is Test {
   address public actionsBuilder = makeAddr('actionsBuilder');
 
   function setUp() external {
-    preApproveAction = new PreApproveAction(address(0), actionsBuilder, APPROVAL_DURATION);
+    preApproveAction = new PreApproveAction(actionsBuilder, APPROVAL_DURATION);
   }
 
   function test_Constructor_WhenCalled() external view {

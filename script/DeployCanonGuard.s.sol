@@ -140,24 +140,19 @@ contract DeployCanonGuard is Constants, Script {
   }
 
   function _deployAllChainsContracts() internal {
-    _allowanceClaimor =
-      IAllowanceClaimor(address(new AllowanceClaimor(DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS)));
-    _preApproveAction =
-      IPreApproveAction(address(new PreApproveAction(DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_APPROVAL_DURATION)));
+    _allowanceClaimor = IAllowanceClaimor(address(new AllowanceClaimor(DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS)));
+    _preApproveAction = IPreApproveAction(address(new PreApproveAction(DUMMY_ADDRESS, DUMMY_APPROVAL_DURATION)));
     _cappedTokenTransfers =
       ICappedTokenTransfers(address(new CappedTokenTransfers(DUMMY_ADDRESS, DUMMY_AMOUNT, DUMMY_ADDRESS)));
-    _changeSafeGuardAction = IChangeSafeGuardAction(address(new ChangeSafeGuardAction(DUMMY_ADDRESS, DUMMY_ADDRESS)));
-    _setEmergencyCallerAction =
-      ISetEmergencyCallerAction(address(new SetEmergencyCallerAction(DUMMY_ADDRESS, DUMMY_ADDRESS)));
-    _setEmergencyTriggerAction =
-      ISetEmergencyTriggerAction(address(new SetEmergencyTriggerAction(DUMMY_ADDRESS, DUMMY_ADDRESS)));
-    _simpleActions = ISimpleActions(address(new SimpleActions(DUMMY_ADDRESS, new SimpleActions.SimpleAction[](0))));
-    _simpleTransfers =
-      ISimpleTransfers(address(new SimpleTransfers(DUMMY_ADDRESS, new SimpleTransfers.TransferAction[](0))));
+    _changeSafeGuardAction = IChangeSafeGuardAction(address(new ChangeSafeGuardAction(DUMMY_ADDRESS)));
+    _setEmergencyCallerAction = ISetEmergencyCallerAction(address(new SetEmergencyCallerAction(DUMMY_ADDRESS)));
+    _setEmergencyTriggerAction = ISetEmergencyTriggerAction(address(new SetEmergencyTriggerAction(DUMMY_ADDRESS)));
+    _simpleActions = ISimpleActions(address(new SimpleActions(new SimpleActions.SimpleAction[](0))));
+    _simpleTransfers = ISimpleTransfers(address(new SimpleTransfers(new SimpleTransfers.TransferAction[](0))));
     _cappedTokenTransfersHub = ICappedTokenTransfersHub(
       address(
         new CappedTokenTransfersHub(
-          DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS, new address[](0), new uint256[](0), DUMMY_EPOCH_LENGTH
+          DUMMY_ADDRESS, DUMMY_ADDRESS, new address[](0), new uint256[](0), DUMMY_EPOCH_LENGTH
         )
       )
     );
@@ -181,10 +176,10 @@ contract DeployCanonGuard is Constants, Script {
   }
 
   function _deployEthereumContracts() internal {
-    new EverclearTokenConversion(DUMMY_ADDRESS, DUMMY_ADDRESS, DUMMY_ADDRESS);
+    new EverclearTokenConversion(DUMMY_ADDRESS, DUMMY_ADDRESS);
   }
 
   function _deployOptimismContracts() internal {
-    new OPxAction(DUMMY_ADDRESS, DUMMY_ADDRESS);
+    new OPxAction(DUMMY_ADDRESS);
   }
 }

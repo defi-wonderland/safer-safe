@@ -14,7 +14,7 @@ contract UnitOPxAction is Test {
   address public opx = makeAddr('opx');
 
   function setUp() external {
-    opxAction = new OPxAction(address(0), opx);
+    opxAction = new OPxAction(opx);
   }
 
   function test_Constructor_WhenCalled() external view {

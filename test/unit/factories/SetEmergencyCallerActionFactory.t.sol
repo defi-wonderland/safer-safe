@@ -25,9 +25,9 @@ contract UnitSetEmergencyCallerActionFactorycreateSetEmergencyCallerAction is Te
 
     address _setEmergencyCallerAction = setEmergencyCallerActionFactory.createSetEmergencyCallerAction(_emergencyCaller);
 
-    auxSetEmergencyCallerAction = ISetEmergencyCallerAction(
-      deployCode('SetEmergencyCallerAction', abi.encode(address(setEmergencyCallerActionFactory), _emergencyCaller))
-    );
+    vm.prank(address(setEmergencyCallerActionFactory));
+    auxSetEmergencyCallerAction =
+      ISetEmergencyCallerAction(deployCode('SetEmergencyCallerAction', abi.encode(_emergencyCaller)));
 
     // it should deploy a SetEmergencyCallerAction contract with correct args
     assertEq(address(auxSetEmergencyCallerAction).code, _setEmergencyCallerAction.code);

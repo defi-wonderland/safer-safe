@@ -35,7 +35,6 @@ contract CappedTokenTransfersHub is ActionHub, ICappedTokenTransfersHub, SafeMan
 
   /**
    * @notice Constructor that sets up the actionHub
-   * @param _parent The parent that deployed the actionHub
    * @param _safe The SAFE authorized to manage the hub.
    * @param _recipient Address that receives transfers.
    * @param _tokens The tokens to cap
@@ -43,17 +42,17 @@ contract CappedTokenTransfersHub is ActionHub, ICappedTokenTransfersHub, SafeMan
    * @param _epochLength Duration of each epoch in seconds. Per token caps reset when the epoch changes. Can't be zero.
    */
   constructor(
-    address _parent,
     address _safe,
     address _recipient,
     address[] memory _tokens,
     uint256[] memory _caps,
     uint256 _epochLength
-  ) SafeManageable(_safe) ActionHub(_parent) {
+  ) SafeManageable(_safe) ActionHub(msg.sender) {
     RECIPIENT = _recipient;
     EPOCH_LENGTH = _epochLength;
     lastEpoch = block.timestamp;
 
+    if (_tokens.length != _caps.length) revert TokensAndCapsLengthMismatch();
     if (_epochLength == 0) revert EpochLengthCannotBeZero();
 
     for (uint256 i = 0; i < _tokens.length; i++) {

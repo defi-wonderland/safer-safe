@@ -32,7 +32,8 @@ contract UnitSimpleActionsFactory is Test, Utils {
     address _simpleActionsContract = simpleActionsFactory.createSimpleActions(_actions);
 
     // it should deploy a SimpleActions contract with correct args
-    auxSimpleActions = ISimpleActions(deployCode('SimpleActions', abi.encode(address(simpleActionsFactory), _actions)));
+    vm.prank(address(simpleActionsFactory));
+    auxSimpleActions = ISimpleActions(deployCode('SimpleActions', abi.encode(_actions)));
     assertEq(address(auxSimpleActions).code, _simpleActionsContract.code);
 
     // it should match the parameters sent to the constructor
@@ -83,7 +84,8 @@ contract UnitSimpleActionsFactory is Test, Utils {
     address _simpleActionsContract = simpleActionsFactory.createSimpleAction(_simpleActions);
 
     // it should deploy a SimpleActions contract with a single simple action args
-    auxSimpleActions = ISimpleActions(deployCode('SimpleActions', abi.encode(address(simpleActionsFactory), _actions)));
+    vm.prank(address(simpleActionsFactory));
+    auxSimpleActions = ISimpleActions(deployCode('SimpleActions', abi.encode(_actions)));
     assertEq(address(auxSimpleActions).code, _simpleActionsContract.code);
 
     // it should match the parameters sent to the constructor
