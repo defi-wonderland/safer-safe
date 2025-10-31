@@ -3,8 +3,8 @@ pragma solidity 0.8.30;
 
 import {CanonGuard} from 'contracts/CanonGuard.sol';
 import {Factory} from 'contracts/factories/Factory.sol';
+import {ICreateX} from 'interfaces/external/ICreateX.sol';
 import {ICanonGuardFactory} from 'interfaces/factories/ICanonGuardFactory.sol';
-import {CREATE3} from 'solady/utils/CREATE3.sol';
 
 /**
  * @title CanonGuardFactory
@@ -12,6 +12,9 @@ import {CREATE3} from 'solady/utils/CREATE3.sol';
  */
 contract CanonGuardFactory is ICanonGuardFactory, Factory {
   // ~~~ STORAGE ~~~
+
+  /// @inheritdoc ICanonGuardFactory
+  ICreateX public constant CREATE_X = ICreateX(0xba5Ed099633D3B313e4D5F7bdc1305d3c28ba5Ed);
 
   /// @inheritdoc ICanonGuardFactory
   address public immutable MULTI_SEND_CALL_ONLY;
@@ -40,7 +43,10 @@ contract CanonGuardFactory is ICanonGuardFactory, Factory {
     address _emergencyTrigger,
     address _emergencyCaller
   ) external returns (address _canonGuard) {
-    _canonGuard = CREATE3.deployDeterministic(
+    if (_safe != msg.sender) revert DeployerMustBeTheSafe();
+
+    _canonGuard = CREATE_X.deployCreate3(
+      keccak256(abi.encode(_safe)),
       abi.encodePacked(
         type(CanonGuard).creationCode,
         abi.encode(
@@ -54,8 +60,7 @@ contract CanonGuardFactory is ICanonGuardFactory, Factory {
           _emergencyTrigger,
           _emergencyCaller
         )
-      ),
-      keccak256(abi.encode(_safe))
+      )
     );
 
     _children[_canonGuard] = true;

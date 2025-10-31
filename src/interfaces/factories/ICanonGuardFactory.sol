@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
+import {ICreateX} from 'interfaces/external/ICreateX.sol';
 import {IFactory} from 'interfaces/factories/IFactory.sol';
 
 /**
@@ -37,6 +38,11 @@ interface ICanonGuardFactory is IFactory {
    */
   error MultiSendCallOnlyCannotBeZero();
 
+  /**
+   * @notice Thrown when the deployer is not the Safe contract
+   */
+  error DeployerMustBeTheSafe();
+
   // ~~~ FACTORY METHODS ~~~
 
   /**
@@ -61,6 +67,12 @@ interface ICanonGuardFactory is IFactory {
   ) external returns (address _canonGuard);
 
   // ~~~ STORAGE METHODS ~~~
+
+  /**
+   * @notice Gets the CreateX contract
+   * @return _createX The CreateX contract address
+   */
+  function CREATE_X() external view returns (ICreateX _createX);
 
   /**
    * @notice Gets the MultiSendCallOnly contract

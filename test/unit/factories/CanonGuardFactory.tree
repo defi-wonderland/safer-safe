@@ -1,7 +1,9 @@
 UnitCanonGuardFactory::constructor
 ├── when called
 │   └── it should store the multi send call only address
-└── when the multi send call only address is zero
+├── when the multi send call only address is zero
+│   └── it reverts
+└── when the deployer is not the Safe contract
     └── it reverts
 
 UnitCanonGuardFactory::createCanonGuard

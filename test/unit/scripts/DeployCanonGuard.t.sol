@@ -26,17 +26,16 @@ import {SetEmergencyCallerActionFactory} from 'src/contracts/factories/SetEmerge
 import {SetEmergencyTriggerActionFactory} from 'src/contracts/factories/SetEmergencyTriggerActionFactory.sol';
 import {SimpleActionsFactory} from 'src/contracts/factories/SimpleActionsFactory.sol';
 import {SimpleTransfersFactory} from 'src/contracts/factories/SimpleTransfersFactory.sol';
+import {Utils} from 'test/unit/utils/Utils.sol';
 
-contract UnitDeployCanonGuard is DeployCanonGuard, Test {
+contract UnitDeployCanonGuard is DeployCanonGuard, Test, Utils {
   ICanonGuardFactory internal _auxCanonGuardFactory;
 
   function setUp() public {
+    vm.etch(address(CREATE_X), _getCreateXDeployedBytecode());
+
     // Deploy the CanonGuardFactory contract
     _auxCanonGuardFactory = ICanonGuardFactory(deployCode('CanonGuardFactory', abi.encode(MULTI_SEND_CALL_ONLY)));
-  }
-
-  function _computeCreate2Address(bytes memory _creationCode) private pure returns (address _address) {
-    _address = vm.computeCreate2Address(SALT, keccak256(_creationCode));
   }
 
   function test_WhenDeployingToEthereumMainnet() external {
@@ -93,28 +92,54 @@ contract UnitDeployCanonGuard is DeployCanonGuard, Test {
   }
 
   function _assertFactoriesAddresses() private view {
+    // NOTE: hashing twice because of safeguard mechanism in the CreateX contract (https://github.com/pcaversaccio/createx/blob/main/src/CreateX.sol#L908-L910)
     assertEq(
       address(canonGuardFactory),
-      _computeCreate2Address(abi.encodePacked(type(CanonGuardFactory).creationCode, abi.encode(MULTI_SEND_CALL_ONLY)))
-    );
-    assertEq(address(allowanceClaimorFactory), _computeCreate2Address(type(AllowanceClaimorFactory).creationCode));
-    assertEq(address(preApproveActionFactory), _computeCreate2Address(type(PreApproveActionFactory).creationCode));
-    assertEq(
-      address(cappedTokenTransfersHubFactory), _computeCreate2Address(type(CappedTokenTransfersHubFactory).creationCode)
+      CREATE_X.computeCreate2Address(
+        keccak256(abi.encode(SALT)),
+        keccak256(abi.encodePacked(type(CanonGuardFactory).creationCode, abi.encode(MULTI_SEND_CALL_ONLY)))
+      )
     );
     assertEq(
-      address(changeSafeGuardActionFactory), _computeCreate2Address(type(ChangeSafeGuardActionFactory).creationCode)
+      address(allowanceClaimorFactory),
+      CREATE_X.computeCreate2Address(keccak256(abi.encode(SALT)), keccak256(type(AllowanceClaimorFactory).creationCode))
+    );
+    assertEq(
+      address(preApproveActionFactory),
+      CREATE_X.computeCreate2Address(keccak256(abi.encode(SALT)), keccak256(type(PreApproveActionFactory).creationCode))
+    );
+    assertEq(
+      address(cappedTokenTransfersHubFactory),
+      CREATE_X.computeCreate2Address(
+        keccak256(abi.encode(SALT)), keccak256(type(CappedTokenTransfersHubFactory).creationCode)
+      )
+    );
+    assertEq(
+      address(changeSafeGuardActionFactory),
+      CREATE_X.computeCreate2Address(
+        keccak256(abi.encode(SALT)), keccak256(type(ChangeSafeGuardActionFactory).creationCode)
+      )
     );
     assertEq(
       address(setEmergencyCallerActionFactory),
-      _computeCreate2Address(type(SetEmergencyCallerActionFactory).creationCode)
+      CREATE_X.computeCreate2Address(
+        keccak256(abi.encode(SALT)), keccak256(type(SetEmergencyCallerActionFactory).creationCode)
+      )
     );
     assertEq(
       address(setEmergencyTriggerActionFactory),
-      _computeCreate2Address(type(SetEmergencyTriggerActionFactory).creationCode)
+      CREATE_X.computeCreate2Address(
+        keccak256(abi.encode(SALT)), keccak256(type(SetEmergencyTriggerActionFactory).creationCode)
+      )
     );
-    assertEq(address(simpleActionsFactory), _computeCreate2Address(type(SimpleActionsFactory).creationCode));
-    assertEq(address(simpleTransfersFactory), _computeCreate2Address(type(SimpleTransfersFactory).creationCode));
+    assertEq(
+      address(simpleActionsFactory),
+      CREATE_X.computeCreate2Address(keccak256(abi.encode(SALT)), keccak256(type(SimpleActionsFactory).creationCode))
+    );
+    assertEq(
+      address(simpleTransfersFactory),
+      CREATE_X.computeCreate2Address(keccak256(abi.encode(SALT)), keccak256(type(SimpleTransfersFactory).creationCode))
+    );
   }
 
   function _assertCommonContracts() private {

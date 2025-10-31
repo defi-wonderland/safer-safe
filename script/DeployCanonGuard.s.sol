@@ -120,15 +120,28 @@ contract DeployCanonGuard is Constants, Script {
   }
 
   function _deployAllChainsFactories() internal {
-    canonGuardFactory = new CanonGuardFactory{salt: SALT}(address(MULTI_SEND_CALL_ONLY));
-    allowanceClaimorFactory = new AllowanceClaimorFactory{salt: SALT}();
-    preApproveActionFactory = new PreApproveActionFactory{salt: SALT}();
-    cappedTokenTransfersHubFactory = new CappedTokenTransfersHubFactory{salt: SALT}();
-    changeSafeGuardActionFactory = new ChangeSafeGuardActionFactory{salt: SALT}();
-    setEmergencyCallerActionFactory = new SetEmergencyCallerActionFactory{salt: SALT}();
-    setEmergencyTriggerActionFactory = new SetEmergencyTriggerActionFactory{salt: SALT}();
-    simpleActionsFactory = new SimpleActionsFactory{salt: SALT}();
-    simpleTransfersFactory = new SimpleTransfersFactory{salt: SALT}();
+    canonGuardFactory = ICanonGuardFactory(
+      CREATE_X.deployCreate2(
+        SALT, abi.encodePacked(type(CanonGuardFactory).creationCode, abi.encode(MULTI_SEND_CALL_ONLY))
+      )
+    );
+    allowanceClaimorFactory =
+      IAllowanceClaimorFactory(CREATE_X.deployCreate2(SALT, type(AllowanceClaimorFactory).creationCode));
+    preApproveActionFactory =
+      IPreApproveActionFactory(CREATE_X.deployCreate2(SALT, type(PreApproveActionFactory).creationCode));
+    cappedTokenTransfersHubFactory =
+      ICappedTokenTransfersHubFactory(CREATE_X.deployCreate2(SALT, type(CappedTokenTransfersHubFactory).creationCode));
+    changeSafeGuardActionFactory =
+      IChangeSafeGuardActionFactory(CREATE_X.deployCreate2(SALT, type(ChangeSafeGuardActionFactory).creationCode));
+    setEmergencyCallerActionFactory = ISetEmergencyCallerActionFactory(
+      CREATE_X.deployCreate2(SALT, type(SetEmergencyCallerActionFactory).creationCode)
+    );
+    setEmergencyTriggerActionFactory = ISetEmergencyTriggerActionFactory(
+      CREATE_X.deployCreate2(SALT, type(SetEmergencyTriggerActionFactory).creationCode)
+    );
+    simpleActionsFactory = ISimpleActionsFactory(CREATE_X.deployCreate2(SALT, type(SimpleActionsFactory).creationCode));
+    simpleTransfersFactory =
+      ISimpleTransfersFactory(CREATE_X.deployCreate2(SALT, type(SimpleTransfersFactory).creationCode));
   }
 
   function _deployEthereumFactories() internal {
