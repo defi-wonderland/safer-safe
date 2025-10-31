@@ -45,6 +45,7 @@ contract CanonGuardFactory is ICanonGuardFactory, Factory {
   ) external returns (address _canonGuard) {
     if (_safe != msg.sender) revert DeployerMustBeTheSafe();
 
+    // Deploying using hash of the SAFE address as salt
     _canonGuard = CREATE_X.deployCreate3(
       keccak256(abi.encode(_safe)),
       abi.encodePacked(
