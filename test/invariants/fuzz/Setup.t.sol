@@ -73,6 +73,7 @@ contract Setup is Test, Constants, Utils {
     _canonGuard = CanonGuard(
       _canonGuardFactory.createCanonGuard(
         address(_safe),
+        0,
         address(_multiSendCallOnly),
         SHORT_TX_EXECUTION_DELAY,
         LONG_TX_EXECUTION_DELAY,

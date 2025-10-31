@@ -22,6 +22,7 @@ contract UnitCanonGuardFactorycreateCanonGuard is Test, Constants, Utils {
 
   function test_WhenCalledWithValidParameters(
     address _safe,
+    uint256 _nonce,
     address _multiSendCallOnly,
     uint256 _shortTxExecutionDelay,
     uint256 _longTxExecutionDelay,
@@ -40,7 +41,8 @@ contract UnitCanonGuardFactorycreateCanonGuard is Test, Constants, Utils {
     _longTxExecutionDelay = bound(_longTxExecutionDelay, _shortTxExecutionDelay, 6 * 30 days);
 
     // NOTE: hashing twice because of safeguard mechanism in the CreateX contract (https://github.com/pcaversaccio/createx/blob/main/src/CreateX.sol#L908-L910)
-    address _expectedCanonGuard = CREATE_X.computeCreate3Address(keccak256(abi.encode(keccak256(abi.encode(_safe)))));
+    address _expectedCanonGuard =
+      CREATE_X.computeCreate3Address(keccak256(abi.encode(keccak256(abi.encode(_safe, _nonce)))));
 
     // it should emit CanonGuardCreated event with correct parameters
     vm.expectEmit();
@@ -49,6 +51,7 @@ contract UnitCanonGuardFactorycreateCanonGuard is Test, Constants, Utils {
     vm.prank(_safe);
     address _canonGuard = canonGuardFactory.createCanonGuard(
       _safe,
+      _nonce,
       _multiSendCallOnly,
       _shortTxExecutionDelay,
       _longTxExecutionDelay,
@@ -99,7 +102,7 @@ contract UnitCanonGuardFactorycreateCanonGuard is Test, Constants, Utils {
     // it reverts
     vm.prank(_safe);
     vm.expectRevert(ICanonGuardFactory.MultiSendCallOnlyCannotBeZero.selector);
-    canonGuardFactory.createCanonGuard(_safe, address(0), 0, 0, 0, 0, address(0), address(0));
+    canonGuardFactory.createCanonGuard(_safe, 0, address(0), 0, 0, 0, 0, address(0), address(0));
   }
 
   function test_WhenTheDeployerIsNotTheSafeContract(address _deployer, address _safe) external {
@@ -108,6 +111,6 @@ contract UnitCanonGuardFactorycreateCanonGuard is Test, Constants, Utils {
     // it reverts
     vm.expectRevert(ICanonGuardFactory.DeployerMustBeTheSafe.selector);
     vm.prank(_deployer);
-    canonGuardFactory.createCanonGuard(_safe, address(0), 0, 0, 0, 0, address(0), address(0));
+    canonGuardFactory.createCanonGuard(_safe, 0, address(0), 0, 0, 0, 0, address(0), address(0));
   }
 }

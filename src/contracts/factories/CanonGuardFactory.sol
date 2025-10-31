@@ -21,6 +21,7 @@ contract CanonGuardFactory is ICanonGuardFactory, Factory {
   /// @inheritdoc ICanonGuardFactory
   function createCanonGuard(
     address _safe,
+    uint256 _nonce,
     address _multiSendCallOnly,
     uint256 _shortTxExecutionDelay,
     uint256 _longTxExecutionDelay,
@@ -34,7 +35,7 @@ contract CanonGuardFactory is ICanonGuardFactory, Factory {
 
     // Deploying using hash of the SAFE address as salt
     _canonGuard = CREATE_X.deployCreate3(
-      keccak256(abi.encode(_safe)),
+      keccak256(abi.encode(_safe, _nonce)),
       abi.encodePacked(
         type(CanonGuard).creationCode,
         abi.encode(

@@ -48,6 +48,7 @@ interface ICanonGuardFactory is IFactory {
   /**
    * @notice Creates a CanonGuard contract
    * @param _safe The Gnosis Safe contract address
+   * @param _nonce A nonce used to avoid collisions when redeploying the CanonGuard contract with the same Safe address
    * @param _multiSendCallOnly The MultiSendCallOnly contract address
    * @param _shortTxExecutionDelay The short transaction execution delay (in seconds)
    * @param _longTxExecutionDelay The long transaction execution delay (in seconds)
@@ -59,6 +60,7 @@ interface ICanonGuardFactory is IFactory {
    */
   function createCanonGuard(
     address _safe,
+    uint256 _nonce,
     address _multiSendCallOnly,
     uint256 _shortTxExecutionDelay,
     uint256 _longTxExecutionDelay,

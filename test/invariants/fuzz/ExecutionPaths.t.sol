@@ -221,7 +221,7 @@ contract ExecutionPaths is Setup {
     // 2. Change SHORT_TX_EXECUTION_DELAY (via redeployment)
     uint256 originalDelay = handlersTarget.canonGuard().SHORT_TX_EXECUTION_DELAY();
     uint256 newDelay = originalDelay / 2; // Make it shorter
-    handlersTarget.handler_changeShortTxDelay(newDelay);
+    handlersTarget.handler_changeShortTxDelay(newDelay, 1);
 
     // 3. Verify delay changed
     assertEq(handlersTarget.canonGuard().SHORT_TX_EXECUTION_DELAY(), newDelay);
