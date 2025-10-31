@@ -7,6 +7,12 @@ pragma solidity 0.8.30;
  */
 interface ICreateX {
   /**
+   * @notice Thrown when a contract creation fails
+   * @param _emitter The address of the emitter
+   */
+  error FailedContractCreation(address _emitter);
+
+  /**
    * @notice Deploys a new contract using CREATE3
    * @param _salt The salt for the deployment
    * @param _initCode The init code for the deployment
