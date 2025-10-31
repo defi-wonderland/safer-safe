@@ -99,11 +99,14 @@ abstract contract HandlersCanonGuard is BaseHandlers {
     uint256 _maxApprovalDuration = canonGuard.MAX_APPROVAL_DURATION();
     address _emergencyTrigger = canonGuard.emergencyTrigger();
     address _emergencyCaller = canonGuard.emergencyCaller();
+    address _multiSendCallOnly = canonGuard.MULTI_SEND_CALL_ONLY();
 
+    vm.prank(address(safe));
     // redeploy with same params except new delay
     canonGuard = CanonGuard(
       canonGuardFactory.createCanonGuard(
         address(safe),
+        _multiSendCallOnly,
         _shortTxExecutionDelay,
         _longTxExecutionDelay,
         _txExpiryDelay,
@@ -131,11 +134,14 @@ abstract contract HandlersCanonGuard is BaseHandlers {
     uint256 _maxApprovalDuration = canonGuard.MAX_APPROVAL_DURATION();
     address _emergencyTrigger = canonGuard.emergencyTrigger();
     address _emergencyCaller = canonGuard.emergencyCaller();
+    address _multiSendCallOnly = canonGuard.MULTI_SEND_CALL_ONLY();
 
+    vm.prank(address(safe));
     // redeploy with same params except new delay
     canonGuard = CanonGuard(
       canonGuardFactory.createCanonGuard(
         address(safe),
+        _multiSendCallOnly,
         _shortTxExecutionDelay,
         _longTxExecutionDelay,
         _txExpiryDelay,
@@ -162,11 +168,14 @@ abstract contract HandlersCanonGuard is BaseHandlers {
     uint256 _maxApprovalDuration = canonGuard.MAX_APPROVAL_DURATION();
     address _emergencyTrigger = canonGuard.emergencyTrigger();
     address _emergencyCaller = canonGuard.emergencyCaller();
+    address _multiSendCallOnly = canonGuard.MULTI_SEND_CALL_ONLY();
 
+    vm.prank(address(safe));
     // redeploy with same params except new delay
     canonGuard = CanonGuard(
       canonGuardFactory.createCanonGuard(
         address(safe),
+        _multiSendCallOnly,
         _shortTxExecutionDelay,
         _longTxExecutionDelay,
         _txExpiryDelay,
@@ -193,11 +202,14 @@ abstract contract HandlersCanonGuard is BaseHandlers {
     uint256 _txExpiryDelay = canonGuard.TX_EXPIRY_DELAY();
     address _emergencyTrigger = canonGuard.emergencyTrigger();
     address _emergencyCaller = canonGuard.emergencyCaller();
+    address _multiSendCallOnly = canonGuard.MULTI_SEND_CALL_ONLY();
 
+    vm.prank(address(safe));
     // redeploy with same params except new delay
     canonGuard = CanonGuard(
       canonGuardFactory.createCanonGuard(
         address(safe),
+        _multiSendCallOnly,
         _shortTxExecutionDelay,
         _longTxExecutionDelay,
         _txExpiryDelay,

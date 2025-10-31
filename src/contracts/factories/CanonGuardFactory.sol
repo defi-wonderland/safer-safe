@@ -16,26 +16,12 @@ contract CanonGuardFactory is ICanonGuardFactory, Factory {
   /// @inheritdoc ICanonGuardFactory
   ICreateX public constant CREATE_X = ICreateX(0xba5Ed099633D3B313e4D5F7bdc1305d3c28ba5Ed);
 
-  /// @inheritdoc ICanonGuardFactory
-  address public immutable MULTI_SEND_CALL_ONLY;
-
-  // ~~~ CONSTRUCTOR ~~~
-
-  /**
-   * @notice Constructor that sets up the MultiSendCallOnly contract
-   * @param _multiSendCallOnly The MultiSendCallOnly contract address
-   */
-  constructor(address _multiSendCallOnly) {
-    if (_multiSendCallOnly == address(0)) revert MultiSendCallOnlyCannotBeZero();
-
-    MULTI_SEND_CALL_ONLY = _multiSendCallOnly;
-  }
-
   // ~~~ FACTORY METHODS ~~~
 
   /// @inheritdoc ICanonGuardFactory
   function createCanonGuard(
     address _safe,
+    address _multiSendCallOnly,
     uint256 _shortTxExecutionDelay,
     uint256 _longTxExecutionDelay,
     uint256 _txExpiryDelay,
@@ -44,6 +30,7 @@ contract CanonGuardFactory is ICanonGuardFactory, Factory {
     address _emergencyCaller
   ) external returns (address _canonGuard) {
     if (_safe != msg.sender) revert DeployerMustBeTheSafe();
+    if (_multiSendCallOnly == address(0)) revert MultiSendCallOnlyCannotBeZero();
 
     // Deploying using hash of the SAFE address as salt
     _canonGuard = CREATE_X.deployCreate3(
@@ -53,7 +40,7 @@ contract CanonGuardFactory is ICanonGuardFactory, Factory {
         abi.encode(
           address(this),
           _safe,
-          MULTI_SEND_CALL_ONLY,
+          _multiSendCallOnly,
           _shortTxExecutionDelay,
           _longTxExecutionDelay,
           _txExpiryDelay,

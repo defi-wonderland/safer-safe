@@ -44,6 +44,7 @@ abstract contract IntegrationOptimismBase is DeployCanonGuard, OptimismConstants
     canonGuard = ICanonGuard(
       canonGuardFactory.createCanonGuard(
         address(SAFE_PROXY),
+        address(MULTI_SEND_CALL_ONLY),
         SHORT_TX_EXECUTION_DELAY,
         LONG_TX_EXECUTION_DELAY,
         TX_EXPIRY_DELAY,

@@ -9,41 +9,20 @@ import {ISafeManageable} from 'src/interfaces/ISafeManageable.sol';
 import {ICanonGuardFactory} from 'src/interfaces/factories/ICanonGuardFactory.sol';
 import {Utils} from 'test/unit/utils/Utils.sol';
 
-contract UnitCanonGuardFactory is Test, Constants, Utils {
+contract UnitCanonGuardFactorycreateCanonGuard is Test, Constants, Utils {
   CanonGuardFactory public canonGuardFactory;
   ICanonGuard public auxCanonGuard;
-  address public multiSendCallOnly;
   uint256 public constant MIN_EXPIRY_TIME = 1 hours;
 
   function setUp() external {
-    multiSendCallOnly = makeAddr('multiSendCallOnly');
-    canonGuardFactory = new CanonGuardFactory(multiSendCallOnly);
+    canonGuardFactory = new CanonGuardFactory();
 
     vm.etch(address(CREATE_X), _getCreateXDeployedBytecode());
   }
 
-  function test_Constructor_WhenCalled() external view {
-    // it should store the multi send call only address
-    assertEq(canonGuardFactory.MULTI_SEND_CALL_ONLY(), multiSendCallOnly);
-  }
-
-  function test_Constructor_WhenTheMultiSendCallOnlyAddressIsZero() external {
-    // it reverts
-    vm.expectRevert(ICanonGuardFactory.MultiSendCallOnlyCannotBeZero.selector);
-    new CanonGuardFactory(address(0));
-  }
-
-  function test_Constructor_WhenTheDeployerIsNotTheSafeContract(address _deployer, address _safe) external {
-    vm.assume(_deployer != _safe);
-
-    // it reverts
-    vm.expectRevert(ICanonGuardFactory.DeployerMustBeTheSafe.selector);
-    vm.prank(_deployer);
-    canonGuardFactory.createCanonGuard(_safe, 0, 0, 0, 0, address(0), address(0));
-  }
-
-  function test_CreateCanonGuard_WhenCalledWithValidParameters(
+  function test_WhenCalledWithValidParameters(
     address _safe,
+    address _multiSendCallOnly,
     uint256 _shortTxExecutionDelay,
     uint256 _longTxExecutionDelay,
     uint256 _txExpiryDelay,
@@ -53,6 +32,7 @@ contract UnitCanonGuardFactory is Test, Constants, Utils {
   ) external {
     vm.assume(_emergencyTrigger != address(0));
     vm.assume(_emergencyCaller != address(0));
+    vm.assume(_multiSendCallOnly != address(0));
 
     _txExpiryDelay = bound(_txExpiryDelay, MIN_EXPIRY_TIME, type(uint128).max);
     _maxApprovalDuration = bound(_maxApprovalDuration, MIN_EXPIRY_TIME, type(uint256).max);
@@ -69,6 +49,7 @@ contract UnitCanonGuardFactory is Test, Constants, Utils {
     vm.prank(_safe);
     address _canonGuard = canonGuardFactory.createCanonGuard(
       _safe,
+      _multiSendCallOnly,
       _shortTxExecutionDelay,
       _longTxExecutionDelay,
       _txExpiryDelay,
@@ -82,7 +63,7 @@ contract UnitCanonGuardFactory is Test, Constants, Utils {
         abi.encode(
           address(canonGuardFactory),
           _safe,
-          multiSendCallOnly,
+          _multiSendCallOnly,
           _shortTxExecutionDelay,
           _longTxExecutionDelay,
           _txExpiryDelay,
@@ -98,7 +79,7 @@ contract UnitCanonGuardFactory is Test, Constants, Utils {
 
     // it should match the parameters sent to the constructor
     assertEq(address(ISafeManageable(_canonGuard).SAFE()), _safe);
-    assertEq(ICanonGuard(_canonGuard).MULTI_SEND_CALL_ONLY(), multiSendCallOnly);
+    assertEq(ICanonGuard(_canonGuard).MULTI_SEND_CALL_ONLY(), _multiSendCallOnly);
     assertEq(ICanonGuard(_canonGuard).SHORT_TX_EXECUTION_DELAY(), _shortTxExecutionDelay);
     assertEq(ICanonGuard(_canonGuard).LONG_TX_EXECUTION_DELAY(), _longTxExecutionDelay);
     assertEq(ICanonGuard(_canonGuard).TX_EXPIRY_DELAY(), _txExpiryDelay);
@@ -112,5 +93,21 @@ contract UnitCanonGuardFactory is Test, Constants, Utils {
 
     // it should match the deterministic address
     assertEq(_canonGuard, _expectedCanonGuard);
+  }
+
+  function test_WhenTheMultiSendCallOnlyAddressIsZero(address _safe) external {
+    // it reverts
+    vm.prank(_safe);
+    vm.expectRevert(ICanonGuardFactory.MultiSendCallOnlyCannotBeZero.selector);
+    canonGuardFactory.createCanonGuard(_safe, address(0), 0, 0, 0, 0, address(0), address(0));
+  }
+
+  function test_WhenTheDeployerIsNotTheSafeContract(address _deployer, address _safe) external {
+    vm.assume(_deployer != _safe);
+
+    // it reverts
+    vm.expectRevert(ICanonGuardFactory.DeployerMustBeTheSafe.selector);
+    vm.prank(_deployer);
+    canonGuardFactory.createCanonGuard(_safe, address(0), 0, 0, 0, 0, address(0), address(0));
   }
 }

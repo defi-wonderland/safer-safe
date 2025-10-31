@@ -48,6 +48,7 @@ interface ICanonGuardFactory is IFactory {
   /**
    * @notice Creates a CanonGuard contract
    * @param _safe The Gnosis Safe contract address
+   * @param _multiSendCallOnly The MultiSendCallOnly contract address
    * @param _shortTxExecutionDelay The short transaction execution delay (in seconds)
    * @param _longTxExecutionDelay The long transaction execution delay (in seconds)
    * @param _txExpiryDelay The transaction expiry delay (in seconds after executable)
@@ -58,6 +59,7 @@ interface ICanonGuardFactory is IFactory {
    */
   function createCanonGuard(
     address _safe,
+    address _multiSendCallOnly,
     uint256 _shortTxExecutionDelay,
     uint256 _longTxExecutionDelay,
     uint256 _txExpiryDelay,
@@ -73,10 +75,4 @@ interface ICanonGuardFactory is IFactory {
    * @return _createX The CreateX contract address
    */
   function CREATE_X() external view returns (ICreateX _createX);
-
-  /**
-   * @notice Gets the MultiSendCallOnly contract
-   * @return _multiSendCallOnly The MultiSendCallOnly contract address
-   */
-  function MULTI_SEND_CALL_ONLY() external view returns (address _multiSendCallOnly);
 }
