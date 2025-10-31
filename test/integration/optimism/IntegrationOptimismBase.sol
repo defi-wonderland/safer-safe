@@ -40,6 +40,7 @@ abstract contract IntegrationOptimismBase is DeployCanonGuard, OptimismConstants
     run();
 
     // Deploy the CanonGuard contract
+    vm.prank(address(SAFE_PROXY));
     canonGuard = ICanonGuard(
       canonGuardFactory.createCanonGuard(
         address(SAFE_PROXY),

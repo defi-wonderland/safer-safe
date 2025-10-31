@@ -49,6 +49,7 @@ contract IntegrationBasicTest is DeployCanonGuard, EthereumConstants, Test {
     run();
 
     // Deploy the CanonGuard contract (overriding the dummy contract)
+    vm.prank(address(_safeProxy));
     _canonGuard = ICanonGuard(
       canonGuardFactory.createCanonGuard(
         address(_safeProxy),
