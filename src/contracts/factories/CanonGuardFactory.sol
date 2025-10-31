@@ -3,8 +3,8 @@ pragma solidity 0.8.30;
 
 import {CanonGuard} from 'contracts/CanonGuard.sol';
 import {Factory} from 'contracts/factories/Factory.sol';
+import {ICreateX} from 'interfaces/external/ICreateX.sol';
 import {ICanonGuardFactory} from 'interfaces/factories/ICanonGuardFactory.sol';
-import {CREATE3} from 'solady/utils/CREATE3.sol';
 
 /**
  * @title CanonGuardFactory
@@ -14,25 +14,15 @@ contract CanonGuardFactory is ICanonGuardFactory, Factory {
   // ~~~ STORAGE ~~~
 
   /// @inheritdoc ICanonGuardFactory
-  address public immutable MULTI_SEND_CALL_ONLY;
-
-  // ~~~ CONSTRUCTOR ~~~
-
-  /**
-   * @notice Constructor that sets up the MultiSendCallOnly contract
-   * @param _multiSendCallOnly The MultiSendCallOnly contract address
-   */
-  constructor(address _multiSendCallOnly) {
-    if (_multiSendCallOnly == address(0)) revert MultiSendCallOnlyCannotBeZero();
-
-    MULTI_SEND_CALL_ONLY = _multiSendCallOnly;
-  }
+  ICreateX public constant CREATE_X = ICreateX(0xba5Ed099633D3B313e4D5F7bdc1305d3c28ba5Ed);
 
   // ~~~ FACTORY METHODS ~~~
 
   /// @inheritdoc ICanonGuardFactory
   function createCanonGuard(
     address _safe,
+    uint256 _nonce,
+    address _multiSendCallOnly,
     uint256 _shortTxExecutionDelay,
     uint256 _longTxExecutionDelay,
     uint256 _txExpiryDelay,
@@ -40,13 +30,18 @@ contract CanonGuardFactory is ICanonGuardFactory, Factory {
     address _emergencyTrigger,
     address _emergencyCaller
   ) external returns (address _canonGuard) {
-    _canonGuard = CREATE3.deployDeterministic(
+    if (_safe != msg.sender) revert DeployerMustBeTheSafe();
+    if (_multiSendCallOnly == address(0)) revert MultiSendCallOnlyCannotBeZero();
+
+    // Deploying using hash of the SAFE address as salt
+    _canonGuard = CREATE_X.deployCreate3(
+      keccak256(abi.encode(_safe, _nonce)),
       abi.encodePacked(
         type(CanonGuard).creationCode,
         abi.encode(
           address(this),
           _safe,
-          MULTI_SEND_CALL_ONLY,
+          _multiSendCallOnly,
           _shortTxExecutionDelay,
           _longTxExecutionDelay,
           _txExpiryDelay,
@@ -54,8 +49,7 @@ contract CanonGuardFactory is ICanonGuardFactory, Factory {
           _emergencyTrigger,
           _emergencyCaller
         )
-      ),
-      keccak256(abi.encode(_safe))
+      )
     );
 
     _children[_canonGuard] = true;

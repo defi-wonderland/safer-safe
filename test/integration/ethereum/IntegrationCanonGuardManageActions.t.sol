@@ -8,6 +8,7 @@ import {IPreApproveAction} from 'interfaces/actions-builders/IPreApproveAction.s
 import {ISetEmergencyCallerAction} from 'interfaces/actions-builders/ISetEmergencyCallerAction.sol';
 import {ISetEmergencyTriggerAction} from 'interfaces/actions-builders/ISetEmergencyTriggerAction.sol';
 import {ISimpleActions} from 'interfaces/actions-builders/ISimpleActions.sol';
+import {ICreateX} from 'interfaces/external/ICreateX.sol';
 import {IntegrationEthereumBase} from 'test/integration/ethereum/IntegrationEthereumBase.sol';
 
 contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
@@ -565,5 +566,51 @@ contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
 
     // Assert that the WETH has been collected
     assertEq(WETH.balanceOf(address(SAFE_PROXY)), _safeWETHBalanceBefore + 1 ether);
+  }
+
+  function test_CanonGuardDeploymentNonce() public {
+    vm.startPrank(address(SAFE_PROXY));
+
+    // Deploy the CanonGuard contract through the factory with a non-used nonce
+    canonGuardFactory.createCanonGuard(
+      address(SAFE_PROXY),
+      1,
+      address(MULTI_SEND_CALL_ONLY),
+      SHORT_TX_EXECUTION_DELAY,
+      LONG_TX_EXECUTION_DELAY,
+      TX_EXPIRY_DELAY,
+      MAX_APPROVAL_DURATION,
+      makeAddr('emergencyTrigger'),
+      makeAddr('emergencyCaller')
+    );
+
+    // Re-deploy the CanonGuard contract through the factory with the same nonce, should revert
+    vm.expectRevert(abi.encodeWithSelector(ICreateX.FailedContractCreation.selector, address(CREATE_X)));
+    canonGuardFactory.createCanonGuard(
+      address(SAFE_PROXY),
+      1,
+      address(MULTI_SEND_CALL_ONLY),
+      SHORT_TX_EXECUTION_DELAY,
+      LONG_TX_EXECUTION_DELAY,
+      TX_EXPIRY_DELAY,
+      MAX_APPROVAL_DURATION,
+      makeAddr('emergencyTrigger'),
+      makeAddr('emergencyCaller')
+    );
+
+    // Deploy the CanonGuard contract through the factory with a new nonce
+    canonGuardFactory.createCanonGuard(
+      address(SAFE_PROXY),
+      2,
+      address(MULTI_SEND_CALL_ONLY),
+      SHORT_TX_EXECUTION_DELAY,
+      LONG_TX_EXECUTION_DELAY,
+      TX_EXPIRY_DELAY,
+      MAX_APPROVAL_DURATION,
+      makeAddr('emergencyTrigger'),
+      makeAddr('emergencyCaller')
+    );
+
+    vm.stopPrank();
   }
 }

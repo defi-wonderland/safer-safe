@@ -48,9 +48,12 @@ abstract contract IntegrationEthereumBase is DeployCanonGuard, EthereumConstants
     run();
 
     // Deploy the CanonGuard contract
+    vm.prank(address(SAFE_PROXY));
     canonGuard = ICanonGuard(
       canonGuardFactory.createCanonGuard(
         address(SAFE_PROXY),
+        0,
+        address(MULTI_SEND_CALL_ONLY),
         SHORT_TX_EXECUTION_DELAY,
         LONG_TX_EXECUTION_DELAY,
         TX_EXPIRY_DELAY,

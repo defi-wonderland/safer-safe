@@ -85,7 +85,8 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
    * @notice Constructor that sets up the Safe, MultiSendCallOnly, execution delays and default expiry delay
    * @param _parent The parent that deployed the CanonGuard contract
    * @param _safe The Gnosis Safe contract address
-   * @param _multiSendCallOnly The MultiSendCallOnly contract address
+   * @param _multiSendCallOnly The MultiSendCallOnly contract address. The list of compatible deployments can be found here:
+   *  https://github.com/safe-global/safe-deployments/blob/54bc801cd3513533fc5a8c6994ce461bc733812a/src/assets/v1.4.1/multi_send_call_only.json
    * @param _shortTxExecutionDelay The short transaction execution delay (in seconds)
    * @param _longTxExecutionDelay The long transaction execution delay (in seconds)
    * @param _txExpiryDelay The transaction expiry delay (in seconds after executable)

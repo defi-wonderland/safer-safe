@@ -90,7 +90,11 @@ abstract contract HandlersCanonGuard is BaseHandlers {
   /// @notice Change the short transaction execution delay
   /// @dev Tests redeployment and configuration changes
   /// @param _shortTxExecutionDelay New short delay (must be <= long delay)
-  function handler_changeShortTxDelay(uint256 _shortTxExecutionDelay) public {
+  /// @param _nonce The nonce of the Safe deployment
+  function handler_changeShortTxDelay(uint256 _shortTxExecutionDelay, uint256 _nonce) public {
+    if (ghost_safeDeploymentNonce[address(safe)][_nonce] || _nonce == 0) {
+      return;
+    }
     _shortTxExecutionDelay = bound(_shortTxExecutionDelay, 1, canonGuard.LONG_TX_EXECUTION_DELAY());
 
     // get current params
@@ -99,11 +103,15 @@ abstract contract HandlersCanonGuard is BaseHandlers {
     uint256 _maxApprovalDuration = canonGuard.MAX_APPROVAL_DURATION();
     address _emergencyTrigger = canonGuard.emergencyTrigger();
     address _emergencyCaller = canonGuard.emergencyCaller();
+    address _multiSendCallOnly = canonGuard.MULTI_SEND_CALL_ONLY();
 
+    vm.prank(address(safe));
     // redeploy with same params except new delay
     canonGuard = CanonGuard(
       canonGuardFactory.createCanonGuard(
         address(safe),
+        _nonce,
+        _multiSendCallOnly,
         _shortTxExecutionDelay,
         _longTxExecutionDelay,
         _txExpiryDelay,
@@ -112,6 +120,8 @@ abstract contract HandlersCanonGuard is BaseHandlers {
         _emergencyCaller
       )
     );
+
+    ghost_safeDeploymentNonce[address(safe)][_nonce] = true;
 
     // set the new entrypoint as guard
     vm.prank(address(safe));
@@ -121,7 +131,11 @@ abstract contract HandlersCanonGuard is BaseHandlers {
   /// @notice Change the long transaction execution delay
   /// @dev Tests redeployment with new long delay
   /// @param _longTxExecutionDelay New long delay (must be >= short delay)
-  function handler_changeLongTxDelay(uint256 _longTxExecutionDelay) public {
+  /// @param _nonce The nonce of the Safe deployment
+  function handler_changeLongTxDelay(uint256 _longTxExecutionDelay, uint256 _nonce) public {
+    if (ghost_safeDeploymentNonce[address(safe)][_nonce] || _nonce == 0) {
+      return;
+    }
     _longTxExecutionDelay =
       bound(_longTxExecutionDelay, canonGuard.SHORT_TX_EXECUTION_DELAY(), canonGuard.MAX_TX_EXECUTION_DELAY());
 
@@ -131,11 +145,15 @@ abstract contract HandlersCanonGuard is BaseHandlers {
     uint256 _maxApprovalDuration = canonGuard.MAX_APPROVAL_DURATION();
     address _emergencyTrigger = canonGuard.emergencyTrigger();
     address _emergencyCaller = canonGuard.emergencyCaller();
+    address _multiSendCallOnly = canonGuard.MULTI_SEND_CALL_ONLY();
 
+    vm.prank(address(safe));
     // redeploy with same params except new delay
     canonGuard = CanonGuard(
       canonGuardFactory.createCanonGuard(
         address(safe),
+        _nonce,
+        _multiSendCallOnly,
         _shortTxExecutionDelay,
         _longTxExecutionDelay,
         _txExpiryDelay,
@@ -144,6 +162,8 @@ abstract contract HandlersCanonGuard is BaseHandlers {
         _emergencyCaller
       )
     );
+
+    ghost_safeDeploymentNonce[address(safe)][_nonce] = true;
 
     // set the new entrypoint as guard
     vm.prank(address(safe));
@@ -153,7 +173,11 @@ abstract contract HandlersCanonGuard is BaseHandlers {
   /// @notice Change the transaction expiry delay
   /// @dev Tests redeployment with new expiry delay
   /// @param _txExpiryDelay New expiry delay
-  function handler_changeTxExpiryDelay(uint256 _txExpiryDelay) public {
+  /// @param _nonce The nonce of the Safe deployment
+  function handler_changeTxExpiryDelay(uint256 _txExpiryDelay, uint256 _nonce) public {
+    if (ghost_safeDeploymentNonce[address(safe)][_nonce] || _nonce == 0) {
+      return;
+    }
     _txExpiryDelay = bound(_txExpiryDelay, canonGuard.MIN_EXPIRY_TIME(), 3650 days);
 
     // get current params
@@ -162,11 +186,15 @@ abstract contract HandlersCanonGuard is BaseHandlers {
     uint256 _maxApprovalDuration = canonGuard.MAX_APPROVAL_DURATION();
     address _emergencyTrigger = canonGuard.emergencyTrigger();
     address _emergencyCaller = canonGuard.emergencyCaller();
+    address _multiSendCallOnly = canonGuard.MULTI_SEND_CALL_ONLY();
 
+    vm.prank(address(safe));
     // redeploy with same params except new delay
     canonGuard = CanonGuard(
       canonGuardFactory.createCanonGuard(
         address(safe),
+        _nonce,
+        _multiSendCallOnly,
         _shortTxExecutionDelay,
         _longTxExecutionDelay,
         _txExpiryDelay,
@@ -175,6 +203,8 @@ abstract contract HandlersCanonGuard is BaseHandlers {
         _emergencyCaller
       )
     );
+
+    ghost_safeDeploymentNonce[address(safe)][_nonce] = true;
 
     // set the new entrypoint as guard
     vm.prank(address(safe));
@@ -184,7 +214,11 @@ abstract contract HandlersCanonGuard is BaseHandlers {
   /// @notice Change the maximum approval duration
   /// @dev Tests redeployment with new max approval duration
   /// @param _maxApprovalDuration New max approval duration
-  function handler_changeMaxApprovalDuration(uint256 _maxApprovalDuration) public {
+  /// @param _nonce The nonce of the Safe deployment
+  function handler_changeMaxApprovalDuration(uint256 _maxApprovalDuration, uint256 _nonce) public {
+    if (ghost_safeDeploymentNonce[address(safe)][_nonce] || _nonce == 0) {
+      return;
+    }
     _maxApprovalDuration = bound(_maxApprovalDuration, canonGuard.MIN_EXPIRY_TIME(), 365 days);
 
     // get current params
@@ -193,11 +227,15 @@ abstract contract HandlersCanonGuard is BaseHandlers {
     uint256 _txExpiryDelay = canonGuard.TX_EXPIRY_DELAY();
     address _emergencyTrigger = canonGuard.emergencyTrigger();
     address _emergencyCaller = canonGuard.emergencyCaller();
+    address _multiSendCallOnly = canonGuard.MULTI_SEND_CALL_ONLY();
 
+    vm.prank(address(safe));
     // redeploy with same params except new delay
     canonGuard = CanonGuard(
       canonGuardFactory.createCanonGuard(
         address(safe),
+        _nonce,
+        _multiSendCallOnly,
         _shortTxExecutionDelay,
         _longTxExecutionDelay,
         _txExpiryDelay,
@@ -206,6 +244,8 @@ abstract contract HandlersCanonGuard is BaseHandlers {
         _emergencyCaller
       )
     );
+
+    ghost_safeDeploymentNonce[address(safe)][_nonce] = true;
 
     // set the new entrypoint as guard
     vm.prank(address(safe));
