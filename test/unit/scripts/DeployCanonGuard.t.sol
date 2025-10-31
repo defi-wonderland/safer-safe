@@ -16,7 +16,6 @@ import {ISimpleTransfers} from 'interfaces/actions-builders/ISimpleTransfers.sol
 import {ICanonGuardFactory} from 'interfaces/factories/ICanonGuardFactory.sol';
 import {DeployCanonGuard} from 'script/DeployCanonGuard.s.sol';
 import {AllowanceClaimorFactory} from 'src/contracts/factories/AllowanceClaimorFactory.sol';
-import {CanonGuardFactory} from 'src/contracts/factories/CanonGuardFactory.sol';
 import {CappedTokenTransfersHubFactory} from 'src/contracts/factories/CappedTokenTransfersHubFactory.sol';
 import {ChangeSafeGuardActionFactory} from 'src/contracts/factories/ChangeSafeGuardActionFactory.sol';
 import {EverclearTokenConversionFactory} from 'src/contracts/factories/EverclearTokenConversionFactory.sol';
@@ -92,14 +91,11 @@ contract UnitDeployCanonGuard is DeployCanonGuard, Test, Utils {
   }
 
   function _assertFactoriesAddresses() private view {
+    // NOTE: https://github.com/pcaversaccio/createx/blob/main/src/CreateX.sol#L894
+    bytes32 _salt = bytes32(abi.encodePacked(DEFAULT_SENDER, false, bytes11(SALT)));
+    bytes32 _sender = bytes32(uint256(uint160(DEFAULT_SENDER)));
+    assertEq(address(canonGuardFactory), CREATE_X.computeCreate3Address(keccak256(abi.encode(_sender, _salt))));
     // NOTE: hashing twice because of safeguard mechanism in the CreateX contract (https://github.com/pcaversaccio/createx/blob/main/src/CreateX.sol#L908-L910)
-    assertEq(
-      address(canonGuardFactory),
-      CREATE_X.computeCreate2Address(
-        keccak256(abi.encode(SALT)),
-        keccak256(abi.encodePacked(type(CanonGuardFactory).creationCode, abi.encode(MULTI_SEND_CALL_ONLY)))
-      )
-    );
     assertEq(
       address(allowanceClaimorFactory),
       CREATE_X.computeCreate2Address(keccak256(abi.encode(SALT)), keccak256(type(AllowanceClaimorFactory).creationCode))

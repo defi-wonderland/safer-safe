@@ -121,8 +121,9 @@ contract DeployCanonGuard is Constants, Script {
 
   function _deployAllChainsFactories() internal {
     canonGuardFactory = ICanonGuardFactory(
-      CREATE_X.deployCreate2(
-        SALT, abi.encodePacked(type(CanonGuardFactory).creationCode, abi.encode(MULTI_SEND_CALL_ONLY))
+      CREATE_X.deployCreate3(
+        bytes32(abi.encodePacked(msg.sender, false, bytes11(SALT))),
+        abi.encodePacked(type(CanonGuardFactory).creationCode, abi.encode(MULTI_SEND_CALL_ONLY))
       )
     );
     allowanceClaimorFactory =
