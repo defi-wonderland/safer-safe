@@ -1,13 +1,14 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import {ISafeManageable} from 'interfaces/ISafeManageable.sol';
+import {IEmergencyModeHook} from 'interfaces/IEmergencyModeHook.sol';
+import {IOnlyCanonGuard} from 'interfaces/IOnlyCanonGuard.sol';
 
 /**
  * @title ICanonGuard
  * @notice Interface for the CanonGuard contract
  */
-interface ICanonGuard is ISafeManageable {
+interface ICanonGuard is IOnlyCanonGuard, IEmergencyModeHook {
   // ~~~ STRUCTS ~~~
 
   /**
@@ -78,6 +79,13 @@ interface ICanonGuard is ISafeManageable {
   );
 
   /**
+   * @notice Emitted when dust is collected
+   * @param _token The token sent to the SAFE contract
+   * @param _balance The balance of the token sent to the SAFE contract
+   */
+  event DustCollected(address indexed _token, uint256 _balance);
+
+  /**
    * @notice Thrown when no transaction is queued for the actions builder
    */
   error NoTransactionQueued();
@@ -124,7 +132,7 @@ interface ICanonGuard is ISafeManageable {
   error TxExpiryDelayCannotBeGreaterThanMax();
 
   /**
-   * @notice Thrown when the long transaction execution delay is greater than the maximum value (uint128.max)
+   * @notice Thrown when the long transaction execution delay is greater than the maximum value
    */
   error LongDelayCannotBeGreaterThanMax();
 
@@ -139,9 +147,19 @@ interface ICanonGuard is ISafeManageable {
   error CallerMustBeTransactionProposer();
 
   /**
-   * @notice Thrown when attempting to cancel a transaction with approved hash signers
+   * @notice Thrown when the MultiSendCallOnly contract is the zero address
    */
-  error TransactionWithSignaturesCannotBeCancelled();
+  error ZeroMultiSendCallOnly();
+
+  /**
+   * @notice Thrown when the transaction expiry delay is less than the minimum expiry time
+   */
+  error TxExpiryDelayCannotBeLessThanMin();
+
+  /**
+   * @notice Thrown when the maximum approval duration is less than the minimum expiry time
+   */
+  error MaxApprovalDurationCannotBeLessThanMin();
 
   // ~~~ ADMIN METHODS ~~~
 
@@ -194,7 +212,20 @@ interface ICanonGuard is ISafeManageable {
    */
   function cancelEnqueuedTransaction(address _actionsBuilder) external;
 
+  /**
+   * @notice Collects dust (ETH or ERC20 tokens) from the contract and sends it to the SAFE contract.
+   * @dev Can be called by anyone. If balance is zero, nothing happens.
+   * @param _token The token to collect dust from. Zero address for ETH.
+   */
+  function collectDust(address _token) external;
+
   // ~~~ STORAGE METHODS ~~~
+
+  /**
+   * @notice Gets the address that represents ETH for dust collection
+   * @return _ethAddress The ETH address
+   */
+  function ETH_ADDRESS() external view returns (address _ethAddress);
 
   /**
    * @notice Gets the parent address
@@ -231,6 +262,18 @@ interface ICanonGuard is ISafeManageable {
    * @return _maxApprovalDuration The maximum approval duration for an actions builder or hub (in seconds)
    */
   function MAX_APPROVAL_DURATION() external view returns (uint256 _maxApprovalDuration);
+
+  /**
+   * @notice Gets the minimum expiry time
+   * @return _minExpiryTime The minimum expiry time (in seconds)
+   */
+  function MIN_EXPIRY_TIME() external view returns (uint256 _minExpiryTime);
+
+  /**
+   * @notice Gets the maximum transaction execution delay
+   * @return _maxTxExecutionDelay The maximum transaction execution delay (in seconds)
+   */
+  function MAX_TX_EXECUTION_DELAY() external view returns (uint256 _maxTxExecutionDelay);
 
   /**
    * @notice Gets the approval expiry time for an actions builder

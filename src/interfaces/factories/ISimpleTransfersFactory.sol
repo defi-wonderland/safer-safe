@@ -2,12 +2,21 @@
 pragma solidity 0.8.30;
 
 import {ISimpleTransfers} from 'interfaces/actions-builders/ISimpleTransfers.sol';
+import {IFactory} from 'interfaces/factories/IFactory.sol';
 
 /**
  * @title ISimpleTransfersFactory
  * @notice Interface for the SimpleTransfersFactory contract
  */
-interface ISimpleTransfersFactory {
+interface ISimpleTransfersFactory is IFactory {
+  // ~~~ EVENTS ~~~
+
+  /**
+   * @notice Emitted when a new SimpleTransfers contract is created
+   * @param _simpleTransfers The address of the created SimpleTransfers contract
+   */
+  event SimpleTransfersCreated(address indexed _simpleTransfers);
+
   // ~~~ FACTORY METHODS ~~~
 
   /**
@@ -24,9 +33,8 @@ interface ISimpleTransfersFactory {
    * @param _transferActions The array of transfer actions
    * @return _simpleTransfers The SimpleTransfers contract address
    */
-  function createSimpleTransfers(ISimpleTransfers.TransferAction[] memory _transferActions)
-    external
-    returns (address _simpleTransfers);
+  function createSimpleTransfers(ISimpleTransfers
+        .TransferAction[] memory _transferActions) external returns (address _simpleTransfers);
 
   /**
    * @notice Creates a SimpleTransfers contract with a single transfer action
@@ -38,7 +46,7 @@ interface ISimpleTransfersFactory {
    * @param _transferAction The transfer action
    * @return _simpleTransfers The SimpleTransfers contract address
    */
-  function createSimpleTransfer(ISimpleTransfers.TransferAction memory _transferAction)
-    external
-    returns (address _simpleTransfers);
+  function createSimpleTransfer(
+    ISimpleTransfers.TransferAction memory _transferAction
+  ) external returns (address _simpleTransfers);
 }

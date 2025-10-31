@@ -2,12 +2,13 @@
 pragma solidity 0.8.30;
 
 import {IERC20} from 'forge-std/interfaces/IERC20.sol';
+import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 
 /**
  * @title IAllowanceClaimor
  * @notice Interface for the AllowanceClaimor contract
  */
-interface IAllowanceClaimor {
+interface IAllowanceClaimor is IActionsBuilder {
   // ~~~ STORAGE METHODS ~~~
 
   /**

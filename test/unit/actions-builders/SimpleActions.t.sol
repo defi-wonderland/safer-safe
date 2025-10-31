@@ -12,19 +12,13 @@ contract UnitSimpleActionsconstructor is Test {
   function setUp() public {
     actions.push(
       ISimpleActions.SimpleAction({
-        target: address(1),
-        signature: 'transfer(address,uint256)',
-        data: abi.encode(address(0), 100),
-        value: 0
+        target: address(1), signature: 'transfer(address,uint256)', data: abi.encode(address(0), 100), value: 0
       })
     );
 
     actions.push(
       ISimpleActions.SimpleAction({
-        target: address(2),
-        signature: 'approve(address,uint256)',
-        data: abi.encode(address(0), 100),
-        value: 0
+        target: address(2), signature: 'approve(address,uint256)', data: abi.encode(address(0), 100), value: 0
       })
     );
   }
@@ -38,7 +32,7 @@ contract UnitSimpleActionsconstructor is Test {
       );
     }
 
-    simpleActions = new SimpleActions(address(0), actions);
+    simpleActions = new SimpleActions(actions);
 
     for (uint256 _i; _i < actions.length; _i++) {
       ISimpleActions.SimpleAction memory _simpleAction = actions[_i];
@@ -50,6 +44,12 @@ contract UnitSimpleActionsconstructor is Test {
       assertEq(simpleActions.getActions()[_i].target, _simpleAction.target);
       assertEq(simpleActions.getActions()[_i].data, _completeCallData);
       assertEq(simpleActions.getActions()[_i].value, actions[_i].value);
+
+      // it should save the entire array of actions
+      assertEq(simpleActions.simpleActions()[_i].target, _simpleAction.target);
+      assertEq(simpleActions.simpleActions()[_i].signature, _simpleAction.signature);
+      assertEq(simpleActions.simpleActions()[_i].data, _simpleAction.data);
+      assertEq(simpleActions.simpleActions()[_i].value, _simpleAction.value);
     }
   }
 }

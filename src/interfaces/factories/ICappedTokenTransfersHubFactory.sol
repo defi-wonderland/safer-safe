@@ -1,11 +1,25 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
+import {IFactory} from 'interfaces/factories/IFactory.sol';
+
 /**
  * @title ICappedTokenTransfersHubFactory
  * @notice Interface for the CappedTokenTransfersHubFactory contract
  */
-interface ICappedTokenTransfersHubFactory {
+interface ICappedTokenTransfersHubFactory is IFactory {
+  // ~~~ EVENTS ~~~
+
+  /**
+   * @notice Emitted when a new CappedTokenTransfersHub contract is created
+   * @param _cappedTokenTransfersHub The address of the created CappedTokenTransfersHub contract
+   * @param _safe The Gnosis Safe contract address
+   * @param _recipient The recipient of the token transfers
+   */
+  event CappedTokenTransfersHubCreated(
+    address indexed _cappedTokenTransfersHub, address indexed _safe, address indexed _recipient
+  );
+
   // ~~~ FACTORY METHODS ~~~
 
   /**

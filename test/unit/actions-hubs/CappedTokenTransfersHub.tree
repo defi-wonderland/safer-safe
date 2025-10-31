@@ -3,11 +3,12 @@ UnitCappedTokenTransfersHub::constructor
 │   ├── it sets the safe
 │   ├── it sets the recipient
 │   ├── it sets the epoch length
-│   ├── it sets the starting timestamp
 │   └── it sets the tokens and caps
 ├── When tokens registered contain a duplicated token
 │   └── it reverts
-└── When the epoch length is zero
+├── When the epoch length is zero
+│   └── it reverts
+└── When the tokens and caps length mismatch
     └── it reverts
 
 UnitCappedTokenTransfersHub::createNewActionsBuilder
@@ -15,8 +16,9 @@ UnitCappedTokenTransfersHub::createNewActionsBuilder
 │   ├── When the token is not registered in the hub
 │   │   └── it reverts
 │   └── When the token is registered in the hub
-│       └── it creates a new CappedTokenTransfers actions builder
-│       └── it sets the hub address in the child contract
+│       ├── it creates a new CappedTokenTransfers actions builder
+│       ├── it sets the hub address in the child contract
+│       └── it emits the event CappedTokenTransfersCreated
 └── When not called by the safe owner
     └── It reverts
 
@@ -24,8 +26,9 @@ UnitCappedTokenTransfersHub::updateState
 ├── When called by the safe
 │   ├── when the current epoch is greater than the epoch of the state
 │   │   ├── it resets the total spent
-│   │   └── it updates the current epoch
+│   │   └── it updates the last epoch
 │   ├── it increments the total spent
+│   ├── it emits the StateUpdated event
 │   └── when the total spent is greater than the cap
 │       └── it reverts
 └── When not called by the safe

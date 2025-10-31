@@ -23,17 +23,11 @@ contract IntegrationWonderlandClaims is IntegrationOptimismBase {
     uint256[] memory _plans = new uint256[](1);
     _plans[0] = 9;
     ISimpleActions.SimpleAction memory _claimKITE = ISimpleActions.SimpleAction({
-      target: address(_kiteVestingPlans),
-      signature: 'redeemPlans(uint256[])',
-      data: abi.encode(_plans),
-      value: 0
+      target: address(_kiteVestingPlans), signature: 'redeemPlans(uint256[])', data: abi.encode(_plans), value: 0
     });
 
     ISimpleActions.SimpleAction memory _claimWLD = ISimpleActions.SimpleAction({
-      target: address(_wldVestingWallet),
-      signature: 'release(address)',
-      data: abi.encode(address(WLD)),
-      value: 0
+      target: address(_wldVestingWallet), signature: 'release(address)', data: abi.encode(address(WLD)), value: 0
     });
 
     ISimpleActions.SimpleAction[] memory _simpleActions = new ISimpleActions.SimpleAction[](2);
@@ -41,7 +35,7 @@ contract IntegrationWonderlandClaims is IntegrationOptimismBase {
     _simpleActions[1] = _claimWLD;
 
     _actionsBuilder = simpleActionsFactory.createSimpleActions(_simpleActions);
-    _opxAction = address(new OPxAction(address(0), _opx));
+    _opxAction = address(new OPxAction(_opx));
   }
 
   function test_ExecuteTransaction() public {

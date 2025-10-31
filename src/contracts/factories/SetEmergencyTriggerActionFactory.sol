@@ -17,8 +17,10 @@ contract SetEmergencyTriggerActionFactory is ISetEmergencyTriggerActionFactory, 
     external
     returns (address _setEmergencyTriggerAction)
   {
-    _setEmergencyTriggerAction = address(new SetEmergencyTriggerAction(address(this), _emergencyTrigger));
+    _setEmergencyTriggerAction = address(new SetEmergencyTriggerAction(_emergencyTrigger));
 
     _children[_setEmergencyTriggerAction] = true;
+
+    emit SetEmergencyTriggerActionCreated(_setEmergencyTriggerAction, _emergencyTrigger);
   }
 }

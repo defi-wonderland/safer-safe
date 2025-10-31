@@ -5,8 +5,10 @@ import {SetEmergencyCallerActionFactory} from 'contracts/factories/SetEmergencyC
 import {Test} from 'forge-std/Test.sol';
 import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 import {ISetEmergencyCallerAction} from 'interfaces/actions-builders/ISetEmergencyCallerAction.sol';
+import {ISetEmergencyCallerActionFactory} from 'interfaces/factories/ISetEmergencyCallerActionFactory.sol';
+import {Utils} from 'test/unit/utils/Utils.sol';
 
-contract UnitSetEmergencyCallerActionFactorycreateSetEmergencyCallerAction is Test {
+contract UnitSetEmergencyCallerActionFactorycreateSetEmergencyCallerAction is Test, Utils {
   SetEmergencyCallerActionFactory public setEmergencyCallerActionFactory;
   ISetEmergencyCallerAction public auxSetEmergencyCallerAction;
 
@@ -15,11 +17,17 @@ contract UnitSetEmergencyCallerActionFactorycreateSetEmergencyCallerAction is Te
   }
 
   function test_WhenCalled(address _emergencyCaller) external {
+    // It should emit SetEmergencyCallerActionCreated event with correct parameters
+    vm.expectEmit();
+    emit ISetEmergencyCallerActionFactory.SetEmergencyCallerActionCreated(
+      _getNextContractDeployedAddress(address(setEmergencyCallerActionFactory)), _emergencyCaller
+    );
+
     address _setEmergencyCallerAction = setEmergencyCallerActionFactory.createSetEmergencyCallerAction(_emergencyCaller);
 
-    auxSetEmergencyCallerAction = ISetEmergencyCallerAction(
-      deployCode('SetEmergencyCallerAction', abi.encode(address(setEmergencyCallerActionFactory), _emergencyCaller))
-    );
+    vm.prank(address(setEmergencyCallerActionFactory));
+    auxSetEmergencyCallerAction =
+      ISetEmergencyCallerAction(deployCode('SetEmergencyCallerAction', abi.encode(_emergencyCaller)));
 
     // it should deploy a SetEmergencyCallerAction contract with correct args
     assertEq(address(auxSetEmergencyCallerAction).code, _setEmergencyCallerAction.code);

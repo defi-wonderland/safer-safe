@@ -10,9 +10,11 @@ import {ICanonGuard} from 'contracts/CanonGuard.sol';
 import {IEmergencyModeHook} from 'contracts/EmergencyModeHook.sol';
 import {ISafeManageable} from 'contracts/SafeManageable.sol';
 import {Test} from 'forge-std/Test.sol';
+import {IERC20} from 'forge-std/interfaces/IERC20.sol';
 import {IActionHub} from 'interfaces/action-hubs/IActionHub.sol';
 import {IActionHubChild} from 'interfaces/action-hubs/IActionHubChild.sol';
 import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
+import {SafeTransferLib} from 'solady/utils/SafeTransferLib.sol';
 
 contract UnitCanonGuard is Test {
   CanonGuardForTest public canonGuard;
@@ -63,7 +65,7 @@ contract UnitCanonGuard is Test {
     vm.assume(_address != ENUMERABLE_SET_LIST_SENTINEL);
   }
 
-  function test_ConstructorWhenPassingValidParameters(
+  function test_Constructor_WhenPassingValidParameters(
     address _safe,
     address _multiSendCallOnly,
     uint256 _shortTxExecutionDelay,
@@ -71,9 +73,11 @@ contract UnitCanonGuard is Test {
     uint256 _txExpiryDelay,
     uint256 _maxApprovalDuration
   ) external {
+    vm.assume(_multiSendCallOnly != address(0));
     _txExpiryDelay = bound(_txExpiryDelay, 1 hours, type(uint128).max);
-    _shortTxExecutionDelay = bound(_shortTxExecutionDelay, 0, type(uint128).max - 1);
-    _longTxExecutionDelay = bound(_longTxExecutionDelay, _shortTxExecutionDelay, type(uint128).max);
+    _shortTxExecutionDelay = bound(_shortTxExecutionDelay, 0, 6 * 30 days);
+    _longTxExecutionDelay = bound(_longTxExecutionDelay, _shortTxExecutionDelay, 6 * 30 days);
+    _maxApprovalDuration = bound(_maxApprovalDuration, canonGuard.MIN_EXPIRY_TIME(), type(uint256).max);
 
     canonGuard = new CanonGuardForTest(
       PARENT,
@@ -95,7 +99,7 @@ contract UnitCanonGuard is Test {
     assertEq(canonGuard.PARENT(), PARENT);
   }
 
-  function test_ConstructorWhenTheShortExecutionDelayIsGreaterThanTheLongExecutionDelay(
+  function test_Constructor_WhenTheShortExecutionDelayIsGreaterThanTheLongExecutionDelay(
     uint256 _shortTxExecutionDelay,
     uint256 _longTxExecutionDelay
   ) external {
@@ -117,7 +121,46 @@ contract UnitCanonGuard is Test {
     );
   }
 
-  function test_ConstructorWhenTxExpiryDelayIsGreaterThanMax(uint256 _txExpiryDelay) external {
+  function test_Constructor_WhenLongExecutionDelayIsGreaterThanMax(uint256 _longTxExecutionDelay) external {
+    _longTxExecutionDelay = bound(_longTxExecutionDelay, canonGuard.MAX_TX_EXECUTION_DELAY() + 1, type(uint256).max);
+
+    // it reverts
+    vm.expectRevert(ICanonGuard.LongDelayCannotBeGreaterThanMax.selector);
+    new CanonGuardForTest(
+      PARENT,
+      SAFE,
+      MULTI_SEND_CALL_ONLY,
+      SHORT_TX_EXECUTION_DELAY,
+      _longTxExecutionDelay,
+      TX_EXPIRY_DELAY,
+      MAX_APPROVAL_DURATION,
+      EMERGENCY_TRIGGER,
+      EMERGENCY_CALLER
+    );
+  }
+
+  function test_Constructor_WhenShortExecutionDelayIsGreaterThanMax(uint256 _shortTxExecutionDelay) external {
+    _shortTxExecutionDelay = bound(_shortTxExecutionDelay, canonGuard.MAX_TX_EXECUTION_DELAY() + 1, type(uint256).max);
+
+    // set to max value possible
+    uint256 _longTxExecutionDelay = canonGuard.MAX_TX_EXECUTION_DELAY();
+
+    // it reverts
+    vm.expectRevert(ICanonGuard.ShortDelayCannotBeGreaterThanLongDelay.selector);
+    new CanonGuardForTest(
+      PARENT,
+      SAFE,
+      MULTI_SEND_CALL_ONLY,
+      _shortTxExecutionDelay,
+      _longTxExecutionDelay,
+      TX_EXPIRY_DELAY,
+      MAX_APPROVAL_DURATION,
+      EMERGENCY_TRIGGER,
+      EMERGENCY_CALLER
+    );
+  }
+
+  function test_Constructor_WhenTxExpiryDelayIsGreaterThanMax(uint256 _txExpiryDelay) external {
     _txExpiryDelay = bound(_txExpiryDelay, uint256(type(uint128).max) + 1, type(uint256).max);
 
     // it reverts
@@ -135,17 +178,51 @@ contract UnitCanonGuard is Test {
     );
   }
 
-  function test_ConstructorWhenLongDelayIsGreaterThanMax(uint256 _longTxExecutionDelay) external {
-    _longTxExecutionDelay = bound(_longTxExecutionDelay, uint256(type(uint128).max) + 1, type(uint256).max);
+  function test_Constructor_WhenTxExpiryDelayIsLessThanMin(uint256 _txExpiryDelay) external {
+    _txExpiryDelay = bound(_txExpiryDelay, 0, canonGuard.MIN_EXPIRY_TIME() - 1);
 
     // it reverts
-    vm.expectRevert(ICanonGuard.LongDelayCannotBeGreaterThanMax.selector);
+    vm.expectRevert(ICanonGuard.TxExpiryDelayCannotBeLessThanMin.selector);
     new CanonGuardForTest(
       PARENT,
       SAFE,
       MULTI_SEND_CALL_ONLY,
       SHORT_TX_EXECUTION_DELAY,
-      _longTxExecutionDelay,
+      LONG_TX_EXECUTION_DELAY,
+      _txExpiryDelay,
+      MAX_APPROVAL_DURATION,
+      EMERGENCY_TRIGGER,
+      EMERGENCY_CALLER
+    );
+  }
+
+  function test_Constructor_WhenMaxApprovalDurationIsLessThanMinExpiryTime(uint256 _maxApprovalDuration) external {
+    _maxApprovalDuration = bound(_maxApprovalDuration, 0, canonGuard.MIN_EXPIRY_TIME() - 1);
+
+    // it reverts
+    vm.expectRevert(ICanonGuard.MaxApprovalDurationCannotBeLessThanMin.selector);
+    new CanonGuardForTest(
+      PARENT,
+      SAFE,
+      MULTI_SEND_CALL_ONLY,
+      SHORT_TX_EXECUTION_DELAY,
+      LONG_TX_EXECUTION_DELAY,
+      TX_EXPIRY_DELAY,
+      _maxApprovalDuration,
+      EMERGENCY_TRIGGER,
+      EMERGENCY_CALLER
+    );
+  }
+
+  function test_Constructor_WhenMultiSendCallOnlyIsTheZeroAddress() external {
+    // it reverts with ZeroMultiSendCallOnly
+    vm.expectRevert(ICanonGuard.ZeroMultiSendCallOnly.selector);
+    new CanonGuardForTest(
+      PARENT,
+      SAFE,
+      address(0),
+      SHORT_TX_EXECUTION_DELAY,
+      LONG_TX_EXECUTION_DELAY,
       TX_EXPIRY_DELAY,
       MAX_APPROVAL_DURATION,
       EMERGENCY_TRIGGER,
@@ -159,7 +236,10 @@ contract UnitCanonGuard is Test {
     vm.stopPrank();
   }
 
-  function test_ApproveActionsBuilderOrHubWhenCallerIsSafe(uint256 _approvalDuration, address _actionsBuilder) external {
+  function test_ApproveActionsBuilderOrHub_WhenCallerIsSafe(
+    uint256 _approvalDuration,
+    address _actionsBuilder
+  ) external {
     _approvalDuration = bound(_approvalDuration, 0, MAX_APPROVAL_DURATION);
 
     vm.expectEmit(address(canonGuard));
@@ -173,9 +253,10 @@ contract UnitCanonGuard is Test {
     assertEq(canonGuard.approvalExpiries(_actionsBuilder), block.timestamp + _approvalDuration);
   }
 
-  function test_ApproveActionsBuilderOrHubWhenApprovalDurationIsGreaterThanMaxApprovalDuration(
-    uint256 _approvalDuration
-  ) external whenCallerIsSafe {
+  function test_ApproveActionsBuilderOrHub_WhenApprovalDurationIsGreaterThanMaxApprovalDuration(uint256 _approvalDuration)
+    external
+    whenCallerIsSafe
+  {
     _approvalDuration = bound(_approvalDuration, canonGuard.MAX_APPROVAL_DURATION() + 1, type(uint256).max);
 
     // it reverts with InvalidApprovalDuration
@@ -183,7 +264,7 @@ contract UnitCanonGuard is Test {
     canonGuard.approveActionsBuilderOrHub(address(0), _approvalDuration);
   }
 
-  function test_ApproveActionsBuilderOrHubWhenExtendingApproval(
+  function test_ApproveActionsBuilderOrHub_WhenExtendingApproval(
     address _actionsBuilder,
     uint256 _previousApprovalExpiry,
     uint256 _newApprovalDuration
@@ -205,7 +286,7 @@ contract UnitCanonGuard is Test {
     assertEq(canonGuard.approvalExpiries(_actionsBuilder), block.timestamp + _newApprovalDuration);
   }
 
-  function test_ApproveActionsBuilderOrHubWhenCallerIsNotSafe(
+  function test_ApproveActionsBuilderOrHub_WhenCallerIsNotSafe(
     address _caller,
     uint256 _approvalDuration,
     address _actionsBuilder
@@ -226,7 +307,7 @@ contract UnitCanonGuard is Test {
     _;
   }
 
-  function test_QueueTransactionWhenTransactionIsAlreadyQueuedButExpired(
+  function test_QueueTransaction_WhenTransactionIsAlreadyQueuedButExpired(
     address _caller,
     address _target,
     uint256 _value,
@@ -261,7 +342,7 @@ contract UnitCanonGuard is Test {
     assertEq(canonGuard.getQueuedActionBuilders()[0], _actionsBuilder);
   }
 
-  function test_QueueTransactionWhenTransactionIsAlreadyQueuedAndNotExpired(
+  function test_QueueTransaction_WhenTransactionIsAlreadyQueuedAndNotExpired(
     address _caller,
     address _actionsBuilder,
     uint256 _expiry
@@ -279,7 +360,7 @@ contract UnitCanonGuard is Test {
     canonGuard.queueTransaction(_actionsBuilder);
   }
 
-  function test_QueueTransactionWhenActionBuilderIsPreApproved(
+  function test_QueueTransaction_WhenActionBuilderIsPreApproved(
     address _caller,
     address _actionsBuilder
   )
@@ -320,7 +401,7 @@ contract UnitCanonGuard is Test {
     assertEq(_isPreApproved, true);
   }
 
-  function test_QueueTransactionWhenActionBuilderIsNotPreApproved(
+  function test_QueueTransaction_WhenActionBuilderIsNotPreApproved(
     address _caller,
     address _target,
     uint256 _value,
@@ -369,7 +450,7 @@ contract UnitCanonGuard is Test {
     _;
   }
 
-  function test_QueueTransactionWhenHubTransactionIsAlreadyQueuedButExpired(
+  function test_QueueTransaction_WhenHubTransactionIsAlreadyQueuedButExpired(
     address _caller,
     address _actionHub,
     address _actionsBuilder,
@@ -409,7 +490,7 @@ contract UnitCanonGuard is Test {
     assertEq(canonGuard.getQueuedActionBuilders()[0], _actionsBuilder);
   }
 
-  function test_QueueTransactionWhenHubTransactionIsAlreadyQueuedAndNotExpired(
+  function test_QueueTransaction_WhenHubTransactionIsAlreadyQueuedAndNotExpired(
     address _caller,
     address _actionHub,
     address _actionsBuilder,
@@ -433,7 +514,7 @@ contract UnitCanonGuard is Test {
     canonGuard.queueTransaction(_actionsBuilder);
   }
 
-  function test_QueueTransactionWhenActionBuilderIsNotAChildOfTheHub(
+  function test_QueueTransaction_WhenActionBuilderIsNotAChildOfTheHub(
     address _caller,
     address _actionHub,
     address _actionsBuilder
@@ -458,7 +539,7 @@ contract UnitCanonGuard is Test {
     _;
   }
 
-  function test_QueueTransactionWhenActionHubIsPreApproved(
+  function test_QueueTransaction_WhenActionHubIsPreApproved(
     address _caller,
     address _actionHub,
     address _actionsBuilder
@@ -504,7 +585,7 @@ contract UnitCanonGuard is Test {
     assertEq(_isPreApproved, true);
   }
 
-  function test_QueueTransactionWhenActionHubIsNotPreApproved(
+  function test_QueueTransaction_WhenActionHubIsNotPreApproved(
     address _caller,
     address _target,
     uint256 _value,
@@ -549,7 +630,7 @@ contract UnitCanonGuard is Test {
     assertEq(_isPreApproved, false);
   }
 
-  function test_QueueTransactionWhenCallerIsNotSafeOwner(
+  function test_QueueTransaction_WhenCallerIsNotSafeOwner(
     address _caller,
     address _actionsBuilder
   ) external givenCallerIsNotSafeOwner(_caller) {
@@ -559,7 +640,7 @@ contract UnitCanonGuard is Test {
     canonGuard.queueTransaction(_actionsBuilder);
   }
 
-  function test_ExecuteTransactionWhenInEmergencyModeAndTheCallerIsNotTheEmergencyCaller(
+  function test_ExecuteTransaction_WhenInEmergencyModeAndTheCallerIsNotTheEmergencyCaller(
     address _caller,
     address _actionsBuilder
   ) external whenEmergencyModeIsActive {
@@ -571,7 +652,7 @@ contract UnitCanonGuard is Test {
     canonGuard.executeTransaction(_actionsBuilder);
   }
 
-  function test_ExecuteTransactionWhenTransactionIsExpired(
+  function test_ExecuteTransaction_WhenTransactionIsExpired(
     address _caller,
     address _actionsBuilder,
     IActionsBuilder.Action calldata _action,
@@ -602,7 +683,7 @@ contract UnitCanonGuard is Test {
     canonGuard.executeTransaction(_actionsBuilder);
   }
 
-  function test_ExecuteTransactionWhenApprovedTransactionIsNotYetExecutable(
+  function test_ExecuteTransaction_WhenApprovedTransactionIsNotYetExecutable(
     address _caller,
     address _actionsBuilder,
     IActionsBuilder.Action calldata _action,
@@ -636,7 +717,7 @@ contract UnitCanonGuard is Test {
     canonGuard.executeTransaction(_actionsBuilder);
   }
 
-  function test_ExecuteTransactionWhenTransactionIsNotQueued(address _actionsBuilder) external {
+  function test_ExecuteTransaction_WhenTransactionIsNotQueued(address _actionsBuilder) external {
     _assumeFuzzable(_actionsBuilder);
     _mockAndExpect(address(SAFE), abi.encodeWithSelector(ISafe.nonce.selector), abi.encode(1));
 
@@ -649,7 +730,7 @@ contract UnitCanonGuard is Test {
     _;
   }
 
-  function test_ExecuteTransactionWhenInSimulationMode(
+  function test_ExecuteTransaction_WhenInSimulationMode(
     address _caller,
     address _actionsBuilder,
     IActionsBuilder.Action calldata _action,
@@ -702,7 +783,7 @@ contract UnitCanonGuard is Test {
     assertEq(canonGuard.getQueuedActionBuilders().length, 0);
   }
 
-  function test_ExecuteTransactionWhenNotInSimulationMode(
+  function test_ExecuteTransaction_WhenNotInSimulationMode(
     address _caller,
     address _actionsBuilder,
     IActionsBuilder.Action calldata _action,
@@ -763,7 +844,7 @@ contract UnitCanonGuard is Test {
     assertEq(canonGuard.getQueuedActionBuilders().length, 0);
   }
 
-  function test_ExecuteTransactionsWhenInEmergencyModeAndTheCallerIsNotTheEmergencyCaller(
+  function test_ExecuteTransactions_WhenInEmergencyModeAndTheCallerIsNotTheEmergencyCaller(
     address _caller,
     address[] memory _actionsBuilders
   ) external whenEmergencyModeIsActive {
@@ -775,7 +856,7 @@ contract UnitCanonGuard is Test {
     canonGuard.executeTransactions(_actionsBuilders);
   }
 
-  function test_ExecuteTransactionsWhenAtLeastOneTransactionIsExpired(
+  function test_ExecuteTransactions_WhenAtLeastOneTransactionIsExpired(
     address _caller,
     IActionsBuilder.Action calldata _action,
     ICanonGuard.TransactionInfo[] memory _txsInfo
@@ -818,7 +899,7 @@ contract UnitCanonGuard is Test {
     canonGuard.executeTransactions(_actionsBuilders);
   }
 
-  function test_ExecuteTransactionsWhenAtLeastOneApprovedTransactionIsNotYetExecutable(
+  function test_ExecuteTransactions_WhenAtLeastOneApprovedTransactionIsNotYetExecutable(
     address _caller,
     IActionsBuilder.Action calldata _action,
     ICanonGuard.TransactionInfo[] memory _txsInfo
@@ -860,7 +941,7 @@ contract UnitCanonGuard is Test {
     canonGuard.executeTransactions(_actionsBuilders);
   }
 
-  function test_ExecuteTransactionsWhenAtLeastOneTransactionIsNotQueued(
+  function test_ExecuteTransactions_WhenAtLeastOneTransactionIsNotQueued(
     address _caller,
     IActionsBuilder.Action calldata _action,
     ICanonGuard.TransactionInfo[] memory _txsInfo
@@ -906,7 +987,7 @@ contract UnitCanonGuard is Test {
     _;
   }
 
-  function test_ExecuteTransactionsWhenInSimulationMode(
+  function test_ExecuteTransactions_WhenInSimulationMode(
     address _caller,
     IActionsBuilder.Action calldata _action,
     ICanonGuard.TransactionInfo[] memory _txsInfo
@@ -965,7 +1046,7 @@ contract UnitCanonGuard is Test {
     assertEq(canonGuard.getQueuedActionBuilders().length, 0);
   }
 
-  function test_ExecuteTransactionsWhenNotInSimulationMode(
+  function test_ExecuteTransactions_WhenNotInSimulationMode(
     address _caller,
     IActionsBuilder.Action calldata _action,
     ICanonGuard.TransactionInfo[] memory _txsInfo,
@@ -1040,7 +1121,7 @@ contract UnitCanonGuard is Test {
     _;
   }
 
-  function test_CancelEnqueuedTransactionWhenTheCallerIsNotTheEmergencyCaller(
+  function test_CancelEnqueuedTransaction_WhenTheCallerIsNotTheEmergencyCaller(
     address _caller,
     address _actionsBuilder
   ) external whenEmergencyModeIsActive {
@@ -1052,7 +1133,7 @@ contract UnitCanonGuard is Test {
     canonGuard.cancelEnqueuedTransaction(_actionsBuilder);
   }
 
-  function test_CancelEnqueuedTransactionWhenTheCallerIsTheEmergencyCallerAndProposer(
+  function test_CancelEnqueuedTransaction_WhenTheCallerIsTheEmergencyCallerAndProposer(
     address _actionsBuilder,
     IActionsBuilder.Action calldata _action,
     ICanonGuard.TransactionInfo memory _txInfo
@@ -1067,7 +1148,6 @@ contract UnitCanonGuard is Test {
 
     _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.nonce.selector), abi.encode(1));
     _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.getTransactionHash.selector), abi.encode(bytes32(0)));
-    _mockAndExpect(SAFE, abi.encodeWithSelector(IOwnerManager.getOwners.selector), abi.encode(new address[](0)));
 
     canonGuard.mockTransaction(
       _txInfo.proposer, _actionsBuilder, _actionsData, _txInfo.executableAt, _txInfo.expiresAt, _txInfo.isPreApproved
@@ -1092,7 +1172,7 @@ contract UnitCanonGuard is Test {
     assertEq(canonGuard.getQueuedActionBuilders().length, 0);
   }
 
-  function test_CancelEnqueuedTransactionWhenTheCallerIsTheEmergencyCallerAndNotTheProposer(
+  function test_CancelEnqueuedTransaction_WhenTheCallerIsTheEmergencyCallerAndNotTheProposer(
     address _actionsBuilder,
     IActionsBuilder.Action calldata _action,
     ICanonGuard.TransactionInfo memory _txInfo
@@ -1107,7 +1187,6 @@ contract UnitCanonGuard is Test {
 
     _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.nonce.selector), abi.encode(1));
     _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.getTransactionHash.selector), abi.encode(bytes32(0)));
-    _mockAndExpect(SAFE, abi.encodeWithSelector(IOwnerManager.getOwners.selector), abi.encode(new address[](0)));
 
     canonGuard.mockTransaction(
       _txInfo.proposer, _actionsBuilder, _actionsData, _txInfo.executableAt, _txInfo.expiresAt, _txInfo.isPreApproved
@@ -1132,13 +1211,13 @@ contract UnitCanonGuard is Test {
     assertEq(canonGuard.getQueuedActionBuilders().length, 0);
   }
 
-  function test_CancelEnqueuedTransactionWhenTransactionIsNotQueued(address _actionsBuilder) external {
+  function test_CancelEnqueuedTransaction_WhenTransactionIsNotQueued(address _actionsBuilder) external {
     // it reverts with NoTransactionQueued
     vm.expectRevert(ICanonGuard.NoTransactionQueued.selector);
     canonGuard.cancelEnqueuedTransaction(_actionsBuilder);
   }
 
-  function test_CancelEnqueuedTransactionWhenCallerIsNotTheProposer(
+  function test_CancelEnqueuedTransaction_WhenCallerIsNotTheProposer(
     address _caller,
     address _actionsBuilder,
     IActionsBuilder.Action calldata _action,
@@ -1162,36 +1241,7 @@ contract UnitCanonGuard is Test {
     canonGuard.cancelEnqueuedTransaction(_actionsBuilder);
   }
 
-  function test_CancelEnqueuedTransactionWhenTransactionHasApprovedHashSigners(
-    address _actionsBuilder,
-    IActionsBuilder.Action calldata _action,
-    ICanonGuard.TransactionInfo memory _txInfo,
-    address[] memory _signers
-  ) external {
-    _assumeFuzzable(_actionsBuilder);
-    vm.assume(_signers.length > 0);
-    _txInfo.expiresAt = bound(_txInfo.expiresAt, 1, type(uint64).max - 1);
-
-    IActionsBuilder.Action[] memory _actions = new IActionsBuilder.Action[](1);
-    _actions[0] = _action;
-    bytes memory _actionsData = abi.encode(_actions);
-
-    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.nonce.selector), abi.encode(1));
-    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.getTransactionHash.selector), abi.encode(bytes32(0)));
-    _mockAndExpect(SAFE, abi.encodeWithSelector(IOwnerManager.getOwners.selector), abi.encode(_signers));
-    _mockApprovedHashesForSigners(_signers, 1);
-
-    canonGuard.mockTransaction(
-      _txInfo.proposer, _actionsBuilder, _actionsData, _txInfo.executableAt, _txInfo.expiresAt, _txInfo.isPreApproved
-    );
-
-    // it reverts with TransactionWithSignaturesCannotBeCancelled
-    vm.prank(_txInfo.proposer);
-    vm.expectRevert(ICanonGuard.TransactionWithSignaturesCannotBeCancelled.selector);
-    canonGuard.cancelEnqueuedTransaction(_actionsBuilder);
-  }
-
-  function test_CancelEnqueuedTransactionWhenTransactionCanBeCancelled(
+  function test_CancelEnqueuedTransaction_WhenTransactionCanBeCancelled(
     address _actionsBuilder,
     IActionsBuilder.Action calldata _action,
     ICanonGuard.TransactionInfo memory _txInfo
@@ -1205,7 +1255,6 @@ contract UnitCanonGuard is Test {
 
     _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.nonce.selector), abi.encode(1));
     _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.getTransactionHash.selector), abi.encode(bytes32(0)));
-    _mockAndExpect(SAFE, abi.encodeWithSelector(IOwnerManager.getOwners.selector), abi.encode(new address[](0)));
 
     canonGuard.mockTransaction(
       _txInfo.proposer, _actionsBuilder, _actionsData, _txInfo.executableAt, _txInfo.expiresAt, _txInfo.isPreApproved
@@ -1230,7 +1279,99 @@ contract UnitCanonGuard is Test {
     assertEq(canonGuard.getQueuedActionBuilders().length, 0);
   }
 
-  function test_ExecuteNoActionTransactionWhenTheCallerIsTheEmergencyCaller(bytes32 _safeTxHash)
+  modifier whenTheTokenIsTheEthAddress() {
+    _;
+  }
+
+  function test_CollectDust_WhenTheBalanceIsZero() external whenTheTokenIsTheEthAddress {
+    vm.deal(address(canonGuard), 0);
+
+    // it emits DustCollected event
+    vm.expectEmit();
+    emit ICanonGuard.DustCollected(canonGuard.ETH_ADDRESS(), 0);
+
+    canonGuard.collectDust(canonGuard.ETH_ADDRESS());
+  }
+
+  modifier whenTheBalanceIsNotZero() {
+    _;
+  }
+
+  function test_CollectDust_WhenTheCollectionFails(uint256 _balance)
+    external
+    whenTheTokenIsTheEthAddress
+    whenTheBalanceIsNotZero
+  {
+    // This will set the code of the safe to a safe with a reverting fallback
+    vm.etch(address(SAFE), address(new RevertingFallbackSAFE()).code);
+
+    _balance = bound(_balance, 1, type(uint256).max);
+    vm.deal(address(canonGuard), _balance);
+
+    address _ethAddress = canonGuard.ETH_ADDRESS();
+
+    // it reverts with ETHTransferFailed
+    vm.expectRevert(SafeTransferLib.ETHTransferFailed.selector);
+    canonGuard.collectDust(_ethAddress);
+  }
+
+  function test_CollectDust_WhenTheCollectionSucceeds(uint256 _balance)
+    external
+    whenTheTokenIsTheEthAddress
+    whenTheBalanceIsNotZero
+  {
+    _balance = bound(_balance, 1, type(uint256).max);
+    vm.deal(address(canonGuard), _balance);
+    uint256 _safeBalanceBefore = address(SAFE).balance;
+
+    // it emits DustCollected event
+    vm.expectEmit();
+    emit ICanonGuard.DustCollected(canonGuard.ETH_ADDRESS(), _balance);
+
+    canonGuard.collectDust(canonGuard.ETH_ADDRESS());
+
+    // it collects dust from the contract
+    uint256 _safeBalanceAfter = address(SAFE).balance;
+    assertEq(_safeBalanceAfter, _safeBalanceBefore + _balance);
+  }
+
+  modifier whenTheTokenIsNotTheEthAddress(address _token) {
+    vm.assume(_token != canonGuard.ETH_ADDRESS());
+    _assumeFuzzable(_token);
+    _;
+  }
+
+  function test_CollectDust_WhenTheBalanceIsZero_WhenTheTokenIsNotTheEthAddress(address _token)
+    external
+    whenTheTokenIsNotTheEthAddress(_token)
+  {
+    _mockAndExpect(_token, abi.encodeWithSelector(IERC20.balanceOf.selector), abi.encode(0));
+
+    // it emits DustCollected event
+    vm.expectEmit();
+    emit ICanonGuard.DustCollected(_token, 0);
+
+    canonGuard.collectDust(_token);
+  }
+
+  function test_CollectDust_WhenTheBalanceIsNotZero(
+    uint256 _balance,
+    address _token
+  ) external whenTheTokenIsNotTheEthAddress(_token) {
+    _balance = bound(_balance, 1, type(uint256).max);
+
+    // it collects dust from the contract
+    _mockAndExpect(_token, abi.encodeWithSelector(IERC20.balanceOf.selector), abi.encode(_balance));
+    _mockAndExpect(_token, abi.encodeWithSelector(IERC20.transfer.selector), abi.encode(true));
+
+    // it emits DustCollected event
+    vm.expectEmit();
+    emit ICanonGuard.DustCollected(_token, _balance);
+
+    canonGuard.collectDust(_token);
+  }
+
+  function test_ExecuteNoActionTransaction_WhenTheCallerIsTheEmergencyCaller(bytes32 _safeTxHash)
     external
     whenEmergencyModeIsActive
   {
@@ -1249,7 +1390,7 @@ contract UnitCanonGuard is Test {
     canonGuard.executeNoActionTransaction();
   }
 
-  function test_ExecuteNoActionTransactionWhenTheCallerIsNotTheEmergencyCaller(address _caller)
+  function test_ExecuteNoActionTransaction_WhenTheCallerIsNotTheEmergencyCaller(address _caller)
     external
     whenEmergencyModeIsActive
   {
@@ -1261,7 +1402,7 @@ contract UnitCanonGuard is Test {
     canonGuard.executeNoActionTransaction();
   }
 
-  function test_ExecuteNoActionTransactionWhenEmergencyModeIsNotActive(bytes32 _safeTxHash) external {
+  function test_ExecuteNoActionTransaction_WhenEmergencyModeIsNotActive(bytes32 _safeTxHash) external {
     _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.nonce.selector), abi.encode(1));
     _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.getTransactionHash.selector), abi.encode(_safeTxHash));
     _mockAndExpect(SAFE, abi.encodeWithSelector(IOwnerManager.getOwners.selector), abi.encode(new address[](0)));
@@ -1276,7 +1417,7 @@ contract UnitCanonGuard is Test {
     canonGuard.executeNoActionTransaction();
   }
 
-  function test_GetSafeTransactionHashWhenTheAddressIsTheZeroAddress(
+  function test_GetSafeTransactionHash_WhenTheAddressIsTheZeroAddress(
     uint256 _safeNonce,
     bytes32 _expectedHash
   ) external {
@@ -1312,7 +1453,7 @@ contract UnitCanonGuard is Test {
     _;
   }
 
-  function test_GetSafeTransactionHashWhenTransactionExists(
+  function test_GetSafeTransactionHash_WhenTransactionExists(
     address _actionsBuilder,
     IActionsBuilder.Action memory _action,
     ICanonGuard.TransactionInfo memory _txInfo,
@@ -1337,7 +1478,7 @@ contract UnitCanonGuard is Test {
     assertEq(_safeTxHash, _expectedHash);
   }
 
-  function test_GetSafeTransactionHashWhenGettingHashWithNonce(
+  function test_GetSafeTransactionHash_WhenGettingHashWithNonce(
     address _actionsBuilder,
     IActionsBuilder.Action memory _action,
     ICanonGuard.TransactionInfo memory _txInfo,
@@ -1361,7 +1502,7 @@ contract UnitCanonGuard is Test {
     assertEq(_safeTxHash, _expectedHash);
   }
 
-  function test_GetSafeTransactionHashWhenTransactionDoesNotExist(address _actionsBuilder) external {
+  function test_GetSafeTransactionHash_WhenTransactionDoesNotExist(address _actionsBuilder) external {
     _assumeFuzzable(_actionsBuilder);
 
     _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.nonce.selector), abi.encode(1));
@@ -1371,7 +1512,7 @@ contract UnitCanonGuard is Test {
     canonGuard.getSafeTransactionHash(_actionsBuilder);
   }
 
-  function test_GetApprovedHashSignersWhenTheAddressIsTheZeroAddress(
+  function test_GetApprovedHashSigners_WhenTheAddressIsTheZeroAddress(
     address _signer1,
     address _signer2,
     uint256 _safeNonce
@@ -1389,7 +1530,7 @@ contract UnitCanonGuard is Test {
     assertEq(_approvedSigners, _signers);
   }
 
-  function test_GetApprovedHashSignersWhenTransactionExists(
+  function test_GetApprovedHashSigners_WhenTransactionExists(
     address _signer1,
     address _signer2,
     address _actionsBuilder,
@@ -1421,7 +1562,7 @@ contract UnitCanonGuard is Test {
     assertEq(_approvedSigners, _signers);
   }
 
-  function test_GetApprovedHashSignersWhenTransactionDoesNotExist(address _actionsBuilder, uint256 _nonce) external {
+  function test_GetApprovedHashSigners_WhenTransactionDoesNotExist(address _actionsBuilder, uint256 _nonce) external {
     _assumeFuzzable(_actionsBuilder);
 
     // it reverts with NoTransactionQueued
@@ -1429,13 +1570,13 @@ contract UnitCanonGuard is Test {
     canonGuard.getApprovedHashSigners(_actionsBuilder, _nonce);
   }
 
-  function test_GetSafeNonceReturnsCorrectNonce(uint256 _nonce) external {
+  function test_GetSafeNonce_ReturnsCorrectNonce(uint256 _nonce) external {
     _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.nonce.selector), abi.encode(_nonce));
 
     assertEq(canonGuard.getSafeNonce(), _nonce);
   }
 
-  function test_GetQueuedActionBuildersWhenThereAreActionBuildersInTheQueue(
+  function test_GetQueuedActionBuilders_WhenThereAreActionBuildersInTheQueue(
     address _actionsBuilder,
     address _caller,
     IActionsBuilder.Action[] memory _actions,
@@ -1453,7 +1594,7 @@ contract UnitCanonGuard is Test {
     assertEq(canonGuard.getQueuedActionBuilders()[0], _actionsBuilder);
   }
 
-  function test_GetQueuedActionBuildersWhenThereAreNoActionBuildersInTheQueue() external view {
+  function test_GetQueuedActionBuilders_WhenThereAreNoActionBuildersInTheQueue() external view {
     // it returns an empty array
     assertEq(canonGuard.getQueuedActionBuilders().length, 0);
   }
@@ -1473,5 +1614,12 @@ contract UnitCanonGuard is Test {
     vm.prank(SAFE);
     canonGuard.approveActionsBuilderOrHub(_actionsBuilder, ACTIONS_BUILDER_APPROVAL_DURATION);
     _;
+  }
+}
+
+contract RevertingFallbackSAFE {
+  fallback() external payable {
+    // solhint-disable-next-line custom-errors
+    revert('');
   }
 }

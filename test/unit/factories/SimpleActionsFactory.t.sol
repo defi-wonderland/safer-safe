@@ -5,8 +5,10 @@ import {SimpleActionsFactory} from 'contracts/factories/SimpleActionsFactory.sol
 import {Test} from 'forge-std/Test.sol';
 import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 import {ISimpleActions} from 'interfaces/actions-builders/ISimpleActions.sol';
+import {ISimpleActionsFactory} from 'interfaces/factories/ISimpleActionsFactory.sol';
+import {Utils} from 'test/unit/utils/Utils.sol';
 
-contract UnitSimpleActionsFactory is Test {
+contract UnitSimpleActionsFactory is Test, Utils {
   SimpleActionsFactory public simpleActionsFactory;
   ISimpleActions public auxSimpleActions;
 
@@ -14,7 +16,7 @@ contract UnitSimpleActionsFactory is Test {
     simpleActionsFactory = new SimpleActionsFactory();
   }
 
-  function test_CreateSimpleActionsWhenCreatingASimpleActionsContract(
+  function test_CreateSimpleActions_WhenCreatingASimpleActionsContract(
     ISimpleActions.SimpleAction memory _simpleActionsA,
     ISimpleActions.SimpleAction memory _simpleActionsB
   ) external {
@@ -23,10 +25,15 @@ contract UnitSimpleActionsFactory is Test {
     _actions[0] = _simpleActionsA;
     _actions[1] = _simpleActionsB;
 
+    // it should emit SimpleActionsCreated event with correct parameters
+    vm.expectEmit();
+    emit ISimpleActionsFactory.SimpleActionsCreated(_getNextContractDeployedAddress(address(simpleActionsFactory)));
+
     address _simpleActionsContract = simpleActionsFactory.createSimpleActions(_actions);
 
     // it should deploy a SimpleActions contract with correct args
-    auxSimpleActions = ISimpleActions(deployCode('SimpleActions', abi.encode(address(simpleActionsFactory), _actions)));
+    vm.prank(address(simpleActionsFactory));
+    auxSimpleActions = ISimpleActions(deployCode('SimpleActions', abi.encode(_actions)));
     assertEq(address(auxSimpleActions).code, _simpleActionsContract.code);
 
     // it should match the parameters sent to the constructor
@@ -45,6 +52,17 @@ contract UnitSimpleActionsFactory is Test {
     assertEq(_savedActions[1].data, _completeCallDataB);
     assertEq(_savedActions[1].value, _simpleActionsB.value);
 
+    // it should save the entire array of actions
+    ISimpleActions.SimpleAction[] memory _savedSimpleActions = ISimpleActions(_simpleActionsContract).simpleActions();
+    assertEq(_savedSimpleActions.length, 2);
+    assertEq(_savedSimpleActions[0].target, _simpleActionsA.target);
+    assertEq(_savedSimpleActions[0].signature, _simpleActionsA.signature);
+    assertEq(_savedSimpleActions[0].data, _simpleActionsA.data);
+    assertEq(_savedSimpleActions[0].value, _simpleActionsA.value);
+    assertEq(_savedSimpleActions[1].target, _simpleActionsB.target);
+    assertEq(_savedSimpleActions[1].signature, _simpleActionsB.signature);
+    assertEq(_savedSimpleActions[1].data, _simpleActionsB.data);
+
     // it should store the contract as a factory children
     assertTrue(simpleActionsFactory.isChild(_simpleActionsContract));
 
@@ -52,16 +70,22 @@ contract UnitSimpleActionsFactory is Test {
     assertEq(IActionsBuilder(_simpleActionsContract).PARENT(), address(simpleActionsFactory));
   }
 
-  function test_CreateSimpleActionWhenCreatingASimpleActionsContractWithASingleSimpleAction(
+  function test_CreateSimpleAction_WhenCreatingASimpleActionsContractWithASingleSimpleAction(
     ISimpleActions.SimpleAction memory _simpleActions
   ) external {
     ISimpleActions.SimpleAction[] memory _actions = new ISimpleActions.SimpleAction[](1);
     _actions[0] = _simpleActions;
+
+    // it should emit SimpleActionsCreated event with correct parameters
+    vm.expectEmit();
+    emit ISimpleActionsFactory.SimpleActionsCreated(_getNextContractDeployedAddress(address(simpleActionsFactory)));
+
     // it should deploy a SimpleActions contract with that single simple action args
     address _simpleActionsContract = simpleActionsFactory.createSimpleAction(_simpleActions);
 
     // it should deploy a SimpleActions contract with a single simple action args
-    auxSimpleActions = ISimpleActions(deployCode('SimpleActions', abi.encode(address(simpleActionsFactory), _actions)));
+    vm.prank(address(simpleActionsFactory));
+    auxSimpleActions = ISimpleActions(deployCode('SimpleActions', abi.encode(_actions)));
     assertEq(address(auxSimpleActions).code, _simpleActionsContract.code);
 
     // it should match the parameters sent to the constructor
@@ -72,6 +96,14 @@ contract UnitSimpleActionsFactory is Test {
     assertEq(_savedActions[0].target, _simpleActions.target);
     assertEq(_savedActions[0].data, _completeCallData);
     assertEq(_savedActions[0].value, _simpleActions.value);
+
+    // it should save the entire array of actions
+    ISimpleActions.SimpleAction[] memory _savedSimpleActions = ISimpleActions(_simpleActionsContract).simpleActions();
+    assertEq(_savedSimpleActions.length, 1);
+    assertEq(_savedSimpleActions[0].target, _simpleActions.target);
+    assertEq(_savedSimpleActions[0].signature, _simpleActions.signature);
+    assertEq(_savedSimpleActions[0].data, _simpleActions.data);
+    assertEq(_savedSimpleActions[0].value, _simpleActions.value);
 
     // it should set the parent address in the child contract
     assertEq(IActionsBuilder(_simpleActionsContract).PARENT(), address(simpleActionsFactory));

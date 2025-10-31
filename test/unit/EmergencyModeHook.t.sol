@@ -16,19 +16,19 @@ contract UnitEmergencyModeHook is Test {
     emergencyModeHook = new EmergencyModeHookForTest(emergencyTrigger, emergencyCaller, safe);
   }
 
-  function test_ConstructorWhenEmergencyTriggerIsZeroAddress() external {
+  function test_Constructor_WhenEmergencyTriggerIsZeroAddress() external {
     // It reverts with ZeroAddress
     vm.expectRevert(abi.encodeWithSelector(IEmergencyModeHook.ZeroAddress.selector));
     new EmergencyModeHookForTest(address(0), emergencyCaller, safe);
   }
 
-  function test_ConstructorWhenEmergencyCallerIsZeroAddress() external {
+  function test_Constructor_WhenEmergencyCallerIsZeroAddress() external {
     // It reverts with ZeroAddress
     vm.expectRevert(abi.encodeWithSelector(IEmergencyModeHook.ZeroAddress.selector));
     new EmergencyModeHookForTest(emergencyTrigger, address(0), safe);
   }
 
-  function test_ConstructorWhenEmergencyTriggerAndEmergencyCallerAreNotZeroAddress(
+  function test_Constructor_WhenEmergencyTriggerAndEmergencyCallerAreNotZeroAddress(
     address _emergencyTrigger,
     address _emergencyCaller
   ) external {
@@ -43,7 +43,7 @@ contract UnitEmergencyModeHook is Test {
     assertEq(emergencyModeHook.emergencyCaller(), _emergencyCaller);
   }
 
-  function test_SetEmergencyModeWhenSenderIsNotEmergencyTrigger(address _sender) external {
+  function test_SetEmergencyMode_WhenSenderIsNotEmergencyTrigger(address _sender) external {
     vm.assume(_sender != emergencyModeHook.emergencyTrigger());
 
     // It reverts with Unauthorized
@@ -54,23 +54,33 @@ contract UnitEmergencyModeHook is Test {
     emergencyModeHook.setEmergencyMode();
   }
 
-  function test_SetEmergencyModeWhenSenderIsEmergencyTrigger() external {
+  function test_SetEmergencyMode_WhenSenderIsEmergencyTrigger() external {
     vm.prank(emergencyModeHook.emergencyTrigger());
+
+    // It emits EmergencyModeSet event
+    vm.expectEmit();
+    emit IEmergencyModeHook.EmergencyModeSet();
+
     emergencyModeHook.setEmergencyMode();
 
     // It sets emergencyMode to true
     assertTrue(emergencyModeHook.emergencyMode());
   }
 
-  function test_UnsetEmergencyModeWhenSenderIsSafe() external {
+  function test_UnsetEmergencyMode_WhenSenderIsSafe() external {
     vm.prank(safe);
+
+    // It emits EmergencyModeUnset event
+    vm.expectEmit();
+    emit IEmergencyModeHook.EmergencyModeUnset();
+
     emergencyModeHook.unsetEmergencyMode();
 
     // It sets emergencyMode to false
     assertFalse(emergencyModeHook.emergencyMode());
   }
 
-  function test_UnsetEmergencyModeWhenSenderIsNotSafe(address _sender) external {
+  function test_UnsetEmergencyMode_WhenSenderIsNotSafe(address _sender) external {
     vm.assume(_sender != safe);
 
     // It reverts
@@ -85,24 +95,30 @@ contract UnitEmergencyModeHook is Test {
     vm.stopPrank();
   }
 
-  function test_SetEmergencyCallerWhenEmergencyCallerIsZeroAddress() external whenSenderIsSafe {
+  function test_SetEmergencyCaller_WhenEmergencyCallerIsZeroAddress() external whenSenderIsSafe {
     // It reverts with ZeroAddress
     vm.expectRevert(abi.encodeWithSelector(IEmergencyModeHook.ZeroAddress.selector));
     emergencyModeHook.setEmergencyCaller(address(0));
   }
 
-  function test_SetEmergencyCallerWhenEmergencyCallerIsNotZeroAddress(address _emergencyCaller)
+  function test_SetEmergencyCaller_WhenEmergencyCallerIsNotZeroAddress(address _emergencyCaller)
     external
     whenSenderIsSafe
   {
     vm.assume(_emergencyCaller != address(0));
+
+    address _oldCaller = emergencyModeHook.emergencyCaller();
+
+    // It emits EmergencyCallerSet event with old and new caller
+    vm.expectEmit();
+    emit IEmergencyModeHook.EmergencyCallerSet(_oldCaller, _emergencyCaller);
 
     // It sets emergencyCaller to the given value
     emergencyModeHook.setEmergencyCaller(_emergencyCaller);
     assertEq(emergencyModeHook.emergencyCaller(), _emergencyCaller);
   }
 
-  function test_SetEmergencyCallerWhenSenderIsNotSafe(address _sender) external {
+  function test_SetEmergencyCaller_WhenSenderIsNotSafe(address _sender) external {
     vm.assume(_sender != safe);
 
     // It reverts
@@ -111,24 +127,30 @@ contract UnitEmergencyModeHook is Test {
     emergencyModeHook.setEmergencyCaller(address(0));
   }
 
-  function test_SetEmergencyTriggerWhenEmergencyTriggerIsZeroAddress() external whenSenderIsSafe {
+  function test_SetEmergencyTrigger_WhenEmergencyTriggerIsZeroAddress() external whenSenderIsSafe {
     // It reverts with ZeroAddress
     vm.expectRevert(abi.encodeWithSelector(IEmergencyModeHook.ZeroAddress.selector));
     emergencyModeHook.setEmergencyTrigger(address(0));
   }
 
-  function test_SetEmergencyTriggerWhenEmergencyTriggerIsNotZeroAddress(address _emergencyTrigger)
+  function test_SetEmergencyTrigger_WhenEmergencyTriggerIsNotZeroAddress(address _emergencyTrigger)
     external
     whenSenderIsSafe
   {
     vm.assume(_emergencyTrigger != address(0));
+
+    address _oldTrigger = emergencyModeHook.emergencyTrigger();
+
+    // It emits EmergencyTriggerSet event with old and new trigger
+    vm.expectEmit();
+    emit IEmergencyModeHook.EmergencyTriggerSet(_oldTrigger, _emergencyTrigger);
 
     // It sets emergencyTrigger to the given value
     emergencyModeHook.setEmergencyTrigger(_emergencyTrigger);
     assertEq(emergencyModeHook.emergencyTrigger(), _emergencyTrigger);
   }
 
-  function test_SetEmergencyTriggerWhenSenderIsNotSafe(address _sender) external {
+  function test_SetEmergencyTrigger_WhenSenderIsNotSafe(address _sender) external {
     vm.assume(_sender != safe);
 
     // It reverts
@@ -143,7 +165,7 @@ contract UnitEmergencyModeHook is Test {
     _;
   }
 
-  function test__onBeforeExecutionWhenSenderIsNotEmergencyCaller(address _sender) external whenEmergencyModeIsTrue {
+  function test__onBeforeExecution_WhenSenderIsNotEmergencyCaller(address _sender) external whenEmergencyModeIsTrue {
     vm.assume(_sender != emergencyModeHook.emergencyCaller());
 
     // It reverts with Unauthorized
@@ -154,13 +176,13 @@ contract UnitEmergencyModeHook is Test {
     emergencyModeHook.forTest_onBeforeExecution();
   }
 
-  function test__onBeforeExecutionWhenSenderIsEmergencyCaller() external whenEmergencyModeIsTrue {
+  function test__onBeforeExecution_WhenSenderIsEmergencyCaller() external whenEmergencyModeIsTrue {
     // It does not revert
     vm.prank(emergencyModeHook.emergencyCaller());
     emergencyModeHook.forTest_onBeforeExecution();
   }
 
-  function test__onBeforeExecutionWhenEmergencyModeIsFalse() external {
+  function test__onBeforeExecution_WhenEmergencyModeIsFalse() external {
     // It sets emergencyMode to false
     vm.prank(safe);
     emergencyModeHook.unsetEmergencyMode();

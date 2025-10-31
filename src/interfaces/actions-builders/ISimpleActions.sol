@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
+import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
+
 /**
  * @title ISimpleActions
  * @notice Interface for the SimpleActions contract
  */
-interface ISimpleActions {
+interface ISimpleActions is IActionsBuilder {
   // ~~~ STRUCTS ~~~
 
   /**
@@ -32,4 +34,12 @@ interface ISimpleActions {
    * @param _value The value of the action
    */
   event SimpleActionAdded(address indexed _target, string indexed _signature, bytes _data, uint256 _value);
+
+  // ~~~ VIEW METHODS ~~~
+
+  /**
+   * @notice Gets the array of simple actions
+   * @return _simpleActions The array of simple actions
+   */
+  function simpleActions() external view returns (SimpleAction[] memory _simpleActions);
 }

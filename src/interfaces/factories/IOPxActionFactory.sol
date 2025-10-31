@@ -1,11 +1,22 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
+import {IFactory} from 'interfaces/factories/IFactory.sol';
+
 /**
  * @title IOPxActionFactory
  * @notice Interface for the OPxActionFactory contract
  */
-interface IOPxActionFactory {
+interface IOPxActionFactory is IFactory {
+  // ~~~ EVENTS ~~~
+
+  /**
+   * @notice Emitted when a new OPxAction contract is created
+   * @param _opxAction The address of the created OPxAction contract
+   * @param _opx The OPX contract address
+   */
+  event OPxActionCreated(address indexed _opxAction, address indexed _opx);
+
   // ~~~ FACTORY METHODS ~~~
 
   /**

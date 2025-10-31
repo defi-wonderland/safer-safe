@@ -5,8 +5,10 @@ import {AllowanceClaimorFactory} from 'contracts/factories/AllowanceClaimorFacto
 import {Test} from 'forge-std/Test.sol';
 import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 import {IAllowanceClaimor} from 'interfaces/actions-builders/IAllowanceClaimor.sol';
+import {IAllowanceClaimorFactory} from 'interfaces/factories/IAllowanceClaimorFactory.sol';
+import {Utils} from 'test/unit/utils/Utils.sol';
 
-contract UnitAllowanceClaimorFactorycreateAllowanceClaimor is Test {
+contract UnitAllowanceClaimorFactorycreateAllowanceClaimor is Test, Utils {
   AllowanceClaimorFactory public allowanceClaimorFactory;
   IAllowanceClaimor public auxAllowanceClaimor;
 
@@ -15,11 +17,17 @@ contract UnitAllowanceClaimorFactorycreateAllowanceClaimor is Test {
   }
 
   function test_WhenCalled(address _token, address _tokenOwner, address _tokenRecipient) external {
+    // it should emit AllowanceClaimorCreated event with correct parameters
+    vm.expectEmit();
+    emit IAllowanceClaimorFactory.AllowanceClaimorCreated(
+      _getNextContractDeployedAddress(address(allowanceClaimorFactory)), _token, _tokenOwner, _tokenRecipient
+    );
+
     address _allowanceClaimor = allowanceClaimorFactory.createAllowanceClaimor(_token, _tokenOwner, _tokenRecipient);
 
-    auxAllowanceClaimor = IAllowanceClaimor(
-      deployCode('AllowanceClaimor', abi.encode(address(allowanceClaimorFactory), _token, _tokenOwner, _tokenRecipient))
-    );
+    vm.prank(address(allowanceClaimorFactory));
+    auxAllowanceClaimor =
+      IAllowanceClaimor(deployCode('AllowanceClaimor', abi.encode(_token, _tokenOwner, _tokenRecipient)));
 
     // it should deploy a AllowanceClaimor contract
     assertEq(address(auxAllowanceClaimor).code, _allowanceClaimor.code);

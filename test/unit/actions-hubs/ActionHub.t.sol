@@ -2,9 +2,6 @@
 pragma solidity 0.8.30;
 
 import {Test} from 'forge-std/Test.sol';
-import {IActionHub} from 'interfaces/action-hubs/IActionHub.sol';
-import {CREATE3} from 'solady/utils/CREATE3.sol';
-import {CappedTokenTransfers} from 'src/contracts/actions-builders/CappedTokenTransfers.sol';
 import {ActionHubForTest} from 'test/unit/mocks/ActionHubForTest.sol';
 
 contract UnitActionHub is Test {
@@ -15,46 +12,28 @@ contract UnitActionHub is Test {
     actionHub = new ActionHubForTest(parent);
   }
 
-  function test_ConstructorWhenCalledByAChildContract() external view {
+  function test_Constructor_WhenCalledByAChildContract() external view {
     // it sets the parent
     assertEq(actionHub.PARENT(), parent);
   }
 
-  function test_IsHubChildWhenTheActionsBuilderIsAChild(address _actionsBuilder) external {
+  function test_IsHubChild_WhenTheActionsBuilderIsAChild(address _actionsBuilder) external {
     actionHub.forTest_set__actionsBuilders(_actionsBuilder, true);
 
     // it returns true
     assertTrue(actionHub.isHubChild(_actionsBuilder));
   }
 
-  function test_IsHubChildWhenTheActionsBuilderIsNotAChild(address _actionsBuilder) external {
+  function test_IsHubChild_WhenTheActionsBuilderIsNotAChild(address _actionsBuilder) external {
     actionHub.forTest_set__actionsBuilders(_actionsBuilder, false);
 
     // it returns false
     assertFalse(actionHub.isHubChild(_actionsBuilder));
   }
 
-  function test__createNewActionsBuilderWhenCalled(
-    bytes32 _salt,
-    address _token,
-    uint256 _amount,
-    address _recipient
-  ) external {
-    bytes memory _initCode = abi.encodePacked(
-      type(CappedTokenTransfers).creationCode,
-      abi.encode(address(actionHub), _token, _amount, _recipient, address(this))
-    );
+  function test__saveNewActionsBuilder_WhenCalled(address _actionsBuilder) external {
+    actionHub.forTest_saveNewActionsBuilder(_actionsBuilder);
 
-    address _expectedActionsBuilder = CREATE3.predictDeterministicAddress(_salt, address(actionHub));
-
-    // it emits a NewActionsBuilderCreated event
-    vm.expectEmit();
-    emit IActionHub.NewActionsBuilderCreated(_expectedActionsBuilder, _initCode, _salt);
-
-    address _actionsBuilder = actionHub.forTest_createNewActionsBuilder(_initCode, _salt);
-
-    // it creates a new actions builder
-    assertEq(_actionsBuilder, _expectedActionsBuilder);
     // it marks the actions builder as a child
     assertTrue(actionHub.isHubChild(_actionsBuilder));
   }

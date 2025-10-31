@@ -2,20 +2,37 @@
 pragma solidity 0.8.30;
 
 import {ISafeManageable} from 'interfaces/ISafeManageable.sol';
+import {IActionHub} from 'interfaces/action-hubs/IActionHub.sol';
 
 /**
  * @title ICappedTokenTransfersHub
  * @notice Interface for the CappedTokenTransfersHub contract
  */
-interface ICappedTokenTransfersHub is ISafeManageable {
+interface ICappedTokenTransfersHub is IActionHub, ISafeManageable {
+  // ~~~ EVENTS ~~~
+
+  /**
+   * @notice Emitted when a new CappedTokenTransfers actions builder is created
+   * @param _actionsBuilder The address of the new CappedTokenTransfers actions builder
+   * @param _token The token that is capped
+   * @param _amount The maximum amount of tokens that can be transferred in the current epoch
+   */
+  event CappedTokenTransfersCreated(address _actionsBuilder, address _token, uint256 _amount);
+
+  /**
+   * @notice Emitted when the state is updated for a token with a certain amount
+   * @param _token The token that was updated
+   * @param _amountSpent The amount of tokens that were spent
+   * @param _lastEpoch The last epoch after the update
+   */
+  event StateUpdated(address indexed _token, uint256 _amountSpent, uint256 _lastEpoch);
+
   // ~~~ ERRORS ~~~
 
   /**
    * @notice Thrown when the cap is exceeded
    */
   error CapExceeded();
-
-  // ~~~ FUNCTIONS ~~~
 
   /**
    * @notice Thrown when creating a hub actions builder for a token that is not registered in the hub
@@ -32,6 +49,13 @@ interface ICappedTokenTransfersHub is ISafeManageable {
    * @param _token The token that is duplicated
    */
   error TokenAlreadyRegisteredInHub(address _token);
+
+  /**
+   * @notice Thrown when the tokens and caps length mismatch
+   */
+  error TokensAndCapsLengthMismatch();
+
+  // ~~~ FUNCTIONS ~~~
 
   /**
    * @notice Checks if the spending cap is exceeded and resets the spending if we're in a new epoch.
@@ -62,16 +86,10 @@ interface ICappedTokenTransfersHub is ISafeManageable {
   function EPOCH_LENGTH() external view returns (uint256 _epochLength);
 
   /**
-   * @notice Gets the starting timestamp
-   * @return _startingTimestamp The starting timestamp
+   * @notice Gets the last epoch
+   * @return _lastEpoch The last epoch
    */
-  function STARTING_TIMESTAMP() external view returns (uint256 _startingTimestamp);
-
-  /**
-   * @notice Gets the current epoch
-   * @return _currentEpoch The current epoch
-   */
-  function currentEpoch() external view returns (uint256 _currentEpoch);
+  function lastEpoch() external view returns (uint256 _lastEpoch);
 
   /**
    * @notice Gets the total amount of tokens spent

@@ -5,6 +5,7 @@ import {ActionHubChild} from 'contracts/action-hubs/ActionHubChild.sol';
 import {ActionsBuilder} from 'contracts/actions-builders/ActionsBuilder.sol';
 import {IERC20} from 'forge-std/interfaces/IERC20.sol';
 import {ICappedTokenTransfersHub} from 'interfaces/action-hubs/ICappedTokenTransfersHub.sol';
+import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 import {ICappedTokenTransfers} from 'interfaces/actions-builders/ICappedTokenTransfers.sol';
 
 /**
@@ -27,19 +28,15 @@ contract CappedTokenTransfers is ICappedTokenTransfers, ActionHubChild, ActionsB
 
   /**
    * @notice Constructor that sets up the token, amount and recipient
-   * @param _parent The parent that deployed the actions builder. This is the factory address.
    * @param _token The token contract address
    * @param _amount The amount of tokens to transfer
    * @param _recipient The recipient of the tokens
-   * @param _actionHub The parent hub of the action. In this case, it's the CappedTokenTransfersHub contract that created this action Builder. It is the same as _parent when the action builder is correctly created by a hub.
    */
   constructor(
-    address _parent,
     address _token,
     uint256 _amount,
-    address _recipient,
-    address _actionHub
-  ) ActionsBuilder(_parent) ActionHubChild(_actionHub) {
+    address _recipient
+  ) ActionsBuilder(msg.sender) ActionHubChild(msg.sender) {
     TOKEN = _token;
     AMOUNT = _amount;
     RECIPIENT = _recipient;
@@ -48,7 +45,7 @@ contract CappedTokenTransfers is ICappedTokenTransfers, ActionHubChild, ActionsB
   // ~~~ ACTIONS METHODS ~~~
 
   /// @inheritdoc ActionsBuilder
-  function getActions() external view override returns (Action[] memory _actions) {
+  function getActions() external view override(ActionsBuilder, IActionsBuilder) returns (Action[] memory _actions) {
     _actions = new Action[](2);
 
     // First action: update state

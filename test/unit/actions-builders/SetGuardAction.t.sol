@@ -21,12 +21,12 @@ contract UnitSetGuardAction is Test {
     vm.expectCall(_target, _call);
   }
 
-  function test_ConstructorWhenCalled() external view {
+  function test_Constructor_WhenCalled() external view {
     // it sets the parent to address(0)
     assertEq(setGuardAction.PARENT(), address(0));
   }
 
-  function test_GetActionsWhenCalled() external {
+  function test_GetActions_WhenCalled() external {
     // Mock the canon guard to return the safe address
     _mockAndExpect(mockCanonGuard, abi.encodeCall(ISafeManageable.SAFE, ()), abi.encode(mockSafe));
 

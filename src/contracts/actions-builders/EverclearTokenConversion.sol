@@ -4,6 +4,7 @@ pragma solidity 0.8.30;
 import {ActionsBuilder} from 'contracts/actions-builders/ActionsBuilder.sol';
 import {IERC20} from 'forge-std/interfaces/IERC20.sol';
 import {ICanonGuard} from 'interfaces/ICanonGuard.sol';
+import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 import {IEverclearTokenConversion} from 'interfaces/actions-builders/IEverclearTokenConversion.sol';
 import {IxERC20Lockbox} from 'interfaces/external/IxERC20Lockbox.sol';
 
@@ -27,11 +28,10 @@ contract EverclearTokenConversion is IEverclearTokenConversion, ActionsBuilder {
 
   /**
    * @notice Initializes the builder with the xERC20 lockbox, the NEXT token, and the SAFE whose balance will be converted.
-   * @param _parent The parent that deployed the actions builder
    * @param _lockbox The xERC20 lockbox that accepts NEXT and mints CLEAR
    * @param _next The NEXT ERC20 token to deposit into the lockbox
    */
-  constructor(address _parent, address _lockbox, address _next) ActionsBuilder(_parent) {
+  constructor(address _lockbox, address _next) ActionsBuilder(msg.sender) {
     CLEAR_LOCKBOX = IxERC20Lockbox(_lockbox);
     NEXT = IERC20(_next);
   }
@@ -39,12 +39,13 @@ contract EverclearTokenConversion is IEverclearTokenConversion, ActionsBuilder {
   // ~~~ ACTIONS METHODS ~~~
 
   /// @inheritdoc ActionsBuilder
-  function getActions() external view override returns (Action[] memory _actions) {
+  function getActions() external view override(ActionsBuilder, IActionsBuilder) returns (Action[] memory _actions) {
     uint256 _amount = NEXT.balanceOf(address(ICanonGuard(msg.sender).SAFE()));
 
     _actions = new Action[](2);
-    _actions[0] =
-      Action({target: address(NEXT), data: abi.encodeCall(IERC20.approve, (address(CLEAR_LOCKBOX), _amount)), value: 0});
+    _actions[0] = Action({
+      target: address(NEXT), data: abi.encodeCall(IERC20.approve, (address(CLEAR_LOCKBOX), _amount)), value: 0
+    });
     _actions[1] =
       Action({target: address(CLEAR_LOCKBOX), data: abi.encodeCall(IxERC20Lockbox.deposit, (_amount)), value: 0});
   }

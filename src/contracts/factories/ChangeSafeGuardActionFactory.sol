@@ -14,8 +14,10 @@ contract ChangeSafeGuardActionFactory is IChangeSafeGuardActionFactory, Factory 
 
   /// @inheritdoc IChangeSafeGuardActionFactory
   function createChangeSafeGuardAction(address _safeGuard) external returns (address _changeSafeGuardAction) {
-    _changeSafeGuardAction = address(new ChangeSafeGuardAction(address(this), _safeGuard));
+    _changeSafeGuardAction = address(new ChangeSafeGuardAction(_safeGuard));
 
     _children[_changeSafeGuardAction] = true;
+
+    emit ChangeSafeGuardActionCreated(_changeSafeGuardAction, _safeGuard);
   }
 }

@@ -26,7 +26,7 @@ contract UnitSafeManageable is Test {
     assumeNotPrecompile(_address);
   }
 
-  function test_ConstructorWhenPassingValidParameters(address _safe) external {
+  function test_Constructor_WhenPassingValidParameters(address _safe) external {
     _assumeFuzzable(_safe);
     SafeManageableForTest newSafeManageable = new SafeManageableForTest(_safe);
     assertEq(address(ISafeManageable(address(newSafeManageable)).SAFE()), _safe);
@@ -37,12 +37,12 @@ contract UnitSafeManageable is Test {
     _;
   }
 
-  function test_IsSafeWhenCallerIsSafe() external whenCallerIsSafe {
+  function test_IsSafe_WhenCallerIsSafe() external whenCallerIsSafe {
     vm.prank(SAFE);
     safeManageable.testIsSafeModifier();
   }
 
-  function test_IsSafeWhenCallerIsNotSafe(address _caller) external {
+  function test_IsSafe_WhenCallerIsNotSafe(address _caller) external {
     vm.assume(_caller != SAFE);
     vm.expectRevert(ISafeManageable.NotSafe.selector);
     vm.prank(_caller);
@@ -54,12 +54,12 @@ contract UnitSafeManageable is Test {
     _;
   }
 
-  function test_IsSafeOwnerWhenCallerIsSafeOwner() external whenCallerIsSafeOwner {
+  function test_IsSafeOwner_WhenCallerIsSafeOwner() external whenCallerIsSafeOwner {
     vm.prank(SAFE);
     safeManageable.testIsSafeOwnerModifier();
   }
 
-  function test_IsSafeOwnerWhenCallerIsNotSafeOwner(address _caller) external {
+  function test_IsSafeOwner_WhenCallerIsNotSafeOwner(address _caller) external {
     vm.assume(_caller != SAFE);
     _mockAndExpect(SAFE, abi.encodeWithSelector(IOwnerManager.isOwner.selector), abi.encode(false));
     vm.expectRevert(ISafeManageable.NotSafeOwner.selector);

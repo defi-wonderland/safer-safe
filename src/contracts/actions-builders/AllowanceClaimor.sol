@@ -3,8 +3,8 @@ pragma solidity 0.8.30;
 
 import {ActionsBuilder} from 'contracts/actions-builders/ActionsBuilder.sol';
 import {IERC20} from 'forge-std/interfaces/IERC20.sol';
-
 import {ICanonGuard} from 'interfaces/ICanonGuard.sol';
+import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 import {IAllowanceClaimor} from 'interfaces/actions-builders/IAllowanceClaimor.sol';
 
 /**
@@ -28,12 +28,11 @@ contract AllowanceClaimor is IAllowanceClaimor, ActionsBuilder {
 
   /**
    * @notice Constructor that sets up the Safe, token, token owner and token recipient
-   * @param _parent The parent that deployed the actions builder
    * @param _token The token contract address to be transferred
    * @param _tokenOwner The token owner address
    * @param _tokenRecipient The token recipient address
    */
-  constructor(address _parent, address _token, address _tokenOwner, address _tokenRecipient) ActionsBuilder(_parent) {
+  constructor(address _token, address _tokenOwner, address _tokenRecipient) ActionsBuilder(msg.sender) {
     TOKEN = IERC20(_token);
     TOKEN_OWNER = _tokenOwner;
     TOKEN_RECIPIENT = _tokenRecipient;
@@ -42,7 +41,7 @@ contract AllowanceClaimor is IAllowanceClaimor, ActionsBuilder {
   // ~~~ ACTIONS METHODS ~~~
 
   /// @inheritdoc ActionsBuilder
-  function getActions() external view override returns (Action[] memory _actions) {
+  function getActions() external view override(ActionsBuilder, IActionsBuilder) returns (Action[] memory _actions) {
     uint256 _amountToClaim = TOKEN.allowance(TOKEN_OWNER, address(ICanonGuard(msg.sender).SAFE()));
     uint256 _balance = TOKEN.balanceOf(TOKEN_OWNER);
     if (_amountToClaim > _balance) {

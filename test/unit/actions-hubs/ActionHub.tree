@@ -8,8 +8,6 @@ UnitActionHub::isHubChild
 └── when the actions builder is not a child
     └── it returns false
 
-UnitActionHub::_createNewActionsBuilder
+UnitActionHub::_saveNewActionsBuilder
 └── When called
-    ├── it creates a new actions builder
-    ├── it marks the actions builder as a child
-    └── it emits a NewActionsBuilderCreated event
+    └── it marks the actions builder as a child

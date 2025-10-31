@@ -15,7 +15,7 @@ contract IntegrationEverclearConversion is IntegrationEthereumBase {
     super.setUp();
 
     // Deploy the contract
-    _actionsBuilder = address(new EverclearTokenConversion(address(0), _clearLockbox, _next));
+    _actionsBuilder = address(new EverclearTokenConversion(_clearLockbox, _next));
   }
 
   function test_ExecuteTransaction() public {

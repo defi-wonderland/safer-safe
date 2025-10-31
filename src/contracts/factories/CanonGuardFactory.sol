@@ -3,6 +3,7 @@ pragma solidity 0.8.30;
 
 import {CanonGuard} from 'contracts/CanonGuard.sol';
 import {Factory} from 'contracts/factories/Factory.sol';
+import {ICreateX} from 'interfaces/external/ICreateX.sol';
 import {ICanonGuardFactory} from 'interfaces/factories/ICanonGuardFactory.sol';
 
 /**
@@ -13,26 +14,15 @@ contract CanonGuardFactory is ICanonGuardFactory, Factory {
   // ~~~ STORAGE ~~~
 
   /// @inheritdoc ICanonGuardFactory
-  uint256 public constant MIN_EXPIRY_TIME = 1 hours;
-
-  /// @inheritdoc ICanonGuardFactory
-  address public immutable MULTI_SEND_CALL_ONLY;
-
-  // ~~~ CONSTRUCTOR ~~~
-
-  /**
-   * @notice Constructor that sets up the MultiSendCallOnly contract
-   * @param _multiSendCallOnly The MultiSendCallOnly contract address
-   */
-  constructor(address _multiSendCallOnly) {
-    MULTI_SEND_CALL_ONLY = _multiSendCallOnly;
-  }
+  ICreateX public constant CREATE_X = ICreateX(0xba5Ed099633D3B313e4D5F7bdc1305d3c28ba5Ed);
 
   // ~~~ FACTORY METHODS ~~~
 
   /// @inheritdoc ICanonGuardFactory
   function createCanonGuard(
     address _safe,
+    uint256 _nonce,
+    address _multiSendCallOnly,
     uint256 _shortTxExecutionDelay,
     uint256 _longTxExecutionDelay,
     uint256 _txExpiryDelay,
@@ -40,23 +30,30 @@ contract CanonGuardFactory is ICanonGuardFactory, Factory {
     address _emergencyTrigger,
     address _emergencyCaller
   ) external returns (address _canonGuard) {
-    if (_txExpiryDelay < MIN_EXPIRY_TIME) revert TxExpiryDelayCannotBeLessThanMin();
-    if (_maxApprovalDuration < MIN_EXPIRY_TIME) revert MaxApprovalDurationCannotBeLessThanMin();
+    if (_safe != msg.sender) revert DeployerMustBeTheSafe();
+    if (_multiSendCallOnly == address(0)) revert MultiSendCallOnlyCannotBeZero();
 
-    _canonGuard = address(
-      new CanonGuard(
-        address(this),
-        _safe,
-        MULTI_SEND_CALL_ONLY,
-        _shortTxExecutionDelay,
-        _longTxExecutionDelay,
-        _txExpiryDelay,
-        _maxApprovalDuration,
-        _emergencyTrigger,
-        _emergencyCaller
+    // Deploying using hash of the SAFE address as salt
+    _canonGuard = CREATE_X.deployCreate3(
+      keccak256(abi.encode(_safe, _nonce)),
+      abi.encodePacked(
+        type(CanonGuard).creationCode,
+        abi.encode(
+          address(this),
+          _safe,
+          _multiSendCallOnly,
+          _shortTxExecutionDelay,
+          _longTxExecutionDelay,
+          _txExpiryDelay,
+          _maxApprovalDuration,
+          _emergencyTrigger,
+          _emergencyCaller
+        )
       )
     );
 
     _children[_canonGuard] = true;
+
+    emit CanonGuardCreated(_canonGuard, _safe, _emergencyTrigger, _emergencyCaller);
   }
 }

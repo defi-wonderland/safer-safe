@@ -2,12 +2,16 @@ UnitSimpleTransfersFactory::createSimpleTransfers
 └── when creating a SimpleTransfers contract
     ├── it should deploy a SimpleTransfers contract with correct args
     ├── it should match the parameters sent to the constructor
+    ├── it should save the entire array of transfer actions
     ├── it should set the parent address in the child contract
-    └── it should store the contract as a factory children
+    ├── it should store the contract as a factory children
+    └── it should emit SimpleTransfersCreated event with correct parameters
 
 UnitSimpleTransfersFactory::createSimpleTransfer
 └── when creating a SimpleTransfers contract with a single transfer action
     ├── it should deploy a SimpleTransfers contract with a single transfer action
     ├── it should match the parameters sent to the constructor
+    ├── it should save the entire array of transfer actions
     ├── it should set the parent address in the child contract
-    └── it should store the contract as a factory children
+    ├── it should store the contract as a factory children
+    └── it should emit SimpleTransfersCreated event with correct parameters

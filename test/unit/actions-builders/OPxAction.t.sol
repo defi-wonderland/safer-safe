@@ -14,15 +14,15 @@ contract UnitOPxAction is Test {
   address public opx = makeAddr('opx');
 
   function setUp() external {
-    opxAction = new OPxAction(address(0), opx);
+    opxAction = new OPxAction(opx);
   }
 
-  function test_ConstructorWhenCalled() external view {
+  function test_Constructor_WhenCalled() external view {
     // it sets the OPX address
     assertEq(opxAction.OPX(), opx);
   }
 
-  function test_GetActionsWhenCalled(address _safe) external {
+  function test_GetActions_WhenCalled(address _safe) external {
     _mockAndExpect(address(this), abi.encodeWithSelector(ISafeManageable.SAFE.selector), abi.encode(_safe));
     _mockAndExpect(opx, abi.encodeWithSelector(IERC20.balanceOf.selector, _safe), abi.encode(BALANCE));
 

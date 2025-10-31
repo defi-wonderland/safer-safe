@@ -24,8 +24,9 @@ abstract contract EmergencyModeHook is IEmergencyModeHook, SafeManageable {
    * @notice Constructor that sets up the emergency mode hook
    * @param _emergencyTrigger The emergency trigger address
    * @param _emergencyCaller The emergency caller address
+   * @param _safe The safe address
    */
-  constructor(address _emergencyTrigger, address _emergencyCaller) {
+  constructor(address _emergencyTrigger, address _emergencyCaller, address _safe) SafeManageable(_safe) {
     if (_emergencyTrigger == address(0)) revert ZeroAddress();
     if (_emergencyCaller == address(0)) revert ZeroAddress();
 
@@ -39,23 +40,35 @@ abstract contract EmergencyModeHook is IEmergencyModeHook, SafeManageable {
   function setEmergencyMode() external {
     if (msg.sender != emergencyTrigger) revert Unauthorized(msg.sender, emergencyTrigger);
     emergencyMode = true;
+
+    emit EmergencyModeSet();
   }
 
   /// @inheritdoc IEmergencyModeHook
   function unsetEmergencyMode() external isSafe {
     emergencyMode = false;
+
+    emit EmergencyModeUnset();
   }
 
   /// @inheritdoc IEmergencyModeHook
   function setEmergencyCaller(address _emergencyCaller) external isSafe {
     if (_emergencyCaller == address(0)) revert ZeroAddress();
+
+    address _oldCaller = emergencyCaller;
     emergencyCaller = _emergencyCaller;
+
+    emit EmergencyCallerSet(_oldCaller, _emergencyCaller);
   }
 
   /// @inheritdoc IEmergencyModeHook
   function setEmergencyTrigger(address _emergencyTrigger) external isSafe {
     if (_emergencyTrigger == address(0)) revert ZeroAddress();
+
+    address _oldTrigger = emergencyTrigger;
     emergencyTrigger = _emergencyTrigger;
+
+    emit EmergencyTriggerSet(_oldTrigger, _emergencyTrigger);
   }
 
   // ~~~ INTERNAL METHODS ~~~

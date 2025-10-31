@@ -1,11 +1,12 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity 0.8.30;
 
 import {Test} from 'forge-std/Test.sol';
 
 /// @title GhostState
 /// @notice Centralized ghost state tracking for invariant tests
 /// @dev This contract maintains shadow state to track system behavior across handler calls
+// solhint-disable style-guide-casing
 abstract contract GhostState is Test {
   /*//////////////////////////////////////////////////////////////
                             TYPE DEFINITIONS
@@ -42,6 +43,9 @@ abstract contract GhostState is Test {
 
   /// @notice Maps action builder to timestamp when approval was granted
   mapping(address builder => uint256 timestamp) public ghost_approvalTimestamp;
+
+  /// @notice Maps Safe address to its nonce
+  mapping(address safe => mapping(uint256 nonce => bool spent)) public ghost_safeDeploymentNonce;
 
   /*//////////////////////////////////////////////////////////////
                         EMERGENCY MODE TRACKING

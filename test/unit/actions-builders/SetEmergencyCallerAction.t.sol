@@ -11,15 +11,15 @@ contract UnitSetEmergencyCallerAction is Test {
   address public emergencyCaller = makeAddr('emergencyCaller');
 
   function setUp() external {
-    setEmergencyCallerAction = new SetEmergencyCallerAction(address(0), emergencyCaller);
+    setEmergencyCallerAction = new SetEmergencyCallerAction(emergencyCaller);
   }
 
-  function test_ConstructorWhenCalled() external view {
+  function test_Constructor_WhenCalled() external view {
     // it sets the emergency trigger address
     assertEq(setEmergencyCallerAction.EMERGENCY_CALLER(), emergencyCaller);
   }
 
-  function test_GetActionsWhenCalled() external view {
+  function test_GetActions_WhenCalled() external view {
     // it returns an action to set the emergency caller
     IActionsBuilder.Action[] memory actions = setEmergencyCallerAction.getActions();
     assertEq(actions[0].target, address(this));

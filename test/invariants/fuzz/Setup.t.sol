@@ -1,14 +1,13 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity 0.8.30;
 
 import {Test} from 'forge-std/Test.sol';
 
-import {ISafe, Safe} from '@safe-smart-account/Safe.sol';
+import {Safe} from '@safe-smart-account/Safe.sol';
 import {SafeProxyFactory} from '@safe-smart-account/proxies/SafeProxyFactory.sol';
 
 import {HandlersTarget} from './HandlersTarget.t.sol';
 
-import {ActionTarget} from './utils/ActionTarget.sol';
 import {MultiSendCallOnly} from './utils/MultiSendCallOnly.sol';
 import {CanonGuard} from 'contracts/CanonGuard.sol';
 
@@ -20,8 +19,9 @@ import {SimpleActionsFactory} from 'contracts/factories/SimpleActionsFactory.sol
 import {SimpleTransfersFactory} from 'contracts/factories/SimpleTransfersFactory.sol';
 
 import {Constants} from 'script/Constants.sol';
+import {Utils} from 'test/unit/utils/Utils.sol';
 
-contract Setup is Test, Constants {
+contract Setup is Test, Constants, Utils {
   SafeProxyFactory private _safeProxyFactory;
   Safe private _safeSingleton;
   MultiSendCallOnly private _multiSendCallOnly;
@@ -47,6 +47,8 @@ contract Setup is Test, Constants {
     _signers[3] = makeAddr('signer4');
     _signers[4] = makeAddr('signer5');
 
+    vm.etch(address(CREATE_X), _getCreateXDeployedBytecode());
+
     _safeProxyFactory = new SafeProxyFactory();
     _safeSingleton = new Safe();
 
@@ -54,7 +56,7 @@ contract Setup is Test, Constants {
 
     _safe = Safe(payable(_safeProxyFactory.createProxyWithNonce(address(_safeSingleton), bytes(''), 1)));
 
-    _canonGuardFactory = new CanonGuardFactory(address(_multiSendCallOnly));
+    _canonGuardFactory = new CanonGuardFactory();
 
     _safe.setup({
       _owners: _signers,
@@ -67,15 +69,18 @@ contract Setup is Test, Constants {
       paymentReceiver: payable(address(0))
     });
 
+    vm.prank(address(_safe));
     _canonGuard = CanonGuard(
       _canonGuardFactory.createCanonGuard(
         address(_safe),
+        0,
+        address(_multiSendCallOnly),
         SHORT_TX_EXECUTION_DELAY,
         LONG_TX_EXECUTION_DELAY,
         TX_EXPIRY_DELAY,
         MAX_APPROVAL_DURATION,
-        EMERGENCY_TRIGGER,
-        EMERGENCY_CALLER
+        address(1),
+        address(1)
       )
     );
 

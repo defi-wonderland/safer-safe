@@ -21,12 +21,13 @@ import {Enum} from '@safe-smart-account/libraries/Enum.sol';
 import {MultiSendCallOnly} from '@safe-smart-account/libraries/MultiSendCallOnly.sol';
 import {EmergencyModeHook} from 'contracts/EmergencyModeHook.sol';
 import {OnlyCanonGuard} from 'contracts/OnlyCanonGuard.sol';
-import {SafeManageable} from 'contracts/SafeManageable.sol';
+import {IERC20} from 'forge-std/interfaces/IERC20.sol';
 import {ICanonGuard} from 'interfaces/ICanonGuard.sol';
 import {IActionHub} from 'interfaces/action-hubs/IActionHub.sol';
 import {IActionHubChild} from 'interfaces/action-hubs/IActionHubChild.sol';
 import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 import {EnumerableSetLib} from 'solady/utils/EnumerableSetLib.sol';
+import {SafeTransferLib} from 'solady/utils/SafeTransferLib.sol';
 
 /**
  * @title CanonGuard
@@ -34,8 +35,19 @@ import {EnumerableSetLib} from 'solady/utils/EnumerableSetLib.sol';
  */
 contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
   using EnumerableSetLib for EnumerableSetLib.AddressSet;
+  using SafeTransferLib for address;
 
   // ~~~ STORAGE ~~~
+
+  /// @inheritdoc ICanonGuard
+  uint256 public constant MIN_EXPIRY_TIME = 1 hours;
+
+  /// @inheritdoc ICanonGuard
+  uint256 public constant MAX_TX_EXECUTION_DELAY = 6 * 30 days;
+
+  /// @inheritdoc ICanonGuard
+  address public constant ETH_ADDRESS = 0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE;
+
   /// @inheritdoc ICanonGuard
   address public immutable PARENT;
 
@@ -73,7 +85,8 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
    * @notice Constructor that sets up the Safe, MultiSendCallOnly, execution delays and default expiry delay
    * @param _parent The parent that deployed the CanonGuard contract
    * @param _safe The Gnosis Safe contract address
-   * @param _multiSendCallOnly The MultiSendCallOnly contract address
+   * @param _multiSendCallOnly The MultiSendCallOnly contract address. The list of compatible deployments can be found here:
+   *  https://github.com/safe-global/safe-deployments/blob/54bc801cd3513533fc5a8c6994ce461bc733812a/src/assets/v1.4.1/multi_send_call_only.json
    * @param _shortTxExecutionDelay The short transaction execution delay (in seconds)
    * @param _longTxExecutionDelay The long transaction execution delay (in seconds)
    * @param _txExpiryDelay The transaction expiry delay (in seconds after executable)
@@ -91,10 +104,16 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
     uint256 _maxApprovalDuration,
     address _emergencyTrigger,
     address _emergencyCaller
-  ) SafeManageable(_safe) EmergencyModeHook(_emergencyTrigger, _emergencyCaller) {
-    if (_shortTxExecutionDelay > _longTxExecutionDelay) revert ShortDelayCannotBeGreaterThanLongDelay();
+  ) EmergencyModeHook(_emergencyTrigger, _emergencyCaller, _safe) {
+    if (_shortTxExecutionDelay > _longTxExecutionDelay) {
+      revert ShortDelayCannotBeGreaterThanLongDelay();
+    }
+    // NOTE: no need to check short delay > MAX_TX_EXECUTION_DELAY because we checked short delay <= long delay
+    if (_longTxExecutionDelay > MAX_TX_EXECUTION_DELAY) revert LongDelayCannotBeGreaterThanMax();
+    if (_multiSendCallOnly == address(0)) revert ZeroMultiSendCallOnly();
     if (_txExpiryDelay > type(uint128).max) revert TxExpiryDelayCannotBeGreaterThanMax();
-    if (_longTxExecutionDelay > type(uint128).max) revert LongDelayCannotBeGreaterThanMax();
+    if (_txExpiryDelay < MIN_EXPIRY_TIME) revert TxExpiryDelayCannotBeLessThanMin();
+    if (_maxApprovalDuration < MIN_EXPIRY_TIME) revert MaxApprovalDurationCannotBeLessThanMin();
 
     PARENT = _parent;
     MULTI_SEND_CALL_ONLY = _multiSendCallOnly;
@@ -176,15 +195,27 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
 
     bytes memory _multiSendData = _buildMultiSendData(_actions);
     bytes32 _safeTxHash = _getSafeTransactionHash(_multiSendData, SAFE.nonce());
-    address[] memory _signers = _getApprovedHashSigners(_safeTxHash);
-
-    if (_signers.length > 0) revert TransactionWithSignaturesCannotBeCancelled();
 
     // Remove the transaction from the queue and mapping
     delete transactionsInfo[_actionsBuilder];
     __queuedActionBuilders.remove(_actionsBuilder);
 
     emit EnqueuedTransactionCancelled(_actionsBuilder, msg.sender, _safeTxHash);
+  }
+
+  /// @inheritdoc ICanonGuard
+  function collectDust(address _token) external {
+    uint256 _balance;
+
+    if (_token == ETH_ADDRESS) {
+      _balance = address(this).balance;
+      if (_balance != 0) address(SAFE).safeTransferAllETH();
+    } else {
+      _balance = IERC20(_token).balanceOf(address(this));
+      if (_balance != 0) _token.safeTransferAll(address(SAFE));
+    }
+
+    emit DustCollected(_token, _balance);
   }
 
   // ~~~ GETTER METHODS ~~~
@@ -334,7 +365,7 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
 
   /**
    * @notice Internal function to prepare a transaction to be executed
-   * @dev If isSmulation is enabled, the signers array will be set to this contract address.
+   * @dev If isSimulation is enabled, the signers array will be set to this contract address.
    * @param _actionsBuilder The actions builder address of the transaction to prepare
    * @param _safeNonce The Safe nonce to use for the hash calculation. For multiple transactions, the nonce should
    * be incremented by 1 for each transaction.
@@ -451,11 +482,8 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
    * @param _actions The batch of actions to encode
    * @return _multiSendData The encoded MultiSend data
    */
-  function _buildMultiSendData(IActionsBuilder.Action[] memory _actions)
-    internal
-    pure
-    returns (bytes memory _multiSendData)
-  {
+  function _buildMultiSendData(IActionsBuilder
+        .Action[] memory _actions) internal pure returns (bytes memory _multiSendData) {
     // Initialize an empty bytes array to avoid null reference
     _multiSendData = new bytes(0);
 

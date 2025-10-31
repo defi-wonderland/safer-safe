@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
+import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
+
 /**
  * @title ISimpleTransfers
  * @notice Interface for the SimpleTransfers contract
  */
-interface ISimpleTransfers {
+interface ISimpleTransfers is IActionsBuilder {
   // ~~~ STRUCTS ~~~
 
   /**
@@ -29,4 +31,12 @@ interface ISimpleTransfers {
    * @param _amount The amount of the transfer
    */
   event TransferActionAdded(address indexed _token, address indexed _to, uint256 _amount);
+
+  // ~~~ VIEW METHODS ~~~
+
+  /**
+   * @notice Gets the array of transfer actions
+   * @return _transferActions The array of transfer actions
+   */
+  function transferActions() external view returns (TransferAction[] memory _transferActions);
 }

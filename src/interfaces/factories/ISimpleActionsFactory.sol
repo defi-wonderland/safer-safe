@@ -2,12 +2,21 @@
 pragma solidity 0.8.30;
 
 import {ISimpleActions} from 'interfaces/actions-builders/ISimpleActions.sol';
+import {IFactory} from 'interfaces/factories/IFactory.sol';
 
 /**
  * @title ISimpleActionsFactory
  * @notice Interface for the SimpleActionsFactory contract
  */
-interface ISimpleActionsFactory {
+interface ISimpleActionsFactory is IFactory {
+  // ~~~ EVENTS ~~~
+
+  /**
+   * @notice Emitted when a new SimpleActions contract is created
+   * @param _simpleActions The address of the created SimpleActions contract
+   */
+  event SimpleActionsCreated(address indexed _simpleActions);
+
   // ~~~ FACTORY METHODS ~~~
 
   /**
@@ -33,9 +42,8 @@ interface ISimpleActionsFactory {
    * @param _smplActions The array of simple actions
    * @return _simpleActions The SimpleActions contract address
    */
-  function createSimpleActions(ISimpleActions.SimpleAction[] memory _smplActions)
-    external
-    returns (address _simpleActions);
+  function createSimpleActions(ISimpleActions
+        .SimpleAction[] memory _smplActions) external returns (address _simpleActions);
 
   /**
    * @notice Creates a SimpleActions contract with a single simple action
@@ -50,7 +58,7 @@ interface ISimpleActionsFactory {
    * @param _simpleAction The simple action
    * @return _simpleActions The SimpleActions contract address
    */
-  function createSimpleAction(ISimpleActions.SimpleAction memory _simpleAction)
-    external
-    returns (address _simpleActions);
+  function createSimpleAction(
+    ISimpleActions.SimpleAction memory _simpleAction
+  ) external returns (address _simpleActions);
 }

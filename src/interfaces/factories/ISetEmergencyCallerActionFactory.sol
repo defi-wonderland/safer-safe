@@ -1,11 +1,22 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
+import {IFactory} from 'interfaces/factories/IFactory.sol';
+
 /**
  * @title ISetEmergencyCallerActionFactory
  * @notice Interface for the SetEmergencyCallerActionFactory contract
  */
-interface ISetEmergencyCallerActionFactory {
+interface ISetEmergencyCallerActionFactory is IFactory {
+  // ~~~ EVENTS ~~~
+
+  /**
+   * @notice Emitted when a new SetEmergencyCallerAction contract is created
+   * @param _setEmergencyCallerAction The address of the created SetEmergencyCallerAction contract
+   * @param _emergencyCaller The emergency caller address
+   */
+  event SetEmergencyCallerActionCreated(address indexed _setEmergencyCallerAction, address indexed _emergencyCaller);
+
   // ~~~ FACTORY METHODS ~~~
 
   /**
@@ -13,7 +24,5 @@ interface ISetEmergencyCallerActionFactory {
    * @param _emergencyCaller The emergency caller address
    * @return _setEmergencyCallerAction The SetEmergencyCallerAction contract address
    */
-  function createSetEmergencyCallerAction(address _emergencyCaller)
-    external
-    returns (address _setEmergencyCallerAction);
+  function createSetEmergencyCallerAction(address _emergencyCaller) external returns (address _setEmergencyCallerAction);
 }

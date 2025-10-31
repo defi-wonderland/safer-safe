@@ -18,7 +18,7 @@ contract UnitAllowanceClaimor is Test {
     tokenOwner = makeAddr('tokenOwner');
     tokenRecipient = makeAddr('tokenRecipient');
 
-    allowanceClaimor = new AllowanceClaimor(address(0), token, tokenOwner, tokenRecipient);
+    allowanceClaimor = new AllowanceClaimor(token, tokenOwner, tokenRecipient);
   }
 
   function _mockAndExpect(address _target, bytes memory _call, bytes memory _returnData) internal {
@@ -26,8 +26,8 @@ contract UnitAllowanceClaimor is Test {
     vm.expectCall(_target, _call);
   }
 
-  function test_ConstructorWhenCalled(address _token, address _tokenOwner, address _tokenRecipient) external {
-    allowanceClaimor = new AllowanceClaimor(address(0), _token, _tokenOwner, _tokenRecipient);
+  function test_Constructor_WhenCalled(address _token, address _tokenOwner, address _tokenRecipient) external {
+    allowanceClaimor = new AllowanceClaimor(_token, _tokenOwner, _tokenRecipient);
 
     // it should set the correct values
     assertEq(address(allowanceClaimor.TOKEN()), _token);
@@ -39,7 +39,7 @@ contract UnitAllowanceClaimor is Test {
     _;
   }
 
-  function test_GetActionsWhenCalled(address _safe, uint256 _allowance, uint256 _balance) external whenCalled {
+  function test_GetActions_WhenCalled(address _safe, uint256 _allowance, uint256 _balance) external whenCalled {
     // it should call SAFE on the canon guard
     _mockAndExpect(address(this), abi.encodeWithSelector(ISafeManageable.SAFE.selector), abi.encode(_safe));
 
@@ -52,7 +52,7 @@ contract UnitAllowanceClaimor is Test {
     allowanceClaimor.getActions();
   }
 
-  function test_GetActionsWhenAmountToClaimIsGreaterThanBalance(
+  function test_GetActions_WhenAmountToClaimIsGreaterThanBalance(
     address _safe,
     uint256 _allowance,
     uint256 _balance
@@ -75,7 +75,7 @@ contract UnitAllowanceClaimor is Test {
     assertEq(_actions[0].value, 0);
   }
 
-  function test_GetActionsWhenAmountToClaimIsLessThanOrEqualToBalance(
+  function test_GetActions_WhenAmountToClaimIsLessThanOrEqualToBalance(
     address _safe,
     uint256 _allowance,
     uint256 _balance

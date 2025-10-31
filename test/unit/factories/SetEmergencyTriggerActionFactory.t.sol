@@ -3,11 +3,12 @@ pragma solidity 0.8.30;
 
 import {SetEmergencyTriggerActionFactory} from 'contracts/factories/SetEmergencyTriggerActionFactory.sol';
 import {Test} from 'forge-std/Test.sol';
-
 import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 import {ISetEmergencyTriggerAction} from 'interfaces/actions-builders/ISetEmergencyTriggerAction.sol';
+import {ISetEmergencyTriggerActionFactory} from 'interfaces/factories/ISetEmergencyTriggerActionFactory.sol';
+import {Utils} from 'test/unit/utils/Utils.sol';
 
-contract UnitSetEmergencyTriggerActionFactorycreateSetEmergencyTriggerAction is Test {
+contract UnitSetEmergencyTriggerActionFactorycreateSetEmergencyTriggerAction is Test, Utils {
   SetEmergencyTriggerActionFactory public setEmergencyTriggerActionFactory;
   ISetEmergencyTriggerAction public auxSetEmergencyTriggerAction;
 
@@ -16,12 +17,18 @@ contract UnitSetEmergencyTriggerActionFactorycreateSetEmergencyTriggerAction is 
   }
 
   function test_WhenCalled(address _emergencyTrigger) external {
+    // It should emit SetEmergencyTriggerActionCreated event with correct parameters
+    vm.expectEmit();
+    emit ISetEmergencyTriggerActionFactory.SetEmergencyTriggerActionCreated(
+      _getNextContractDeployedAddress(address(setEmergencyTriggerActionFactory)), _emergencyTrigger
+    );
+
     address _setEmergencyTriggerAction =
       setEmergencyTriggerActionFactory.createSetEmergencyTriggerAction(_emergencyTrigger);
 
-    auxSetEmergencyTriggerAction = ISetEmergencyTriggerAction(
-      deployCode('SetEmergencyTriggerAction', abi.encode(address(setEmergencyTriggerActionFactory), _emergencyTrigger))
-    );
+    vm.prank(address(setEmergencyTriggerActionFactory));
+    auxSetEmergencyTriggerAction =
+      ISetEmergencyTriggerAction(deployCode('SetEmergencyTriggerAction', abi.encode(_emergencyTrigger)));
 
     // it should deploy a SetEmergencyTriggerAction contract with correct args
     assertEq(address(auxSetEmergencyTriggerAction).code, _setEmergencyTriggerAction.code);

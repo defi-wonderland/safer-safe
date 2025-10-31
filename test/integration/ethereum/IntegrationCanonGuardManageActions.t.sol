@@ -3,18 +3,17 @@ pragma solidity 0.8.30;
 
 import {IEmergencyModeHook} from 'interfaces/IEmergencyModeHook.sol';
 import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
-import {IApproveAction} from 'interfaces/actions-builders/IApproveAction.sol';
 import {IChangeSafeGuardAction} from 'interfaces/actions-builders/IChangeSafeGuardAction.sol';
-import {IDisapproveAction} from 'interfaces/actions-builders/IDisapproveAction.sol';
+import {IPreApproveAction} from 'interfaces/actions-builders/IPreApproveAction.sol';
 import {ISetEmergencyCallerAction} from 'interfaces/actions-builders/ISetEmergencyCallerAction.sol';
 import {ISetEmergencyTriggerAction} from 'interfaces/actions-builders/ISetEmergencyTriggerAction.sol';
 import {ISimpleActions} from 'interfaces/actions-builders/ISimpleActions.sol';
+import {ICreateX} from 'interfaces/external/ICreateX.sol';
 import {IntegrationEthereumBase} from 'test/integration/ethereum/IntegrationEthereumBase.sol';
 
 contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
-  IApproveAction public approveAction;
-
-  IDisapproveAction public disapproveAction;
+  IPreApproveAction public preApproveAction;
+  IPreApproveAction public disapproveAction;
 
   IChangeSafeGuardAction public changeSafeGuardAction;
   IChangeSafeGuardAction public disableSafeGuardAction;
@@ -46,17 +45,16 @@ contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
     newEmergencyCaller = makeAddr('newEmergencyCaller');
     newEmergencyTrigger = makeAddr('newEmergencyTrigger');
 
-    // Deploy the ApproveAction contract
-    approveAction = IApproveAction(approveActionFactory.createApproveAction(address(actionsBuilder), APPROVAL_DURATION));
+    // Deploy the PreApproveAction contract for both approve and disapprove
+    preApproveAction =
+      IPreApproveAction(preApproveActionFactory.createPreApproveAction(address(actionsBuilder), APPROVAL_DURATION));
+    disapproveAction = IPreApproveAction(preApproveActionFactory.createPreApproveAction(address(actionsBuilder), 0));
 
     // Deploy emergency actions
     setEmergencyCallerAction =
       ISetEmergencyCallerAction(setEmergencyCallerActionFactory.createSetEmergencyCallerAction(newEmergencyCaller));
     setEmergencyTriggerAction =
       ISetEmergencyTriggerAction(setEmergencyTriggerActionFactory.createSetEmergencyTriggerAction(newEmergencyTrigger));
-
-    // Deploy the DisapproveAction contract
-    disapproveAction = IDisapproveAction(disapproveActionFactory.createDisapproveAction(address(actionsBuilder)));
 
     // Deploy the ChangeSafeGuardAction contract
     changeSafeGuardAction =
@@ -181,13 +179,13 @@ contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
   function test_ApproveActionsBuilderOrHub() public {
     // Queue the transaction
     vm.prank(_safeOwners[0]);
-    canonGuard.queueTransaction(address(approveAction));
+    canonGuard.queueTransaction(address(preApproveAction));
 
     // Wait for the timelock period
     vm.warp(block.timestamp + LONG_TX_EXECUTION_DELAY);
 
     // Get the Safe transaction hash
-    bytes32 _safeTxHash = canonGuard.getSafeTransactionHash(address(approveAction));
+    bytes32 _safeTxHash = canonGuard.getSafeTransactionHash(address(preApproveAction));
 
     // Approve the Safe transaction hash
     for (uint256 _i; _i < _safeThreshold; ++_i) {
@@ -197,7 +195,7 @@ contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
     vm.stopPrank();
 
     // Execute the transaction
-    canonGuard.executeTransaction(address(approveAction));
+    canonGuard.executeTransaction(address(preApproveAction));
 
     // Assert if the actions builder is approved
     assertEq(canonGuard.approvalExpiries(address(actionsBuilder)), block.timestamp + APPROVAL_DURATION);
@@ -428,19 +426,20 @@ contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
 
     uint256 _originalBlockTimestamp = block.timestamp;
 
-    approveAction =
-      IApproveAction(approveActionFactory.createApproveAction(address(setEmergencyCallerAction), APPROVAL_DURATION));
+    preApproveAction = IPreApproveAction(
+      preApproveActionFactory.createPreApproveAction(address(setEmergencyCallerAction), APPROVAL_DURATION)
+    );
 
     vm.prank(_safeOwners[0]);
-    canonGuard.queueTransaction(address(approveAction));
+    canonGuard.queueTransaction(address(preApproveAction));
     vm.warp(block.timestamp + LONG_TX_EXECUTION_DELAY);
-    bytes32 _safeTxHash = canonGuard.getSafeTransactionHash(address(approveAction));
+    bytes32 _safeTxHash = canonGuard.getSafeTransactionHash(address(preApproveAction));
     for (uint256 _i; _i < _safeThreshold; ++_i) {
       vm.startPrank(_safeOwners[_i]);
       SAFE_PROXY.approveHash(_safeTxHash);
     }
     vm.stopPrank();
-    canonGuard.executeTransaction(address(approveAction));
+    canonGuard.executeTransaction(address(preApproveAction));
 
     // Get the queued action builders info
     address[] memory _queuedActionBuilders = canonGuard.getQueuedActionBuilders();
@@ -468,19 +467,13 @@ contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
     address _recipient = makeAddr('recipient');
     address _wethTransferSimpleAction = simpleActionsFactory.createSimpleAction(
       ISimpleActions.SimpleAction({
-        target: address(WETH),
-        signature: 'transfer(address,uint256)',
-        data: abi.encode(_recipient, 1 ether),
-        value: 0
+        target: address(WETH), signature: 'transfer(address,uint256)', data: abi.encode(_recipient, 1 ether), value: 0
       })
     );
 
     address _usdcTransferSimpleAction = simpleActionsFactory.createSimpleAction(
       ISimpleActions.SimpleAction({
-        target: address(USDC),
-        signature: 'transfer(address,uint256)',
-        data: abi.encode(_recipient, 1 ether),
-        value: 0
+        target: address(USDC), signature: 'transfer(address,uint256)', data: abi.encode(_recipient, 1 ether), value: 0
       })
     );
 
@@ -549,5 +542,75 @@ contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
     // Assert that the guard has been set to the canon guard
     bytes32 _guardSlot = vm.load(address(SAFE_PROXY), keccak256('guard_manager.guard.address'));
     assertEq(address(uint160(uint256(_guardSlot))), address(canonGuard));
+  }
+
+  function test_CollectDust() public {
+    // Send ETH to the canon guard
+    vm.deal(address(canonGuard), 1 ether);
+
+    uint256 _safeETHBalanceBefore = address(SAFE_PROXY).balance;
+
+    // Collect the dust
+    canonGuard.collectDust(canonGuard.ETH_ADDRESS());
+
+    // Assert that the ETH has been collected
+    assertEq(address(SAFE_PROXY).balance, _safeETHBalanceBefore + 1 ether);
+
+    // Send WETH to the canon guard
+    deal(address(WETH), address(canonGuard), 1 ether);
+
+    uint256 _safeWETHBalanceBefore = WETH.balanceOf(address(SAFE_PROXY));
+
+    // Collect the WETH
+    canonGuard.collectDust(address(WETH));
+
+    // Assert that the WETH has been collected
+    assertEq(WETH.balanceOf(address(SAFE_PROXY)), _safeWETHBalanceBefore + 1 ether);
+  }
+
+  function test_CanonGuardDeploymentNonce() public {
+    vm.startPrank(address(SAFE_PROXY));
+
+    // Deploy the CanonGuard contract through the factory with a non-used nonce
+    canonGuardFactory.createCanonGuard(
+      address(SAFE_PROXY),
+      1,
+      address(MULTI_SEND_CALL_ONLY),
+      SHORT_TX_EXECUTION_DELAY,
+      LONG_TX_EXECUTION_DELAY,
+      TX_EXPIRY_DELAY,
+      MAX_APPROVAL_DURATION,
+      makeAddr('emergencyTrigger'),
+      makeAddr('emergencyCaller')
+    );
+
+    // Re-deploy the CanonGuard contract through the factory with the same nonce, should revert
+    vm.expectRevert(abi.encodeWithSelector(ICreateX.FailedContractCreation.selector, address(CREATE_X)));
+    canonGuardFactory.createCanonGuard(
+      address(SAFE_PROXY),
+      1,
+      address(MULTI_SEND_CALL_ONLY),
+      SHORT_TX_EXECUTION_DELAY,
+      LONG_TX_EXECUTION_DELAY,
+      TX_EXPIRY_DELAY,
+      MAX_APPROVAL_DURATION,
+      makeAddr('emergencyTrigger'),
+      makeAddr('emergencyCaller')
+    );
+
+    // Deploy the CanonGuard contract through the factory with a new nonce
+    canonGuardFactory.createCanonGuard(
+      address(SAFE_PROXY),
+      2,
+      address(MULTI_SEND_CALL_ONLY),
+      SHORT_TX_EXECUTION_DELAY,
+      LONG_TX_EXECUTION_DELAY,
+      TX_EXPIRY_DELAY,
+      MAX_APPROVAL_DURATION,
+      makeAddr('emergencyTrigger'),
+      makeAddr('emergencyCaller')
+    );
+
+    vm.stopPrank();
   }
 }

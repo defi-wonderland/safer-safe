@@ -1,11 +1,27 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
+import {ICreateX} from 'interfaces/external/ICreateX.sol';
+import {IFactory} from 'interfaces/factories/IFactory.sol';
+
 /**
  * @title ICanonGuardFactory
  * @notice Interface for the CanonGuardFactory contract
  */
-interface ICanonGuardFactory {
+interface ICanonGuardFactory is IFactory {
+  // ~~~ EVENTS ~~~
+
+  /**
+   * @notice Emitted when a new CanonGuard contract is created
+   * @param _canonGuard The address of the created CanonGuard contract
+   * @param _safe The Gnosis Safe contract address
+   * @param _emergencyTrigger The emergency trigger address
+   * @param _emergencyCaller The emergency caller address
+   */
+  event CanonGuardCreated(
+    address indexed _canonGuard, address indexed _safe, address indexed _emergencyTrigger, address _emergencyCaller
+  );
+
   // ~~~ ERRORS ~~~
   /**
    * @notice Thrown when the transaction expiry delay is less than the minimum expiry time
@@ -17,11 +33,23 @@ interface ICanonGuardFactory {
    */
   error MaxApprovalDurationCannotBeLessThanMin();
 
+  /**
+   * @notice Thrown when the MultiSendCallOnly contract address is zero
+   */
+  error MultiSendCallOnlyCannotBeZero();
+
+  /**
+   * @notice Thrown when the deployer is not the Safe contract
+   */
+  error DeployerMustBeTheSafe();
+
   // ~~~ FACTORY METHODS ~~~
 
   /**
    * @notice Creates a CanonGuard contract
    * @param _safe The Gnosis Safe contract address
+   * @param _nonce A nonce used to avoid collisions when redeploying the CanonGuard contract with the same Safe address
+   * @param _multiSendCallOnly The MultiSendCallOnly contract address
    * @param _shortTxExecutionDelay The short transaction execution delay (in seconds)
    * @param _longTxExecutionDelay The long transaction execution delay (in seconds)
    * @param _txExpiryDelay The transaction expiry delay (in seconds after executable)
@@ -32,6 +60,8 @@ interface ICanonGuardFactory {
    */
   function createCanonGuard(
     address _safe,
+    uint256 _nonce,
+    address _multiSendCallOnly,
     uint256 _shortTxExecutionDelay,
     uint256 _longTxExecutionDelay,
     uint256 _txExpiryDelay,
@@ -43,14 +73,8 @@ interface ICanonGuardFactory {
   // ~~~ STORAGE METHODS ~~~
 
   /**
-   * @notice Gets the MultiSendCallOnly contract
-   * @return _multiSendCallOnly The MultiSendCallOnly contract address
+   * @notice Gets the CreateX contract
+   * @return _createX The CreateX contract address
    */
-  function MULTI_SEND_CALL_ONLY() external view returns (address _multiSendCallOnly);
-
-  /**
-   * @notice Gets the minimum expiry time
-   * @return _minExpiryTime The minimum expiry time (in seconds)
-   */
-  function MIN_EXPIRY_TIME() external view returns (uint256 _minExpiryTime);
+  function CREATE_X() external view returns (ICreateX _createX);
 }

@@ -14,7 +14,7 @@ contract UnitEverclearTokenConversion is Test {
   address public next = makeAddr('NEXT');
 
   function setUp() external {
-    everclearTokenConversion = new EverclearTokenConversion(address(0), clearLockbox, next);
+    everclearTokenConversion = new EverclearTokenConversion(clearLockbox, next);
   }
 
   function _mockAndExpect(address _target, bytes memory _call, bytes memory _returnData) internal {
@@ -22,14 +22,14 @@ contract UnitEverclearTokenConversion is Test {
     vm.expectCall(_target, _call);
   }
 
-  function test_ConstructorWhenCalled() external view {
+  function test_Constructor_WhenCalled() external view {
     // it sets the clear lockbox address
     assertEq(address(everclearTokenConversion.CLEAR_LOCKBOX()), clearLockbox);
     // it sets the NEXT address
     assertEq(address(everclearTokenConversion.NEXT()), next);
   }
 
-  function test_GetActionsWhenCalled(address _safe, uint256 _amount) external {
+  function test_GetActions_WhenCalled(address _safe, uint256 _amount) external {
     _mockAndExpect(address(this), abi.encodeWithSelector(ISafeManageable.SAFE.selector), abi.encode(_safe));
     _mockAndExpect(next, abi.encodeWithSelector(IERC20.balanceOf.selector, _safe), abi.encode(_amount));
 
