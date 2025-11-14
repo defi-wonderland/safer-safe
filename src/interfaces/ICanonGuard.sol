@@ -207,7 +207,6 @@ interface ICanonGuard is IOnlyCanonGuard, IEmergencyModeHook {
   /**
    * @notice Cancels an enqueued transaction
    * @dev Can only be called by the proposer of the transaction
-   * @dev The transaction must not have any approved hash signers
    * @param _actionsBuilder The actions builder contract address
    */
   function cancelEnqueuedTransaction(address _actionsBuilder) external;
