@@ -137,11 +137,6 @@ interface ICanonGuard is IOnlyCanonGuard, IEmergencyModeHook {
   error LongDelayCannotBeGreaterThanMax();
 
   /**
-   * @notice Thrown when queueing a transaction that is not an ActionsBuilder
-   */
-  error NotAnActionsBuilder();
-
-  /**
    * @notice Thrown when the caller is not the proposer of the transaction being cancelled
    */
   error CallerMustBeTransactionProposer();
