@@ -191,16 +191,11 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
     if (_txInfo.expiresAt == 0) revert NoTransactionQueued();
     if (!emergencyMode && msg.sender != _txInfo.proposer) revert CallerMustBeTransactionProposer();
 
-    IActionsBuilder.Action[] memory _actions = abi.decode(_txInfo.actionsData, (IActionsBuilder.Action[]));
-
-    bytes memory _multiSendData = _buildMultiSendData(_actions);
-    bytes32 _safeTxHash = _getSafeTransactionHash(_multiSendData, SAFE.nonce());
-
     // Remove the transaction from the queue and mapping
     delete transactionsInfo[_actionsBuilder];
     __queuedActionBuilders.remove(_actionsBuilder);
 
-    emit EnqueuedTransactionCancelled(_actionsBuilder, msg.sender, _safeTxHash);
+    emit EnqueuedTransactionCancelled(_actionsBuilder, msg.sender);
   }
 
   /// @inheritdoc ICanonGuard
