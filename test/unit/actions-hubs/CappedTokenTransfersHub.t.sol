@@ -59,6 +59,10 @@ contract UnitCappedTokenTransfersHub is Test {
     vm.assume(_tokenB != ZERO_SENTINEL);
     vm.assume(_token != _tokenB);
 
+    _amountA = bound(_amountA, 1, type(uint256).max);
+    _amountB = bound(_amountB, 1, type(uint256).max);
+    _amountC = bound(_amountC, 1, type(uint256).max);
+
     tokens = new address[](3);
     tokens[0] = _token;
     tokens[1] = _tokenB;
@@ -92,6 +96,17 @@ contract UnitCappedTokenTransfersHub is Test {
 
     // it reverts
     vm.expectRevert(ICappedTokenTransfersHub.TokensAndCapsLengthMismatch.selector);
+    new CappedTokenTransfersHub(safe, recipient, tokens, caps, EPOCH_LENGTH);
+  }
+
+  function test_Constructor_WhenTheCapIsZero() external {
+    caps = new uint256[](3);
+    caps[0] = 0;
+    caps[1] = 100;
+    caps[2] = 200;
+
+    // it reverts
+    vm.expectRevert(ICappedTokenTransfersHub.CapCannotBeZero.selector);
     new CappedTokenTransfersHub(safe, recipient, tokens, caps, EPOCH_LENGTH);
   }
 
