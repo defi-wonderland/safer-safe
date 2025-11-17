@@ -143,7 +143,7 @@ contract UnitCappedTokenTransfersHub is Test {
   function test_UpdateState_WhenCalledByTheSafe(uint256 _amount) external whenCalledByTheSafe {
     _amount = bound(_amount, 0, cappedTokenTransfersHub.cap(tokens[0]));
 
-    uint256 _secondsSinceLastEpoch = block.timestamp - cappedTokenTransfersHub.lastEpoch();
+    uint256 _secondsSinceLastEpoch = block.timestamp - cappedTokenTransfersHub.lastEpoch(tokens[0]);
     uint256 _remainder = _secondsSinceLastEpoch % cappedTokenTransfersHub.EPOCH_LENGTH();
     uint256 _currentEpoch = block.timestamp - _remainder;
 
@@ -161,7 +161,7 @@ contract UnitCappedTokenTransfersHub is Test {
     external
     whenCalledByTheSafe
   {
-    uint256 _lastEpoch = cappedTokenTransfersHub.lastEpoch();
+    uint256 _lastEpoch = cappedTokenTransfersHub.lastEpoch(tokens[0]);
     _amount = bound(_amount, 0, cappedTokenTransfersHub.cap(tokens[0]));
 
     // spend all the cap for this epoch
@@ -175,7 +175,7 @@ contract UnitCappedTokenTransfersHub is Test {
     // it resets the total spent
     assertEq(cappedTokenTransfersHub.totalSpent(tokens[0]), _amount);
     // it updates the last epoch
-    assertEq(cappedTokenTransfersHub.lastEpoch(), _lastEpoch + EPOCH_LENGTH);
+    assertEq(cappedTokenTransfersHub.lastEpoch(tokens[0]), _lastEpoch + EPOCH_LENGTH);
   }
 
   function test_UpdateState_WhenTheTotalSpentIsGreaterThanTheCap(uint256 _amount) external whenCalledByTheSafe {
