@@ -1124,7 +1124,7 @@ contract UnitCanonGuard is Test {
   function test_CancelEnqueuedTransaction_WhenTheCallerIsNotTheEmergencyCaller(
     address _caller,
     address _actionsBuilder
-  ) external whenEmergencyModeIsActive {
+  ) external whenCallerIsSafeOwner whenEmergencyModeIsActive {
     vm.assume(_caller != EMERGENCY_CALLER);
 
     // it reverts with Unauthorized
@@ -1137,7 +1137,7 @@ contract UnitCanonGuard is Test {
     address _actionsBuilder,
     IActionsBuilder.Action calldata _action,
     ICanonGuard.TransactionInfo memory _txInfo
-  ) external whenEmergencyModeIsActive {
+  ) external whenCallerIsSafeOwner whenEmergencyModeIsActive {
     _assumeFuzzable(_actionsBuilder);
     _txInfo.expiresAt = bound(_txInfo.expiresAt, 1, type(uint64).max - 1);
     _txInfo.proposer = EMERGENCY_CALLER;
@@ -1176,7 +1176,7 @@ contract UnitCanonGuard is Test {
     address _actionsBuilder,
     IActionsBuilder.Action calldata _action,
     ICanonGuard.TransactionInfo memory _txInfo
-  ) external whenEmergencyModeIsActive {
+  ) external whenCallerIsSafeOwner whenEmergencyModeIsActive {
     _assumeFuzzable(_actionsBuilder);
     vm.assume(_txInfo.proposer != EMERGENCY_CALLER);
     _txInfo.expiresAt = bound(_txInfo.expiresAt, 1, type(uint64).max - 1);
@@ -1211,7 +1211,10 @@ contract UnitCanonGuard is Test {
     assertEq(canonGuard.getQueuedActionBuilders().length, 0);
   }
 
-  function test_CancelEnqueuedTransaction_WhenTransactionIsNotQueued(address _actionsBuilder) external {
+  function test_CancelEnqueuedTransaction_WhenTransactionIsNotQueued(address _actionsBuilder)
+    external
+    whenCallerIsSafeOwner
+  {
     // it reverts with NoTransactionQueued
     vm.expectRevert(ICanonGuard.NoTransactionQueued.selector);
     canonGuard.cancelEnqueuedTransaction(_actionsBuilder);
@@ -1222,7 +1225,7 @@ contract UnitCanonGuard is Test {
     address _actionsBuilder,
     IActionsBuilder.Action calldata _action,
     ICanonGuard.TransactionInfo memory _txInfo
-  ) external {
+  ) external whenCallerIsSafeOwner {
     _assumeFuzzable(_actionsBuilder);
     vm.assume(_caller != _txInfo.proposer);
     _txInfo.expiresAt = bound(_txInfo.expiresAt, 1, type(uint64).max - 1);
@@ -1245,7 +1248,7 @@ contract UnitCanonGuard is Test {
     address _actionsBuilder,
     IActionsBuilder.Action calldata _action,
     ICanonGuard.TransactionInfo memory _txInfo
-  ) external {
+  ) external whenCallerIsSafeOwner {
     _assumeFuzzable(_actionsBuilder);
     _txInfo.expiresAt = bound(_txInfo.expiresAt, 1, type(uint64).max - 1);
 
@@ -1277,6 +1280,13 @@ contract UnitCanonGuard is Test {
 
     // it deletes transaction from mapping
     assertEq(canonGuard.getQueuedActionBuilders().length, 0);
+  }
+
+  function test_CancelEnqueuedTransaction_WhenCallerIsNotSafeOwner() external {
+    _mockAndExpect(SAFE, abi.encodeWithSelector(IOwnerManager.isOwner.selector), abi.encode(false));
+
+    vm.expectRevert(ISafeManageable.NotSafeOwner.selector);
+    canonGuard.cancelEnqueuedTransaction(address(0));
   }
 
   modifier whenTheTokenIsTheEthAddress() {

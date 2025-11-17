@@ -129,25 +129,28 @@ UnitCanonGuard::executeTransactions
         └── it emits TransactionExecuted event
 
 UnitCanonGuard::cancelEnqueuedTransaction
-├── when emergency mode is active
-│   ├── when the caller is not the emergency caller
-│   │   └── it reverts with Unauthorized
-│   ├── when the caller is the emergency caller and proposer
-│   │   ├── it deletes transaction from queue
-│   │   ├── it deletes transaction from mapping
-│   │   └── it emits EnqueuedTransactionCancelled event
-│   └── when the caller is the emergency caller and not the proposer
+├── when caller is safe owner
+│   ├── when emergency mode is active
+│   │   ├── when the caller is not the emergency caller
+│   │   │   └── it reverts with Unauthorized
+│   │   ├── when the caller is the emergency caller and proposer
+│   │   │   ├── it deletes transaction from queue
+│   │   │   ├── it deletes transaction from mapping
+│   │   │   └── it emits EnqueuedTransactionCancelled event
+│   │   └── when the caller is the emergency caller and not the proposer
+│   │       ├── it deletes transaction from queue
+│   │       ├── it deletes transaction from mapping
+│   │       └── it emits EnqueuedTransactionCancelled event
+│   ├── when transaction is not queued
+│   │   └── it reverts with NoTransactionQueued
+│   ├── when caller is not the proposer
+│   │   └── it reverts with CallerMustBeTransactionProposer
+│   └── when transaction can be cancelled
 │       ├── it deletes transaction from queue
 │       ├── it deletes transaction from mapping
 │       └── it emits EnqueuedTransactionCancelled event
-├── when transaction is not queued
-│   └── it reverts with NoTransactionQueued
-├── when caller is not the proposer
-│   └── it reverts with CallerMustBeTransactionProposer
-└── when transaction can be cancelled
-    ├── it deletes transaction from queue
-    ├── it deletes transaction from mapping
-    └── it emits EnqueuedTransactionCancelled event
+└── when caller is not safe owner
+    └── it reverts with NotSafeOwner
 
 UnitCanonGuard::collectDust
 ├── when the token is the eth address

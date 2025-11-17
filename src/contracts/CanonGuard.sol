@@ -184,7 +184,7 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
   }
 
   /// @inheritdoc ICanonGuard
-  function cancelEnqueuedTransaction(address _actionsBuilder) external {
+  function cancelEnqueuedTransaction(address _actionsBuilder) external isSafeOwner {
     _onBeforeExecution();
 
     TransactionInfo memory _txInfo = transactionsInfo[_actionsBuilder];
