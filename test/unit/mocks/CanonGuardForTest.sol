@@ -53,4 +53,10 @@ contract CanonGuardForTest is CanonGuard {
   function mockApprovalExpiry(address _actionsBuilder, uint256 _expiry) external {
     approvalExpiries[_actionsBuilder] = _expiry;
   }
+
+  function forTest_sortSigners(address[] memory _signers) external pure returns (address[] memory) {
+    _sortSigners(_signers);
+
+    return _signers;
+  }
 }

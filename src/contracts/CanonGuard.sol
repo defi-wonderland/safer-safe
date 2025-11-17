@@ -561,22 +561,22 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
 
   /**
    * @notice Internal function to sort signer addresses
-   * @dev Uses bubble sort to sort addresses numerically
+   * @dev Uses insertion sort to sort addresses
    * @param _signers The array of signer addresses to sort
    */
   function _sortSigners(address[] memory _signers) internal pure {
-    uint256 _signersLength = _signers.length;
-    address _temp;
-    for (uint256 _i; _i < _signersLength; ++_i) {
-      for (uint256 _j; _j < _signersLength - _i - 1; ++_j) {
-        // If the current element is greater than the next element, swap them
-        if (_signers[_j] > _signers[_j + 1]) {
-          // Swap elements
-          _temp = _signers[_j];
-          _signers[_j] = _signers[_j + 1];
-          _signers[_j + 1] = _temp;
-        }
+    for (uint256 i = 1; i < _signers.length; i++) {
+      address key = _signers[i];
+      uint256 j = i;
+
+      // Shift elements greater than key to the right
+      while (j > 0 && _signers[j - 1] > key) {
+        _signers[j] = _signers[j - 1];
+        j--;
       }
+
+      // Insert key at its correct position
+      _signers[j] = key;
     }
   }
 }

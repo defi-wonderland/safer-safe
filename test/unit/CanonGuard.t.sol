@@ -1599,6 +1599,26 @@ contract UnitCanonGuard is Test {
     assertEq(canonGuard.getQueuedActionBuilders().length, 0);
   }
 
+  function test__sortSigners_WhenSortingSigners(uint256 _seed) external {
+    address[] memory _signers = new address[](10);
+
+    // Create an array from a seed
+    _seed = bound(_seed, 0, type(uint256).max - 1);
+    for (uint256 i = 0; i < _signers.length; i++) {
+      _signers[i] = makeAddr(string(abi.encodePacked(keccak256(abi.encodePacked(_seed + 1)))));
+    }
+
+    // Sort with current implementation
+    address[] memory _sortedSignersWithCurrentImplementation = canonGuard.forTest_sortSigners(_signers);
+    // Sort with bubble sort (old implementation)
+    address[] memory _sortedSignersWithBubbleSort = _bubbleSort(_signers);
+
+    // It should be equal to the array sorted by insertion sort
+    for (uint256 i = 0; i < _signers.length; i++) {
+      assertEq(_sortedSignersWithCurrentImplementation[i], _sortedSignersWithBubbleSort[i]);
+    }
+  }
+
   modifier givenCallerIsSafeOwner(address _caller) {
     _mockAndExpect(SAFE, abi.encodeWithSelector(IOwnerManager.isOwner.selector), abi.encode(true));
     _;
@@ -1614,6 +1634,24 @@ contract UnitCanonGuard is Test {
     vm.prank(SAFE);
     canonGuard.approveActionsBuilderOrHub(_actionsBuilder, ACTIONS_BUILDER_APPROVAL_DURATION);
     _;
+  }
+
+  function _bubbleSort(address[] memory _signers) internal pure returns (address[] memory) {
+    uint256 _signersLength = _signers.length;
+    address _temp;
+    for (uint256 _i; _i < _signersLength; ++_i) {
+      for (uint256 _j; _j < _signersLength - _i - 1; ++_j) {
+        // If the current element is greater than the next element, swap them
+        if (_signers[_j] > _signers[_j + 1]) {
+          // Swap elements
+          _temp = _signers[_j];
+          _signers[_j] = _signers[_j + 1];
+          _signers[_j + 1] = _temp;
+        }
+      }
+    }
+
+    return _signers;
   }
 }
 
