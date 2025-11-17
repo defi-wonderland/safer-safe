@@ -55,6 +55,11 @@ interface ICappedTokenTransfersHub is IActionHub, ISafeManageable {
    */
   error TokensAndCapsLengthMismatch();
 
+  /**
+   * @notice Thrown when the recipient is the zero address
+   */
+  error RecipientCannotBeZeroAddress();
+
   // ~~~ FUNCTIONS ~~~
 
   /**

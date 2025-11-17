@@ -8,7 +8,9 @@ UnitCappedTokenTransfersHub::constructor
 │   └── it reverts
 ├── When the epoch length is zero
 │   └── it reverts
-└── When the tokens and caps length mismatch
+├── When the tokens and caps length mismatch
+│   └── it reverts
+└── When the recipient is the zero address
     └── it reverts
 
 UnitCappedTokenTransfersHub::createNewActionsBuilder
