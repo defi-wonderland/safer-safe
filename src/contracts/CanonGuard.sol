@@ -454,7 +454,7 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
     for (uint256 _i; _i < _safeOwnersLength; ++_i) {
       _safeOwner = _safeOwners[_i];
       // Check if this owner has approved the hash
-      if (SAFE.approvedHashes(_safeOwner, _safeTxHash) == 1) {
+      if (SAFE.approvedHashes(_safeOwner, _safeTxHash) != 0) {
         _tempSigners[_approvedHashSignersCount] = _safeOwner;
         ++_approvedHashSignersCount;
       }
