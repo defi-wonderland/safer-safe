@@ -72,11 +72,8 @@ interface ICanonGuard is IOnlyCanonGuard, IEmergencyModeHook {
    * @notice Emitted when a enqueued transaction is cancelled
    * @param _actionsBuilder The actions builder contract address
    * @param _proposer The address of the proposer of the transaction
-   * @param _safeTxHash The hash of the Safe transaction
    */
-  event EnqueuedTransactionCancelled(
-    address indexed _actionsBuilder, address indexed _proposer, bytes32 indexed _safeTxHash
-  );
+  event EnqueuedTransactionCancelled(address indexed _actionsBuilder, address indexed _proposer);
 
   /**
    * @notice Emitted when dust is collected
