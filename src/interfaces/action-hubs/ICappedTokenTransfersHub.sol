@@ -55,6 +55,11 @@ interface ICappedTokenTransfersHub is IActionHub, ISafeManageable {
    */
   error TokensAndCapsLengthMismatch();
 
+  /**
+   * @notice Thrown when the at least one cap is zero
+   */
+  error CapCannotBeZero();
+
   // ~~~ FUNCTIONS ~~~
 
   /**
