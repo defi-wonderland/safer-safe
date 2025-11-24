@@ -10,7 +10,9 @@ UnitCappedTokenTransfersHub::constructor
 │   └── it reverts
 ├── When the tokens and caps length mismatch
 │   └── it reverts
-└── When the recipient is the zero address
+├── When the recipient is the zero address
+│   └── it reverts
+└── When the cap is zero
     └── it reverts
 
 UnitCappedTokenTransfersHub::createNewActionsBuilder

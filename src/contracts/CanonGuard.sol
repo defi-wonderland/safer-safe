@@ -191,16 +191,11 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
     if (_txInfo.expiresAt == 0) revert NoTransactionQueued();
     if (!emergencyMode && msg.sender != _txInfo.proposer) revert CallerMustBeTransactionProposer();
 
-    IActionsBuilder.Action[] memory _actions = abi.decode(_txInfo.actionsData, (IActionsBuilder.Action[]));
-
-    bytes memory _multiSendData = _buildMultiSendData(_actions);
-    bytes32 _safeTxHash = _getSafeTransactionHash(_multiSendData, SAFE.nonce());
-
     // Remove the transaction from the queue and mapping
     delete transactionsInfo[_actionsBuilder];
     __queuedActionBuilders.remove(_actionsBuilder);
 
-    emit EnqueuedTransactionCancelled(_actionsBuilder, msg.sender, _safeTxHash);
+    emit EnqueuedTransactionCancelled(_actionsBuilder, msg.sender);
   }
 
   /// @inheritdoc ICanonGuard
@@ -459,7 +454,7 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
     for (uint256 _i; _i < _safeOwnersLength; ++_i) {
       _safeOwner = _safeOwners[_i];
       // Check if this owner has approved the hash
-      if (SAFE.approvedHashes(_safeOwner, _safeTxHash) == 1) {
+      if (SAFE.approvedHashes(_safeOwner, _safeTxHash) != 0) {
         _tempSigners[_approvedHashSignersCount] = _safeOwner;
         ++_approvedHashSignersCount;
       }

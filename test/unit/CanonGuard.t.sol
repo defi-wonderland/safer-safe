@@ -1146,9 +1146,6 @@ contract UnitCanonGuard is Test {
     _actions[0] = _action;
     bytes memory _actionsData = abi.encode(_actions);
 
-    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.nonce.selector), abi.encode(1));
-    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.getTransactionHash.selector), abi.encode(bytes32(0)));
-
     canonGuard.mockTransaction(
       _txInfo.proposer, _actionsBuilder, _actionsData, _txInfo.executableAt, _txInfo.expiresAt, _txInfo.isPreApproved
     );
@@ -1156,7 +1153,7 @@ contract UnitCanonGuard is Test {
     // it emits EnqueuedTransactionCancelled event
     vm.prank(EMERGENCY_CALLER);
     vm.expectEmit(address(canonGuard));
-    emit ICanonGuard.EnqueuedTransactionCancelled(_actionsBuilder, EMERGENCY_CALLER, bytes32(0));
+    emit ICanonGuard.EnqueuedTransactionCancelled(_actionsBuilder, EMERGENCY_CALLER);
     canonGuard.cancelEnqueuedTransaction(_actionsBuilder);
 
     // it deletes transaction from queue
@@ -1185,9 +1182,6 @@ contract UnitCanonGuard is Test {
     _actions[0] = _action;
     bytes memory _actionsData = abi.encode(_actions);
 
-    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.nonce.selector), abi.encode(1));
-    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.getTransactionHash.selector), abi.encode(bytes32(0)));
-
     canonGuard.mockTransaction(
       _txInfo.proposer, _actionsBuilder, _actionsData, _txInfo.executableAt, _txInfo.expiresAt, _txInfo.isPreApproved
     );
@@ -1195,7 +1189,7 @@ contract UnitCanonGuard is Test {
     // it emits EnqueuedTransactionCancelled event
     vm.prank(EMERGENCY_CALLER);
     vm.expectEmit(address(canonGuard));
-    emit ICanonGuard.EnqueuedTransactionCancelled(_actionsBuilder, EMERGENCY_CALLER, bytes32(0));
+    emit ICanonGuard.EnqueuedTransactionCancelled(_actionsBuilder, EMERGENCY_CALLER);
     canonGuard.cancelEnqueuedTransaction(_actionsBuilder);
 
     // it deletes transaction from queue
@@ -1253,9 +1247,6 @@ contract UnitCanonGuard is Test {
     _actions[0] = _action;
     bytes memory _actionsData = abi.encode(_actions);
 
-    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.nonce.selector), abi.encode(1));
-    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.getTransactionHash.selector), abi.encode(bytes32(0)));
-
     canonGuard.mockTransaction(
       _txInfo.proposer, _actionsBuilder, _actionsData, _txInfo.executableAt, _txInfo.expiresAt, _txInfo.isPreApproved
     );
@@ -1263,7 +1254,7 @@ contract UnitCanonGuard is Test {
     // it emits EnqueuedTransactionCancelled event
     vm.prank(_txInfo.proposer);
     vm.expectEmit(address(canonGuard));
-    emit ICanonGuard.EnqueuedTransactionCancelled(_actionsBuilder, _txInfo.proposer, bytes32(0));
+    emit ICanonGuard.EnqueuedTransactionCancelled(_actionsBuilder, _txInfo.proposer);
     canonGuard.cancelEnqueuedTransaction(_actionsBuilder);
 
     // it deletes transaction from queue
