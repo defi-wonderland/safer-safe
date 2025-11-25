@@ -1613,7 +1613,7 @@ contract UnitCanonGuard is Test {
     // Sort with bubble sort (old implementation)
     address[] memory _sortedSignersWithBubbleSort = _bubbleSort(_signers);
 
-    // It should be equal to the array sorted by insertion sort
+    // It should be equal to the array sorted by bubble sort
     for (uint256 i = 0; i < _signers.length; i++) {
       assertEq(_sortedSignersWithCurrentImplementation[i], _sortedSignersWithBubbleSort[i]);
     }

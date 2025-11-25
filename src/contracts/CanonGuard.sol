@@ -27,6 +27,7 @@ import {IActionHub} from 'interfaces/action-hubs/IActionHub.sol';
 import {IActionHubChild} from 'interfaces/action-hubs/IActionHubChild.sol';
 import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 import {EnumerableSetLib} from 'solady/utils/EnumerableSetLib.sol';
+import {LibSort} from 'solady/utils/LibSort.sol';
 import {SafeTransferLib} from 'solady/utils/SafeTransferLib.sol';
 
 /**
@@ -36,6 +37,7 @@ import {SafeTransferLib} from 'solady/utils/SafeTransferLib.sol';
 contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
   using EnumerableSetLib for EnumerableSetLib.AddressSet;
   using SafeTransferLib for address;
+  using LibSort for address[];
 
   // ~~~ STORAGE ~~~
 
@@ -560,23 +562,15 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
   }
 
   /**
-   * @notice Internal function to sort signer addresses
+   * @notice Internal function to sort signer addresses. Will return early if the array is already sorted.
    * @dev Uses insertion sort to sort addresses
    * @param _signers The array of signer addresses to sort
    */
   function _sortSigners(address[] memory _signers) internal pure {
-    for (uint256 i = 1; i < _signers.length; i++) {
-      address key = _signers[i];
-      uint256 j = i;
-
-      // Shift elements greater than key to the right
-      while (j > 0 && _signers[j - 1] > key) {
-        _signers[j] = _signers[j - 1];
-        j--;
-      }
-
-      // Insert key at its correct position
-      _signers[j] = key;
+    if (_signers.isSorted()) {
+      return;
+    } else {
+      LibSort.insertionSort(_signers);
     }
   }
 }
