@@ -72,11 +72,8 @@ interface ICanonGuard is IOnlyCanonGuard, IEmergencyModeHook {
    * @notice Emitted when a enqueued transaction is cancelled
    * @param _actionsBuilder The actions builder contract address
    * @param _proposer The address of the proposer of the transaction
-   * @param _safeTxHash The hash of the Safe transaction
    */
-  event EnqueuedTransactionCancelled(
-    address indexed _actionsBuilder, address indexed _proposer, bytes32 indexed _safeTxHash
-  );
+  event EnqueuedTransactionCancelled(address indexed _actionsBuilder, address indexed _proposer);
 
   /**
    * @notice Emitted when dust is collected
@@ -135,11 +132,6 @@ interface ICanonGuard is IOnlyCanonGuard, IEmergencyModeHook {
    * @notice Thrown when the long transaction execution delay is greater than the maximum value
    */
   error LongDelayCannotBeGreaterThanMax();
-
-  /**
-   * @notice Thrown when queueing a transaction that is not an ActionsBuilder
-   */
-  error NotAnActionsBuilder();
 
   /**
    * @notice Thrown when the caller is not the proposer of the transaction being cancelled
@@ -207,7 +199,6 @@ interface ICanonGuard is IOnlyCanonGuard, IEmergencyModeHook {
   /**
    * @notice Cancels an enqueued transaction
    * @dev Can only be called by the proposer of the transaction
-   * @dev The transaction must not have any approved hash signers
    * @param _actionsBuilder The actions builder contract address
    */
   function cancelEnqueuedTransaction(address _actionsBuilder) external;
