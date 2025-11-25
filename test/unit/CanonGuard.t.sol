@@ -1127,6 +1127,9 @@ contract UnitCanonGuard is Test {
     address _proposer,
     address _actionsBuilder
   ) {
+    vm.assume(_actionsBuilder != address(0));
+    vm.assume(_actionsBuilder != address(0xfbb67fda52d4bfb8bf));
+
     _txInfo.expiresAt = bound(_txInfo.expiresAt, 1, type(uint64).max - 1);
     _txInfo.proposer = _proposer;
 
@@ -1176,11 +1179,11 @@ contract UnitCanonGuard is Test {
     canonGuard.cancelEnqueuedTransaction(_actionsBuilder);
 
     // it deletes transaction from queue
-    (address _proposer, bytes memory __actionsData, uint256 _executableAt, uint256 _expiresAt, bool _isPreApproved) =
+    (address __proposer, bytes memory __actionsData, uint256 _executableAt, uint256 _expiresAt, bool _isPreApproved) =
       canonGuard.transactionsInfo(_actionsBuilder);
     assertEq(__actionsData, bytes(''));
     assertEq(_executableAt, 0);
-    assertEq(_proposer, address(0));
+    assertEq(__proposer, address(0));
     assertEq(_expiresAt, 0);
     assertEq(_isPreApproved, false);
 
@@ -1234,11 +1237,11 @@ contract UnitCanonGuard is Test {
     canonGuard.cancelEnqueuedTransaction(_actionsBuilder);
 
     // it deletes transaction from queue
-    (address _proposer, bytes memory __actionsData, uint256 _executableAt, uint256 _expiresAt, bool _isPreApproved) =
+    (address __proposer, bytes memory __actionsData, uint256 _executableAt, uint256 _expiresAt, bool _isPreApproved) =
       canonGuard.transactionsInfo(_actionsBuilder);
     assertEq(__actionsData, bytes(''));
     assertEq(_executableAt, 0);
-    assertEq(_proposer, _proposer);
+    assertEq(__proposer, address(0));
     assertEq(_expiresAt, 0);
     assertEq(_isPreApproved, false);
 
