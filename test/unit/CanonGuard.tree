@@ -129,28 +129,26 @@ UnitCanonGuard::executeTransactions
         └── it emits TransactionExecuted event
 
 UnitCanonGuard::cancelEnqueuedTransaction
-├── when caller is safe owner
-│   ├── when emergency mode is active
-│   │   ├── when the caller is not the emergency caller
-│   │   │   └── it reverts with Unauthorized
-│   │   ├── when the caller is the emergency caller and proposer
-│   │   │   ├── it deletes transaction from queue
-│   │   │   ├── it deletes transaction from mapping
-│   │   │   └── it emits EnqueuedTransactionCancelled event
-│   │   └── when the caller is the emergency caller and not the proposer
-│   │       ├── it deletes transaction from queue
-│   │       ├── it deletes transaction from mapping
-│   │       └── it emits EnqueuedTransactionCancelled event
-│   ├── when transaction is not queued
-│   │   └── it reverts with NoTransactionQueued
-│   ├── when caller is not the proposer
-│   │   └── it reverts with CallerMustBeTransactionProposer
-│   └── when transaction can be cancelled
-│       ├── it deletes transaction from queue
-│       ├── it deletes transaction from mapping
-│       └── it emits EnqueuedTransactionCancelled event
-└── when caller is not safe owner
-    └── it reverts with NotSafeOwner
+├── when transaction is not queued
+│   └── it reverts with NoTransactionQueued
+└── when transaction is queued
+    ├── when emergency mode is active
+    │   ├── when the caller is not the emergency caller
+    │   │   └── it reverts with Unauthorized
+    │   └── when the caller is the emergency caller
+    │       ├── it deletes transaction from queue
+    │       ├── it deletes transaction from mapping
+    │       └── it emits EnqueuedTransactionCancelled event
+    └── when emergency mode is not active
+        ├── when caller is not the proposer
+        │   └── it reverts with CallerMustBeTransactionProposer
+        └── when caller is the proposer
+            ├── when the caller is a safe owner
+            │   ├── it deletes transaction from queue
+            │   ├── it deletes transaction from mapping
+            │   └── it emits EnqueuedTransactionCancelled event
+            └── when the caller is not a safe owner
+                └── it reverts with NotSafeOwner
 
 UnitCanonGuard::collectDust
 ├── when the token is the eth address
