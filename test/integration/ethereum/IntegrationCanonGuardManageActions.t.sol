@@ -618,6 +618,13 @@ contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
   }
 
   function test_SortSigners() public {
+    // Add 3 more owners to the Safe
+    vm.startPrank(address(SAFE_PROXY));
+    SAFE_PROXY.addOwnerWithThreshold(makeAddr('owner1'), 1);
+    SAFE_PROXY.addOwnerWithThreshold(makeAddr('owner2'), 1);
+    SAFE_PROXY.addOwnerWithThreshold(makeAddr('owner3'), 1);
+    vm.stopPrank();
+
     // Check that the owners array is unsorted (`getOwners()` is called inside of `_getApprovedHashSigners()` function)
     address[] memory _owners = SAFE_PROXY.getOwners();
     assertFalse(_owners.isSorted());
