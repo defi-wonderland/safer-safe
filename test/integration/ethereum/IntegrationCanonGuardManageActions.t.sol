@@ -9,9 +9,12 @@ import {ISetEmergencyCallerAction} from 'interfaces/actions-builders/ISetEmergen
 import {ISetEmergencyTriggerAction} from 'interfaces/actions-builders/ISetEmergencyTriggerAction.sol';
 import {ISimpleActions} from 'interfaces/actions-builders/ISimpleActions.sol';
 import {ICreateX} from 'interfaces/external/ICreateX.sol';
+import {LibSort} from 'solady/utils/LibSort.sol';
 import {IntegrationEthereumBase} from 'test/integration/ethereum/IntegrationEthereumBase.sol';
 
 contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
+  using LibSort for address[];
+
   IPreApproveAction public preApproveAction;
   IPreApproveAction public disapproveAction;
 
@@ -612,5 +615,22 @@ contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
     );
 
     vm.stopPrank();
+  }
+
+  function test_SortSigners() public {
+    // Check that the owners array is unsorted (`getOwners()` is called inside of `_getApprovedHashSigners()` function)
+    address[] memory _owners = SAFE_PROXY.getOwners();
+    assertFalse(_owners.isSorted());
+
+    // Approve the Safe empty transaction hash
+    bytes32 _safeEmptyTxHash = canonGuard.getSafeTransactionHash(address(0));
+    for (uint256 _i; _i < _safeThreshold; ++_i) {
+      vm.startPrank(_owners[_i]);
+      SAFE_PROXY.approveHash(_safeEmptyTxHash);
+    }
+    vm.stopPrank();
+
+    // Execute empty transaction. It should succeed given that the array was sorted inside the function
+    canonGuard.executeNoActionTransaction();
   }
 }
