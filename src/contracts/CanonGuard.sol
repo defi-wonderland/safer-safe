@@ -156,7 +156,7 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
   }
 
   /// @inheritdoc ICanonGuard
-  function executeTransactions(address[] memory _actionsBuilders) external payable {
+  function executeTransactions(address[] memory _actionsBuilders) external {
     _onBeforeExecution();
 
     uint256 _safeNonce = SAFE.nonce();

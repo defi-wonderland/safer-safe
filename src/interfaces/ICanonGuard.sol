@@ -187,7 +187,7 @@ interface ICanonGuard is IOnlyCanonGuard, IEmergencyModeHook {
    * @dev Each transaction must have been approved using consecutive SAFE nonces.
    * @param _actionsBuilders The array of actions builder contract addresses of the transactions to execute
    */
-  function executeTransactions(address[] memory _actionsBuilders) external payable;
+  function executeTransactions(address[] memory _actionsBuilders) external;
 
   /**
    * @notice Executes an empty transaction, in order to use the safe nonce.

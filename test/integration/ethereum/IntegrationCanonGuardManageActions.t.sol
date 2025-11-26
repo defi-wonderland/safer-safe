@@ -613,4 +613,127 @@ contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
 
     vm.stopPrank();
   }
+
+  function test_ExecuteTransactionWithSingleETHTransfer() public {
+    address _recipient = makeAddr('ethRecipient');
+    address _executor = makeAddr('executor');
+    uint256 _ethAmount = 0.5 ether;
+
+    // Create a SimpleAction that sends ETH to the recipient
+    ISimpleActions.SimpleAction memory _ethTransferAction =
+      ISimpleActions.SimpleAction({target: _recipient, signature: '', data: '', value: _ethAmount});
+
+    ISimpleActions.SimpleAction[] memory _ethTransferActions = new ISimpleActions.SimpleAction[](1);
+    _ethTransferActions[0] = _ethTransferAction;
+    address _ethTransferSimpleAction = simpleActionsFactory.createSimpleActions(_ethTransferActions);
+
+    // Give SAFE some ETH to send
+    vm.deal(address(SAFE_PROXY), _ethAmount);
+
+    // Record initial balances
+    uint256 _executorInitialBalance = _executor.balance;
+    uint256 _recipientInitialBalance = _recipient.balance;
+    uint256 _safeInitialBalance = address(SAFE_PROXY).balance;
+    uint256 _canonGuardInitialBalance = address(canonGuard).balance;
+
+    // Queue the transaction
+    vm.prank(_safeOwners[0]);
+    canonGuard.queueTransaction(_ethTransferSimpleAction);
+
+    // Wait for the timelock period
+    vm.warp(block.timestamp + LONG_TX_EXECUTION_DELAY);
+
+    // Get the Safe transaction hash
+    bytes32 _safeTxHash = canonGuard.getSafeTransactionHash(_ethTransferSimpleAction);
+
+    // Approve the Safe transaction hash
+    for (uint256 _i; _i < _safeThreshold; ++_i) {
+      vm.startPrank(_safeOwners[_i]);
+      SAFE_PROXY.approveHash(_safeTxHash);
+    }
+    vm.stopPrank();
+
+    // Execute the transaction with ETH from the executor
+    vm.prank(_executor);
+    canonGuard.executeTransaction{value: 0}(_ethTransferSimpleAction);
+
+    // Record final balances
+    uint256 _executorFinalBalance = _executor.balance;
+    uint256 _recipientFinalBalance = _recipient.balance;
+    uint256 _safeFinalBalance = address(SAFE_PROXY).balance;
+    uint256 _canonGuardFinalBalance = address(canonGuard).balance;
+
+    // Verify ETH flow: executor -> canonGuard -> safe -> recipient
+    assertEq(_executorFinalBalance, _executorInitialBalance, 'Executor should remain unchanged');
+    assertEq(_recipientFinalBalance, _recipientInitialBalance + _ethAmount, 'Recipient should have received ETH');
+    assertEq(_safeFinalBalance, _safeInitialBalance - _ethAmount, 'Safe balance should have sent ETH');
+    assertEq(_canonGuardFinalBalance, _canonGuardInitialBalance, 'CanonGuard balance should remain unchanged');
+  }
+
+  function test_ExecuteTransactionWithBatchETHTransfer() public {
+    address _recipient = makeAddr('ethRecipient');
+    address _executor = makeAddr('executor');
+    uint256 _ethAmount = 0.5 ether;
+
+    // Create a SimpleAction that sends ETH to the recipient
+    ISimpleActions.SimpleAction memory _ethTransferAction =
+      ISimpleActions.SimpleAction({target: _recipient, signature: '', data: '', value: _ethAmount / 2});
+
+    // Queue same action twice
+    ISimpleActions.SimpleAction[] memory _ethTransferActions = new ISimpleActions.SimpleAction[](1);
+    _ethTransferActions[0] = _ethTransferAction;
+    address _ethTransferSimpleAction = simpleActionsFactory.createSimpleActions(_ethTransferActions);
+    address _ethTransferSimpleAction2 = simpleActionsFactory.createSimpleActions(_ethTransferActions);
+
+    // Give SAFE some ETH to send
+    vm.deal(address(SAFE_PROXY), _ethAmount);
+
+    // Record initial balances
+    uint256 _executorInitialBalance = _executor.balance;
+    uint256 _recipientInitialBalance = _recipient.balance;
+    uint256 _safeInitialBalance = address(SAFE_PROXY).balance;
+    uint256 _canonGuardInitialBalance = address(canonGuard).balance;
+
+    // Queue the transaction
+    vm.prank(_safeOwners[0]);
+    canonGuard.queueTransaction(_ethTransferSimpleAction);
+    vm.prank(_safeOwners[0]);
+    canonGuard.queueTransaction(_ethTransferSimpleAction2);
+
+    // Wait for the timelock period
+    vm.warp(block.timestamp + LONG_TX_EXECUTION_DELAY);
+
+    {
+      // Get the Safe transaction hash
+      bytes32 _safeTxHashA = canonGuard.getSafeTransactionHash(_ethTransferSimpleAction);
+      bytes32 _safeTxHashB = canonGuard.getSafeTransactionHash(_ethTransferSimpleAction2, SAFE_PROXY.nonce() + 1);
+
+      // Approve the Safe transaction hash
+      for (uint256 _i; _i < _safeThreshold; ++_i) {
+        vm.startPrank(_safeOwners[_i]);
+        SAFE_PROXY.approveHash(_safeTxHashA);
+        SAFE_PROXY.approveHash(_safeTxHashB);
+      }
+      vm.stopPrank();
+    }
+
+    // Execute the transaction with ETH from the executor
+    vm.prank(_executor);
+    address[] memory _actionsBuilders = new address[](2);
+    _actionsBuilders[0] = _ethTransferSimpleAction;
+    _actionsBuilders[1] = _ethTransferSimpleAction2;
+    canonGuard.executeTransactions(_actionsBuilders);
+
+    // Record final balances
+    uint256 _executorFinalBalance = _executor.balance;
+    uint256 _recipientFinalBalance = _recipient.balance;
+    uint256 _safeFinalBalance = address(SAFE_PROXY).balance;
+    uint256 _canonGuardFinalBalance = address(canonGuard).balance;
+
+    // Verify ETH flow: executor -> canonGuard -> safe -> recipient
+    assertEq(_executorFinalBalance, _executorInitialBalance, 'Executor should remain unchanged');
+    assertEq(_recipientFinalBalance, _recipientInitialBalance + _ethAmount, 'Recipient should have received ETH');
+    assertEq(_safeFinalBalance, _safeInitialBalance - _ethAmount, 'Safe balance should have sent ETH');
+    assertEq(_canonGuardFinalBalance, _canonGuardInitialBalance, 'CanonGuard balance should remain unchanged');
+  }
 }
