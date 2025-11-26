@@ -185,11 +185,16 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
 
   /// @inheritdoc ICanonGuard
   function cancelEnqueuedTransaction(address _actionsBuilder) external {
-    _onBeforeExecution();
-
     TransactionInfo memory _txInfo = transactionsInfo[_actionsBuilder];
     if (_txInfo.expiresAt == 0) revert NoTransactionQueued();
-    if (!emergencyMode && msg.sender != _txInfo.proposer) revert CallerMustBeTransactionProposer();
+
+    _onBeforeExecution();
+
+    // If emergency mode is not active, the caller must be the transaction proposer and Safe owner
+    if (!emergencyMode) {
+      if (msg.sender != _txInfo.proposer) revert CallerMustBeTransactionProposer();
+      if (!SAFE.isOwner(msg.sender)) revert NotSafeOwner();
+    }
 
     // Remove the transaction from the queue and mapping
     delete transactionsInfo[_actionsBuilder];
