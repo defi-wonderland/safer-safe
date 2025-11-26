@@ -167,6 +167,13 @@ UnitCanonGuard::collectDust
         ├── it collects dust from the contract
         └── it emits DustCollected event
 
+UnitCanonGuard::cleanUpExpiredTransactions
+└── when called
+    ├── it deletes transactions from mapping
+    ├── it deletes transactions from queue
+    ├── it does not delete if the transaction if not expired yet
+    └── it emits ExpiredTransactionsCleanedUp event
+
 UnitCanonGuard::executeNoActionTransaction
 ├── when emergency mode is active
 │   ├── when the caller is the emergency caller

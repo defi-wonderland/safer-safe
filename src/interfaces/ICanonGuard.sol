@@ -83,6 +83,11 @@ interface ICanonGuard is IOnlyCanonGuard, IEmergencyModeHook {
   event DustCollected(address indexed _token, uint256 _balance);
 
   /**
+   * @notice Emitted when expired transactions are cleaned up
+   */
+  event ExpiredTransactionsCleanedUp();
+
+  /**
    * @notice Thrown when no transaction is queued for the actions builder
    */
   error NoTransactionQueued();
@@ -209,6 +214,11 @@ interface ICanonGuard is IOnlyCanonGuard, IEmergencyModeHook {
    * @param _token The token to collect dust from. Zero address for ETH.
    */
   function collectDust(address _token) external;
+
+  /**
+   * @notice Permissionless function to clean up expired transactions from the queue
+   */
+  function cleanUpExpiredTransactions() external;
 
   // ~~~ STORAGE METHODS ~~~
 

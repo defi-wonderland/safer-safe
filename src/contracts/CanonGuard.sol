@@ -218,6 +218,25 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
     emit DustCollected(_token, _balance);
   }
 
+  /// @inheritdoc ICanonGuard
+  function cleanUpExpiredTransactions() external {
+    // Iterate over all queued action builders
+    address[] memory _queuedActionBuilders = __queuedActionBuilders.values();
+
+    for (uint256 _i; _i < _queuedActionBuilders.length; ++_i) {
+      address _actionsBuilder = _queuedActionBuilders[_i];
+
+      // If expired
+      if (transactionsInfo[_actionsBuilder].expiresAt <= block.timestamp) {
+        // Remove the transaction from the queue and mapping
+        delete transactionsInfo[_actionsBuilder];
+        __queuedActionBuilders.remove(_actionsBuilder);
+      }
+    }
+
+    emit ExpiredTransactionsCleanedUp();
+  }
+
   // ~~~ GETTER METHODS ~~~
 
   /// @inheritdoc ICanonGuard

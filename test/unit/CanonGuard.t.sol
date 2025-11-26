@@ -1359,6 +1359,73 @@ contract UnitCanonGuard is Test {
     canonGuard.collectDust(_token);
   }
 
+  function test_CleanUpExpiredTransactions_WhenCalled(uint256 _seed0, uint256 _seed1) external {
+    vm.assume(_seed0 != _seed1);
+
+    // Move time 1 week
+    vm.warp(block.timestamp + 1 weeks);
+    // Create arrays
+    address[] memory _txThatWillExpireInTheFuture = new address[](10);
+    address[] memory _txThatHaveAlreadyExpired = new address[](10);
+    for (uint256 _i; _i < 10; ++_i) {
+      _txThatWillExpireInTheFuture[_i] = makeAddr(string(abi.encodePacked(keccak256(abi.encodePacked(_i, _seed0)))));
+      _txThatHaveAlreadyExpired[_i] = makeAddr(string(abi.encodePacked(keccak256(abi.encodePacked(_i, _seed1)))));
+    }
+
+    // Mock ten that will expire in the future
+    for (uint256 _i; _i < 10; ++_i) {
+      canonGuard.mockTransaction(
+        makeAddr(string(abi.encodePacked(_i))),
+        _txThatWillExpireInTheFuture[_i],
+        abi.encode(new IActionsBuilder.Action[](0)),
+        block.timestamp + 1 weeks,
+        block.timestamp + 1 weeks,
+        false
+      );
+    }
+
+    // Mock ten that already expired
+    for (uint256 _i; _i < 10; ++_i) {
+      canonGuard.mockTransaction(
+        makeAddr(string(abi.encodePacked(_i))),
+        _txThatHaveAlreadyExpired[_i],
+        abi.encode(new IActionsBuilder.Action[](0)),
+        block.timestamp - 1 days,
+        block.timestamp - 1 days,
+        false
+      );
+    }
+
+    // it emits ExpiredTransactionsCleanedUp event
+    vm.expectEmit();
+    emit ICanonGuard.ExpiredTransactionsCleanedUp();
+
+    canonGuard.cleanUpExpiredTransactions();
+
+    // it deletes transactions from mapping
+    for (uint256 _i; _i < 10; ++_i) {
+      (address _proposer,, uint256 _executableAt, uint256 _expiresAt,) =
+        canonGuard.transactionsInfo(_txThatHaveAlreadyExpired[_i]);
+
+      assertEq(_expiresAt, 0);
+      assertEq(_proposer, address(0));
+      assertEq(_executableAt, 0);
+    }
+
+    // it deletes transactions from queue
+    assertEq(canonGuard.getQueuedActionBuilders().length, 10);
+
+    // it does not delete if the transaction if not expired yet
+    for (uint256 _i; _i < 10; ++_i) {
+      (address _proposer,, uint256 _executableAt, uint256 _expiresAt,) =
+        canonGuard.transactionsInfo(_txThatWillExpireInTheFuture[_i]);
+
+      assertEq(_expiresAt, block.timestamp + 1 weeks);
+      assertEq(_proposer, makeAddr(string(abi.encodePacked(_i))));
+      assertEq(_executableAt, block.timestamp + 1 weeks);
+    }
+  }
+
   function test_ExecuteNoActionTransaction_WhenTheCallerIsTheEmergencyCaller(bytes32 _safeTxHash)
     external
     whenEmergencyModeIsActive
