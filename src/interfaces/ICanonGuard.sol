@@ -178,7 +178,7 @@ interface ICanonGuard is IOnlyCanonGuard, IEmergencyModeHook {
    * @dev The transaction must have passed its execution delay period, but not its expiry delay period
    * @param _actionsBuilder The actions builder contract address of the transaction to execute
    */
-  function executeTransaction(address _actionsBuilder) external payable;
+  function executeTransaction(address _actionsBuilder) external;
 
   /**
    * @notice Executes multiple queued transactions using the approved hash signers

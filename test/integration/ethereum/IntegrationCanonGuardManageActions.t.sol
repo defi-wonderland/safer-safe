@@ -653,9 +653,9 @@ contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
     }
     vm.stopPrank();
 
-    // Execute the transaction with ETH from the executor
+    // Execute the transaction
     vm.prank(_executor);
-    canonGuard.executeTransaction{value: 0}(_ethTransferSimpleAction);
+    canonGuard.executeTransaction(_ethTransferSimpleAction);
 
     // Record final balances
     uint256 _executorFinalBalance = _executor.balance;
@@ -717,7 +717,7 @@ contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
       vm.stopPrank();
     }
 
-    // Execute the transaction with ETH from the executor
+    // Execute the transaction
     vm.prank(_executor);
     address[] memory _actionsBuilders = new address[](2);
     _actionsBuilders[0] = _ethTransferSimpleAction;
