@@ -27,6 +27,7 @@ import {IActionHub} from 'interfaces/action-hubs/IActionHub.sol';
 import {IActionHubChild} from 'interfaces/action-hubs/IActionHubChild.sol';
 import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 import {EnumerableSetLib} from 'solady/utils/EnumerableSetLib.sol';
+import {LibSort} from 'solady/utils/LibSort.sol';
 import {SafeTransferLib} from 'solady/utils/SafeTransferLib.sol';
 
 /**
@@ -36,6 +37,7 @@ import {SafeTransferLib} from 'solady/utils/SafeTransferLib.sol';
 contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
   using EnumerableSetLib for EnumerableSetLib.AddressSet;
   using SafeTransferLib for address;
+  using LibSort for address[];
 
   // ~~~ STORAGE ~~~
 
@@ -560,23 +562,15 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
   }
 
   /**
-   * @notice Internal function to sort signer addresses
-   * @dev Uses bubble sort to sort addresses numerically
+   * @notice Internal function to sort signer addresses. Will return early if the array is already sorted.
+   * @dev Uses insertion sort to sort addresses
    * @param _signers The array of signer addresses to sort
    */
   function _sortSigners(address[] memory _signers) internal pure {
-    uint256 _signersLength = _signers.length;
-    address _temp;
-    for (uint256 _i; _i < _signersLength; ++_i) {
-      for (uint256 _j; _j < _signersLength - _i - 1; ++_j) {
-        // If the current element is greater than the next element, swap them
-        if (_signers[_j] > _signers[_j + 1]) {
-          // Swap elements
-          _temp = _signers[_j];
-          _signers[_j] = _signers[_j + 1];
-          _signers[_j + 1] = _temp;
-        }
-      }
+    if (_signers.isSorted()) {
+      return;
+    } else {
+      LibSort.insertionSort(_signers);
     }
   }
 }
