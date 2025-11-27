@@ -100,7 +100,10 @@ contract IntegrationBasicTest is DeployCanonGuard, EthereumConstants, Test {
     bytes32 _safeTxHash = _canonGuard.getSafeTransactionHash(_actionsBuilder);
     _safeProxy.approveHash(_safeTxHash);
 
+    // Send 1 wei to the Safe
+    vm.deal(address(_safeProxy), 1 wei);
+
     // Execute the transaction
-    _canonGuard.executeTransaction{value: 1}(_actionsBuilder);
+    _canonGuard.executeTransaction(_actionsBuilder);
   }
 }

@@ -148,7 +148,7 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
   }
 
   /// @inheritdoc ICanonGuard
-  function executeTransaction(address _actionsBuilder) external payable {
+  function executeTransaction(address _actionsBuilder) external {
     _onBeforeExecution();
 
     (bytes32 _safeTxHash, address[] memory _signers, bytes memory _multiSendData) =
@@ -158,7 +158,7 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
   }
 
   /// @inheritdoc ICanonGuard
-  function executeTransactions(address[] memory _actionsBuilders) external payable {
+  function executeTransactions(address[] memory _actionsBuilders) external {
     _onBeforeExecution();
 
     uint256 _safeNonce = SAFE.nonce();
@@ -319,7 +319,7 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
    * @param _signatures The signatures for the transaction
    */
   function _execSafeTransaction(bytes memory _multiSendData, bytes memory _signatures) internal {
-    SAFE.execTransaction{value: msg.value}({
+    SAFE.execTransaction({
       to: MULTI_SEND_CALL_ONLY,
       value: 0, // Value must be 0 for delegatecall operations
       data: _multiSendData,
