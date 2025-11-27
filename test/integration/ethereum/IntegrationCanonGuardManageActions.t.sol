@@ -627,8 +627,11 @@ contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
     _ethTransferActions[0] = _ethTransferAction;
     address _ethTransferSimpleAction = simpleActionsFactory.createSimpleActions(_ethTransferActions);
 
-    // Give SAFE some ETH to send
-    vm.deal(address(SAFE_PROXY), _ethAmount);
+    // Give some ETH to executor and send it to the SAFE
+    vm.deal(_executor, _ethAmount);
+    vm.prank(_executor);
+    (bool _success,) = payable(address(SAFE_PROXY)).call{value: _ethAmount}('');
+    assertTrue(_success);
 
     // Record initial balances
     uint256 _executorInitialBalance = _executor.balance;
@@ -701,8 +704,11 @@ contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
       _ethTransferSimpleAction1 = simpleActionsFactory.createSimpleActions(_ethTransferActions1);
     }
 
-    // Give SAFE some ETH to send
-    vm.deal(address(SAFE_PROXY), 10 ether);
+    // Give some ETH to executor and send it to the SAFE
+    vm.deal(_executor, 10 ether);
+    vm.prank(_executor);
+    (bool _success,) = payable(address(SAFE_PROXY)).call{value: 10 ether}('');
+    assertTrue(_success);
 
     // Record initial balances
     uint256 _executorInitialBalance = _executor.balance;
