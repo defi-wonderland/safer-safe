@@ -671,42 +671,59 @@ contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
   }
 
   function test_ExecuteTransactionWithBatchETHTransfer() public {
-    address _recipient = makeAddr('ethRecipient');
+    address _alice = makeAddr('ALICE');
+    address _bob = makeAddr('BOB');
     address _executor = makeAddr('executor');
-    uint256 _ethAmount = 0.5 ether;
 
-    // Create a SimpleAction that sends ETH to the recipient
-    ISimpleActions.SimpleAction memory _ethTransferAction =
-      ISimpleActions.SimpleAction({target: _recipient, signature: '', data: '', value: _ethAmount / 2});
+    // Create 2 SimpleActions that send 1 and 2 ether to the recipients
+    address _ethTransferSimpleAction0;
+    address _ethTransferSimpleAction1;
+    {
+      ISimpleActions.SimpleAction memory _ethTransferAction1 =
+        ISimpleActions.SimpleAction({target: _alice, signature: '', data: '', value: 1 ether});
+      ISimpleActions.SimpleAction memory _ethTransferAction2 =
+        ISimpleActions.SimpleAction({target: _bob, signature: '', data: '', value: 2 ether});
 
-    // Queue same action twice
-    ISimpleActions.SimpleAction[] memory _ethTransferActions = new ISimpleActions.SimpleAction[](1);
-    _ethTransferActions[0] = _ethTransferAction;
-    address _ethTransferSimpleAction = simpleActionsFactory.createSimpleActions(_ethTransferActions);
-    address _ethTransferSimpleAction2 = simpleActionsFactory.createSimpleActions(_ethTransferActions);
+      ISimpleActions.SimpleAction[] memory _ethTransferActions0 = new ISimpleActions.SimpleAction[](2);
+      _ethTransferActions0[0] = _ethTransferAction1;
+      _ethTransferActions0[1] = _ethTransferAction2;
+      _ethTransferSimpleAction0 = simpleActionsFactory.createSimpleActions(_ethTransferActions0);
+
+      // Create 2 SimpleActions that send 3 and 4 ether to the recipients
+      ISimpleActions.SimpleAction memory _ethTransferAction3 =
+        ISimpleActions.SimpleAction({target: _bob, signature: '', data: '', value: 3 ether});
+      ISimpleActions.SimpleAction memory _ethTransferAction4 =
+        ISimpleActions.SimpleAction({target: _alice, signature: '', data: '', value: 4 ether});
+
+      ISimpleActions.SimpleAction[] memory _ethTransferActions1 = new ISimpleActions.SimpleAction[](2);
+      _ethTransferActions1[0] = _ethTransferAction3;
+      _ethTransferActions1[1] = _ethTransferAction4;
+      _ethTransferSimpleAction1 = simpleActionsFactory.createSimpleActions(_ethTransferActions1);
+    }
 
     // Give SAFE some ETH to send
-    vm.deal(address(SAFE_PROXY), _ethAmount);
+    vm.deal(address(SAFE_PROXY), 10 ether);
 
     // Record initial balances
     uint256 _executorInitialBalance = _executor.balance;
-    uint256 _recipientInitialBalance = _recipient.balance;
+    uint256 _aliceInitialBalance = _alice.balance;
+    uint256 _bobInitialBalance = _bob.balance;
     uint256 _safeInitialBalance = address(SAFE_PROXY).balance;
     uint256 _canonGuardInitialBalance = address(canonGuard).balance;
 
     // Queue the transaction
     vm.prank(_safeOwners[0]);
-    canonGuard.queueTransaction(_ethTransferSimpleAction);
+    canonGuard.queueTransaction(_ethTransferSimpleAction0);
     vm.prank(_safeOwners[0]);
-    canonGuard.queueTransaction(_ethTransferSimpleAction2);
+    canonGuard.queueTransaction(_ethTransferSimpleAction1);
 
     // Wait for the timelock period
     vm.warp(block.timestamp + LONG_TX_EXECUTION_DELAY);
 
     {
       // Get the Safe transaction hash
-      bytes32 _safeTxHashA = canonGuard.getSafeTransactionHash(_ethTransferSimpleAction);
-      bytes32 _safeTxHashB = canonGuard.getSafeTransactionHash(_ethTransferSimpleAction2, SAFE_PROXY.nonce() + 1);
+      bytes32 _safeTxHashA = canonGuard.getSafeTransactionHash(_ethTransferSimpleAction0);
+      bytes32 _safeTxHashB = canonGuard.getSafeTransactionHash(_ethTransferSimpleAction1, SAFE_PROXY.nonce() + 1);
 
       // Approve the Safe transaction hash
       for (uint256 _i; _i < _safeThreshold; ++_i) {
@@ -718,22 +735,67 @@ contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
     }
 
     // Execute the transaction
-    vm.prank(_executor);
-    address[] memory _actionsBuilders = new address[](2);
-    _actionsBuilders[0] = _ethTransferSimpleAction;
-    _actionsBuilders[1] = _ethTransferSimpleAction2;
-    canonGuard.executeTransactions(_actionsBuilders);
+    {
+      vm.prank(_executor);
+      address[] memory _actionsBuilders = new address[](2);
+      _actionsBuilders[0] = _ethTransferSimpleAction0;
+      _actionsBuilders[1] = _ethTransferSimpleAction1;
+      canonGuard.executeTransactions(_actionsBuilders);
+    }
 
-    // Record final balances
-    uint256 _executorFinalBalance = _executor.balance;
-    uint256 _recipientFinalBalance = _recipient.balance;
-    uint256 _safeFinalBalance = address(SAFE_PROXY).balance;
-    uint256 _canonGuardFinalBalance = address(canonGuard).balance;
+    // Verify ETH flow: executor -> canonGuard -> safe -> recipients
+    assertEq(_executor.balance, _executorInitialBalance, 'Executor should remain unchanged');
+    assertEq(_alice.balance, _aliceInitialBalance + 5 ether, 'Alice should have received 5 ETH (1+4)');
+    assertEq(_bob.balance, _bobInitialBalance + 5 ether, 'Bob should have received 5 ETH (2+3)');
+    assertEq(address(SAFE_PROXY).balance, _safeInitialBalance - 10 ether, 'Safe balance should have sent 10 ETH total');
+    assertEq(address(canonGuard).balance, _canonGuardInitialBalance, 'CanonGuard balance should remain unchanged');
+  }
 
-    // Verify ETH flow: executor -> canonGuard -> safe -> recipient
-    assertEq(_executorFinalBalance, _executorInitialBalance, 'Executor should remain unchanged');
-    assertEq(_recipientFinalBalance, _recipientInitialBalance + _ethAmount, 'Recipient should have received ETH');
-    assertEq(_safeFinalBalance, _safeInitialBalance - _ethAmount, 'Safe balance should have sent ETH');
-    assertEq(_canonGuardFinalBalance, _canonGuardInitialBalance, 'CanonGuard balance should remain unchanged');
+  function test_ExecuteTransactionWithSingleETHTransferWithNoFundsInSAFE() public {
+    address _alice = makeAddr('ALICE');
+    address _executor = makeAddr('executor');
+
+    // Create a SimpleAction that tries to send 1 ether to Alice
+    address _ethTransferSimpleAction;
+    {
+      ISimpleActions.SimpleAction memory _ethTransferAction =
+        ISimpleActions.SimpleAction({target: _alice, signature: '', data: '', value: 1 ether});
+
+      ISimpleActions.SimpleAction[] memory _ethTransferActions = new ISimpleActions.SimpleAction[](1);
+      _ethTransferActions[0] = _ethTransferAction;
+      _ethTransferSimpleAction = simpleActionsFactory.createSimpleActions(_ethTransferActions);
+    }
+
+    // Ensure SAFE has zero ETH balance (it should be zero by default, but make it explicit)
+    vm.deal(address(SAFE_PROXY), 0);
+
+    // Queue the transaction
+    vm.prank(_safeOwners[0]);
+    canonGuard.queueTransaction(_ethTransferSimpleAction);
+
+    // Wait for the timelock period
+    vm.warp(block.timestamp + LONG_TX_EXECUTION_DELAY);
+
+    {
+      // Get the Safe transaction hash
+      bytes32 _safeTxHash = canonGuard.getSafeTransactionHash(_ethTransferSimpleAction);
+
+      // Approve the Safe transaction hash
+      for (uint256 _i; _i < _safeThreshold; ++_i) {
+        vm.startPrank(_safeOwners[_i]);
+        SAFE_PROXY.approveHash(_safeTxHash);
+      }
+      vm.stopPrank();
+    }
+
+    // Execute the transaction and expect it to fail due to insufficient funds
+    {
+      vm.prank(_executor);
+      address[] memory _actionsBuilders = new address[](1);
+      _actionsBuilders[0] = _ethTransferSimpleAction;
+
+      vm.expectRevert();
+      canonGuard.executeTransactions(_actionsBuilders);
+    }
   }
 }
