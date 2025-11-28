@@ -1196,13 +1196,46 @@ contract UnitCanonGuard is Test {
     _;
   }
 
+  function test_CancelEnqueuedTransaction_WhenTheTransactionIsExpired(
+    IActionsBuilder.Action calldata _action,
+    ICanonGuard.TransactionInfo memory _txInfo,
+    address _proposer,
+    address _actionsBuilder
+  ) external whenTransactionIsQueued(_action, _txInfo, _proposer, _actionsBuilder) whenEmergencyModeIsNotActive {
+    canonGuard.modifyMockedTransactionExpiresAt(_actionsBuilder, block.timestamp);
+
+    canonGuard.cancelEnqueuedTransaction(_actionsBuilder);
+
+    // it deletes transaction from queue
+    (address __proposer, bytes memory __actionsData, uint256 _executableAt, uint256 _expiresAt, bool _isPreApproved) =
+      canonGuard.transactionsInfo(_actionsBuilder);
+    assertEq(__actionsData, bytes(''));
+    assertEq(_executableAt, 0);
+    assertEq(__proposer, address(0));
+    assertEq(_expiresAt, 0);
+    assertEq(_isPreApproved, false);
+
+    // it deletes transaction from mapping
+    assertEq(canonGuard.getQueuedActionBuilders().length, 0);
+  }
+
+  modifier whenTheTransactionIsNotExpired(address _actionsBuilder) {
+    canonGuard.modifyMockedTransactionExpiresAt(_actionsBuilder, block.timestamp + 1);
+    _;
+  }
+
   function test_CancelEnqueuedTransaction_WhenCallerIsNotTheProposer(
     IActionsBuilder.Action calldata _action,
     ICanonGuard.TransactionInfo memory _txInfo,
     address _proposer,
     address _actionsBuilder,
     address _caller
-  ) external whenTransactionIsQueued(_action, _txInfo, _proposer, _actionsBuilder) whenEmergencyModeIsNotActive {
+  )
+    external
+    whenTransactionIsQueued(_action, _txInfo, _proposer, _actionsBuilder)
+    whenEmergencyModeIsNotActive
+    whenTheTransactionIsNotExpired(_actionsBuilder)
+  {
     vm.assume(_caller != _proposer);
 
     // it reverts with CallerMustBeTransactionProposer
@@ -1226,6 +1259,7 @@ contract UnitCanonGuard is Test {
     external
     whenTransactionIsQueued(_action, _txInfo, _proposer, _actionsBuilder)
     whenEmergencyModeIsNotActive
+    whenTheTransactionIsNotExpired(_actionsBuilder)
     whenCallerIsTheProposer(_proposer)
   {
     _mockAndExpect(SAFE, abi.encodeWithSelector(IOwnerManager.isOwner.selector), abi.encode(true));
@@ -1258,6 +1292,7 @@ contract UnitCanonGuard is Test {
     external
     whenTransactionIsQueued(_action, _txInfo, _proposer, _actionsBuilder)
     whenEmergencyModeIsNotActive
+    whenTheTransactionIsNotExpired(_actionsBuilder)
     whenCallerIsTheProposer(_proposer)
   {
     _mockAndExpect(SAFE, abi.encodeWithSelector(IOwnerManager.isOwner.selector), abi.encode(false));

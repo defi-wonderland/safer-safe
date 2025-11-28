@@ -140,15 +140,20 @@ UnitCanonGuard::cancelEnqueuedTransaction
     │       ├── it deletes transaction from mapping
     │       └── it emits EnqueuedTransactionCancelled event
     └── when emergency mode is not active
-        ├── when caller is not the proposer
-        │   └── it reverts with CallerMustBeTransactionProposer
-        └── when caller is the proposer
-            ├── when the caller is a safe owner
-            │   ├── it deletes transaction from queue
-            │   ├── it deletes transaction from mapping
-            │   └── it emits EnqueuedTransactionCancelled event
-            └── when the caller is not a safe owner
-                └── it reverts with NotSafeOwner
+        ├── when the transaction is expired
+        │   ├── it deletes transaction from queue
+        │   ├── it deletes transaction from mapping
+        │   └── it emits EnqueuedTransactionCancelled event
+        └── when the transaction is not expired
+            ├── when caller is not the proposer
+            │   └── it reverts with CallerMustBeTransactionProposer
+            └── when caller is the proposer
+                ├── when the caller is a safe owner
+                │   ├── it deletes transaction from queue
+                │   ├── it deletes transaction from mapping
+                │   └── it emits EnqueuedTransactionCancelled event
+                └── when the caller is not a safe owner
+                    └── it reverts with NotSafeOwner
 
 UnitCanonGuard::collectDust
 ├── when the token is the eth address
