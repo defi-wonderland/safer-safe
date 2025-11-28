@@ -83,11 +83,6 @@ interface ICanonGuard is IOnlyCanonGuard, IEmergencyModeHook {
   event DustCollected(address indexed _token, uint256 _balance);
 
   /**
-   * @notice Emitted when expired transactions are cleaned up
-   */
-  event ExpiredTransactionsCleanedUp();
-
-  /**
    * @notice Thrown when no transaction is queued for the actions builder
    */
   error NoTransactionQueued();
