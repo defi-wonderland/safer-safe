@@ -215,11 +215,6 @@ interface ICanonGuard is IOnlyCanonGuard, IEmergencyModeHook {
    */
   function collectDust(address _token) external;
 
-  /**
-   * @notice Permissionless function to clean up expired transactions from the queue
-   */
-  function cleanUpExpiredTransactions() external;
-
   // ~~~ STORAGE METHODS ~~~
 
   /**

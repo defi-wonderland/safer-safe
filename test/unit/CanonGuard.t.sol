@@ -1196,13 +1196,46 @@ contract UnitCanonGuard is Test {
     _;
   }
 
+  function test_CancelEnqueuedTransaction_WhenTheTransactionIsExpired(
+    IActionsBuilder.Action calldata _action,
+    ICanonGuard.TransactionInfo memory _txInfo,
+    address _proposer,
+    address _actionsBuilder
+  ) external whenTransactionIsQueued(_action, _txInfo, _proposer, _actionsBuilder) whenEmergencyModeIsNotActive {
+    canonGuard.modifyMockedTransactionExpiresAt(_actionsBuilder, block.timestamp);
+
+    canonGuard.cancelEnqueuedTransaction(_actionsBuilder);
+
+    // it deletes transaction from queue
+    (address __proposer, bytes memory __actionsData, uint256 _executableAt, uint256 _expiresAt, bool _isPreApproved) =
+      canonGuard.transactionsInfo(_actionsBuilder);
+    assertEq(__actionsData, bytes(''));
+    assertEq(_executableAt, 0);
+    assertEq(__proposer, address(0));
+    assertEq(_expiresAt, 0);
+    assertEq(_isPreApproved, false);
+
+    // it deletes transaction from mapping
+    assertEq(canonGuard.getQueuedActionBuilders().length, 0);
+  }
+
+  modifier whenTheTransactionIsNotExpired(address _actionsBuilder) {
+    canonGuard.modifyMockedTransactionExpiresAt(_actionsBuilder, block.timestamp + 1);
+    _;
+  }
+
   function test_CancelEnqueuedTransaction_WhenCallerIsNotTheProposer(
     IActionsBuilder.Action calldata _action,
     ICanonGuard.TransactionInfo memory _txInfo,
     address _proposer,
     address _actionsBuilder,
     address _caller
-  ) external whenTransactionIsQueued(_action, _txInfo, _proposer, _actionsBuilder) whenEmergencyModeIsNotActive {
+  )
+    external
+    whenTransactionIsQueued(_action, _txInfo, _proposer, _actionsBuilder)
+    whenEmergencyModeIsNotActive
+    whenTheTransactionIsNotExpired(_actionsBuilder)
+  {
     vm.assume(_caller != _proposer);
 
     // it reverts with CallerMustBeTransactionProposer
@@ -1226,6 +1259,7 @@ contract UnitCanonGuard is Test {
     external
     whenTransactionIsQueued(_action, _txInfo, _proposer, _actionsBuilder)
     whenEmergencyModeIsNotActive
+    whenTheTransactionIsNotExpired(_actionsBuilder)
     whenCallerIsTheProposer(_proposer)
   {
     _mockAndExpect(SAFE, abi.encodeWithSelector(IOwnerManager.isOwner.selector), abi.encode(true));
@@ -1258,6 +1292,7 @@ contract UnitCanonGuard is Test {
     external
     whenTransactionIsQueued(_action, _txInfo, _proposer, _actionsBuilder)
     whenEmergencyModeIsNotActive
+    whenTheTransactionIsNotExpired(_actionsBuilder)
     whenCallerIsTheProposer(_proposer)
   {
     _mockAndExpect(SAFE, abi.encodeWithSelector(IOwnerManager.isOwner.selector), abi.encode(false));
@@ -1357,73 +1392,6 @@ contract UnitCanonGuard is Test {
     emit ICanonGuard.DustCollected(_token, _balance);
 
     canonGuard.collectDust(_token);
-  }
-
-  function test_CleanUpExpiredTransactions_WhenCalled(uint256 _seed0, uint256 _seed1) external {
-    vm.assume(_seed0 != _seed1);
-
-    // Move time 1 week
-    vm.warp(block.timestamp + 1 weeks);
-    // Create arrays
-    address[] memory _txThatWillExpireInTheFuture = new address[](10);
-    address[] memory _txThatHaveAlreadyExpired = new address[](10);
-    for (uint256 _i; _i < 10; ++_i) {
-      _txThatWillExpireInTheFuture[_i] = makeAddr(string(abi.encodePacked(keccak256(abi.encodePacked(_i, _seed0)))));
-      _txThatHaveAlreadyExpired[_i] = makeAddr(string(abi.encodePacked(keccak256(abi.encodePacked(_i, _seed1)))));
-    }
-
-    // Mock ten that will expire in the future
-    for (uint256 _i; _i < 10; ++_i) {
-      canonGuard.mockTransaction(
-        makeAddr(string(abi.encodePacked(_i))),
-        _txThatWillExpireInTheFuture[_i],
-        abi.encode(new IActionsBuilder.Action[](0)),
-        block.timestamp + 1 weeks,
-        block.timestamp + 1 weeks,
-        false
-      );
-    }
-
-    // Mock ten that already expired
-    for (uint256 _i; _i < 10; ++_i) {
-      canonGuard.mockTransaction(
-        makeAddr(string(abi.encodePacked(_i))),
-        _txThatHaveAlreadyExpired[_i],
-        abi.encode(new IActionsBuilder.Action[](0)),
-        block.timestamp - 1 days,
-        block.timestamp - 1 days,
-        false
-      );
-    }
-
-    // it emits ExpiredTransactionsCleanedUp event
-    vm.expectEmit();
-    emit ICanonGuard.ExpiredTransactionsCleanedUp();
-
-    canonGuard.cleanUpExpiredTransactions();
-
-    // it deletes transactions from mapping
-    for (uint256 _i; _i < 10; ++_i) {
-      (address _proposer,, uint256 _executableAt, uint256 _expiresAt,) =
-        canonGuard.transactionsInfo(_txThatHaveAlreadyExpired[_i]);
-
-      assertEq(_expiresAt, 0);
-      assertEq(_proposer, address(0));
-      assertEq(_executableAt, 0);
-    }
-
-    // it deletes transactions from queue
-    assertEq(canonGuard.getQueuedActionBuilders().length, 10);
-
-    // it does not delete if the transaction if not expired yet
-    for (uint256 _i; _i < 10; ++_i) {
-      (address _proposer,, uint256 _executableAt, uint256 _expiresAt,) =
-        canonGuard.transactionsInfo(_txThatWillExpireInTheFuture[_i]);
-
-      assertEq(_expiresAt, block.timestamp + 1 weeks);
-      assertEq(_proposer, makeAddr(string(abi.encodePacked(_i))));
-      assertEq(_executableAt, block.timestamp + 1 weeks);
-    }
   }
 
   function test_ExecuteNoActionTransaction_WhenTheCallerIsTheEmergencyCaller(bytes32 _safeTxHash)
