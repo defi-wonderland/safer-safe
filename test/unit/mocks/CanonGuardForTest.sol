@@ -50,7 +50,17 @@ contract CanonGuardForTest is CanonGuard {
     });
   }
 
+  function modifyMockedTransactionExpiresAt(address _actionsBuilder, uint256 _expiresAt) external {
+    transactionsInfo[_actionsBuilder].expiresAt = _expiresAt;
+  }
+
   function mockApprovalExpiry(address _actionsBuilder, uint256 _expiry) external {
     approvalExpiries[_actionsBuilder] = _expiry;
+  }
+
+  function forTest_sortSigners(address[] memory _signers) external pure returns (address[] memory) {
+    _sortSigners(_signers);
+
+    return _signers;
   }
 }

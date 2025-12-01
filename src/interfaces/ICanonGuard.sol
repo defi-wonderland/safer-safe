@@ -72,11 +72,8 @@ interface ICanonGuard is IOnlyCanonGuard, IEmergencyModeHook {
    * @notice Emitted when a enqueued transaction is cancelled
    * @param _actionsBuilder The actions builder contract address
    * @param _proposer The address of the proposer of the transaction
-   * @param _safeTxHash The hash of the Safe transaction
    */
-  event EnqueuedTransactionCancelled(
-    address indexed _actionsBuilder, address indexed _proposer, bytes32 indexed _safeTxHash
-  );
+  event EnqueuedTransactionCancelled(address indexed _actionsBuilder, address indexed _proposer);
 
   /**
    * @notice Emitted when dust is collected
@@ -137,11 +134,6 @@ interface ICanonGuard is IOnlyCanonGuard, IEmergencyModeHook {
   error LongDelayCannotBeGreaterThanMax();
 
   /**
-   * @notice Thrown when queueing a transaction that is not an ActionsBuilder
-   */
-  error NotAnActionsBuilder();
-
-  /**
    * @notice Thrown when the caller is not the proposer of the transaction being cancelled
    */
   error CallerMustBeTransactionProposer();
@@ -184,18 +176,20 @@ interface ICanonGuard is IOnlyCanonGuard, IEmergencyModeHook {
    * @notice Executes a queued transaction using the approved hash signers
    * @dev Can be called by anyone
    * @dev The transaction must have passed its execution delay period, but not its expiry delay period
+   * @dev If the actions to be executed involve sending or using a value, this value will be extracted from the SAFE. If the SAFE does not have sufficient ETH, it may need to be topped up.
    * @param _actionsBuilder The actions builder contract address of the transaction to execute
    */
-  function executeTransaction(address _actionsBuilder) external payable;
+  function executeTransaction(address _actionsBuilder) external;
 
   /**
    * @notice Executes multiple queued transactions using the approved hash signers
    * @dev Can be called by anyone
    * @dev The transactions must have passed their execution delay period, but not their expiry delay period
    * @dev Each transaction must have been approved using consecutive SAFE nonces.
+   * @dev If the actions to be executed involve sending or using a value, this value will be extracted from the SAFE. If the SAFE does not have sufficient ETH, it may need to be topped up.
    * @param _actionsBuilders The array of actions builder contract addresses of the transactions to execute
    */
-  function executeTransactions(address[] memory _actionsBuilders) external payable;
+  function executeTransactions(address[] memory _actionsBuilders) external;
 
   /**
    * @notice Executes an empty transaction, in order to use the safe nonce.
@@ -207,7 +201,6 @@ interface ICanonGuard is IOnlyCanonGuard, IEmergencyModeHook {
   /**
    * @notice Cancels an enqueued transaction
    * @dev Can only be called by the proposer of the transaction
-   * @dev The transaction must not have any approved hash signers
    * @param _actionsBuilder The actions builder contract address
    */
   function cancelEnqueuedTransaction(address _actionsBuilder) external;

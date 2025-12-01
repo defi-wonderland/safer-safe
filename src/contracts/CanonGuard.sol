@@ -27,6 +27,7 @@ import {IActionHub} from 'interfaces/action-hubs/IActionHub.sol';
 import {IActionHubChild} from 'interfaces/action-hubs/IActionHubChild.sol';
 import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 import {EnumerableSetLib} from 'solady/utils/EnumerableSetLib.sol';
+import {LibSort} from 'solady/utils/LibSort.sol';
 import {SafeTransferLib} from 'solady/utils/SafeTransferLib.sol';
 
 /**
@@ -36,6 +37,7 @@ import {SafeTransferLib} from 'solady/utils/SafeTransferLib.sol';
 contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
   using EnumerableSetLib for EnumerableSetLib.AddressSet;
   using SafeTransferLib for address;
+  using LibSort for address[];
 
   // ~~~ STORAGE ~~~
 
@@ -146,7 +148,7 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
   }
 
   /// @inheritdoc ICanonGuard
-  function executeTransaction(address _actionsBuilder) external payable {
+  function executeTransaction(address _actionsBuilder) external {
     _onBeforeExecution();
 
     (bytes32 _safeTxHash, address[] memory _signers, bytes memory _multiSendData) =
@@ -156,7 +158,7 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
   }
 
   /// @inheritdoc ICanonGuard
-  function executeTransactions(address[] memory _actionsBuilders) external payable {
+  function executeTransactions(address[] memory _actionsBuilders) external {
     _onBeforeExecution();
 
     uint256 _safeNonce = SAFE.nonce();
@@ -188,19 +190,23 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
     _onBeforeExecution();
 
     TransactionInfo memory _txInfo = transactionsInfo[_actionsBuilder];
-    if (_txInfo.expiresAt == 0) revert NoTransactionQueued();
-    if (!emergencyMode && msg.sender != _txInfo.proposer) revert CallerMustBeTransactionProposer();
+    uint256 _expiresAt = _txInfo.expiresAt;
+    if (_expiresAt == 0) revert NoTransactionQueued();
 
-    IActionsBuilder.Action[] memory _actions = abi.decode(_txInfo.actionsData, (IActionsBuilder.Action[]));
-
-    bytes memory _multiSendData = _buildMultiSendData(_actions);
-    bytes32 _safeTxHash = _getSafeTransactionHash(_multiSendData, SAFE.nonce());
+    // If the tx is not expired, check caller privileges
+    if (_expiresAt > block.timestamp) {
+      // If emergency mode is not active, the caller must be the transaction proposer and Safe owner
+      if (!emergencyMode) {
+        if (msg.sender != _txInfo.proposer) revert CallerMustBeTransactionProposer();
+        if (!SAFE.isOwner(msg.sender)) revert NotSafeOwner();
+      }
+    }
 
     // Remove the transaction from the queue and mapping
     delete transactionsInfo[_actionsBuilder];
     __queuedActionBuilders.remove(_actionsBuilder);
 
-    emit EnqueuedTransactionCancelled(_actionsBuilder, msg.sender, _safeTxHash);
+    emit EnqueuedTransactionCancelled(_actionsBuilder, msg.sender);
   }
 
   /// @inheritdoc ICanonGuard
@@ -317,7 +323,7 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
    * @param _signatures The signatures for the transaction
    */
   function _execSafeTransaction(bytes memory _multiSendData, bytes memory _signatures) internal {
-    SAFE.execTransaction{value: msg.value}({
+    SAFE.execTransaction({
       to: MULTI_SEND_CALL_ONLY,
       value: 0, // Value must be 0 for delegatecall operations
       data: _multiSendData,
@@ -459,7 +465,7 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
     for (uint256 _i; _i < _safeOwnersLength; ++_i) {
       _safeOwner = _safeOwners[_i];
       // Check if this owner has approved the hash
-      if (SAFE.approvedHashes(_safeOwner, _safeTxHash) == 1) {
+      if (SAFE.approvedHashes(_safeOwner, _safeTxHash) != 0) {
         _tempSigners[_approvedHashSignersCount] = _safeOwner;
         ++_approvedHashSignersCount;
       }
@@ -560,23 +566,15 @@ contract CanonGuard is OnlyCanonGuard, EmergencyModeHook, ICanonGuard {
   }
 
   /**
-   * @notice Internal function to sort signer addresses
-   * @dev Uses bubble sort to sort addresses numerically
+   * @notice Internal function to sort signer addresses. Will return early if the array is already sorted.
+   * @dev Uses insertion sort to sort addresses
    * @param _signers The array of signer addresses to sort
    */
   function _sortSigners(address[] memory _signers) internal pure {
-    uint256 _signersLength = _signers.length;
-    address _temp;
-    for (uint256 _i; _i < _signersLength; ++_i) {
-      for (uint256 _j; _j < _signersLength - _i - 1; ++_j) {
-        // If the current element is greater than the next element, swap them
-        if (_signers[_j] > _signers[_j + 1]) {
-          // Swap elements
-          _temp = _signers[_j];
-          _signers[_j] = _signers[_j + 1];
-          _signers[_j + 1] = _temp;
-        }
-      }
+    if (_signers.isSorted()) {
+      return;
+    } else {
+      LibSort.insertionSort(_signers);
     }
   }
 }

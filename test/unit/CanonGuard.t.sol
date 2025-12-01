@@ -1115,6 +1115,35 @@ contract UnitCanonGuard is Test {
     assertEq(canonGuard.getQueuedActionBuilders().length, 0);
   }
 
+  function test_CancelEnqueuedTransaction_WhenTransactionIsNotQueued(address _actionsBuilder) external {
+    // it reverts with NoTransactionQueued
+    vm.expectRevert(ICanonGuard.NoTransactionQueued.selector);
+    canonGuard.cancelEnqueuedTransaction(_actionsBuilder);
+  }
+
+  modifier whenTransactionIsQueued(
+    IActionsBuilder.Action calldata _action,
+    ICanonGuard.TransactionInfo memory _txInfo,
+    address _proposer,
+    address _actionsBuilder
+  ) {
+    vm.assume(_actionsBuilder != address(0));
+    vm.assume(_actionsBuilder != address(0xfbb67fda52d4bfb8bf));
+
+    _txInfo.expiresAt = bound(_txInfo.expiresAt, 1, type(uint64).max - 1);
+    _txInfo.proposer = _proposer;
+
+    IActionsBuilder.Action[] memory _actions = new IActionsBuilder.Action[](1);
+    _actions[0] = _action;
+    bytes memory _actionsData = abi.encode(_actions);
+
+    canonGuard.mockTransaction(
+      _txInfo.proposer, _actionsBuilder, _actionsData, _txInfo.executableAt, _txInfo.expiresAt, _txInfo.isPreApproved
+    );
+
+    _;
+  }
+
   modifier whenEmergencyModeIsActive() {
     vm.prank(canonGuard.emergencyTrigger());
     canonGuard.setEmergencyMode();
@@ -1123,8 +1152,11 @@ contract UnitCanonGuard is Test {
 
   function test_CancelEnqueuedTransaction_WhenTheCallerIsNotTheEmergencyCaller(
     address _caller,
+    IActionsBuilder.Action calldata _action,
+    ICanonGuard.TransactionInfo memory _txInfo,
+    address _proposer,
     address _actionsBuilder
-  ) external whenEmergencyModeIsActive {
+  ) external whenTransactionIsQueued(_action, _txInfo, _proposer, _actionsBuilder) whenEmergencyModeIsActive {
     vm.assume(_caller != EMERGENCY_CALLER);
 
     // it reverts with Unauthorized
@@ -1133,38 +1165,25 @@ contract UnitCanonGuard is Test {
     canonGuard.cancelEnqueuedTransaction(_actionsBuilder);
   }
 
-  function test_CancelEnqueuedTransaction_WhenTheCallerIsTheEmergencyCallerAndProposer(
-    address _actionsBuilder,
+  function test_CancelEnqueuedTransaction_WhenTheCallerIsTheEmergencyCaller(
     IActionsBuilder.Action calldata _action,
-    ICanonGuard.TransactionInfo memory _txInfo
-  ) external whenEmergencyModeIsActive {
-    _assumeFuzzable(_actionsBuilder);
-    _txInfo.expiresAt = bound(_txInfo.expiresAt, 1, type(uint64).max - 1);
-    _txInfo.proposer = EMERGENCY_CALLER;
-
-    IActionsBuilder.Action[] memory _actions = new IActionsBuilder.Action[](1);
-    _actions[0] = _action;
-    bytes memory _actionsData = abi.encode(_actions);
-
-    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.nonce.selector), abi.encode(1));
-    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.getTransactionHash.selector), abi.encode(bytes32(0)));
-
-    canonGuard.mockTransaction(
-      _txInfo.proposer, _actionsBuilder, _actionsData, _txInfo.executableAt, _txInfo.expiresAt, _txInfo.isPreApproved
-    );
-
+    ICanonGuard.TransactionInfo memory _txInfo,
+    address _proposer,
+    address _actionsBuilder
+  ) external whenTransactionIsQueued(_action, _txInfo, _proposer, _actionsBuilder) whenEmergencyModeIsActive {
     // it emits EnqueuedTransactionCancelled event
+    vm.expectEmit();
+    emit ICanonGuard.EnqueuedTransactionCancelled(_actionsBuilder, EMERGENCY_CALLER);
+
     vm.prank(EMERGENCY_CALLER);
-    vm.expectEmit(address(canonGuard));
-    emit ICanonGuard.EnqueuedTransactionCancelled(_actionsBuilder, EMERGENCY_CALLER, bytes32(0));
     canonGuard.cancelEnqueuedTransaction(_actionsBuilder);
 
     // it deletes transaction from queue
-    (address _proposer, bytes memory __actionsData, uint256 _executableAt, uint256 _expiresAt, bool _isPreApproved) =
+    (address __proposer, bytes memory __actionsData, uint256 _executableAt, uint256 _expiresAt, bool _isPreApproved) =
       canonGuard.transactionsInfo(_actionsBuilder);
     assertEq(__actionsData, bytes(''));
     assertEq(_executableAt, 0);
-    assertEq(_proposer, address(0));
+    assertEq(__proposer, address(0));
     assertEq(_expiresAt, 0);
     assertEq(_isPreApproved, false);
 
@@ -1172,38 +1191,27 @@ contract UnitCanonGuard is Test {
     assertEq(canonGuard.getQueuedActionBuilders().length, 0);
   }
 
-  function test_CancelEnqueuedTransaction_WhenTheCallerIsTheEmergencyCallerAndNotTheProposer(
-    address _actionsBuilder,
+  modifier whenEmergencyModeIsNotActive() {
+    // Emergency mode is off by default
+    _;
+  }
+
+  function test_CancelEnqueuedTransaction_WhenTheTransactionIsExpired(
     IActionsBuilder.Action calldata _action,
-    ICanonGuard.TransactionInfo memory _txInfo
-  ) external whenEmergencyModeIsActive {
-    _assumeFuzzable(_actionsBuilder);
-    vm.assume(_txInfo.proposer != EMERGENCY_CALLER);
-    _txInfo.expiresAt = bound(_txInfo.expiresAt, 1, type(uint64).max - 1);
+    ICanonGuard.TransactionInfo memory _txInfo,
+    address _proposer,
+    address _actionsBuilder
+  ) external whenTransactionIsQueued(_action, _txInfo, _proposer, _actionsBuilder) whenEmergencyModeIsNotActive {
+    canonGuard.modifyMockedTransactionExpiresAt(_actionsBuilder, block.timestamp);
 
-    IActionsBuilder.Action[] memory _actions = new IActionsBuilder.Action[](1);
-    _actions[0] = _action;
-    bytes memory _actionsData = abi.encode(_actions);
-
-    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.nonce.selector), abi.encode(1));
-    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.getTransactionHash.selector), abi.encode(bytes32(0)));
-
-    canonGuard.mockTransaction(
-      _txInfo.proposer, _actionsBuilder, _actionsData, _txInfo.executableAt, _txInfo.expiresAt, _txInfo.isPreApproved
-    );
-
-    // it emits EnqueuedTransactionCancelled event
-    vm.prank(EMERGENCY_CALLER);
-    vm.expectEmit(address(canonGuard));
-    emit ICanonGuard.EnqueuedTransactionCancelled(_actionsBuilder, EMERGENCY_CALLER, bytes32(0));
     canonGuard.cancelEnqueuedTransaction(_actionsBuilder);
 
     // it deletes transaction from queue
-    (address _proposer, bytes memory __actionsData, uint256 _executableAt, uint256 _expiresAt, bool _isPreApproved) =
+    (address __proposer, bytes memory __actionsData, uint256 _executableAt, uint256 _expiresAt, bool _isPreApproved) =
       canonGuard.transactionsInfo(_actionsBuilder);
     assertEq(__actionsData, bytes(''));
     assertEq(_executableAt, 0);
-    assertEq(_proposer, address(0));
+    assertEq(__proposer, address(0));
     assertEq(_expiresAt, 0);
     assertEq(_isPreApproved, false);
 
@@ -1211,29 +1219,24 @@ contract UnitCanonGuard is Test {
     assertEq(canonGuard.getQueuedActionBuilders().length, 0);
   }
 
-  function test_CancelEnqueuedTransaction_WhenTransactionIsNotQueued(address _actionsBuilder) external {
-    // it reverts with NoTransactionQueued
-    vm.expectRevert(ICanonGuard.NoTransactionQueued.selector);
-    canonGuard.cancelEnqueuedTransaction(_actionsBuilder);
+  modifier whenTheTransactionIsNotExpired(address _actionsBuilder) {
+    canonGuard.modifyMockedTransactionExpiresAt(_actionsBuilder, block.timestamp + 1);
+    _;
   }
 
   function test_CancelEnqueuedTransaction_WhenCallerIsNotTheProposer(
-    address _caller,
-    address _actionsBuilder,
     IActionsBuilder.Action calldata _action,
-    ICanonGuard.TransactionInfo memory _txInfo
-  ) external {
-    _assumeFuzzable(_actionsBuilder);
-    vm.assume(_caller != _txInfo.proposer);
-    _txInfo.expiresAt = bound(_txInfo.expiresAt, 1, type(uint64).max - 1);
-
-    IActionsBuilder.Action[] memory _actions = new IActionsBuilder.Action[](1);
-    _actions[0] = _action;
-    bytes memory _actionsData = abi.encode(_actions);
-
-    canonGuard.mockTransaction(
-      _txInfo.proposer, _actionsBuilder, _actionsData, _txInfo.executableAt, _txInfo.expiresAt, _txInfo.isPreApproved
-    );
+    ICanonGuard.TransactionInfo memory _txInfo,
+    address _proposer,
+    address _actionsBuilder,
+    address _caller
+  )
+    external
+    whenTransactionIsQueued(_action, _txInfo, _proposer, _actionsBuilder)
+    whenEmergencyModeIsNotActive
+    whenTheTransactionIsNotExpired(_actionsBuilder)
+  {
+    vm.assume(_caller != _proposer);
 
     // it reverts with CallerMustBeTransactionProposer
     vm.prank(_caller);
@@ -1241,42 +1244,62 @@ contract UnitCanonGuard is Test {
     canonGuard.cancelEnqueuedTransaction(_actionsBuilder);
   }
 
-  function test_CancelEnqueuedTransaction_WhenTransactionCanBeCancelled(
-    address _actionsBuilder,
+  modifier whenCallerIsTheProposer(address _proposer) {
+    vm.startPrank(_proposer);
+    _;
+    vm.stopPrank();
+  }
+
+  function test_CancelEnqueuedTransaction_WhenTheCallerIsASafeOwner(
     IActionsBuilder.Action calldata _action,
-    ICanonGuard.TransactionInfo memory _txInfo
-  ) external {
-    _assumeFuzzable(_actionsBuilder);
-    _txInfo.expiresAt = bound(_txInfo.expiresAt, 1, type(uint64).max - 1);
-
-    IActionsBuilder.Action[] memory _actions = new IActionsBuilder.Action[](1);
-    _actions[0] = _action;
-    bytes memory _actionsData = abi.encode(_actions);
-
-    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.nonce.selector), abi.encode(1));
-    _mockAndExpect(SAFE, abi.encodeWithSelector(ISafe.getTransactionHash.selector), abi.encode(bytes32(0)));
-
-    canonGuard.mockTransaction(
-      _txInfo.proposer, _actionsBuilder, _actionsData, _txInfo.executableAt, _txInfo.expiresAt, _txInfo.isPreApproved
-    );
+    ICanonGuard.TransactionInfo memory _txInfo,
+    address _proposer,
+    address _actionsBuilder
+  )
+    external
+    whenTransactionIsQueued(_action, _txInfo, _proposer, _actionsBuilder)
+    whenEmergencyModeIsNotActive
+    whenTheTransactionIsNotExpired(_actionsBuilder)
+    whenCallerIsTheProposer(_proposer)
+  {
+    _mockAndExpect(SAFE, abi.encodeWithSelector(IOwnerManager.isOwner.selector), abi.encode(true));
 
     // it emits EnqueuedTransactionCancelled event
-    vm.prank(_txInfo.proposer);
-    vm.expectEmit(address(canonGuard));
-    emit ICanonGuard.EnqueuedTransactionCancelled(_actionsBuilder, _txInfo.proposer, bytes32(0));
+    vm.expectEmit();
+    emit ICanonGuard.EnqueuedTransactionCancelled(_actionsBuilder, _proposer);
+
     canonGuard.cancelEnqueuedTransaction(_actionsBuilder);
 
     // it deletes transaction from queue
-    (address _proposer, bytes memory __actionsData, uint256 _executableAt, uint256 _expiresAt, bool _isPreApproved) =
+    (address __proposer, bytes memory __actionsData, uint256 _executableAt, uint256 _expiresAt, bool _isPreApproved) =
       canonGuard.transactionsInfo(_actionsBuilder);
     assertEq(__actionsData, bytes(''));
     assertEq(_executableAt, 0);
-    assertEq(_proposer, address(0));
+    assertEq(__proposer, address(0));
     assertEq(_expiresAt, 0);
     assertEq(_isPreApproved, false);
 
     // it deletes transaction from mapping
     assertEq(canonGuard.getQueuedActionBuilders().length, 0);
+  }
+
+  function test_CancelEnqueuedTransaction_WhenTheCallerIsNotASafeOwner(
+    IActionsBuilder.Action calldata _action,
+    ICanonGuard.TransactionInfo memory _txInfo,
+    address _proposer,
+    address _actionsBuilder
+  )
+    external
+    whenTransactionIsQueued(_action, _txInfo, _proposer, _actionsBuilder)
+    whenEmergencyModeIsNotActive
+    whenTheTransactionIsNotExpired(_actionsBuilder)
+    whenCallerIsTheProposer(_proposer)
+  {
+    _mockAndExpect(SAFE, abi.encodeWithSelector(IOwnerManager.isOwner.selector), abi.encode(false));
+
+    // it reverts with NotSafeOwner
+    vm.expectRevert(ISafeManageable.NotSafeOwner.selector);
+    canonGuard.cancelEnqueuedTransaction(_actionsBuilder);
   }
 
   modifier whenTheTokenIsTheEthAddress() {
@@ -1599,6 +1622,26 @@ contract UnitCanonGuard is Test {
     assertEq(canonGuard.getQueuedActionBuilders().length, 0);
   }
 
+  function test__sortSigners_WhenSortingSigners(uint256 _seed) external {
+    address[] memory _signers = new address[](10);
+
+    // Create an array from a seed
+    _seed = bound(_seed, 0, type(uint256).max - 1);
+    for (uint256 i = 0; i < _signers.length; i++) {
+      _signers[i] = makeAddr(string(abi.encodePacked(keccak256(abi.encodePacked(_seed + 1)))));
+    }
+
+    // Sort with current implementation
+    address[] memory _sortedSignersWithCurrentImplementation = canonGuard.forTest_sortSigners(_signers);
+    // Sort with bubble sort (old implementation)
+    address[] memory _sortedSignersWithBubbleSort = _bubbleSort(_signers);
+
+    // It should be equal to the array sorted by bubble sort
+    for (uint256 i = 0; i < _signers.length; i++) {
+      assertEq(_sortedSignersWithCurrentImplementation[i], _sortedSignersWithBubbleSort[i]);
+    }
+  }
+
   modifier givenCallerIsSafeOwner(address _caller) {
     _mockAndExpect(SAFE, abi.encodeWithSelector(IOwnerManager.isOwner.selector), abi.encode(true));
     _;
@@ -1614,6 +1657,24 @@ contract UnitCanonGuard is Test {
     vm.prank(SAFE);
     canonGuard.approveActionsBuilderOrHub(_actionsBuilder, ACTIONS_BUILDER_APPROVAL_DURATION);
     _;
+  }
+
+  function _bubbleSort(address[] memory _signers) internal pure returns (address[] memory) {
+    uint256 _signersLength = _signers.length;
+    address _temp;
+    for (uint256 _i; _i < _signersLength; ++_i) {
+      for (uint256 _j; _j < _signersLength - _i - 1; ++_j) {
+        // If the current element is greater than the next element, swap them
+        if (_signers[_j] > _signers[_j + 1]) {
+          // Swap elements
+          _temp = _signers[_j];
+          _signers[_j] = _signers[_j + 1];
+          _signers[_j + 1] = _temp;
+        }
+      }
+    }
+
+    return _signers;
   }
 }
 

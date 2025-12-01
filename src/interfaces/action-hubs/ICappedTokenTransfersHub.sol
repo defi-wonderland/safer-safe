@@ -55,6 +55,16 @@ interface ICappedTokenTransfersHub is IActionHub, ISafeManageable {
    */
   error TokensAndCapsLengthMismatch();
 
+  /**
+   * @notice Thrown when the recipient is the zero address
+   */
+  error RecipientCannotBeZeroAddress();
+
+  /**
+   * @notice Thrown when the at least one cap is zero
+   */
+  error CapCannotBeZero();
+
   // ~~~ FUNCTIONS ~~~
 
   /**
@@ -86,10 +96,11 @@ interface ICappedTokenTransfersHub is IActionHub, ISafeManageable {
   function EPOCH_LENGTH() external view returns (uint256 _epochLength);
 
   /**
-   * @notice Gets the last epoch
-   * @return _lastEpoch The last epoch
+   * @notice Gets the last epoch for a token
+   * @param _token The token to get the last epoch for
+   * @return _lastEpoch The last epoch for the token
    */
-  function lastEpoch() external view returns (uint256 _lastEpoch);
+  function lastEpoch(address _token) external view returns (uint256 _lastEpoch);
 
   /**
    * @notice Gets the total amount of tokens spent
