@@ -53,7 +53,6 @@ contract IntegrationBasicTest is DeployCanonGuard, EthereumConstants, Test {
     _canonGuard = ICanonGuard(
       canonGuardFactory.createCanonGuard(
         address(_safeProxy),
-        0,
         address(MULTI_SEND_CALL_ONLY),
         SHORT_TX_EXECUTION_DELAY,
         LONG_TX_EXECUTION_DELAY,
