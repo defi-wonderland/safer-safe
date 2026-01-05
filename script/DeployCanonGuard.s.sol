@@ -24,6 +24,7 @@ import {SetEmergencyCallerActionFactory} from 'contracts/factories/SetEmergencyC
 import {SetEmergencyTriggerActionFactory} from 'contracts/factories/SetEmergencyTriggerActionFactory.sol';
 import {SimpleActionsFactory} from 'contracts/factories/SimpleActionsFactory.sol';
 import {SimpleTransfersFactory} from 'contracts/factories/SimpleTransfersFactory.sol';
+import {CanonGuardRegistry} from 'contracts/periphery/CanonGuardRegistry.sol';
 import {Script} from 'forge-std/Script.sol';
 import {ICanonGuard} from 'interfaces/ICanonGuard.sol';
 import {ICappedTokenTransfersHub} from 'interfaces/action-hubs/ICappedTokenTransfersHub.sol';
@@ -47,6 +48,7 @@ import {ISetEmergencyCallerActionFactory} from 'interfaces/factories/ISetEmergen
 import {ISetEmergencyTriggerActionFactory} from 'interfaces/factories/ISetEmergencyTriggerActionFactory.sol';
 import {ISimpleActionsFactory} from 'interfaces/factories/ISimpleActionsFactory.sol';
 import {ISimpleTransfersFactory} from 'interfaces/factories/ISimpleTransfersFactory.sol';
+import {ICanonGuardRegistry} from 'interfaces/periphery/ICanonGuardRegistry.sol';
 import {Constants} from 'script/Constants.sol';
 import {CanonGuard} from 'src/contracts/CanonGuard.sol';
 import {SetGuardAction} from 'src/contracts/actions-builders/SetGuardAction.sol';
@@ -91,6 +93,9 @@ contract DeployCanonGuard is Constants, Script {
   IActionsBuilder public setGuardAction;
   IActionsBuilder public unsetEmergencyModeAction;
 
+  // ~~~ PERIPHERY ~~~
+  ICanonGuardRegistry public canonGuardRegistry;
+
   // ~~~ DUMMY CONSTANTS ~~~
   address public constant DUMMY_ADDRESS = address(1);
   uint256 public constant DUMMY_APPROVAL_DURATION = 0;
@@ -105,16 +110,17 @@ contract DeployCanonGuard is Constants, Script {
   function run() public {
     vm.startBroadcast();
 
-    _deployAllChainsFactories();
-    _deployAllChainsContracts();
+    // _deployAllChainsFactories();
+    // _deployAllChainsContracts();
+    _deployAllChainsPeripheries();
 
-    if (block.chainid == ETHEREUM_MAINNET_CHAIN_ID) {
-      _deployEthereumFactories();
-      _deployEthereumContracts();
-    } else if (block.chainid == OPTIMISM_MAINNET_CHAIN_ID) {
-      _deployOptimismFactories();
-      _deployOptimismContracts();
-    }
+    // if (block.chainid == ETHEREUM_MAINNET_CHAIN_ID) {
+    //   _deployEthereumFactories();
+    //   _deployEthereumContracts();
+    // } else if (block.chainid == OPTIMISM_MAINNET_CHAIN_ID) {
+    //   _deployOptimismFactories();
+    //   _deployOptimismContracts();
+    // }
 
     vm.stopBroadcast();
   }
@@ -138,14 +144,6 @@ contract DeployCanonGuard is Constants, Script {
     simpleActionsFactory = ISimpleActionsFactory(CREATE_X.deployCreate2(SALT, type(SimpleActionsFactory).creationCode));
     simpleTransfersFactory =
       ISimpleTransfersFactory(CREATE_X.deployCreate2(SALT, type(SimpleTransfersFactory).creationCode));
-  }
-
-  function _deployEthereumFactories() internal {
-    everclearTokenConversionFactory = new EverclearTokenConversionFactory();
-  }
-
-  function _deployOptimismFactories() internal {
-    opxActionFactory = new OPxActionFactory();
   }
 
   function _deployAllChainsContracts() internal {
@@ -182,6 +180,18 @@ contract DeployCanonGuard is Constants, Script {
     );
     setGuardAction = IActionsBuilder(address(new SetGuardAction()));
     unsetEmergencyModeAction = IActionsBuilder(address(new UnsetEmergencyModeAction()));
+  }
+
+  function _deployAllChainsPeripheries() internal {
+    canonGuardRegistry = ICanonGuardRegistry(CREATE_X.deployCreate2(SALT, type(CanonGuardRegistry).creationCode));
+  }
+
+  function _deployEthereumFactories() internal {
+    everclearTokenConversionFactory = new EverclearTokenConversionFactory();
+  }
+
+  function _deployOptimismFactories() internal {
+    opxActionFactory = new OPxActionFactory();
   }
 
   function _deployEthereumContracts() internal {
