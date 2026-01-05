@@ -36,16 +36,16 @@
   },
   "dependencies": {
     "@safe-global/safe-contracts": "github:safe-global/safe-smart-account#b75e250",
-    "solady": "github:vectorized/solady#0.1.26"
+    "solady": "github:vectorized/solady#v0.1.26"
   },
   "devDependencies": {
     "@commitlint/cli": "19.8.1",
     "@commitlint/config-conventional": "19.8.1",
-    "forge-std": "github:foundry-rs/forge-std#1.10.0",
+    "forge-std": "github:foundry-rs/forge-std#v1.10.0",
     "halmos-cheatcodes": "github:a16z/halmos-cheatcodes#6da4e69",
     "husky": "9.1.7",
-    "lint-staged": "16.1.6",
+    "lint-staged": "16.2.7",
     "solhint-community": "4.0.1",
-    "sort-package-json": "3.4.0"
+    "sort-package-json": "3.6.0"
   }
 }
