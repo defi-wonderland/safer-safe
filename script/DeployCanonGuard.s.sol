@@ -110,17 +110,18 @@ contract DeployCanonGuard is Constants, Script {
   function run() public {
     vm.startBroadcast();
 
-    // _deployAllChainsFactories();
-    // _deployAllChainsContracts();
+    _deployAllChainsFactories();
+    _deployAllChainsSharedContracts();
+    _deployAllChainsContracts();
     _deployAllChainsPeripheries();
 
-    // if (block.chainid == ETHEREUM_MAINNET_CHAIN_ID) {
-    //   _deployEthereumFactories();
-    //   _deployEthereumContracts();
-    // } else if (block.chainid == OPTIMISM_MAINNET_CHAIN_ID) {
-    //   _deployOptimismFactories();
-    //   _deployOptimismContracts();
-    // }
+    if (block.chainid == ETHEREUM_MAINNET_CHAIN_ID) {
+      _deployEthereumFactories();
+      _deployEthereumContracts();
+    } else if (block.chainid == OPTIMISM_MAINNET_CHAIN_ID) {
+      _deployOptimismFactories();
+      _deployOptimismContracts();
+    }
 
     vm.stopBroadcast();
   }
@@ -144,6 +145,12 @@ contract DeployCanonGuard is Constants, Script {
     simpleActionsFactory = ISimpleActionsFactory(CREATE_X.deployCreate2(SALT, type(SimpleActionsFactory).creationCode));
     simpleTransfersFactory =
       ISimpleTransfersFactory(CREATE_X.deployCreate2(SALT, type(SimpleTransfersFactory).creationCode));
+  }
+
+  function _deployAllChainsSharedContracts() internal {
+    unsetEmergencyModeAction =
+      IActionsBuilder(CREATE_X.deployCreate2(SALT, type(UnsetEmergencyModeAction).creationCode));
+    setGuardAction = IActionsBuilder(CREATE_X.deployCreate2(SALT, type(SetGuardAction).creationCode));
   }
 
   function _deployAllChainsContracts() internal {
@@ -178,8 +185,6 @@ contract DeployCanonGuard is Constants, Script {
         )
       )
     );
-    setGuardAction = IActionsBuilder(address(new SetGuardAction()));
-    unsetEmergencyModeAction = IActionsBuilder(address(new UnsetEmergencyModeAction()));
   }
 
   function _deployAllChainsPeripheries() internal {
