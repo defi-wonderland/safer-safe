@@ -2,7 +2,7 @@
 pragma solidity 0.8.30;
 
 import {OPxAction} from 'src/contracts/actions-builders/OPxAction.sol';
-import {ISimpleActions} from 'src/interfaces/actions-builders/ISimpleActions.sol';
+import {IArbitraryActions} from 'src/interfaces/actions-builders/IArbitraryActions.sol';
 import {IntegrationOptimismBase} from 'test/integration/optimism/IntegrationOptimismBase.sol';
 
 contract IntegrationWonderlandClaims is IntegrationOptimismBase {
@@ -22,19 +22,19 @@ contract IntegrationWonderlandClaims is IntegrationOptimismBase {
 
     uint256[] memory _plans = new uint256[](1);
     _plans[0] = 9;
-    ISimpleActions.SimpleAction memory _claimKITE = ISimpleActions.SimpleAction({
+    IArbitraryActions.ArbitraryAction memory _claimKITE = IArbitraryActions.ArbitraryAction({
       target: address(_kiteVestingPlans), signature: 'redeemPlans(uint256[])', data: abi.encode(_plans), value: 0
     });
 
-    ISimpleActions.SimpleAction memory _claimWLD = ISimpleActions.SimpleAction({
+    IArbitraryActions.ArbitraryAction memory _claimWLD = IArbitraryActions.ArbitraryAction({
       target: address(_wldVestingWallet), signature: 'release(address)', data: abi.encode(address(WLD)), value: 0
     });
 
-    ISimpleActions.SimpleAction[] memory _simpleActions = new ISimpleActions.SimpleAction[](2);
-    _simpleActions[0] = _claimKITE;
-    _simpleActions[1] = _claimWLD;
+    IArbitraryActions.ArbitraryAction[] memory _arbitraryActions = new IArbitraryActions.ArbitraryAction[](2);
+    _arbitraryActions[0] = _claimKITE;
+    _arbitraryActions[1] = _claimWLD;
 
-    _actionsBuilder = simpleActionsFactory.createSimpleActions(_simpleActions);
+    _actionsBuilder = arbitraryActionsFactory.createArbitraryActions(_arbitraryActions);
     _opxAction = address(new OPxAction(_opx));
   }
 

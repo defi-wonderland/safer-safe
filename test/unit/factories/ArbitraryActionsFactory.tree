@@ -1,0 +1,17 @@
+UnitArbitraryActionsFactory::createArbitraryActions
+└── when creating an ArbitraryActions contract
+    ├── it should deploy an ArbitraryActions contract with correct args
+    ├── it should match the parameters sent to the constructor
+    ├── it should save the entire array of actions
+    ├── it should set the parent address in the child contract
+    ├── it should store the contract as a factory children
+    └── it should emit ArbitraryActionsCreated event with correct parameters
+
+UnitArbitraryActionsFactory::createArbitraryAction
+└── when creating an ArbitraryActions contract with a single arbitrary action
+    ├── it should deploy an ArbitraryActions contract with a single arbitrary action args
+    ├── it should match the parameters sent to the constructor
+    ├── it should save the entire array of actions
+    ├── it should set the parent address in the child contract
+    ├── it should store the contract as a factory children
+    └── it should emit ArbitraryActionsCreated event with correct parameters

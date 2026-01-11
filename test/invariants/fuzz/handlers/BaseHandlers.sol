@@ -4,11 +4,11 @@ pragma solidity 0.8.30;
 import {HandlerHelpers} from './HandlerHelpers.sol';
 
 import {AllowanceClaimorFactory} from 'contracts/factories/AllowanceClaimorFactory.sol';
+import {ArbitraryActionsFactory} from 'contracts/factories/ArbitraryActionsFactory.sol';
 import {CappedTokenTransfersHubFactory} from 'contracts/factories/CappedTokenTransfersHubFactory.sol';
 import {EverclearTokenConversionFactory} from 'contracts/factories/EverclearTokenConversionFactory.sol';
 import {OPxActionFactory} from 'contracts/factories/OPxActionFactory.sol';
 import {PreApproveActionFactory} from 'contracts/factories/PreApproveActionFactory.sol';
-import {SimpleActionsFactory} from 'contracts/factories/SimpleActionsFactory.sol';
 import {SimpleTransfersFactory} from 'contracts/factories/SimpleTransfersFactory.sol';
 
 import {ActionTarget} from '../utils/ActionTarget.sol';
@@ -33,7 +33,7 @@ abstract contract BaseHandlers is HandlerHelpers {
   CappedTokenTransfersHubFactory public cappedTokenTransfersHubFactory;
   EverclearTokenConversionFactory public everclearTokenConversionFactory;
   OPxActionFactory public opxActionFactory;
-  SimpleActionsFactory public simpleActionsFactory;
+  ArbitraryActionsFactory public arbitraryActionsFactory;
   SimpleTransfersFactory public simpleTransfersFactory;
 
   address public currentSigner;
@@ -86,7 +86,7 @@ abstract contract BaseHandlers is HandlerHelpers {
     cappedTokenTransfersHubFactory = new CappedTokenTransfersHubFactory();
     everclearTokenConversionFactory = new EverclearTokenConversionFactory();
     opxActionFactory = new OPxActionFactory();
-    simpleActionsFactory = new SimpleActionsFactory();
+    arbitraryActionsFactory = new ArbitraryActionsFactory();
     simpleTransfersFactory = new SimpleTransfersFactory();
 
     TOKEN_SENDER = makeAddr('TOKEN_SENDER');

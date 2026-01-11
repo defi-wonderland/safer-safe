@@ -4,7 +4,7 @@ pragma solidity 0.8.30;
 import {ISafe} from '@safe-smart-account/interfaces/ISafe.sol';
 import {Test} from 'forge-std/Test.sol';
 import {ICanonGuard} from 'interfaces/ICanonGuard.sol';
-import {ISimpleActions} from 'interfaces/actions-builders/ISimpleActions.sol';
+import {IArbitraryActions} from 'interfaces/actions-builders/IArbitraryActions.sol';
 import {EthereumConstants} from 'script/Constants.sol';
 import {DeployCanonGuard} from 'script/DeployCanonGuard.s.sol';
 
@@ -66,22 +66,22 @@ contract IntegrationBasicTest is DeployCanonGuard, EthereumConstants, Test {
     vm.prank(address(_safeProxy));
     _safeProxy.setGuard(address(_canonGuard));
 
-    // Deploy the SimpleActions contract
-    ISimpleActions.SimpleAction memory _depositAction =
-      ISimpleActions.SimpleAction({target: address(WETH), signature: 'deposit()', data: bytes(''), value: 1});
-    ISimpleActions.SimpleAction memory _transferAction = ISimpleActions.SimpleAction({
+    // Deploy the ArbitraryActions contract
+    IArbitraryActions.ArbitraryAction memory _depositAction =
+      IArbitraryActions.ArbitraryAction({target: address(WETH), signature: 'deposit()', data: bytes(''), value: 1});
+    IArbitraryActions.ArbitraryAction memory _transferAction = IArbitraryActions.ArbitraryAction({
       target: address(WETH), signature: 'transfer(address,uint256)', data: abi.encode(_safeOwner, 1), value: 0
     });
 
-    ISimpleActions.SimpleAction[] memory _simpleActions = new ISimpleActions.SimpleAction[](2);
-    _simpleActions[0] = _depositAction;
-    _simpleActions[1] = _transferAction;
+    IArbitraryActions.ArbitraryAction[] memory _arbitraryActions = new IArbitraryActions.ArbitraryAction[](2);
+    _arbitraryActions[0] = _depositAction;
+    _arbitraryActions[1] = _transferAction;
 
-    _actionsBuilder = simpleActionsFactory.createSimpleActions(_simpleActions);
+    _actionsBuilder = arbitraryActionsFactory.createArbitraryActions(_arbitraryActions);
   }
 
   function test_ExecuteTransaction() public {
-    // Allow the CanonGuard to call the SimpleActions contract
+    // Allow the CanonGuard to call the ArbitraryActions contract
     uint256 _approvalDuration = 1 days;
 
     vm.prank(address(_safeProxy));

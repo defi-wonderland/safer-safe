@@ -1,26 +1,26 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import {ISimpleActions} from 'interfaces/actions-builders/ISimpleActions.sol';
+import {IArbitraryActions} from 'interfaces/actions-builders/IArbitraryActions.sol';
 import {IFactory} from 'interfaces/factories/IFactory.sol';
 
 /**
- * @title ISimpleActionsFactory
- * @notice Interface for the SimpleActionsFactory contract
+ * @title IArbitraryActionsFactory
+ * @notice Interface for the ArbitraryActionsFactory contract
  */
-interface ISimpleActionsFactory is IFactory {
+interface IArbitraryActionsFactory is IFactory {
   // ~~~ EVENTS ~~~
 
   /**
-   * @notice Emitted when a new SimpleActions contract is created
-   * @param _simpleActions The address of the created SimpleActions contract
+   * @notice Emitted when a new ArbitraryActions contract is created
+   * @param _arbitraryActions The address of the created ArbitraryActions contract
    */
-  event SimpleActionsCreated(address indexed _simpleActions);
+  event ArbitraryActionsCreated(address indexed _arbitraryActions);
 
   // ~~~ FACTORY METHODS ~~~
 
   /**
-   * @notice Creates a SimpleActions contract
+   * @notice Creates an ArbitraryActions contract
    * @dev In Etherscan interface, the transaction should be parsed as follows:
    * Describing a WETH.deposit{value:1}() & WETH.transfer(0x0000000000000000000000000000000000C0FFEE, 1)
    *  [
@@ -39,14 +39,14 @@ interface ISimpleActionsFactory is IFactory {
    *  ]
    * Where 0x0000000000000000000000000000000000000000000000000000000000c0ffee0000000000000000000000000000000000000000000000000000000000000001
    * is the result of abi.encode(address(0xC0FFEE), uint256(1))
-   * @param _smplActions The array of simple actions
-   * @return _simpleActions The SimpleActions contract address
+   * @param _smplActions The array of arbitrary actions
+   * @return _arbitraryActions The ArbitraryActions contract address
    */
-  function createSimpleActions(ISimpleActions
-        .SimpleAction[] memory _smplActions) external returns (address _simpleActions);
+  function createArbitraryActions(IArbitraryActions
+        .ArbitraryAction[] memory _smplActions) external returns (address _arbitraryActions);
 
   /**
-   * @notice Creates a SimpleActions contract with a single simple action
+   * @notice Creates an ArbitraryActions contract with a single arbitrary action
    * @dev In Etherscan interface, the transaction should be parsed as follows:
    * Describing a WETH.transfer(0x0000000000000000000000000000000000C0FFEE, 1):
    *  "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
@@ -55,10 +55,10 @@ interface ISimpleActionsFactory is IFactory {
    *  "0"
    * Where 0x0000000000000000000000000000000000000000000000000000000000c0ffee0000000000000000000000000000000000000000000000000000000000000001
    * is the result of abi.encode(address(0xC0FFEE), uint256(1))
-   * @param _simpleAction The simple action
-   * @return _simpleActions The SimpleActions contract address
+   * @param _arbitraryAction The arbitrary action
+   * @return _arbitraryActions The ArbitraryActions contract address
    */
-  function createSimpleAction(
-    ISimpleActions.SimpleAction memory _simpleAction
-  ) external returns (address _simpleActions);
+  function createArbitraryAction(
+    IArbitraryActions.ArbitraryAction memory _arbitraryAction
+  ) external returns (address _arbitraryActions);
 }

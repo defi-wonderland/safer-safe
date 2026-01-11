@@ -12,7 +12,7 @@ Safer Safe is a multisig solution that enhances security through fully on-chain 
 
 1. **SafeEntrypoint**: Main contract that allows execution of transactions on a Safe with time delays and approval mechanisms
 2. **ActionHub**: Abstract contract for managing action builders - contracts that define specific transaction patterns
-3. **Actions Builders**: Specific implementations for different transaction types (SimpleActions, CappedTokenTransfers, etc.)
+3. **Actions Builders**: Specific implementations for different transaction types (ArbitraryActions, CappedTokenTransfers, etc.)
 4. **SafeManageable**: Base contract providing Safe integration functionality
 5. **EmergencyModeHook**: Security mechanism to pause operations in emergency situations
 6. **OnlyEntrypointGuard**: Guard that ensures transactions go through the proper entrypoint

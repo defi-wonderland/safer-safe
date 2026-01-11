@@ -4,10 +4,10 @@ pragma solidity 0.8.30;
 import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 
 /**
- * @title ISimpleActions
- * @notice Interface for the SimpleActions contract
+ * @title IArbitraryActions
+ * @notice Interface for the ArbitraryActions contract
  */
-interface ISimpleActions is IActionsBuilder {
+interface IArbitraryActions is IActionsBuilder {
   // ~~~ STRUCTS ~~~
 
   /**
@@ -17,7 +17,7 @@ interface ISimpleActions is IActionsBuilder {
    * @param data The data of the action (i.e., abi.encode(address,uint256))
    * @param value The value of the action (i.e., msg.value)
    */
-  struct SimpleAction {
+  struct ArbitraryAction {
     address target;
     string signature;
     bytes data;
@@ -27,19 +27,19 @@ interface ISimpleActions is IActionsBuilder {
   // ~~~ EVENTS ~~~
 
   /**
-   * @notice Emitted when a simple action is added
+   * @notice Emitted when an arbitrary action is added
    * @param _target The target address of the action
    * @param _signature The signature of the action
    * @param _data The data of the action
    * @param _value The value of the action
    */
-  event SimpleActionAdded(address indexed _target, string indexed _signature, bytes _data, uint256 _value);
+  event ArbitraryActionAdded(address indexed _target, string indexed _signature, bytes _data, uint256 _value);
 
   // ~~~ VIEW METHODS ~~~
 
   /**
-   * @notice Gets the array of simple actions
-   * @return _simpleActions The array of simple actions
+   * @notice Gets the array of arbitrary actions
+   * @return _arbitraryActions The array of arbitrary actions
    */
-  function simpleActions() external view returns (SimpleAction[] memory _simpleActions);
+  function arbitraryActions() external view returns (ArbitraryAction[] memory _arbitraryActions);
 }

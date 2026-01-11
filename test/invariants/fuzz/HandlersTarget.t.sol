@@ -8,13 +8,13 @@ import {HandlersCappedTokenTransfersHub} from './handlers/HandlersCappedTokenTra
 import {HandlersEverclearTokenConversion} from './handlers/HandlersEverclearTokenConversion.t.sol';
 import {HandlersOPxAction} from './handlers/HandlersOPxAction.t.sol';
 
+import {HandlersArbitraryActions} from './handlers/HandlersArbitraryActions.t.sol';
 import {HandlersCanonGuard} from './handlers/HandlersCanonGuard.t.sol';
-import {HandlersSimpleActions} from './handlers/HandlersSimpleActions.t.sol';
 import {HandlersSimpleTransfers} from './handlers/HandlersSimpleTransfers.t.sol';
 
 contract HandlersTarget is
   HandlersCanonGuard,
-  HandlersSimpleActions,
+  HandlersArbitraryActions,
   HandlersAllowanceClaimor,
   HandlersCappedTokenTransfersHub,
   HandlersEverclearTokenConversion,
