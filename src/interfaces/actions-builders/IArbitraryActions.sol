@@ -13,8 +13,8 @@ interface IArbitraryActions is IActionsBuilder {
   /**
    * @notice Struct for a simple transaction action
    * @param target The target address of the action (e.g., WETH)
-   * @param signature The signature of the action (e.g., "transfer(address,uint256)")
-   * @param data The data of the action (i.e., abi.encode(address,uint256))
+   * @param signature The signature of the action (e.g., "transfer(address,uint256)"), optional
+   * @param data The complete calldata of the action (i.e., selector + abi.encode(args))
    * @param value The value of the action (i.e., msg.value)
    */
   struct ArbitraryAction {
@@ -24,16 +24,25 @@ interface IArbitraryActions is IActionsBuilder {
     uint256 value;
   }
 
+  // ~~~ ERRORS ~~~
+
+  /**
+   * @notice Reverts when the signature selector doesn't match the callData selector
+   * @param _expected The expected selector computed from the signature
+   * @param _actual The actual selector from the callData
+   */
+  error SelectorMismatch(bytes4 _expected, bytes4 _actual);
+
   // ~~~ EVENTS ~~~
 
   /**
    * @notice Emitted when an arbitrary action is added
    * @param _target The target address of the action
-   * @param _signature The signature of the action
-   * @param _data The data of the action
+   * @param _data The complete calldata of the action
    * @param _value The value of the action
+   * @param _signature The signature of the action (optional)
    */
-  event ArbitraryActionAdded(address indexed _target, string indexed _signature, bytes _data, uint256 _value);
+  event ArbitraryActionAdded(address indexed _target, bytes _data, uint256 _value, string indexed _signature);
 
   // ~~~ VIEW METHODS ~~~
 
