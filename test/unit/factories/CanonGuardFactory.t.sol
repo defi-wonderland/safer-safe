@@ -39,6 +39,13 @@ contract UnitCanonGuardFactorycreateCanonGuard is Test, Constants, Utils {
     _shortTxExecutionDelay = bound(_shortTxExecutionDelay, 0, 6 * 30 days);
     _longTxExecutionDelay = bound(_longTxExecutionDelay, _shortTxExecutionDelay, 6 * 30 days);
 
+    address _expectedCanonGuard =
+      vm.computeCreateAddress(address(canonGuardFactory), vm.getNonce(address(canonGuardFactory)));
+
+    // it should emit CanonGuardCreated event with correct parameters
+    vm.expectEmit();
+    emit ICanonGuardFactory.CanonGuardCreated(_expectedCanonGuard, _safe, _emergencyTrigger, _emergencyCaller);
+
     vm.prank(_safe);
     address _canonGuard = canonGuardFactory.createCanonGuard(
       _safe,
@@ -50,6 +57,7 @@ contract UnitCanonGuardFactorycreateCanonGuard is Test, Constants, Utils {
       _emergencyTrigger,
       _emergencyCaller
     );
+
     auxCanonGuard = ICanonGuard(
       deployCode(
         'CanonGuard',

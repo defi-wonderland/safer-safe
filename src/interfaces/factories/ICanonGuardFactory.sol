@@ -66,5 +66,4 @@ interface ICanonGuardFactory is IFactory {
     address _emergencyTrigger,
     address _emergencyCaller
   ) external returns (address _canonGuard);
-
 }
