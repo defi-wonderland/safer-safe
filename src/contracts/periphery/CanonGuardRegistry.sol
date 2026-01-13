@@ -33,55 +33,6 @@ contract CanonGuardRegistry is ICanonGuardRegistry {
     _;
   }
 
-  /**
-   * @notice Internal function to check if the caller is a Safe signer
-   * @param _canonGuard The CanonGuard instance to check against
-   */
-  function _onlySafeSigner(address _canonGuard) internal view {
-    ISafe _safe = ISafeManageable(_canonGuard).SAFE();
-    if (!_safe.isOwner(msg.sender)) revert NotSafeSigner();
-  }
-
-  // ~~~ VIEW METHODS ~~~
-
-  /// @inheritdoc ICanonGuardRegistry
-  function totalEntities(address _canonGuard) external view returns (uint256 _total) {
-    _total = _canonGuardEntities[_canonGuard].length();
-  }
-
-  /// @inheritdoc ICanonGuardRegistry
-  function read(
-    address _canonGuard,
-    uint256 _offset,
-    uint256 _limit
-  ) external view returns (EntityWithEdition[] memory _entities) {
-    EnumerableSetLib.AddressSet storage _set = _canonGuardEntities[_canonGuard];
-    uint256 _totalCount = _set.length();
-
-    // Handle edge cases
-    if (_offset >= _totalCount) {
-      return new EntityWithEdition[](0);
-    }
-
-    // Calculate actual count to return
-    uint256 _remaining = _totalCount - _offset;
-    uint256 _count = _limit < _remaining ? _limit : _remaining;
-
-    _entities = new EntityWithEdition[](_count);
-
-    address[] memory _allEntities = _set.values();
-
-    for (uint256 _i; _i < _count; ++_i) {
-      address _entity = _allEntities[_offset + _i];
-      _entities[_i] = EntityWithEdition({entity: _entity, edition: _entityLabels[_canonGuard][_entity]});
-    }
-  }
-
-  /// @inheritdoc ICanonGuardRegistry
-  function entityLabel(address _canonGuard, address _entity) external view returns (Edition memory _edition) {
-    _edition = _entityLabels[_canonGuard][_entity];
-  }
-
   // ~~~ MUTATIVE METHODS ~~~
 
   /// @inheritdoc ICanonGuardRegistry
@@ -126,5 +77,51 @@ contract CanonGuardRegistry is ICanonGuardRegistry {
       emit EntityRemoved(_canonGuard, _entity);
     }
   }
-}
 
+  // ~~~ VIEW METHODS ~~~
+
+  /// @inheritdoc ICanonGuardRegistry
+  function totalEntities(address _canonGuard) external view returns (uint256 _total) {
+    _total = _canonGuardEntities[_canonGuard].length();
+  }
+
+  /// @inheritdoc ICanonGuardRegistry
+  function read(
+    address _canonGuard,
+    uint256 _offset,
+    uint256 _limit
+  ) external view returns (EntityWithEdition[] memory _entities) {
+    EnumerableSetLib.AddressSet storage _set = _canonGuardEntities[_canonGuard];
+    uint256 _totalCount = _set.length();
+
+    // Handle edge cases
+    if (_offset >= _totalCount) {
+      return new EntityWithEdition[](0);
+    }
+
+    // Calculate actual count to return
+    uint256 _remaining = _totalCount - _offset;
+    uint256 _count = _limit < _remaining ? _limit : _remaining;
+
+    _entities = new EntityWithEdition[](_count);
+
+    for (uint256 _i; _i < _count; ++_i) {
+      address _entity = _set.at(_offset + _i);
+      _entities[_i] = EntityWithEdition({entity: _entity, edition: _entityLabels[_canonGuard][_entity]});
+    }
+  }
+
+  /// @inheritdoc ICanonGuardRegistry
+  function entityLabel(address _canonGuard, address _entity) external view returns (Edition memory _edition) {
+    _edition = _entityLabels[_canonGuard][_entity];
+  }
+
+  /**
+   * @notice Internal function to check if the caller is a Safe signer
+   * @param _canonGuard The CanonGuard instance to check against
+   */
+  function _onlySafeSigner(address _canonGuard) internal view {
+    ISafe _safe = ISafeManageable(_canonGuard).SAFE();
+    if (!_safe.isOwner(msg.sender)) revert NotSafeSigner();
+  }
+}
