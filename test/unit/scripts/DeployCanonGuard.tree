@@ -9,4 +9,6 @@ UnitDeployCanonGuard
     ├── it should match the deterministic address
     ├── it should deploy the common factories
     ├── it should deploy the factories for the chain
-    └── it should deploy the common contracts for the chain
+    ├── it should deploy the common contracts for the chain
+    ├── it should deploy the shared contracts for the chain
+    └── it should deploy the periphery contracts for the chain
