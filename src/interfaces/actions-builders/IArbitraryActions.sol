@@ -24,15 +24,6 @@ interface IArbitraryActions is IActionsBuilder {
     uint256 value;
   }
 
-  // ~~~ ERRORS ~~~
-
-  /**
-   * @notice Reverts when the signature selector doesn't match the callData selector
-   * @param _expected The expected selector computed from the signature
-   * @param _actual The actual selector from the callData
-   */
-  error SelectorMismatch(bytes4 _expected, bytes4 _actual);
-
   // ~~~ EVENTS ~~~
 
   /**
@@ -43,6 +34,15 @@ interface IArbitraryActions is IActionsBuilder {
    * @param _signature The signature of the action (optional)
    */
   event ArbitraryActionAdded(address indexed _target, bytes _data, uint256 _value, string indexed _signature);
+
+  // ~~~ ERRORS ~~~
+
+  /**
+   * @notice Reverts when the signature selector doesn't match the callData selector
+   * @param _expected The expected selector computed from the signature
+   * @param _actual The actual selector from the callData
+   */
+  error SelectorMismatch(bytes4 _expected, bytes4 _actual);
 
   // ~~~ VIEW METHODS ~~~
 

@@ -17,21 +17,33 @@ contract IntegrationWonderlandClaims is IntegrationEthereumBase {
     super.setUp();
 
     // Deploy the ArbitraryActions contract
-    IArbitraryActions.ArbitraryAction memory _claimGTC =
-      IArbitraryActions.ArbitraryAction({target: address(_gtcSimpleEscrow), signature: 'claim()', data: '', value: 0});
+    IArbitraryActions.ArbitraryAction memory _claimGTC = IArbitraryActions.ArbitraryAction({
+      target: address(_gtcSimpleEscrow),
+      signature: 'claim()',
+      data: abi.encodePacked(bytes4(keccak256(bytes('claim()'))), abi.encode(bytes(''))),
+      value: 0
+    });
 
-    IArbitraryActions.ArbitraryAction memory _claimBAL =
-      IArbitraryActions.ArbitraryAction({target: address(_balSimpleEscrow), signature: 'claim()', data: '', value: 0});
+    IArbitraryActions.ArbitraryAction memory _claimBAL = IArbitraryActions.ArbitraryAction({
+      target: address(_balSimpleEscrow),
+      signature: 'claim()',
+      data: abi.encodePacked(bytes4(keccak256(bytes('claim()'))), abi.encode(bytes(''))),
+      value: 0
+    });
 
-    IArbitraryActions.ArbitraryAction memory _claimKP3R =
-      IArbitraryActions.ArbitraryAction({target: address(_kp3rSimpleEscrow), signature: 'claim()', data: '', value: 0});
+    IArbitraryActions.ArbitraryAction memory _claimKP3R = IArbitraryActions.ArbitraryAction({
+      target: address(_kp3rSimpleEscrow),
+      signature: 'claim()',
+      data: abi.encodePacked(bytes4(keccak256(bytes('claim()'))), abi.encode(bytes(''))),
+      value: 0
+    });
 
-    IArbitraryActions.ArbitraryAction[] memory _arbitraryActions = new IArbitraryActions.ArbitraryAction[](3);
-    _arbitraryActions[0] = _claimGTC;
-    _arbitraryActions[1] = _claimBAL;
-    _arbitraryActions[2] = _claimKP3R;
+    IArbitraryActions.ArbitraryAction[] memory __arbitraryActions = new IArbitraryActions.ArbitraryAction[](3);
+    __arbitraryActions[0] = _claimGTC;
+    __arbitraryActions[1] = _claimBAL;
+    __arbitraryActions[2] = _claimKP3R;
 
-    _actionsBuilder = arbitraryActionsFactory.createArbitraryActions(_arbitraryActions);
+    _actionsBuilder = arbitraryActionsFactory.createArbitraryActions(__arbitraryActions);
   }
 
   function test_ExecuteTransaction() public {

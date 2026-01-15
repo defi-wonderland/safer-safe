@@ -70,7 +70,9 @@ contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
     IArbitraryActions.ArbitraryAction memory _addOwnerArbitraryAction = IArbitraryActions.ArbitraryAction({
       target: address(SAFE_PROXY),
       signature: 'addOwnerWithThreshold(address,uint256)',
-      data: abi.encode(newOwner, _safeThreshold + 1),
+      data: abi.encodePacked(
+        bytes4(keccak256(bytes('addOwnerWithThreshold(address,uint256)'))), abi.encode(newOwner, _safeThreshold + 1)
+      ),
       value: 0
     });
     IArbitraryActions.ArbitraryAction[] memory _modifyOwnersArbitraryActions =
@@ -83,7 +85,10 @@ contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
     IArbitraryActions.ArbitraryAction memory _removeOwnerArbitraryAction = IArbitraryActions.ArbitraryAction({
       target: address(SAFE_PROXY),
       signature: 'removeOwner(address,address,uint256)',
-      data: abi.encode(previousOwner, ownerToRemove, _safeThreshold - 1),
+      data: abi.encodePacked(
+        bytes4(keccak256(bytes('removeOwner(address,address,uint256)'))),
+        abi.encode(previousOwner, ownerToRemove, _safeThreshold - 1)
+      ),
       value: 0
     });
     _modifyOwnersArbitraryActions[0] = _removeOwnerArbitraryAction;
@@ -470,15 +475,26 @@ contract IntegrationCanonGuardManageActions is IntegrationEthereumBase {
     deal(address(WETH), address(SAFE_PROXY), 1 ether);
     deal(address(USDC), address(SAFE_PROXY), 1 ether);
     address _recipient = makeAddr('recipient');
+
     address _wethTransferArbitraryAction = arbitraryActionsFactory.createArbitraryAction(
       IArbitraryActions.ArbitraryAction({
-        target: address(WETH), signature: 'transfer(address,uint256)', data: abi.encode(_recipient, 1 ether), value: 0
+        target: address(WETH),
+        signature: 'transfer(address,uint256)',
+        data: abi.encodePacked(
+          bytes4(keccak256(bytes('transfer(address,uint256)'))), abi.encode(_recipient, uint256(1 ether))
+        ),
+        value: 0
       })
     );
 
     address _usdcTransferArbitraryAction = arbitraryActionsFactory.createArbitraryAction(
       IArbitraryActions.ArbitraryAction({
-        target: address(USDC), signature: 'transfer(address,uint256)', data: abi.encode(_recipient, 1 ether), value: 0
+        target: address(USDC),
+        signature: 'transfer(address,uint256)',
+        data: abi.encodePacked(
+          bytes4(keccak256(bytes('transfer(address,uint256)'))), abi.encode(_recipient, uint256(1 ether))
+        ),
+        value: 0
       })
     );
 

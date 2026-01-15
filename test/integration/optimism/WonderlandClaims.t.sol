@@ -23,18 +23,24 @@ contract IntegrationWonderlandClaims is IntegrationOptimismBase {
     uint256[] memory _plans = new uint256[](1);
     _plans[0] = 9;
     IArbitraryActions.ArbitraryAction memory _claimKITE = IArbitraryActions.ArbitraryAction({
-      target: address(_kiteVestingPlans), signature: 'redeemPlans(uint256[])', data: abi.encode(_plans), value: 0
+      target: address(_kiteVestingPlans),
+      signature: 'redeemPlans(uint256[])',
+      data: abi.encodePacked(bytes4(keccak256(bytes('redeemPlans(uint256[])'))), abi.encode(_plans)),
+      value: 0
     });
 
     IArbitraryActions.ArbitraryAction memory _claimWLD = IArbitraryActions.ArbitraryAction({
-      target: address(_wldVestingWallet), signature: 'release(address)', data: abi.encode(address(WLD)), value: 0
+      target: address(_wldVestingWallet),
+      signature: 'release(address)',
+      data: abi.encodePacked(bytes4(keccak256(bytes('release(address)'))), abi.encode(address(WLD))),
+      value: 0
     });
 
-    IArbitraryActions.ArbitraryAction[] memory _arbitraryActions = new IArbitraryActions.ArbitraryAction[](2);
-    _arbitraryActions[0] = _claimKITE;
-    _arbitraryActions[1] = _claimWLD;
+    IArbitraryActions.ArbitraryAction[] memory __arbitraryActions = new IArbitraryActions.ArbitraryAction[](2);
+    __arbitraryActions[0] = _claimKITE;
+    __arbitraryActions[1] = _claimWLD;
 
-    _actionsBuilder = arbitraryActionsFactory.createArbitraryActions(_arbitraryActions);
+    _actionsBuilder = arbitraryActionsFactory.createArbitraryActions(__arbitraryActions);
     _opxAction = address(new OPxAction(_opx));
   }
 

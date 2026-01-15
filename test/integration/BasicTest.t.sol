@@ -67,17 +67,24 @@ contract IntegrationBasicTest is DeployCanonGuard, EthereumConstants, Test {
     _safeProxy.setGuard(address(_canonGuard));
 
     // Deploy the ArbitraryActions contract
-    IArbitraryActions.ArbitraryAction memory _depositAction =
-      IArbitraryActions.ArbitraryAction({target: address(WETH), signature: 'deposit()', data: bytes(''), value: 1});
+    IArbitraryActions.ArbitraryAction memory _depositAction = IArbitraryActions.ArbitraryAction({
+      target: address(WETH),
+      signature: '',
+      data: abi.encodePacked(bytes4(keccak256(bytes('deposit()'))), bytes('')),
+      value: 1
+    });
     IArbitraryActions.ArbitraryAction memory _transferAction = IArbitraryActions.ArbitraryAction({
-      target: address(WETH), signature: 'transfer(address,uint256)', data: abi.encode(_safeOwner, 1), value: 0
+      target: address(WETH),
+      signature: 'transfer(address,uint256)',
+      data: abi.encodePacked(bytes4(keccak256(bytes('transfer(address,uint256)'))), abi.encode(_safeOwner, uint256(1))),
+      value: 0
     });
 
-    IArbitraryActions.ArbitraryAction[] memory _arbitraryActions = new IArbitraryActions.ArbitraryAction[](2);
-    _arbitraryActions[0] = _depositAction;
-    _arbitraryActions[1] = _transferAction;
+    IArbitraryActions.ArbitraryAction[] memory __arbitraryActions = new IArbitraryActions.ArbitraryAction[](2);
+    __arbitraryActions[0] = _depositAction;
+    __arbitraryActions[1] = _transferAction;
 
-    _actionsBuilder = arbitraryActionsFactory.createArbitraryActions(_arbitraryActions);
+    _actionsBuilder = arbitraryActionsFactory.createArbitraryActions(__arbitraryActions);
   }
 
   function test_ExecuteTransaction() public {
