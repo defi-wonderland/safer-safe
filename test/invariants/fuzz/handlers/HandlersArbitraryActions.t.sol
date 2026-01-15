@@ -15,12 +15,17 @@ abstract contract HandlersArbitraryActions is BaseHandlers {
   function handler_queueArbitraryAction(uint256 _approvalDuration) public {
     IArbitraryActions.ArbitraryAction[] memory actions = new IArbitraryActions.ArbitraryAction[](2);
     actions[0] = IArbitraryActions.ArbitraryAction({
-      target: address(actionTarget), signature: 'deposit()', data: bytes(''), value: 0
+      target: address(actionTarget),
+      signature: 'deposit()',
+      data: abi.encodePacked(bytes4(keccak256(bytes('deposit()'))), abi.encode(bytes(''))),
+      value: 0
     });
     actions[1] = IArbitraryActions.ArbitraryAction({
       target: address(actionTarget),
       signature: 'transfer(address,uint256)',
-      data: abi.encode(TOKEN_RECIPIENT, AMOUNT),
+      data: abi.encodePacked(
+        bytes4(keccak256(bytes('transfer(address,uint256)'))), abi.encode(TOKEN_RECIPIENT, AMOUNT)
+      ),
       value: 0
     });
 
