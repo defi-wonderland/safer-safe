@@ -1,0 +1,36 @@
+UnitCanonGuardRegistry::record
+├── when the caller is not a signer
+│   └── it reverts with NotSafeSigner
+├── when the arrays have different lengths
+│   └── it reverts with ArrayLengthMismatch
+├── when a label is empty
+│   └── it reverts with EmptyLabel
+└── when executing the function
+    ├── it adds the entity to the set
+    ├── it stores the edition
+    └── it emits EntityRecorded event
+
+UnitCanonGuardRegistry::remove
+├── when the caller is not a signer
+│   └── it reverts with NotSafeSigner
+├── when the entity is not found
+│   └── it reverts with EntityNotFound
+└── when executing the function
+    ├── it removes the entity from the set
+    ├── it clears the edition
+    └── it emits EntityRemoved event
+
+UnitCanonGuardRegistry::totalEntities
+└── it returns the length of the set
+
+UnitCanonGuardRegistry::read
+├── when offset is greater than the total number of entities
+│   └── it returns an empty array
+└── when executing the function
+    ├── when entities to return are less than the limit
+    │   └── it returns the entities with their editions
+    └── when entities to return are greater than the limit
+        └── it returns the entities with their editions 
+
+UnitCanonGuardRegistry::entityLabel
+└── it returns the edition of the entity

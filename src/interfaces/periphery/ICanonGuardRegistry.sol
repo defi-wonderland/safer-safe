@@ -69,6 +69,25 @@ interface ICanonGuardRegistry {
    */
   error EntityNotFound();
 
+  // ~~~ MUTATIVE METHODS ~~~
+
+  /**
+   * @notice Records or updates labels for multiple entities
+   * @dev Can only be called by a signer of the Safe associated with the CanonGuard
+   * @param _canonGuard The CanonGuard instance
+   * @param _entities Array of entity addresses to label
+   * @param _labels Array of labels corresponding to each entity
+   */
+  function record(address _canonGuard, address[] calldata _entities, string[] calldata _labels) external;
+
+  /**
+   * @notice Removes multiple entities from the registry
+   * @dev Can only be called by a signer of the Safe associated with the CanonGuard
+   * @param _canonGuard The CanonGuard instance
+   * @param _entities Array of entity addresses to remove
+   */
+  function remove(address _canonGuard, address[] calldata _entities) external;
+
   // ~~~ VIEW METHODS ~~~
 
   /**
@@ -98,24 +117,4 @@ interface ICanonGuardRegistry {
    * @return _edition The edition data for the entity
    */
   function entityLabel(address _canonGuard, address _entity) external view returns (Edition memory _edition);
-
-  // ~~~ MUTATIVE METHODS ~~~
-
-  /**
-   * @notice Records or updates labels for multiple entities
-   * @dev Can only be called by a signer of the Safe associated with the CanonGuard
-   * @param _canonGuard The CanonGuard instance
-   * @param _entities Array of entity addresses to label
-   * @param _labels Array of labels corresponding to each entity
-   */
-  function record(address _canonGuard, address[] calldata _entities, string[] calldata _labels) external;
-
-  /**
-   * @notice Removes multiple entities from the registry
-   * @dev Can only be called by a signer of the Safe associated with the CanonGuard
-   * @param _canonGuard The CanonGuard instance
-   * @param _entities Array of entity addresses to remove
-   */
-  function remove(address _canonGuard, address[] calldata _entities) external;
 }
-

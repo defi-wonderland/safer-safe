@@ -15,6 +15,8 @@ import {ISetEmergencyTriggerAction} from 'interfaces/actions-builders/ISetEmerge
 import {ISimpleTransfers} from 'interfaces/actions-builders/ISimpleTransfers.sol';
 import {ICanonGuardFactory} from 'interfaces/factories/ICanonGuardFactory.sol';
 import {DeployCanonGuard} from 'script/DeployCanonGuard.s.sol';
+import {SetGuardAction} from 'src/contracts/actions-builders/SetGuardAction.sol';
+import {UnsetEmergencyModeAction} from 'src/contracts/actions-builders/UnsetEmergencyModeAction.sol';
 import {AllowanceClaimorFactory} from 'src/contracts/factories/AllowanceClaimorFactory.sol';
 import {ArbitraryActionsFactory} from 'src/contracts/factories/ArbitraryActionsFactory.sol';
 import {CanonGuardFactory} from 'src/contracts/factories/CanonGuardFactory.sol';
@@ -26,6 +28,7 @@ import {PreApproveActionFactory} from 'src/contracts/factories/PreApproveActionF
 import {SetEmergencyCallerActionFactory} from 'src/contracts/factories/SetEmergencyCallerActionFactory.sol';
 import {SetEmergencyTriggerActionFactory} from 'src/contracts/factories/SetEmergencyTriggerActionFactory.sol';
 import {SimpleTransfersFactory} from 'src/contracts/factories/SimpleTransfersFactory.sol';
+import {ICanonGuardRegistry} from 'src/interfaces/periphery/ICanonGuardRegistry.sol';
 import {Utils} from 'test/unit/utils/Utils.sol';
 
 contract UnitDeployCanonGuard is DeployCanonGuard, Test, Utils {
@@ -70,12 +73,19 @@ contract UnitDeployCanonGuard is DeployCanonGuard, Test, Utils {
 
     // it should match the deterministic address
     _assertFactoriesAddresses();
+    _assertSharedContractsAddresses();
 
     // it should deploy the common factories
     _assertCommonFactories();
 
     // it should deploy the common contracts for the chain
     _assertCommonContracts();
+
+    // it should deploy the shared contracts for the chain
+    _assertSharedContracts();
+
+    // it should deploy the periphery contracts for the chain
+    _assertPeripheryContracts();
   }
 
   function _assertCommonFactories() private view {
@@ -179,8 +189,6 @@ contract UnitDeployCanonGuard is DeployCanonGuard, Test, Utils {
         )
       )
     );
-    IActionsBuilder _auxSetGuardAction = IActionsBuilder(deployCode('SetGuardAction'));
-    IActionsBuilder _auxUnsetEmergencyModeAction = IActionsBuilder(deployCode('UnsetEmergencyModeAction'));
     vm.stopPrank();
 
     assertEq(address(_allowanceClaimor).code, address(_auxAllowanceClaimor).code);
@@ -193,7 +201,32 @@ contract UnitDeployCanonGuard is DeployCanonGuard, Test, Utils {
     assertEq(address(_simpleTransfers).code, address(_auxSimpleTransfers).code);
     assertEq(address(_cappedTokenTransfersHub).code, address(_auxCappedTokenTransfersHub).code);
     assertEq(address(_canonGuard).code, address(_auxCanonGuard).code);
+  }
+
+  function _assertSharedContractsAddresses() private view {
+    assertEq(
+      address(setGuardAction),
+      CREATE_X.computeCreate2Address(keccak256(abi.encode(SALT)), keccak256(type(SetGuardAction).creationCode))
+    );
+    assertEq(
+      address(unsetEmergencyModeAction),
+      CREATE_X.computeCreate2Address(
+        keccak256(abi.encode(SALT)), keccak256(type(UnsetEmergencyModeAction).creationCode)
+      )
+    );
+  }
+
+  function _assertSharedContracts() private {
+    IActionsBuilder _auxSetGuardAction = IActionsBuilder(deployCode('SetGuardAction'));
+    IActionsBuilder _auxUnsetEmergencyModeAction = IActionsBuilder(deployCode('UnsetEmergencyModeAction'));
+
     assertEq(address(setGuardAction).code, address(_auxSetGuardAction).code);
     assertEq(address(unsetEmergencyModeAction).code, address(_auxUnsetEmergencyModeAction).code);
+  }
+
+  function _assertPeripheryContracts() private {
+    ICanonGuardRegistry _auxCanonGuardRegistry = ICanonGuardRegistry(deployCode('CanonGuardRegistry'));
+
+    assertEq(address(canonGuardRegistry).code, address(_auxCanonGuardRegistry).code);
   }
 }
