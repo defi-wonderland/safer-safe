@@ -9,7 +9,7 @@ import {IArbitraryActions} from 'interfaces/actions-builders/IArbitraryActions.s
  * @title ArbitraryActions
  * @notice Contract that builds actions to perform simple transactions
  * @notice Each ArbitraryAction has a target, complete calldata and value
- * @notice An optional signature can be provided to verify the selector matches the callData
+ * @notice An optional signature can be provided to verify the selector matches the calldata
  */
 contract ArbitraryActions is IArbitraryActions, ActionsBuilder {
   // ~~~ STORAGE ~~~
@@ -25,7 +25,7 @@ contract ArbitraryActions is IArbitraryActions, ActionsBuilder {
   /**
    * @notice Constructor that sets up the array of actions containing the arbitrary actions
    * @notice Each ArbitraryAction is converted into an Action to perform a simple transaction
-   * @notice If a signature is provided, it verifies that the selector matches the callData
+   * @notice If a signature is provided, it verifies that the selector matches the calldata
    * @param _inputArbitraryActions The array of arbitrary actions
    */
   constructor(ArbitraryAction[] memory _inputArbitraryActions) ActionsBuilder(msg.sender) {

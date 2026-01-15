@@ -38,9 +38,9 @@ interface IArbitraryActions is IActionsBuilder {
   // ~~~ ERRORS ~~~
 
   /**
-   * @notice Reverts when the signature selector doesn't match the callData selector
+   * @notice Reverts when the signature selector doesn't match the calldata selector
    * @param _expected The expected selector computed from the signature
-   * @param _actual The actual selector from the callData
+   * @param _actual The actual selector from the calldata
    */
   error SelectorMismatch(bytes4 _expected, bytes4 _actual);
 
