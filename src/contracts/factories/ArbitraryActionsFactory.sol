@@ -15,8 +15,8 @@ contract ArbitraryActionsFactory is IArbitraryActionsFactory, Factory {
 
   /// @inheritdoc IArbitraryActionsFactory
   function createArbitraryActions(IArbitraryActions
-        .ArbitraryAction[] calldata _smplActions) external returns (address _arbitraryActions) {
-    _arbitraryActions = address(new ArbitraryActions(_smplActions));
+        .ArbitraryAction[] calldata _actions) external returns (address _arbitraryActions) {
+    _arbitraryActions = address(new ArbitraryActions(_actions));
 
     _children[_arbitraryActions] = true;
 

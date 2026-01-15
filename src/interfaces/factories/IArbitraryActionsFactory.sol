@@ -39,11 +39,11 @@ interface IArbitraryActionsFactory is IFactory {
    *  ]
    * Where 0x0000000000000000000000000000000000000000000000000000000000c0ffee0000000000000000000000000000000000000000000000000000000000000001
    * is the result of abi.encode(address(0xC0FFEE), uint256(1))
-   * @param _smplActions The array of arbitrary actions
+   * @param _actions The array of arbitrary actions
    * @return _arbitraryActions The ArbitraryActions contract address
    */
   function createArbitraryActions(IArbitraryActions
-        .ArbitraryAction[] memory _smplActions) external returns (address _arbitraryActions);
+        .ArbitraryAction[] memory _actions) external returns (address _arbitraryActions);
 
   /**
    * @notice Creates an ArbitraryActions contract with a single arbitrary action

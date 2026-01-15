@@ -27,9 +27,8 @@ contract UnitArbitraryActionsFactory is Test, Utils {
 
     // it should emit ArbitraryActionsCreated event with correct parameters
     vm.expectEmit();
-    emit IArbitraryActionsFactory.ArbitraryActionsCreated(_getNextContractDeployedAddress(
-        address(arbitraryActionsFactory)
-      ));
+    emit IArbitraryActionsFactory
+      .ArbitraryActionsCreated(_getNextContractDeployedAddress(address(arbitraryActionsFactory)));
 
     address _arbitraryActionsContract = arbitraryActionsFactory.createArbitraryActions(_actions);
 
@@ -81,9 +80,8 @@ contract UnitArbitraryActionsFactory is Test, Utils {
 
     // it should emit ArbitraryActionsCreated event with correct parameters
     vm.expectEmit();
-    emit IArbitraryActionsFactory.ArbitraryActionsCreated(_getNextContractDeployedAddress(
-        address(arbitraryActionsFactory)
-      ));
+    emit IArbitraryActionsFactory
+      .ArbitraryActionsCreated(_getNextContractDeployedAddress(address(arbitraryActionsFactory)));
 
     // it should deploy an ArbitraryActions contract with that single arbitrary action args
     address _arbitraryActionsContract = arbitraryActionsFactory.createArbitraryAction(_arbitraryActions);
