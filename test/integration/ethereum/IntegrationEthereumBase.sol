@@ -52,7 +52,6 @@ abstract contract IntegrationEthereumBase is DeployCanonGuard, EthereumConstants
     canonGuard = ICanonGuard(
       canonGuardFactory.createCanonGuard(
         address(SAFE_PROXY),
-        0,
         address(MULTI_SEND_CALL_ONLY),
         SHORT_TX_EXECUTION_DELAY,
         LONG_TX_EXECUTION_DELAY,

@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import {ICreateX} from 'interfaces/external/ICreateX.sol';
 import {IFactory} from 'interfaces/factories/IFactory.sol';
 
 /**
@@ -48,7 +47,6 @@ interface ICanonGuardFactory is IFactory {
   /**
    * @notice Creates a CanonGuard contract
    * @param _safe The Gnosis Safe contract address
-   * @param _nonce A nonce used to avoid collisions when redeploying the CanonGuard contract with the same Safe address
    * @param _multiSendCallOnly The MultiSendCallOnly contract address
    * @param _shortTxExecutionDelay The short transaction execution delay (in seconds)
    * @param _longTxExecutionDelay The long transaction execution delay (in seconds)
@@ -60,7 +58,6 @@ interface ICanonGuardFactory is IFactory {
    */
   function createCanonGuard(
     address _safe,
-    uint256 _nonce,
     address _multiSendCallOnly,
     uint256 _shortTxExecutionDelay,
     uint256 _longTxExecutionDelay,
@@ -69,12 +66,4 @@ interface ICanonGuardFactory is IFactory {
     address _emergencyTrigger,
     address _emergencyCaller
   ) external returns (address _canonGuard);
-
-  // ~~~ STORAGE METHODS ~~~
-
-  /**
-   * @notice Gets the CreateX contract
-   * @return _createX The CreateX contract address
-   */
-  function CREATE_X() external view returns (ICreateX _createX);
 }
