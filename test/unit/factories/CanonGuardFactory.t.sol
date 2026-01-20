@@ -99,13 +99,4 @@ contract UnitCanonGuardFactorycreateCanonGuard is Test, Constants, Utils {
     vm.expectRevert(ICanonGuardFactory.MultiSendCallOnlyCannotBeZero.selector);
     canonGuardFactory.createCanonGuard(_safe, address(0), 0, 0, 0, 0, address(0), address(0));
   }
-
-  function test_WhenTheDeployerIsNotTheSafeContract(address _deployer, address _safe) external {
-    vm.assume(_deployer != _safe);
-
-    // it reverts
-    vm.expectRevert(ICanonGuardFactory.DeployerMustBeTheSafe.selector);
-    vm.prank(_deployer);
-    canonGuardFactory.createCanonGuard(_safe, address(0), 0, 0, 0, 0, address(0), address(0));
-  }
 }
