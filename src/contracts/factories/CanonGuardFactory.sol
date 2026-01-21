@@ -23,7 +23,6 @@ contract CanonGuardFactory is ICanonGuardFactory, Factory {
     address _emergencyTrigger,
     address _emergencyCaller
   ) external returns (address _canonGuard) {
-    if (_safe != msg.sender) revert DeployerMustBeTheSafe();
     if (_multiSendCallOnly == address(0)) revert MultiSendCallOnlyCannotBeZero();
 
     _canonGuard = address(
