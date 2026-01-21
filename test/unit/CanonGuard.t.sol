@@ -52,9 +52,9 @@ contract UnitCanonGuard is Test {
 
   function _mockApprovedHashesForSigners(address[] memory _signers, uint256 _approvalValue) internal {
     for (uint256 _i = 0; _i < _signers.length; _i++) {
-      bytes memory _callData = abi.encodeWithSelector(ISafe.approvedHashes.selector);
+      bytes memory _calldata = abi.encodeWithSelector(ISafe.approvedHashes.selector);
       bytes memory _returnData = abi.encode(_approvalValue);
-      _mockAndExpect(SAFE, _callData, _returnData);
+      _mockAndExpect(SAFE, _calldata, _returnData);
     }
   }
 

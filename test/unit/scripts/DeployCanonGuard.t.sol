@@ -6,18 +6,19 @@ import {ICanonGuard} from 'interfaces/ICanonGuard.sol';
 import {ICappedTokenTransfersHub} from 'interfaces/action-hubs/ICappedTokenTransfersHub.sol';
 import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 import {IAllowanceClaimor} from 'interfaces/actions-builders/IAllowanceClaimor.sol';
+import {IArbitraryActions} from 'interfaces/actions-builders/IArbitraryActions.sol';
 import {ICappedTokenTransfers} from 'interfaces/actions-builders/ICappedTokenTransfers.sol';
 import {IChangeSafeGuardAction} from 'interfaces/actions-builders/IChangeSafeGuardAction.sol';
 import {IPreApproveAction} from 'interfaces/actions-builders/IPreApproveAction.sol';
 import {ISetEmergencyCallerAction} from 'interfaces/actions-builders/ISetEmergencyCallerAction.sol';
 import {ISetEmergencyTriggerAction} from 'interfaces/actions-builders/ISetEmergencyTriggerAction.sol';
-import {ISimpleActions} from 'interfaces/actions-builders/ISimpleActions.sol';
 import {ISimpleTransfers} from 'interfaces/actions-builders/ISimpleTransfers.sol';
 import {ICanonGuardFactory} from 'interfaces/factories/ICanonGuardFactory.sol';
 import {DeployCanonGuard} from 'script/DeployCanonGuard.s.sol';
 import {SetGuardAction} from 'src/contracts/actions-builders/SetGuardAction.sol';
 import {UnsetEmergencyModeAction} from 'src/contracts/actions-builders/UnsetEmergencyModeAction.sol';
 import {AllowanceClaimorFactory} from 'src/contracts/factories/AllowanceClaimorFactory.sol';
+import {ArbitraryActionsFactory} from 'src/contracts/factories/ArbitraryActionsFactory.sol';
 import {CanonGuardFactory} from 'src/contracts/factories/CanonGuardFactory.sol';
 import {CappedTokenTransfersHubFactory} from 'src/contracts/factories/CappedTokenTransfersHubFactory.sol';
 import {ChangeSafeGuardActionFactory} from 'src/contracts/factories/ChangeSafeGuardActionFactory.sol';
@@ -26,7 +27,6 @@ import {OPxActionFactory} from 'src/contracts/factories/OPxActionFactory.sol';
 import {PreApproveActionFactory} from 'src/contracts/factories/PreApproveActionFactory.sol';
 import {SetEmergencyCallerActionFactory} from 'src/contracts/factories/SetEmergencyCallerActionFactory.sol';
 import {SetEmergencyTriggerActionFactory} from 'src/contracts/factories/SetEmergencyTriggerActionFactory.sol';
-import {SimpleActionsFactory} from 'src/contracts/factories/SimpleActionsFactory.sol';
 import {SimpleTransfersFactory} from 'src/contracts/factories/SimpleTransfersFactory.sol';
 import {ICanonGuardRegistry} from 'src/interfaces/periphery/ICanonGuardRegistry.sol';
 import {Utils} from 'test/unit/utils/Utils.sol';
@@ -96,7 +96,7 @@ contract UnitDeployCanonGuard is DeployCanonGuard, Test, Utils {
     assertEq(address(changeSafeGuardActionFactory).code, type(ChangeSafeGuardActionFactory).runtimeCode);
     assertEq(address(setEmergencyCallerActionFactory).code, type(SetEmergencyCallerActionFactory).runtimeCode);
     assertEq(address(setEmergencyTriggerActionFactory).code, type(SetEmergencyTriggerActionFactory).runtimeCode);
-    assertEq(address(simpleActionsFactory).code, type(SimpleActionsFactory).runtimeCode);
+    assertEq(address(arbitraryActionsFactory).code, type(ArbitraryActionsFactory).runtimeCode);
     assertEq(address(simpleTransfersFactory).code, type(SimpleTransfersFactory).runtimeCode);
   }
 
@@ -139,8 +139,8 @@ contract UnitDeployCanonGuard is DeployCanonGuard, Test, Utils {
       )
     );
     assertEq(
-      address(simpleActionsFactory),
-      CREATE_X.computeCreate2Address(keccak256(abi.encode(SALT)), keccak256(type(SimpleActionsFactory).creationCode))
+      address(arbitraryActionsFactory),
+      CREATE_X.computeCreate2Address(keccak256(abi.encode(SALT)), keccak256(type(ArbitraryActionsFactory).creationCode))
     );
     assertEq(
       address(simpleTransfersFactory),
@@ -163,8 +163,8 @@ contract UnitDeployCanonGuard is DeployCanonGuard, Test, Utils {
       ISetEmergencyCallerAction(deployCode('SetEmergencyCallerAction', abi.encode(DUMMY_ADDRESS)));
     ISetEmergencyTriggerAction _auxSetEmergencyTriggerAction =
       ISetEmergencyTriggerAction(deployCode('SetEmergencyTriggerAction', abi.encode(DUMMY_ADDRESS)));
-    ISimpleActions _auxSimpleActions =
-      ISimpleActions(deployCode('SimpleActions', abi.encode(new ISimpleActions.SimpleAction[](0))));
+    IArbitraryActions _auxArbitraryActions =
+      IArbitraryActions(deployCode('ArbitraryActions', abi.encode(new IArbitraryActions.ArbitraryAction[](0))));
     ISimpleTransfers _auxSimpleTransfers =
       ISimpleTransfers(deployCode('SimpleTransfers', abi.encode(new ISimpleTransfers.TransferAction[](0))));
     ICappedTokenTransfersHub _auxCappedTokenTransfersHub = ICappedTokenTransfersHub(
@@ -197,7 +197,7 @@ contract UnitDeployCanonGuard is DeployCanonGuard, Test, Utils {
     assertEq(address(_changeSafeGuardAction).code, address(_auxChangeSafeGuardAction).code);
     assertEq(address(_setEmergencyCallerAction).code, address(_auxSetEmergencyCallerAction).code);
     assertEq(address(_setEmergencyTriggerAction).code, address(_auxSetEmergencyTriggerAction).code);
-    assertEq(address(_simpleActions).code, address(_auxSimpleActions).code);
+    assertEq(address(_arbitraryActions).code, address(_auxArbitraryActions).code);
     assertEq(address(_simpleTransfers).code, address(_auxSimpleTransfers).code);
     assertEq(address(_cappedTokenTransfersHub).code, address(_auxCappedTokenTransfersHub).code);
     assertEq(address(_canonGuard).code, address(_auxCanonGuard).code);

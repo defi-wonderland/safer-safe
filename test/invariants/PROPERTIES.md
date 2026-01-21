@@ -4,7 +4,7 @@
 
 - `CanonGuard`
 - `CanonGuardFactory`
-- `SimpleActions`
+- `ArbitraryActions`
 - `SimpleTransfers`
 - `CappedTokenTransfers` and hub
 - `AllowanceClaimor`
