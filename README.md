@@ -139,5 +139,9 @@ Also, remember to update the `package_name` param to your package name:
 
 You can take a look at our [solidity-exporter-action](https://github.com/defi-wonderland/solidity-exporter-action) repository for more information and usage examples.
 
+## Support
+Canon Guard is a public good. If you want to support its development, visit our [Giveth
+  project](https://giveth.io/project/canon-guard).
+
 ## Licensing
 The primary license for the boilerplate is MIT, see [`LICENSE`](https://github.com/defi-wonderland/solidity-foundry-boilerplate/blob/main/LICENSE)
