@@ -52,9 +52,9 @@ contract UnitCanonGuard is Test {
 
   function _mockApprovedHashesForSigners(address[] memory _signers, uint256 _approvalValue) internal {
     for (uint256 _i = 0; _i < _signers.length; _i++) {
-      bytes memory _callData = abi.encodeWithSelector(ISafe.approvedHashes.selector);
+      bytes memory _calldata = abi.encodeWithSelector(ISafe.approvedHashes.selector);
       bytes memory _returnData = abi.encode(_approvalValue);
-      _mockAndExpect(SAFE, _callData, _returnData);
+      _mockAndExpect(SAFE, _calldata, _returnData);
     }
   }
 
@@ -859,9 +859,8 @@ contract UnitCanonGuard is Test {
   function test_ExecuteTransactions_WhenAtLeastOneTransactionIsExpired(
     address _caller,
     IActionsBuilder.Action calldata _action,
-    ICanonGuard.TransactionInfo[] memory _txsInfo
+    ICanonGuard.TransactionInfo[60] memory _txsInfo
   ) external {
-    vm.assume(_txsInfo.length > 2);
     _txsInfo[0].expiresAt = bound(_txsInfo[0].expiresAt, 5, type(uint64).max);
     _txsInfo[0].executableAt = bound(_txsInfo[0].executableAt, 0, block.timestamp);
     _txsInfo[1].expiresAt = bound(_txsInfo[1].expiresAt, 1, _txsInfo[0].expiresAt - 2);
@@ -902,9 +901,8 @@ contract UnitCanonGuard is Test {
   function test_ExecuteTransactions_WhenAtLeastOneApprovedTransactionIsNotYetExecutable(
     address _caller,
     IActionsBuilder.Action calldata _action,
-    ICanonGuard.TransactionInfo[] memory _txsInfo
+    ICanonGuard.TransactionInfo[60] memory _txsInfo
   ) external {
-    vm.assume(_txsInfo.length > 2);
     _txsInfo[0].expiresAt = bound(_txsInfo[0].expiresAt, block.timestamp + 1, type(uint256).max);
     _txsInfo[0].executableAt = bound(_txsInfo[0].executableAt, 0, block.timestamp);
 
@@ -944,9 +942,8 @@ contract UnitCanonGuard is Test {
   function test_ExecuteTransactions_WhenAtLeastOneTransactionIsNotQueued(
     address _caller,
     IActionsBuilder.Action calldata _action,
-    ICanonGuard.TransactionInfo[] memory _txsInfo
+    ICanonGuard.TransactionInfo[60] memory _txsInfo
   ) external {
-    vm.assume(_txsInfo.length > 2);
     _txsInfo[0].expiresAt = bound(_txsInfo[0].expiresAt, block.timestamp + 1, type(uint256).max);
     _txsInfo[0].executableAt = bound(_txsInfo[0].executableAt, 0, block.timestamp);
 
@@ -990,9 +987,8 @@ contract UnitCanonGuard is Test {
   function test_ExecuteTransactions_WhenInSimulationMode(
     address _caller,
     IActionsBuilder.Action calldata _action,
-    ICanonGuard.TransactionInfo[] memory _txsInfo
+    ICanonGuard.TransactionInfo[60] memory _txsInfo
   ) external whenAllTransactionsAreValid {
-    vm.assume(_txsInfo.length > 1);
     vm.store(address(canonGuard), bytes32(uint256(4)), bytes32(uint256(1))); // sets _isSimulation to true
 
     IActionsBuilder.Action[] memory _actions = new IActionsBuilder.Action[](1);
@@ -1049,13 +1045,12 @@ contract UnitCanonGuard is Test {
   function test_ExecuteTransactions_WhenNotInSimulationMode(
     address _caller,
     IActionsBuilder.Action calldata _action,
-    ICanonGuard.TransactionInfo[] memory _txsInfo,
+    ICanonGuard.TransactionInfo[60] memory _txsInfo,
     address _signer1,
     address _signer2
   ) external whenAllTransactionsAreValid {
     vm.assume(_signer1 > _signer2);
     vm.assume(_signer2 != address(0));
-    vm.assume(_txsInfo.length > 1);
 
     IActionsBuilder.Action[] memory _actions = new IActionsBuilder.Action[](1);
     _actions[0] = _action;

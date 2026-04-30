@@ -4,7 +4,7 @@ pragma solidity 0.8.30;
 import {ISafe} from '@safe-smart-account/interfaces/ISafe.sol';
 import {Test} from 'forge-std/Test.sol';
 import {ICanonGuard} from 'interfaces/ICanonGuard.sol';
-import {ISimpleActions} from 'interfaces/actions-builders/ISimpleActions.sol';
+import {IArbitraryActions} from 'interfaces/actions-builders/IArbitraryActions.sol';
 import {EthereumConstants} from 'script/Constants.sol';
 import {DeployCanonGuard} from 'script/DeployCanonGuard.s.sol';
 
@@ -53,7 +53,6 @@ contract IntegrationBasicTest is DeployCanonGuard, EthereumConstants, Test {
     _canonGuard = ICanonGuard(
       canonGuardFactory.createCanonGuard(
         address(_safeProxy),
-        0,
         address(MULTI_SEND_CALL_ONLY),
         SHORT_TX_EXECUTION_DELAY,
         LONG_TX_EXECUTION_DELAY,
@@ -67,22 +66,29 @@ contract IntegrationBasicTest is DeployCanonGuard, EthereumConstants, Test {
     vm.prank(address(_safeProxy));
     _safeProxy.setGuard(address(_canonGuard));
 
-    // Deploy the SimpleActions contract
-    ISimpleActions.SimpleAction memory _depositAction =
-      ISimpleActions.SimpleAction({target: address(WETH), signature: 'deposit()', data: bytes(''), value: 1});
-    ISimpleActions.SimpleAction memory _transferAction = ISimpleActions.SimpleAction({
-      target: address(WETH), signature: 'transfer(address,uint256)', data: abi.encode(_safeOwner, 1), value: 0
+    // Deploy the ArbitraryActions contract
+    IArbitraryActions.ArbitraryAction memory _depositAction = IArbitraryActions.ArbitraryAction({
+      target: address(WETH),
+      signature: '',
+      data: abi.encodePacked(bytes4(keccak256(bytes('deposit()'))), bytes('')),
+      value: 1
+    });
+    IArbitraryActions.ArbitraryAction memory _transferAction = IArbitraryActions.ArbitraryAction({
+      target: address(WETH),
+      signature: 'transfer(address,uint256)',
+      data: abi.encodePacked(bytes4(keccak256(bytes('transfer(address,uint256)'))), abi.encode(_safeOwner, uint256(1))),
+      value: 0
     });
 
-    ISimpleActions.SimpleAction[] memory _simpleActions = new ISimpleActions.SimpleAction[](2);
-    _simpleActions[0] = _depositAction;
-    _simpleActions[1] = _transferAction;
+    IArbitraryActions.ArbitraryAction[] memory __arbitraryActions = new IArbitraryActions.ArbitraryAction[](2);
+    __arbitraryActions[0] = _depositAction;
+    __arbitraryActions[1] = _transferAction;
 
-    _actionsBuilder = simpleActionsFactory.createSimpleActions(_simpleActions);
+    _actionsBuilder = arbitraryActionsFactory.createArbitraryActions(__arbitraryActions);
   }
 
   function test_ExecuteTransaction() public {
-    // Allow the CanonGuard to call the SimpleActions contract
+    // Allow the CanonGuard to call the ArbitraryActions contract
     uint256 _approvalDuration = 1 days;
 
     vm.prank(address(_safeProxy));

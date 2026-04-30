@@ -3,6 +3,7 @@ pragma solidity 0.8.30;
 
 import {CappedTokenTransfersHub} from 'contracts/action-hubs/CappedTokenTransfersHub.sol';
 import {AllowanceClaimor} from 'contracts/actions-builders/AllowanceClaimor.sol';
+import {ArbitraryActions} from 'contracts/actions-builders/ArbitraryActions.sol';
 import {CappedTokenTransfers} from 'contracts/actions-builders/CappedTokenTransfers.sol';
 import {ChangeSafeGuardAction} from 'contracts/actions-builders/ChangeSafeGuardAction.sol';
 import {EverclearTokenConversion} from 'contracts/actions-builders/EverclearTokenConversion.sol';
@@ -10,10 +11,10 @@ import {OPxAction} from 'contracts/actions-builders/OPxAction.sol';
 import {PreApproveAction} from 'contracts/actions-builders/PreApproveAction.sol';
 import {SetEmergencyCallerAction} from 'contracts/actions-builders/SetEmergencyCallerAction.sol';
 import {SetEmergencyTriggerAction} from 'contracts/actions-builders/SetEmergencyTriggerAction.sol';
-import {SimpleActions} from 'contracts/actions-builders/SimpleActions.sol';
 import {SimpleTransfers} from 'contracts/actions-builders/SimpleTransfers.sol';
 import {UnsetEmergencyModeAction} from 'contracts/actions-builders/UnsetEmergencyModeAction.sol';
 import {AllowanceClaimorFactory} from 'contracts/factories/AllowanceClaimorFactory.sol';
+import {ArbitraryActionsFactory} from 'contracts/factories/ArbitraryActionsFactory.sol';
 import {CanonGuardFactory} from 'contracts/factories/CanonGuardFactory.sol';
 import {CappedTokenTransfersHubFactory} from 'contracts/factories/CappedTokenTransfersHubFactory.sol';
 import {ChangeSafeGuardActionFactory} from 'contracts/factories/ChangeSafeGuardActionFactory.sol';
@@ -22,21 +23,22 @@ import {OPxActionFactory} from 'contracts/factories/OPxActionFactory.sol';
 import {PreApproveActionFactory} from 'contracts/factories/PreApproveActionFactory.sol';
 import {SetEmergencyCallerActionFactory} from 'contracts/factories/SetEmergencyCallerActionFactory.sol';
 import {SetEmergencyTriggerActionFactory} from 'contracts/factories/SetEmergencyTriggerActionFactory.sol';
-import {SimpleActionsFactory} from 'contracts/factories/SimpleActionsFactory.sol';
 import {SimpleTransfersFactory} from 'contracts/factories/SimpleTransfersFactory.sol';
+import {CanonGuardRegistry} from 'contracts/periphery/CanonGuardRegistry.sol';
 import {Script} from 'forge-std/Script.sol';
 import {ICanonGuard} from 'interfaces/ICanonGuard.sol';
 import {ICappedTokenTransfersHub} from 'interfaces/action-hubs/ICappedTokenTransfersHub.sol';
 import {IActionsBuilder} from 'interfaces/actions-builders/IActionsBuilder.sol';
 import {IAllowanceClaimor} from 'interfaces/actions-builders/IAllowanceClaimor.sol';
+import {IArbitraryActions} from 'interfaces/actions-builders/IArbitraryActions.sol';
 import {ICappedTokenTransfers} from 'interfaces/actions-builders/ICappedTokenTransfers.sol';
 import {IChangeSafeGuardAction} from 'interfaces/actions-builders/IChangeSafeGuardAction.sol';
 import {IPreApproveAction} from 'interfaces/actions-builders/IPreApproveAction.sol';
 import {ISetEmergencyCallerAction} from 'interfaces/actions-builders/ISetEmergencyCallerAction.sol';
 import {ISetEmergencyTriggerAction} from 'interfaces/actions-builders/ISetEmergencyTriggerAction.sol';
-import {ISimpleActions} from 'interfaces/actions-builders/ISimpleActions.sol';
 import {ISimpleTransfers} from 'interfaces/actions-builders/ISimpleTransfers.sol';
 import {IAllowanceClaimorFactory} from 'interfaces/factories/IAllowanceClaimorFactory.sol';
+import {IArbitraryActionsFactory} from 'interfaces/factories/IArbitraryActionsFactory.sol';
 import {ICanonGuardFactory} from 'interfaces/factories/ICanonGuardFactory.sol';
 import {ICappedTokenTransfersHubFactory} from 'interfaces/factories/ICappedTokenTransfersHubFactory.sol';
 import {IChangeSafeGuardActionFactory} from 'interfaces/factories/IChangeSafeGuardActionFactory.sol';
@@ -45,8 +47,8 @@ import {IOPxActionFactory} from 'interfaces/factories/IOPxActionFactory.sol';
 import {IPreApproveActionFactory} from 'interfaces/factories/IPreApproveActionFactory.sol';
 import {ISetEmergencyCallerActionFactory} from 'interfaces/factories/ISetEmergencyCallerActionFactory.sol';
 import {ISetEmergencyTriggerActionFactory} from 'interfaces/factories/ISetEmergencyTriggerActionFactory.sol';
-import {ISimpleActionsFactory} from 'interfaces/factories/ISimpleActionsFactory.sol';
 import {ISimpleTransfersFactory} from 'interfaces/factories/ISimpleTransfersFactory.sol';
+import {ICanonGuardRegistry} from 'interfaces/periphery/ICanonGuardRegistry.sol';
 import {Constants} from 'script/Constants.sol';
 import {CanonGuard} from 'src/contracts/CanonGuard.sol';
 import {SetGuardAction} from 'src/contracts/actions-builders/SetGuardAction.sol';
@@ -72,7 +74,7 @@ contract DeployCanonGuard is Constants, Script {
   IOPxActionFactory public opxActionFactory;
   ISetEmergencyCallerActionFactory public setEmergencyCallerActionFactory;
   ISetEmergencyTriggerActionFactory public setEmergencyTriggerActionFactory;
-  ISimpleActionsFactory public simpleActionsFactory;
+  IArbitraryActionsFactory public arbitraryActionsFactory;
   ISimpleTransfersFactory public simpleTransfersFactory;
 
   // ~~~ DUMMY CONTRACTS ~~~
@@ -82,7 +84,7 @@ contract DeployCanonGuard is Constants, Script {
   IChangeSafeGuardAction internal _changeSafeGuardAction;
   ISetEmergencyCallerAction internal _setEmergencyCallerAction;
   ISetEmergencyTriggerAction internal _setEmergencyTriggerAction;
-  ISimpleActions internal _simpleActions;
+  IArbitraryActions internal _arbitraryActions;
   ISimpleTransfers internal _simpleTransfers;
   ICappedTokenTransfersHub internal _cappedTokenTransfersHub;
   ICanonGuard internal _canonGuard;
@@ -90,6 +92,9 @@ contract DeployCanonGuard is Constants, Script {
   // ~~~ ACTIONS BUILDERS ~~~
   IActionsBuilder public setGuardAction;
   IActionsBuilder public unsetEmergencyModeAction;
+
+  // ~~~ PERIPHERY ~~~
+  ICanonGuardRegistry public canonGuardRegistry;
 
   // ~~~ DUMMY CONSTANTS ~~~
   address public constant DUMMY_ADDRESS = address(1);
@@ -106,7 +111,9 @@ contract DeployCanonGuard is Constants, Script {
     vm.startBroadcast();
 
     _deployAllChainsFactories();
+    _deployAllChainsSharedContracts();
     _deployAllChainsContracts();
+    _deployAllChainsPeripheries();
 
     if (block.chainid == ETHEREUM_MAINNET_CHAIN_ID) {
       _deployEthereumFactories();
@@ -135,17 +142,16 @@ contract DeployCanonGuard is Constants, Script {
     setEmergencyTriggerActionFactory = ISetEmergencyTriggerActionFactory(
       CREATE_X.deployCreate2(SALT, type(SetEmergencyTriggerActionFactory).creationCode)
     );
-    simpleActionsFactory = ISimpleActionsFactory(CREATE_X.deployCreate2(SALT, type(SimpleActionsFactory).creationCode));
+    arbitraryActionsFactory =
+      IArbitraryActionsFactory(CREATE_X.deployCreate2(SALT, type(ArbitraryActionsFactory).creationCode));
     simpleTransfersFactory =
       ISimpleTransfersFactory(CREATE_X.deployCreate2(SALT, type(SimpleTransfersFactory).creationCode));
   }
 
-  function _deployEthereumFactories() internal {
-    everclearTokenConversionFactory = new EverclearTokenConversionFactory();
-  }
-
-  function _deployOptimismFactories() internal {
-    opxActionFactory = new OPxActionFactory();
+  function _deployAllChainsSharedContracts() internal {
+    unsetEmergencyModeAction =
+      IActionsBuilder(CREATE_X.deployCreate2(SALT, type(UnsetEmergencyModeAction).creationCode));
+    setGuardAction = IActionsBuilder(CREATE_X.deployCreate2(SALT, type(SetGuardAction).creationCode));
   }
 
   function _deployAllChainsContracts() internal {
@@ -156,7 +162,7 @@ contract DeployCanonGuard is Constants, Script {
     _changeSafeGuardAction = IChangeSafeGuardAction(address(new ChangeSafeGuardAction(DUMMY_ADDRESS)));
     _setEmergencyCallerAction = ISetEmergencyCallerAction(address(new SetEmergencyCallerAction(DUMMY_ADDRESS)));
     _setEmergencyTriggerAction = ISetEmergencyTriggerAction(address(new SetEmergencyTriggerAction(DUMMY_ADDRESS)));
-    _simpleActions = ISimpleActions(address(new SimpleActions(new SimpleActions.SimpleAction[](0))));
+    _arbitraryActions = IArbitraryActions(address(new ArbitraryActions(new ArbitraryActions.ArbitraryAction[](0))));
     _simpleTransfers = ISimpleTransfers(address(new SimpleTransfers(new SimpleTransfers.TransferAction[](0))));
     _cappedTokenTransfersHub = ICappedTokenTransfersHub(
       address(
@@ -180,8 +186,18 @@ contract DeployCanonGuard is Constants, Script {
         )
       )
     );
-    setGuardAction = IActionsBuilder(address(new SetGuardAction()));
-    unsetEmergencyModeAction = IActionsBuilder(address(new UnsetEmergencyModeAction()));
+  }
+
+  function _deployAllChainsPeripheries() internal {
+    canonGuardRegistry = ICanonGuardRegistry(CREATE_X.deployCreate2(SALT, type(CanonGuardRegistry).creationCode));
+  }
+
+  function _deployEthereumFactories() internal {
+    everclearTokenConversionFactory = new EverclearTokenConversionFactory();
+  }
+
+  function _deployOptimismFactories() internal {
+    opxActionFactory = new OPxActionFactory();
   }
 
   function _deployEthereumContracts() internal {

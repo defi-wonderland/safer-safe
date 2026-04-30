@@ -18,9 +18,9 @@ contract ExecutionPaths is Setup {
 
   /// @notice Test pre-approved transaction with short delay
   /// @dev Path: approve → queue → warp(SHORT_DELAY) → approve hashes → execute
-  function test_preApprovedPath_SimpleActions() public {
-    // 1. Queue SimpleActions (which internally approves it)
-    handlersTarget.handler_queueSimpleAction(100 days);
+  function test_preApprovedPath_ArbitraryActions() public {
+    // 1. Queue ArbitraryActions (which internally approves it)
+    handlersTarget.handler_queueArbitraryAction(100 days);
 
     // 2. Verify it was queued as pre-approved
     address[] memory queuedBuilders = handlersTarget.canonGuard().getQueuedActionBuilders();
@@ -145,7 +145,7 @@ contract ExecutionPaths is Setup {
   /// @dev Path: queue multiple → warp → execute all
   function test_batchExecutionPath() public {
     // 1. Queue multiple transactions
-    handlersTarget.handler_queueSimpleAction(100 days);
+    handlersTarget.handler_queueArbitraryAction(100 days);
     handlersTarget.handler_queueSimpleTransfers(100 days);
     handlersTarget.handler_queueAllowanceClaimor(100 days);
 
@@ -181,7 +181,7 @@ contract ExecutionPaths is Setup {
   /// @dev Path: queue → signers approve hash → warp → execute
   function test_hashApprovalPath() public {
     // 1. Queue a transaction
-    handlersTarget.handler_queueSimpleAction(100 days);
+    handlersTarget.handler_queueArbitraryAction(100 days);
 
     address[] memory queuedBuilders = handlersTarget.canonGuard().getQueuedActionBuilders();
     assertEq(queuedBuilders.length, 1);
@@ -210,7 +210,7 @@ contract ExecutionPaths is Setup {
   /// @dev Path: queue → change config → warp → execute
   function test_configChangePath_ShortDelay() public {
     // 1. Queue a transaction with current config
-    handlersTarget.handler_queueSimpleAction(100 days);
+    handlersTarget.handler_queueArbitraryAction(100 days);
 
     address[] memory queuedBuilders = handlersTarget.canonGuard().getQueuedActionBuilders();
     assertEq(queuedBuilders.length, 1);
@@ -221,7 +221,7 @@ contract ExecutionPaths is Setup {
     // 2. Change SHORT_TX_EXECUTION_DELAY (via redeployment)
     uint256 originalDelay = handlersTarget.canonGuard().SHORT_TX_EXECUTION_DELAY();
     uint256 newDelay = originalDelay / 2; // Make it shorter
-    handlersTarget.handler_changeShortTxDelay(newDelay, 1);
+    handlersTarget.handler_changeShortTxDelay(newDelay);
 
     // 3. Verify delay changed
     assertEq(handlersTarget.canonGuard().SHORT_TX_EXECUTION_DELAY(), newDelay);
@@ -245,7 +245,7 @@ contract ExecutionPaths is Setup {
   /// @dev Path: queue → set emergency mode → verify execution restrictions
   function test_emergencyModePath() public {
     // 1. Queue a transaction
-    handlersTarget.handler_queueSimpleAction(100 days);
+    handlersTarget.handler_queueArbitraryAction(100 days);
 
     address[] memory queuedBuilders = handlersTarget.canonGuard().getQueuedActionBuilders();
     assertEq(queuedBuilders.length, 1);
@@ -278,7 +278,7 @@ contract ExecutionPaths is Setup {
   /// @dev Path: queue → warp forward → warp back (if possible) → approve hashes → execute
   function test_timeWarpPath() public {
     // 1. Queue transaction
-    handlersTarget.handler_queueSimpleAction(100 days);
+    handlersTarget.handler_queueArbitraryAction(100 days);
 
     address[] memory queuedBuilders = handlersTarget.canonGuard().getQueuedActionBuilders();
     assertEq(queuedBuilders.length, 1);
@@ -314,7 +314,7 @@ contract ExecutionPaths is Setup {
   /// @dev Path: queue → warp past expiry → verify not executable
   function test_expiryPath() public {
     // 1. Queue transaction
-    handlersTarget.handler_queueSimpleAction(100 days);
+    handlersTarget.handler_queueArbitraryAction(100 days);
 
     address[] memory queuedBuilders = handlersTarget.canonGuard().getQueuedActionBuilders();
     assertEq(queuedBuilders.length, 1);
@@ -341,7 +341,7 @@ contract ExecutionPaths is Setup {
   /// @dev Path: queue → cancel → verify not executable
   function test_cancellationPath() public {
     // 1. Queue a transaction
-    handlersTarget.handler_queueSimpleAction(100 days);
+    handlersTarget.handler_queueArbitraryAction(100 days);
 
     address[] memory queuedBuilders = handlersTarget.canonGuard().getQueuedActionBuilders();
     assertEq(queuedBuilders.length, 1);
@@ -368,7 +368,7 @@ contract ExecutionPaths is Setup {
     uint256 expectedCount = 0;
 
     // Queue different types
-    handlersTarget.handler_queueSimpleAction(approvalDuration);
+    handlersTarget.handler_queueArbitraryAction(approvalDuration);
     expectedCount++;
 
     handlersTarget.handler_queueSimpleTransfers(approvalDuration);

@@ -12,7 +12,7 @@ contract ActionTarget is IERC20 {
   address public transferFromRecipient;
   uint256 public transferFromAmount;
 
-  // Simple action
+  // Arbitrary action
   bool public isDepositCalled;
   bool public isTransferCalled;
   address public transferRecipient;

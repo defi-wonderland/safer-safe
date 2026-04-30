@@ -33,7 +33,7 @@ corpus_dir = 'test/invariants/fuzz/corpus'
 show_solidity = true
 
 [fuzz]
-runs = 1000
+runs = 2000
 
 [rpc_endpoints]
 ethereum = "${ETHEREUM_RPC}"

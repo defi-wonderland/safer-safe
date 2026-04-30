@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.30;
 
-import {ISimpleActions} from 'src/interfaces/actions-builders/ISimpleActions.sol';
+import {IArbitraryActions} from 'src/interfaces/actions-builders/IArbitraryActions.sol';
 import {IntegrationEthereumBase} from 'test/integration/ethereum/IntegrationEthereumBase.sol';
 
 contract IntegrationWonderlandClaims is IntegrationEthereumBase {
@@ -16,22 +16,34 @@ contract IntegrationWonderlandClaims is IntegrationEthereumBase {
   function setUp() public override {
     super.setUp();
 
-    // Deploy the SimpleActions contract
-    ISimpleActions.SimpleAction memory _claimGTC =
-      ISimpleActions.SimpleAction({target: address(_gtcSimpleEscrow), signature: 'claim()', data: '', value: 0});
+    // Deploy the ArbitraryActions contract
+    IArbitraryActions.ArbitraryAction memory _claimGTC = IArbitraryActions.ArbitraryAction({
+      target: address(_gtcSimpleEscrow),
+      signature: 'claim()',
+      data: abi.encodePacked(bytes4(keccak256(bytes('claim()'))), abi.encode(bytes(''))),
+      value: 0
+    });
 
-    ISimpleActions.SimpleAction memory _claimBAL =
-      ISimpleActions.SimpleAction({target: address(_balSimpleEscrow), signature: 'claim()', data: '', value: 0});
+    IArbitraryActions.ArbitraryAction memory _claimBAL = IArbitraryActions.ArbitraryAction({
+      target: address(_balSimpleEscrow),
+      signature: 'claim()',
+      data: abi.encodePacked(bytes4(keccak256(bytes('claim()'))), abi.encode(bytes(''))),
+      value: 0
+    });
 
-    ISimpleActions.SimpleAction memory _claimKP3R =
-      ISimpleActions.SimpleAction({target: address(_kp3rSimpleEscrow), signature: 'claim()', data: '', value: 0});
+    IArbitraryActions.ArbitraryAction memory _claimKP3R = IArbitraryActions.ArbitraryAction({
+      target: address(_kp3rSimpleEscrow),
+      signature: 'claim()',
+      data: abi.encodePacked(bytes4(keccak256(bytes('claim()'))), abi.encode(bytes(''))),
+      value: 0
+    });
 
-    ISimpleActions.SimpleAction[] memory _simpleActions = new ISimpleActions.SimpleAction[](3);
-    _simpleActions[0] = _claimGTC;
-    _simpleActions[1] = _claimBAL;
-    _simpleActions[2] = _claimKP3R;
+    IArbitraryActions.ArbitraryAction[] memory __arbitraryActions = new IArbitraryActions.ArbitraryAction[](3);
+    __arbitraryActions[0] = _claimGTC;
+    __arbitraryActions[1] = _claimBAL;
+    __arbitraryActions[2] = _claimKP3R;
 
-    _actionsBuilder = simpleActionsFactory.createSimpleActions(_simpleActions);
+    _actionsBuilder = arbitraryActionsFactory.createArbitraryActions(__arbitraryActions);
   }
 
   function test_ExecuteTransaction() public {

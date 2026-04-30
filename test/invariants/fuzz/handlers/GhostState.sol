@@ -44,9 +44,6 @@ abstract contract GhostState is Test {
   /// @notice Maps action builder to timestamp when approval was granted
   mapping(address builder => uint256 timestamp) public ghost_approvalTimestamp;
 
-  /// @notice Maps Safe address to its nonce
-  mapping(address safe => mapping(uint256 nonce => bool spent)) public ghost_safeDeploymentNonce;
-
   /*//////////////////////////////////////////////////////////////
                         EMERGENCY MODE TRACKING
   //////////////////////////////////////////////////////////////*/

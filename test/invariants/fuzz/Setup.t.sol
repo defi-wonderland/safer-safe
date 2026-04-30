@@ -13,9 +13,9 @@ import {CanonGuard} from 'contracts/CanonGuard.sol';
 
 import {AllowanceClaimorFactory} from 'contracts/factories/AllowanceClaimorFactory.sol';
 
+import {ArbitraryActionsFactory} from 'contracts/factories/ArbitraryActionsFactory.sol';
 import {CanonGuardFactory} from 'contracts/factories/CanonGuardFactory.sol';
 import {CappedTokenTransfersHubFactory} from 'contracts/factories/CappedTokenTransfersHubFactory.sol';
-import {SimpleActionsFactory} from 'contracts/factories/SimpleActionsFactory.sol';
 import {SimpleTransfersFactory} from 'contracts/factories/SimpleTransfersFactory.sol';
 
 import {Constants} from 'script/Constants.sol';
@@ -31,7 +31,7 @@ contract Setup is Test, Constants, Utils {
 
   AllowanceClaimorFactory public allowanceClaimorFactory;
   CappedTokenTransfersHubFactory public cappedTokenTransfersHubFactory;
-  SimpleActionsFactory public simpleActionsFactory;
+  ArbitraryActionsFactory public arbitraryActionsFactory;
   SimpleTransfersFactory public simpleTransfersFactory;
 
   // handlers
@@ -73,7 +73,6 @@ contract Setup is Test, Constants, Utils {
     _canonGuard = CanonGuard(
       _canonGuardFactory.createCanonGuard(
         address(_safe),
-        0,
         address(_multiSendCallOnly),
         SHORT_TX_EXECUTION_DELAY,
         LONG_TX_EXECUTION_DELAY,

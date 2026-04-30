@@ -1,0 +1,7 @@
+UnitArbitraryActions::constructor
+├── when signature is provided
+│   └── when selector does not match the calldata
+│       └── it should revert with SelectorMismatch
+├── it should add the actions to the actions array with correct values
+├── it should emit the events
+└── it should save the entire array of actions
